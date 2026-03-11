@@ -21,10 +21,11 @@ function EnvErrorPage() {
             Environment variables <code className="bg-black/30 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
             <code className="bg-black/30 px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> are not set.
           </p>
-          <p className="text-xs text-amber-200/80">
-            Local: Check your <code className="bg-black/30 px-1 rounded">.env.local</code> and restart the dev server.
-            Vercel: Add variables under Project Settings → Environment Variables.
-          </p>
+          <ol className="text-xs text-amber-200/80 space-y-2 list-decimal list-inside">
+            <li><strong>Local:</strong> Add them to <code className="bg-black/30 px-1 rounded">.env.local</code> and restart the dev server.</li>
+            <li><strong>Vercel:</strong> Project Settings → Environment Variables. Add both variables for Production, Preview, and Development.</li>
+            <li><strong>Important:</strong> After adding variables on Vercel, trigger a new deployment (Redeploy). <code>NEXT_PUBLIC_*</code> vars are embedded at build time.</li>
+          </ol>
         </div>
       </body>
     </html>
