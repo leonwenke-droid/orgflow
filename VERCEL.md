@@ -3,7 +3,7 @@
 Damit der Build durchläuft und die App funktioniert, müssen in Vercel **Environment Variables** gesetzt werden:
 
 1. Im Vercel-Dashboard: **Project → Settings → Environment Variables**
-2. Folgende Variablen anlegen (Werte aus dem Supabase-Dashboard unter **Project Settings → API**):
+2. Folgende Variablen anlegen (Werte aus dem Supabase-Dashboard unter **Project Settings → API**). **Wichtig:** Dieselben Werte wie in `.env.local` verwenden – die App muss dasselbe Supabase-Projekt nutzen (Test-User existieren nur dort).
 
 | Name | Beschreibung |
 |------|--------------|

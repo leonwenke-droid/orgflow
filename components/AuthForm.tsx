@@ -31,7 +31,7 @@ export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
         return;
       }
       setError(
-        data.message || "Login failed. Please check your credentials."
+        data.detail ? `${data.message} (${data.detail})` : (data.message || "Login failed. Please check your credentials.")
       );
       return;
     }
