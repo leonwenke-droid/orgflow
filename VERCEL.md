@@ -10,6 +10,7 @@ Damit der Build durchläuft und die App funktioniert, müssen in Vercel **Enviro
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public Key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service_role Key (geheim halten) |
+| `ADMIN_SEED_SECRET` | Optional: Geheimer Wert für `/api/dev/create-test-admin?secret=...` – legt Test-User an oder setzt Passwort zurück |
 
 3. Für **Production**, **Preview** und **Development** aktivieren, damit sie beim Build und zur Laufzeit verfügbar sind.
 
@@ -24,6 +25,8 @@ Ohne diese Variablen schlägt der Build mit einem Fehler zu fehlenden Supabase-C
 - **Redirect URLs:** `https://deine-app.vercel.app/**` und `https://deine-app.vercel.app/auth/callback`
 
 Ohne diese Einträge können Sessions/Cookies in Produktion fehlschlagen.
+
+**Test-Login funktioniert nicht (Invalid login credentials):** Der Test-User muss im Produktions-Supabase existieren. Rufe einmal auf: `https://deine-app.vercel.app/api/dev/create-test-admin?secret=DEIN_ADMIN_SEED_SECRET` (nachdem `ADMIN_SEED_SECRET` in Vercel gesetzt wurde). Das legt `test2@orgflow.local` / `TestPassword123!` an oder setzt das Passwort zurück.
 
 **E-Mail-Verifikation (Registrierung):** Die Bestätigungs-E-Mail wird über einen n8n-Webhook versendet. In Vercel optional `N8N_WEBHOOK_URL_SEND_MAGIC_LINK` setzen (Standard: `https://n8n.srv881499.hstgr.cloud/webhook/send-magic-link`). Der Webhook erhält per POST JSON: `email`, `confirmLink`, `fullName`, `type: "signup"`. n8n sendet die E-Mail mit dem Link; der Nutzer klickt darauf, wird von Supabase bestätigt und zur App weitergeleitet.
 

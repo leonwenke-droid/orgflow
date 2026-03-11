@@ -3,15 +3,18 @@ import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer"
 
 export const runtime = "nodejs";
 
-const EMAIL = "leon@abi-orga.test";
-const PASSWORD = "LeonTestPasswort123!";
+const EMAIL = "test2@orgflow.local";
+const PASSWORD = "TestPassword123!";
 
 export async function GET(req: NextRequest) {
   const secret = process.env.ADMIN_SEED_SECRET;
   const urlSecret = req.nextUrl.searchParams.get("secret");
 
   if (!secret || !urlSecret || urlSecret !== secret) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { message: "Unauthorized. Set ADMIN_SEED_SECRET in Vercel and call ?secret=YOUR_SECRET" },
+      { status: 401 }
+    );
   }
 
   const supabase = createSupabaseServiceRoleClient();
@@ -25,12 +28,18 @@ export async function GET(req: NextRequest) {
 
     if (found) {
       await supabase.auth.admin.updateUserById(found.id, { password: PASSWORD });
-      await supabase.from("profiles").upsert(
-        { id: found.id, full_name: "Leon", role: "admin" },
-        { onConflict: "id" }
-      );
+      const { error: updateErr } = await supabase
+        .from("profiles")
+        .update({ full_name: "Test User", role: "admin" })
+        .eq("auth_user_id", found.id);
+      if (updateErr) {
+        return NextResponse.json(
+          { message: "Passwort aktualisiert, Profil-Update fehlgeschlagen.", detail: updateErr.message },
+          { status: 500 }
+        );
+      }
       return NextResponse.json({
-        message: "Test-Admin existierte bereits – Passwort und Rolle aktualisiert.",
+        message: "Test-User existierte bereits – Passwort und Rolle aktualisiert.",
         email: EMAIL,
         password: PASSWORD
       });
@@ -39,7 +48,8 @@ export async function GET(req: NextRequest) {
     const { data: created, error } = await supabase.auth.admin.createUser({
       email: EMAIL,
       password: PASSWORD,
-      email_confirm: true
+      email_confirm: true,
+      user_metadata: { full_name: "Test User" }
     });
 
     if (error || !created.user) {
@@ -49,21 +59,20 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: created.user.id,
-      full_name: "Leon",
-      role: "admin"
-    });
+    const { error: updateErr } = await supabase
+      .from("profiles")
+      .update({ full_name: "Test User", role: "admin" })
+      .eq("auth_user_id", created.user.id);
 
-    if (profileError) {
+    if (updateErr) {
       return NextResponse.json(
-        { message: "User angelegt, Profil fehlgeschlagen.", detail: profileError.message },
+        { message: "User angelegt, Profil-Update fehlgeschlagen.", detail: updateErr.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
-      message: "Test-Admin (Leon, Jahrgangssprecher) erfolgreich angelegt.",
+      message: "Test-User erfolgreich angelegt.",
       email: EMAIL,
       password: PASSWORD
     });
