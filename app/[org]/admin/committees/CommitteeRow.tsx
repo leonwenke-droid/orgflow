@@ -86,7 +86,7 @@ export default function CommitteeRow({
               onClick={() => setEditing(true)}
               className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
             >
-              Bearbeiten
+              Edit
             </button>
             <button
               type="button"
@@ -94,7 +94,7 @@ export default function CommitteeRow({
               disabled={loading}
               className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
             >
-              Löschen
+              Delete
             </button>
           </>
         )}

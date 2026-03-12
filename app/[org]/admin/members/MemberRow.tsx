@@ -180,7 +180,7 @@ export default function MemberRow({
         ) : (
           <div className="flex items-center gap-2">
             <span className="font-medium text-gray-900">{isCurrentUser ? "Du" : (member.full_name ?? "–")}</span>
-            <button type="button" onClick={() => setEditingName(true)} className="text-[10px] text-blue-600 hover:text-blue-700">Bearbeiten</button>
+            <button type="button" onClick={() => setEditingName(true)} className="text-[10px] text-blue-600 hover:text-blue-700">Edit</button>
           </div>
         )}
       </td>

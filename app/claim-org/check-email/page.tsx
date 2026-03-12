@@ -13,12 +13,12 @@ export default async function ClaimOrgCheckEmailPage({
 
   return (
     <div className="mx-auto max-w-md p-6 text-center">
-      <h1 className="text-xl font-bold text-blue-100">E-Mail prüfen</h1>
+      <h1 className="text-xl font-bold text-blue-100">Check email</h1>
       <p className="mt-4 text-sm text-blue-300">
         Wir haben dir eine Verifikations-E-Mail geschickt.
       </p>
       <p className="mt-2 text-sm text-blue-300/90">
-        Bitte prüfe dein Postfach (auch den Spam-Ordner) und klicke auf den Link in der E-Mail, um deinen Account zu bestätigen.
+        Please check your inbox (including spam folder) and click the link in the email to confirm your account.
       </p>
       <p className="mt-4 text-sm text-blue-400/90">
         Sobald du das erledigt hast, kannst du hier fortfahren:

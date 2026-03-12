@@ -122,7 +122,7 @@ export default function ShiftPlanTableWithEdit({
       <li key={a.id} className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-[11px]">
         <div className="mb-1.5 flex items-center justify-between gap-2">
           <span className="truncate font-medium text-gray-900">{name}</span>
-          <button type="button" onClick={() => { setEditingAssignmentId(null); setNotAttendedAssignmentId(null); }} className="shrink-0 text-[10px] text-gray-500 hover:text-gray-700">Schließen</button>
+          <button type="button" onClick={() => { setEditingAssignmentId(null); setNotAttendedAssignmentId(null); }} className="shrink-0 text-[10px] text-gray-500 hover:text-gray-700">Close</button>
         </div>
         <div className="mb-1.5 flex flex-wrap gap-1.5">
           <form action={async () => { await updateAssignmentStatus(a.id, "erledigt", null); setEditingAssignmentId(null); setNotAttendedAssignmentId(null); router.refresh(); }} className="inline">
@@ -260,7 +260,7 @@ export default function ShiftPlanTableWithEdit({
                             title="Delete event"
                             loadingLabel="…"
                           >
-                            Löschen
+                            Delete
                           </SubmitButtonWithSpinner>
                         </form>
                       </div>

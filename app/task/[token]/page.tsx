@@ -40,7 +40,7 @@ export default async function TaskPage({
     return (
       <div className="card max-w-xl">
         <p className="text-sm text-red-300">
-          Ungültiger Aufgabenlink.
+          Invalid task link.
         </p>
       </div>
     );
@@ -52,7 +52,7 @@ export default async function TaskPage({
     return (
       <div className="card max-w-xl">
         <p className="text-sm text-red-300">
-          Dieser Aufgabenlink ist ungültig oder abgelaufen.
+          This task link is invalid or expired.
         </p>
       </div>
     );
@@ -65,10 +65,10 @@ export default async function TaskPage({
     return (
       <div className="card max-w-xl">
         <h2 className="mb-2 text-sm font-semibold text-blue-400">
-          Persönliche Aufgabe
+          Personal task
         </h2>
         <p className="text-xs text-blue-400/80 mb-4">
-          Dieser Link ist nur für dich. Du kannst den Status ändern und bei Bedarf einen Beleg hochladen.
+          This link is for you only. You can change the status and upload proof if required.
         </p>
         <TaskConfirmationForm
           token={token}
@@ -89,10 +89,10 @@ export default async function TaskPage({
   return (
     <div className="card max-w-xl">
       <h2 className="mb-2 text-sm font-semibold text-blue-400">
-        Aufgabenlink bestätigen
+        Confirm task link
       </h2>
       <p className="text-xs text-blue-400/80 mb-4">
-        Gib einmalig deinen Namen ein, damit wir prüfen können, ob dieser Link für dich bestimmt ist.
+        Enter your name once so we can verify this link is intended for you.
       </p>
       <NameVerificationForm token={token} verifyAction={verifyTaskOwner} />
     </div>

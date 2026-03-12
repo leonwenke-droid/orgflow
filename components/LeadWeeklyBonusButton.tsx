@@ -18,7 +18,7 @@ function SubmitButton() {
       {pending ? (
         <>
           <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-blue-300 border-t-transparent" />
-          Wird ausgeführt …
+          Running …
         </>
       ) : (
         "Run weekly lead bonus now"

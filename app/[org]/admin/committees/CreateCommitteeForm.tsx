@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCommitteeAction } from "./actions";
+import Link from "next/link";
 
 type Committee = { id: string; name: string };
 
@@ -13,20 +15,35 @@ export default function CreateCommitteeForm({
   committees: Committee[];
 }) {
   const router = useRouter();
+  const [limitError, setLimitError] = useState<string | null>(null);
 
   async function handleSubmit(formData: FormData) {
+    setLimitError(null);
     const name = formData.get("name")?.toString()?.trim();
     if (!name) return;
     const { error } = await createCommitteeAction(orgSlug, name);
     if (error) {
-      alert(error);
+      if (error.includes("limit")) {
+        setLimitError(error);
+      } else {
+        alert(error);
+      }
       return;
     }
     router.refresh();
   }
 
   return (
-    <form action={handleSubmit} className="mt-6 flex gap-2">
+    <form action={handleSubmit} className="mt-6 flex flex-col gap-2">
+      {limitError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+          <p className="font-medium">{limitError}</p>
+          <Link href="/#pricing" className="mt-2 inline-block text-blue-600 underline hover:text-blue-700 dark:text-blue-400">
+            View pricing & upgrade →
+          </Link>
+        </div>
+      )}
+      <div className="flex gap-2">
       <input
         type="text"
         name="name"
@@ -38,8 +55,9 @@ export default function CreateCommitteeForm({
         type="submit"
         className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
       >
-        Anlegen
+        Create
       </button>
+      </div>
     </form>
   );
 }

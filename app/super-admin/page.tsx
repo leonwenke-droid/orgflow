@@ -33,7 +33,7 @@ export default async function SuperAdminDashboard() {
       <div className="mx-auto max-w-md p-6 text-center">
         <h1 className="text-xl font-bold text-blue-100">Keine Berechtigung</h1>
         <p className="mt-3 text-sm text-blue-300">
-          Du hast keine Berechtigung für den Super-Admin-Bereich. Dieser Bereich ist nur für den technischen Administrator.
+          You do not have permission for the Super Admin area. This area is for the technical administrator only.
         </p>
         <Link
           href="/"

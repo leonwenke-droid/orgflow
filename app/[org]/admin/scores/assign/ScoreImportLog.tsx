@@ -62,7 +62,7 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
         </p>
       )}
       <p className="mb-4 text-xs text-gray-600">
-        Wann, wie viele Punkte, an wen, Begründung und Vergeber.
+        When, how many points, to whom, reason and assigner.
       </p>
       <div className="overflow-x-auto">
         <table className="min-w-full text-xs border-collapse">
@@ -71,7 +71,7 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
               <th className="py-2 pr-4 font-medium">Datum & Uhrzeit</th>
               <th className="py-2 pr-4 font-medium">Empfänger</th>
               <th className="py-2 pr-4 font-medium text-right">Punkte</th>
-              <th className="py-2 pr-4 font-medium">Begründung</th>
+              <th className="py-2 pr-4 font-medium">Reason</th>
               <th className="py-2 pr-4 font-medium">Vergeber</th>
               <th className="py-2 w-16 text-right font-medium">Aktion</th>
             </tr>

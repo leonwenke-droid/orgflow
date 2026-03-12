@@ -108,8 +108,8 @@ export default function AuthCallbackClient({
   if (status === "loading") {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <p className="text-sm text-blue-300">Anmeldung wird abgeschlossen …</p>
-        <p className="mt-2 text-xs text-blue-500">Du wirst gleich weitergeleitet.</p>
+        <p className="text-sm text-blue-300">Signing in …</p>
+        <p className="mt-2 text-xs text-blue-500">You will be redirected shortly.</p>
       </div>
     );
   }

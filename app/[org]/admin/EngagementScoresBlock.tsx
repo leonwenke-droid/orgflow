@@ -97,7 +97,7 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
               ) : (
                 <tr>
                   <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
-                    Noch keine Engagement-Daten verfügbar.
+                    No engagement data available yet.
                   </td>
                 </tr>
               )}

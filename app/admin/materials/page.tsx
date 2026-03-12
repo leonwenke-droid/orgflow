@@ -41,7 +41,7 @@ async function addMaterialProcurement(
   const size = formData.get("size")?.toString() as "small" | "medium" | "large" | null;
 
   if (!userIds.length || !eventName || !description || !size || !["small", "medium", "large"].includes(size)) {
-    return { error: "Mindestens eine Person, Event, Beschreibung und Größe sind erforderlich." };
+    return { error: "At least one person, event, description and size are required." };
   }
 
   const orgId = (profile as { organization_id?: string | null }).organization_id ?? null;
@@ -50,7 +50,7 @@ async function addMaterialProcurement(
   const validProfileIds = new Set((await profilesQuery).data?.map((p) => p.id) ?? []);
   const validUserIds = userIds.filter((id) => validProfileIds.has(id));
   if (validUserIds.length === 0) {
-    return { error: "Keine gültigen Personen ausgewählt." };
+    return { error: "No valid persons selected." };
   }
 
   const { data: material, error: matError } = await service
@@ -156,7 +156,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
   if (!profile || !["admin", "lead", "super_admin"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300">
-        Zugriff nur für Admins & Komiteeleitungen.
+        Access only for admins & team leads.
       </p>
     );
   }
@@ -242,7 +242,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                 <th className="p-3 text-left text-xs font-semibold text-gray-500">Personen</th>
                 <th className="p-3 text-left text-xs font-semibold text-gray-500">Event</th>
                 <th className="p-3 text-left text-xs font-semibold text-gray-500">Was besorgt</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500">Größe</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500">Size</th>
                 <th className="p-3 text-left text-xs font-semibold text-gray-500">Punkte</th>
                 <th className="w-20 p-3 text-left text-xs font-semibold text-gray-500"></th>
               </tr>
@@ -251,7 +251,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
               {materialsForOrg.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-6 text-center text-gray-500">
-                    Noch keine Einträge.
+                    No entries yet.
                   </td>
                 </tr>
               ) : (

@@ -69,7 +69,7 @@ export default function LeadSetupClient({
       if (cancelled) return;
       if (!session) {
         setStatus("error");
-        setErrorMessage("Der Einladungslink ist ungültig oder abgelaufen. Bitte lass dir eine neue Einladung senden.");
+        setErrorMessage("The invite link is invalid or expired. Please request a new invitation.");
         return;
       }
       setStatus("form");
@@ -89,11 +89,11 @@ export default function LeadSetupClient({
     const pw = password.trim();
     const pw2 = passwordRepeat.trim();
     if (!pw || pw.length < 6) {
-      setErrorMessage("Passwort muss mindestens 6 Zeichen lang sein.");
+      setErrorMessage("Password muss mindestens 6 Zeichen lang sein.");
       return;
     }
     if (pw !== pw2) {
-      setErrorMessage("Die beiden Passwörter stimmen nicht überein.");
+      setErrorMessage("The two passwords do not match.");
       return;
     }
 
@@ -127,13 +127,13 @@ export default function LeadSetupClient({
 
   return (
     <div className="mx-auto max-w-md rounded-xl border border-blue-500/30 bg-card/80 p-6 shadow-lg">
-      <h1 className="text-lg font-semibold text-blue-100">Passwort festlegen</h1>
+      <h1 className="text-lg font-semibold text-blue-100">Set password</h1>
       <p className="mt-1 text-xs text-blue-300">
-        Bitte lege ein Passwort für deinen Zugang fest. Danach wirst du direkt zum Admin-Dashboard weitergeleitet.
+        Please set a password for your account. You will then be redirected to the admin dashboard.
       </p>
       <form onSubmit={handleSubmit} className="mt-4 space-y-3 text-sm">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-blue-400">Passwort</label>
+          <label className="mb-1 block text-xs font-semibold text-blue-400">Password</label>
           <input
             type="password"
             value={password}
@@ -144,7 +144,7 @@ export default function LeadSetupClient({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-blue-400">Passwort wiederholen</label>
+          <label className="mb-1 block text-xs font-semibold text-blue-400">Repeat password</label>
           <input
             type="password"
             value={passwordRepeat}
@@ -160,7 +160,7 @@ export default function LeadSetupClient({
           disabled={status === "saving"}
           className="w-full rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {status === "saving" ? "Wird gespeichert …" : "Passwort speichern & weiter"}
+          {status === "saving" ? "Wird gespeichert …" : "Password speichern & weiter"}
         </button>
       </form>
     </div>

@@ -17,8 +17,8 @@ export default async function ClaimOrgPage({
   if (!token) {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="text-xl font-bold text-blue-100">Ungültiger Link</h1>
-        <p className="mt-2 text-sm text-blue-300">Es wurde kein gültiger Einrichtungs-Link angegeben.</p>
+        <h1 className="text-xl font-bold text-blue-100">Invalid link</h1>
+        <p className="mt-2 text-sm text-blue-300">No valid setup link was provided.</p>
       </div>
     );
   }
@@ -35,8 +35,8 @@ export default async function ClaimOrgPage({
   if (error || !org) {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="text-xl font-bold text-blue-100">Link ungültig oder bereits verwendet</h1>
-        <p className="mt-2 text-sm text-blue-300">Dieser Einrichtungs-Link ist abgelaufen oder wurde schon genutzt.</p>
+        <h1 className="text-xl font-bold text-blue-100">Link invalid or already used</h1>
+        <p className="mt-2 text-sm text-blue-300">This setup link has expired or has already been used.</p>
       </div>
     );
   }
@@ -46,7 +46,7 @@ export default async function ClaimOrgPage({
 
   return (
     <div className="mx-auto max-w-md p-6">
-      <h1 className="text-xl font-bold text-blue-100">Organisation übernehmen</h1>
+      <h1 className="text-xl font-bold text-blue-100">Take over organization</h1>
       <p className="mt-2 text-sm text-blue-300">
         {org.name}
       </p>

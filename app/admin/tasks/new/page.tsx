@@ -83,7 +83,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
   if (!userId) {
     return (
       <p className="text-sm text-amber-300">
-        Session nicht erkannt. Bitte <a href="/" className="underline">einloggen</a> (über dein Jahrgangs-Admin).
+        Session not recognised. Please <a href="/" className="underline">sign in</a> (via your cohort admin).
       </p>
     );
   }

@@ -32,7 +32,7 @@ export default async function OrgCreatedPage({
         <div className="rounded-lg border border-green-500/40 bg-green-500/5 p-6">
           <h1 className="text-xl font-bold text-blue-100">Organisation erstellt</h1>
           <p className="mt-2 text-sm text-blue-300">
-            Teile diesen Link mit der berechtigten Person. Sie kann damit die Organisation übernehmen und sich als Admin anlegen bzw. einloggen.
+            Share this link with the authorised person. They can use it to take over the organization and sign up or sign in as admin.
           </p>
           <div className="mt-4 rounded bg-black/20 p-3 font-mono text-sm text-blue-200 break-all">
             {claimUrl}
@@ -46,7 +46,7 @@ export default async function OrgCreatedPage({
             href="/super-admin"
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           >
-            Zurück zum Super-Admin
+            Back to Super Admin
           </Link>
         </div>
       </div>

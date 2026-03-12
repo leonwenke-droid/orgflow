@@ -154,7 +154,7 @@ export default async function AdminTasksPage(props: PageProps) {
                 .map((t) => (
                   <article
                     key={t.id}
-                    className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm"
+                    className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm dark:border-gray-700 dark:bg-card-dark"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div>
@@ -174,18 +174,18 @@ export default async function AdminTasksPage(props: PageProps) {
                         <span className="text-gray-500">
                           {t.proof_required
                             ? t.proof_url
-                              ? "Beleg vorhanden"
-                              : "Beleg fehlt"
-                            : "Beleg optional"}
+                              ? "Proof uploaded"
+                              : "Proof missing"
+                            : "Proof optional"}
                         </span>
                       </div>
                     </div>
                     <div className="mt-1.5 space-y-0.5 text-[10px] text-gray-600">
                       <p>
-                        Ausgestellt von: {t.created_by ? profileNames.get(t.created_by) ?? "–" : "–"}
+                        Created by: {t.created_by ? profileNames.get(t.created_by) ?? "–" : "–"}
                       </p>
                       <p>
-                        Zugewiesen an: {t.owner_id ? profileNames.get(t.owner_id) ?? "–" : "Unzugewiesen"}
+                        Assigned to: {t.owner_id ? profileNames.get(t.owner_id) ?? "–" : "Unassigned"}
                       </p>
                     </div>
                     {t.description && (
@@ -218,10 +218,10 @@ export default async function AdminTasksPage(props: PageProps) {
                         <input type="hidden" name="taskId" value={t.id} />
                         <SubmitButtonWithSpinner
                           className="inline-flex items-center gap-1.5 rounded bg-red-100 px-2 py-0.5 text-[9px] text-red-600 hover:bg-red-200 disabled:opacity-70"
-                          title="Aufgabe entfernen"
+                          title="Remove task"
                           loadingLabel="…"
                         >
-                          Entfernen
+                          Remove
                         </SubmitButtonWithSpinner>
                       </form>
                     </div>

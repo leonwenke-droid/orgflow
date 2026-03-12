@@ -30,10 +30,10 @@ function SubmitButton() {
             className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-300 border-t-transparent"
             aria-hidden
           />
-          Erfassen …
+          Recording …
         </>
       ) : (
-        "Erfassen"
+        "Record"
       )}
     </button>
   );
@@ -74,7 +74,7 @@ export default function AddMaterialForm({
         <table className="mt-1.5 w-full text-left">
           <thead>
             <tr className="text-gray-500">
-              <th className="py-0.5">Größe</th>
+              <th className="py-0.5">Size</th>
               <th className="py-0.5">Punkte</th>
               <th className="py-0.5">Beispiele</th>
             </tr>
@@ -103,7 +103,7 @@ export default function AddMaterialForm({
                 required={idx === 0}
                 className="min-w-0 flex-1 rounded border border-gray-300 bg-white p-2 text-sm text-gray-900"
               >
-                <option value="">Auswählen …</option>
+                <option value="">Select …</option>
                 {profiles.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.full_name ?? "(ohne Namen)"}
@@ -143,7 +143,7 @@ export default function AddMaterialForm({
         </div>
         <div className="space-y-1">
           <label className="block text-xs font-semibold text-gray-700">
-            Größe & Punkte
+            Size & points
           </label>
           <select
             name="size"

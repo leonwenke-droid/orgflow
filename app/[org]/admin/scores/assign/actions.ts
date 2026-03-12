@@ -21,7 +21,7 @@ export async function assignPoints(
   }
   const trimmedReason = String(reason ?? "").trim();
   if (!trimmedReason) {
-    return { error: "Begründung ist erforderlich." };
+    return { error: "Reason is required." };
   }
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY

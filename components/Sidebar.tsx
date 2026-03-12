@@ -101,6 +101,10 @@ export default function Sidebar({
       return (pathname === "/admin/materials" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/materials`);
     if (href.includes("/admin/treasury"))
       return (pathname === "/admin/treasury" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/treasury`);
+    if (href.includes("/admin/tasks"))
+      return (pathname === "/admin/tasks" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/tasks`);
+    if (href.includes("/admin/shifts"))
+      return (pathname === "/admin/shifts" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/shifts`);
     return pathname === href || (href !== `/${orgSlug}/dashboard` && pathname.startsWith(href));
   };
 

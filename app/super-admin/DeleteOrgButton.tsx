@@ -48,7 +48,7 @@ export default function DeleteOrgButton({
             Organisation wirklich entfernen?
           </p>
           <p className="mt-1 text-xs text-blue-400/80">
-            Zum Bestätigen bitte den exakten Organisationsnamen eingeben:{" "}
+            To confirm, please enter the exact organization name:{" "}
             <strong className="text-blue-200">{orgName}</strong>
           </p>
           <input
@@ -65,7 +65,7 @@ export default function DeleteOrgButton({
               disabled={loading || confirmation.trim() !== orgName}
               className="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
             >
-              {loading ? "Wird entfernt…" : "Endgültig entfernen"}
+              {loading ? "Removing…" : "Permanently remove"}
             </button>
             <button
               type="button"

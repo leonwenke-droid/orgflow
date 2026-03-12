@@ -38,7 +38,7 @@ export default function AssignPointsForm({
       setMessage({ type: "error", text: result.error });
       return;
     }
-    setMessage({ type: "ok", text: "Punkte wurden vergeben." });
+    setMessage({ type: "ok", text: "Points assigned." });
     setPoints("");
     setReason("");
   }
@@ -47,7 +47,7 @@ export default function AssignPointsForm({
     <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div>
         <label className="mb-1 block text-xs font-semibold text-gray-700">
-          Mitglied
+          Member
         </label>
         <select
           required
@@ -55,7 +55,7 @@ export default function AssignPointsForm({
           onChange={(e) => setProfileId(e.target.value)}
           className="w-full rounded border border-gray-300 bg-white p-2 text-sm"
         >
-          <option value="">— wählen —</option>
+          <option value="">— select —</option>
           {members.map((m) => (
             <option key={m.id} value={m.id}>
               {m.full_name}
@@ -65,20 +65,20 @@ export default function AssignPointsForm({
       </div>
       <div>
         <label className="mb-1 block text-xs font-semibold text-gray-700">
-          Punkte (positiv oder negativ)
+          Points (positive or negative)
         </label>
         <input
           type="number"
           required
           value={points}
           onChange={(e) => setPoints(e.target.value)}
-          placeholder="z. B. 10 oder -5"
+          placeholder="e.g. 10 or -5"
           className="w-full rounded border border-gray-300 bg-white p-2 text-sm"
         />
       </div>
       <div>
         <label className="mb-1 block text-xs font-semibold text-gray-700">
-          Begründung <span className="text-gray-500">(Pflicht)</span>
+          Reason <span className="text-gray-500">(required)</span>
         </label>
         <textarea
           required
@@ -99,7 +99,7 @@ export default function AssignPointsForm({
         disabled={loading}
         className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {loading ? "Wird gespeichert…" : "Punkte vergeben"}
+        {loading ? "Saving…" : "Assign points"}
       </button>
     </form>
   );

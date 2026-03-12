@@ -25,7 +25,7 @@ export async function createCommitteeAction(
     .select("*", { count: "exact", head: true })
     .eq("organization_id", orgIdForData);
   if (!canAddTeam(org.plan, count ?? 0)) {
-    return { error: "Team limit reached for your plan. Upgrade to add more teams." };
+    return { error: "Team limit reached for your plan. Upgrade to Team or Pro to add more teams." };
   }
   const { error } = await supabase.from("committees").insert({
     name: trimmed,

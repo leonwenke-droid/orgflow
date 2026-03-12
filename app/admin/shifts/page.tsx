@@ -737,17 +737,17 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         Shifts & auto-assignment
       </h2>
       <section className="card space-y-2 text-xs sm:space-y-3">
-        <h3 className="text-xs font-semibold text-gray-700">Neue Schichten</h3>
+        <h3 className="text-xs font-semibold text-gray-700">New shifts</h3>
         <p className="hidden text-[11px] text-gray-600 sm:block">
           Break sales (1st + 2nd break) or single event.
         </p>
         <CreateShiftsForm action={createShifts} organizationId={orgId ?? undefined} />
       </section>
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3">
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Schichtplan</h3>
-            <p className="mt-0.5 text-[11px] text-gray-600">Vergangene Schichten: Antreten bestätigen oder Ersatz eintragen.</p>
+            <h3 className="text-sm font-semibold text-gray-900">Shift plan</h3>
+            <p className="mt-0.5 text-[11px] text-gray-600">Past shifts: confirm attendance or enter replacement.</p>
           </div>
           {shifts && shifts.length > 0 && (
             <ShiftAttendancePdfExport

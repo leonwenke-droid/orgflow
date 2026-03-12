@@ -5,7 +5,7 @@
 export type Plan = "free" | "team" | "pro";
 
 export const PLAN_LIMITS: Record<Plan, { members: number; teams: number }> = {
-  free: { members: 10, teams: 1 },
+  free: { members: 25, teams: 5 },
   team: { members: 50, teams: 10 },
   pro: { members: Infinity, teams: Infinity },
 };

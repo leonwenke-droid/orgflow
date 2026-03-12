@@ -226,7 +226,7 @@ export default function ShiftEditModal({
                     )}
                     <form action={async (fd: FormData) => { const uid = fd.get("user_id")?.toString(); if (uid) { await assignToShift(s.id, fd); onRefresh?.(); } }} className="flex items-center gap-2">
                       <select name="user_id" className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] flex-1 min-w-0">
-                        <option value="">Hinzufügen …</option>
+                        <option value="">Add …</option>
                         {members.filter((m) => !aList.some((a) => a.user_id === m.id)).map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
                       </select>
                       <SubmitButtonWithSpinner className="rounded shrink-0 bg-blue-100 px-2 py-0.5 text-[10px] text-blue-700" loadingLabel="…">+</SubmitButtonWithSpinner>
@@ -301,7 +301,7 @@ export default function ShiftEditModal({
                 name="user_id"
                 className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[11px]"
               >
-                <option value="">Hinzufügen …</option>
+                <option value="">Add …</option>
                 {members
                   .filter((m) => !assignments.some((a) => a.user_id === m.id))
                   .map((m) => (
@@ -314,7 +314,7 @@ export default function ShiftEditModal({
                 className="inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 hover:bg-blue-200 disabled:opacity-70"
                 loadingLabel="Adding…"
               >
-                Hinzufügen
+                Add
               </SubmitButtonWithSpinner>
             </form>
           </div>
