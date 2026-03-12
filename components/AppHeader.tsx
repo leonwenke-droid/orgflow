@@ -1,21 +1,25 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Suspense } from "react";
 import type { User } from "@supabase/supabase-js";
-import HeaderNav from "./HeaderNav";
+import { Menu } from "lucide-react";
+import FullPageLink from "./FullPageLink";
+import LogoutButton from "./LogoutButton";
 
 const RESERVED = ["admin", "dashboard", "login", "super-admin", "task", "api", "claim-org", "auth", "create-organisation", "join"];
 
 function useOrgSlug(): string | null {
   const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
   const segments = pathname.split("/").filter(Boolean);
-  if (segments.length >= 1 && !RESERVED.includes(segments[0])) return segments[0];
-  return null;
+  const orgFromPath = segments.length >= 1 && !RESERVED.includes(segments[0]) ? segments[0] : null;
+  const orgFromQuery = searchParams?.get("org")?.trim() || null;
+  return orgFromPath || orgFromQuery;
 }
 
-export default function AppHeader({ user }: { user: User | null }) {
+export default function AppHeader({ user, onMenuOpen }: { user: User | null; onMenuOpen?: () => void }) {
   const pathname = usePathname() ?? "";
   const orgSlug = useOrgSlug();
   const [orgName, setOrgName] = useState<string | null>(null);
@@ -38,19 +42,40 @@ export default function AppHeader({ user }: { user: User | null }) {
   // Hide header on landing, auth, claim and create-organisation
   if (pathname === "/" || pathname.startsWith("/auth") || pathname.startsWith("/claim-org") || pathname.startsWith("/create-organisation") || pathname.startsWith("/join")) return null;
 
+  const logoutReturnTo = pathname.startsWith("/super-admin")
+    ? "/login?redirectTo=/super-admin"
+    : orgSlug ? `/${orgSlug}/dashboard` : "/";
+
   return (
     <header className="mb-6 flex items-center justify-between" role="banner">
-      <div>
+      <div className="flex items-center gap-3">
+        {onMenuOpen && (
+          <button
+            type="button"
+            onClick={onMenuOpen}
+            className="lg:hidden rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
         <h1 className="text-xl font-semibold tracking-tight text-gray-900">
           {orgName ? `OrgFlow – ${orgName}` : "OrgFlow"}
         </h1>
-        <p className="text-xs text-gray-500">
-          Tasks, shifts & finances.
-        </p>
       </div>
-        <Suspense fallback={<div className="h-9 w-32 animate-pulse rounded-lg bg-gray-200" />}>
-        <HeaderNav user={user} />
-      </Suspense>
+      <div className="flex items-center gap-2">
+        {!user && orgSlug && (
+          <FullPageLink
+            href={`/${orgSlug}/login`}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+          >
+            Sign in
+          </FullPageLink>
+        )}
+        {user && !pathname.startsWith("/auth") && !pathname.startsWith("/claim-org") && (
+          <LogoutButton returnTo={logoutReturnTo} />
+        )}
+      </div>
     </header>
   );
 }

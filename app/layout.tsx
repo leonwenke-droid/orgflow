@@ -2,7 +2,7 @@ import "./globals.css";
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import AppHeader from "../components/AppHeader";
+import AppShell from "../components/AppShell";
 import ToastContainer from "../components/Toast";
 
 export const metadata = {
@@ -47,8 +47,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="en">
       <body className="min-h-screen bg-background text-foreground">
         <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-6">
-          <AppHeader user={user} />
-          <main className="flex-1 pb-10">{children}</main>
+          <AppShell user={user}>
+            <main className="flex-1 pb-10">{children}</main>
+          </AppShell>
           <ToastContainer />
           <footer className="mt-8 border-t border-gray-200 pt-4 text-xs text-gray-500">
             <a
