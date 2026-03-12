@@ -23,7 +23,7 @@ export default function ToastContainer() {
               ? "border-green-200 bg-green-50 text-green-800"
               : t.type === "error"
                 ? "border-red-200 bg-red-50 text-red-800"
-                : "border-blue-200 bg-blue-50 text-blue-800"
+                : "border-gray-200 bg-gray-50 text-gray-800"
           }`}
         >
           {t.type === "success" && <CheckCircle2 className="h-5 w-5 flex-shrink-0" />}

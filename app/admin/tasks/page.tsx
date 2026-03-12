@@ -203,7 +203,7 @@ export default async function AdminTasksPage(props: PageProps) {
                             href={t.proof_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rounded bg-blue-100 px-2 py-0.5 text-blue-700 hover:bg-blue-200"
+                            className="rounded bg-gray-100 px-2 py-0.5 text-gray-700 hover:bg-gray-200"
                           >
                             Beweis ansehen
                           </a>

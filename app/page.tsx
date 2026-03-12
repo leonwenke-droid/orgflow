@@ -201,7 +201,7 @@ export default async function LandingPage() {
           </p>
           <div className="grid md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 rounded-full bg-gray-200 text-gray-700 font-bold flex items-center justify-center mx-auto mb-4">
                 1
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">Create organisation</h4>
@@ -210,7 +210,7 @@ export default async function LandingPage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 rounded-full bg-gray-200 text-gray-700 font-bold flex items-center justify-center mx-auto mb-4">
                 2
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">Add teams</h4>
@@ -219,7 +219,7 @@ export default async function LandingPage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 rounded-full bg-gray-200 text-gray-700 font-bold flex items-center justify-center mx-auto mb-4">
                 3
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">Invite members</h4>
@@ -228,7 +228,7 @@ export default async function LandingPage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 rounded-full bg-gray-200 text-gray-700 font-bold flex items-center justify-center mx-auto mb-4">
                 4
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">Start coordinating</h4>
@@ -349,7 +349,7 @@ export default async function LandingPage() {
           <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
             Ready to organise your team?
           </h3>
-          <p className="text-lg text-blue-100 mb-8">
+          <p className="text-lg text-blue-50 mb-8">
             Join schools, sports clubs, volunteer groups and event crews already
             using OrgFlow.
           </p>
@@ -379,7 +379,7 @@ export default async function LandingPage() {
                 <Link
                   key={org.id}
                   href={`/${org.slug}/dashboard`}
-                  className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-200 hover:shadow-md transition-all flex flex-col gap-2"
+                  className="bg-white border border-gray-200 rounded-xl p-5 hover:border-gray-300 hover:shadow-md transition-all flex flex-col gap-2"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>

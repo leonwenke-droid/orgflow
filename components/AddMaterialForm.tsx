@@ -124,7 +124,7 @@ export default function AddMaterialForm({
           <button
             type="button"
             onClick={addPerson}
-            className="text-xs text-blue-600 hover:underline hover:text-blue-700"
+            className="text-xs text-gray-600 hover:underline hover:text-gray-900"
           >
             + Weitere Person hinzufügen
           </button>

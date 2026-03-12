@@ -288,7 +288,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                             ? "bg-green-100 text-green-700"
                             : m.size === "medium"
                             ? "bg-amber-100 text-amber-700"
-                            : "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-700"
                         }`}
                       >
                         {m.size === "small" ? "Klein" : m.size === "medium" ? "Mittel" : "Groß"}
