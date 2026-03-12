@@ -12,21 +12,21 @@ export default function AdminBreadcrumb({ orgSlug, currentLabel }: Props) {
     <nav className="mb-4 flex items-center gap-2 text-sm" aria-label="Breadcrumb">
       <Link
         href={`/${orgSlug}/dashboard`}
-        className="text-cyan-400 transition hover:text-cyan-300"
+        className="text-gray-600 transition hover:text-gray-900"
       >
         Dashboard
       </Link>
-      <span className="text-cyan-500/60" aria-hidden>·</span>
+      <span className="text-gray-400" aria-hidden>·</span>
       <Link
         href={`/${orgSlug}/admin`}
-        className="text-cyan-400 transition hover:text-cyan-300"
+        className="text-gray-600 transition hover:text-gray-900"
       >
         Admin
       </Link>
       {currentLabel && (
         <>
-          <span className="text-cyan-500/60" aria-hidden>·</span>
-          <span className="text-cyan-200">{currentLabel}</span>
+          <span className="text-gray-400" aria-hidden>·</span>
+          <span className="text-gray-900">{currentLabel}</span>
         </>
       )}
     </nav>

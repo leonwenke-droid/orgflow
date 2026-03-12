@@ -16,10 +16,10 @@ function formatAssignments(
         const name = a.user_id ? (profileNames[a.user_id] ?? "–") : "–";
         const rep = a.replacement_user_id ? (profileNames[a.replacement_user_id] ?? "–") : null;
         let inner: React.ReactNode;
-        if (a.status === "erledigt") inner = <span className="text-green-300/90">✓ {name}</span>;
-        else if (a.status === "abgesagt") inner = <><span className="text-red-400/90">✗ </span><span className={rep ? "text-red-200/80" : "line-through text-cyan-400/50"}>{name}</span>{rep ? <span className="text-cyan-300/90"> ({rep})</span> : null}</>;
-        else inner = <span className="text-amber-300/90">{name}</span>;
-        return <span key={a.id}>{i > 0 && <span className="text-cyan-500/50 mx-0.5">·</span>}{inner}</span>;
+        if (a.status === "erledigt") inner = <span className="text-green-600">✓ {name}</span>;
+        else if (a.status === "abgesagt") inner = <><span className="text-red-500">✗ </span><span className={rep ? "text-red-600" : "line-through text-gray-400"}>{name}</span>{rep ? <span className="text-gray-600"> ({rep})</span> : null}</>;
+        else inner = <span className="text-amber-600">{name}</span>;
+        return <span key={a.id}>{i > 0 && <span className="mx-0.5 text-gray-400">·</span>}{inner}</span>;
       })}
     </span>
   );
@@ -149,7 +149,7 @@ export default function ShiftPlanWeekNav({
 
   if (!week) {
     return (
-      <p className="text-xs text-cyan-400/70">Keine Schichten in diesem Zeitraum.</p>
+      <p className="text-xs text-gray-500">Keine Schichten in diesem Zeitraum.</p>
     );
   }
 
@@ -164,38 +164,38 @@ export default function ShiftPlanWeekNav({
     const hasShifts = day.shifts.length > 0;
     return (
       <>
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
-          <p className={`text-[11px] font-semibold ${isToday ? "text-cyan-300" : "text-cyan-400/90"}`}>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <p className={`text-[11px] font-semibold ${isToday ? "text-blue-600" : "text-gray-600"}`}>
             {day.weekdayName} {day.dateStr.slice(8, 10)}.{day.dateStr.slice(5, 7)}.
           </p>
           {isToday && (
-            <span className="rounded bg-cyan-500/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-cyan-200">
+            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-blue-600">
               Heute
             </span>
           )}
         </div>
         {!hasShifts ? (
-          <p className="mt-1 text-[11px] text-cyan-400/50">–</p>
+          <p className="mt-1 text-[11px] text-gray-400">–</p>
         ) : (
           <>
-            <div className="mt-1 border-t border-cyan-500/15 pt-1.5 space-y-1">
+            <div className="mt-1 space-y-1 border-t border-gray-100 pt-1.5">
               {day.dayTitle && (
-                <p className="text-[10px] font-medium text-cyan-200/90 line-clamp-2">
+                <p className="line-clamp-2 text-[10px] font-medium text-gray-700">
                   {day.dayTitle}</p>
               )}
               {day.location && (
-                <p className="text-[10px] text-cyan-400/70">Ort: {day.location}</p>
+                <p className="text-[10px] text-gray-500">Ort: {day.location}</p>
               )}
               {day.notes && (
-                <p className="text-[10px] text-cyan-200/70 line-clamp-2" title={day.notes}>
+                <p className="line-clamp-2 text-[10px] text-gray-600" title={day.notes}>
                   {day.notes}</p>
               )}
             </div>
             <div className="mt-2 space-y-1">
               {day.shifts.map((s) => (
-                <div key={s.id} className="rounded bg-card/50 px-1.5 py-1 text-[10px]">
-                  <span className="text-cyan-400">{slotLabel(s)}</span>
-                  <div className="ml-1 text-cyan-200">
+                <div key={s.id} className="rounded bg-gray-50 px-1.5 py-1 text-[10px]">
+                  <span className="text-gray-700">{slotLabel(s)}</span>
+                  <div className="ml-1 text-gray-600">
                     {s.assignments?.length > 0
                       ? formatAssignments(s.assignments, profileNames)
                       : "–"}
@@ -216,19 +216,19 @@ export default function ShiftPlanWeekNav({
           type="button"
           onClick={() => setWeekIndex((i) => Math.max(0, i - 1))}
           disabled={!canGoLeft}
-          className="rounded-lg border border-cyan-500/40 bg-card/60 p-2 text-cyan-400 hover:bg-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Vorherige Woche"
         >
           ←
         </button>
-        <h3 className="flex-1 text-center text-xs font-semibold uppercase tracking-wide text-cyan-400/90">
+        <h3 className="flex-1 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">
           Woche {weekLabel}
         </h3>
         <button
           type="button"
           onClick={() => setWeekIndex((i) => Math.min(weeks.length - 1, i + 1))}
           disabled={!canGoRight}
-          className="rounded-lg border border-cyan-500/40 bg-card/60 p-2 text-cyan-400 hover:bg-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Nächste Woche"
         >
           →
@@ -248,16 +248,16 @@ export default function ShiftPlanWeekNav({
               }
             }}
             disabled={!canDayLeft}
-            className="shrink-0 rounded-xl border border-cyan-500/40 bg-card/60 p-3 text-cyan-400 hover:bg-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+            className="shrink-0 rounded-xl border border-gray-300 bg-white p-3 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation"
             aria-label="Vorheriger Tag"
           >
             ←
           </button>
-          <div className="flex-1 min-w-0 text-center">
-            <p className="text-base font-semibold text-cyan-200 truncate">
+          <div className="min-w-0 flex-1 text-center">
+            <p className="truncate text-base font-semibold text-gray-900">
               {currentDay && formatDateLabel(currentDay.dateStr, { weekday: "long" })}
             </p>
-            <p className="text-xs text-cyan-400/80 mt-0.5">
+            <p className="mt-0.5 text-xs text-gray-500">
               {currentDay && `${currentDay.dateStr.slice(8, 10)}.${currentDay.dateStr.slice(5, 7)}.${currentDay.dateStr.slice(0, 4)}`}
             </p>
           </div>
@@ -271,7 +271,7 @@ export default function ShiftPlanWeekNav({
               }
             }}
             disabled={!canDayRight}
-            className="shrink-0 rounded-xl border border-cyan-500/40 bg-card/60 p-3 text-cyan-400 hover:bg-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed touch-manipulation"
+            className="shrink-0 rounded-xl border border-gray-300 bg-white p-3 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation"
             aria-label="Nächster Tag"
           >
             →
@@ -285,14 +285,14 @@ export default function ShiftPlanWeekNav({
             onKeyDown={(e) =>
               currentDay.shifts.length > 0 && (e.key === "Enter" || e.key === " ") && setOverlayDay(currentDay)
             }
-            className={`rounded-xl border-2 p-4 flex flex-col text-left relative ${
+            className={`relative flex flex-col rounded-xl border-2 p-4 text-left ${
               currentDay.dateStr === todayStr
-                ? "border-cyan-400/70 bg-cyan-500/15 ring-2 ring-cyan-400/25"
-                : "border-cyan-500/25 bg-card/50"
-            } ${currentDay.shifts.length > 0 ? "cursor-pointer active:bg-card/70" : ""}`}
+                ? "border-blue-400 bg-blue-50/50 ring-2 ring-blue-200"
+                : "border-gray-200 bg-white"
+            } ${currentDay.shifts.length > 0 ? "cursor-pointer active:bg-gray-50" : ""}`}
           >
             {currentDay.dateStr === todayStr && (
-              <span className="absolute top-3 right-12 rounded-md bg-cyan-500/30 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-cyan-200">
+              <span className="absolute right-12 top-3 rounded-md bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-600">
                 Heute
               </span>
             )}
@@ -304,7 +304,7 @@ export default function ShiftPlanWeekNav({
                   setExportFormat("png");
                   setExportDay(currentDay);
                 }}
-                className="absolute top-3 right-3 rounded-lg p-2 text-cyan-400/90 hover:text-cyan-300 hover:bg-cyan-500/20 touch-manipulation"
+                className="absolute right-3 top-3 rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 touch-manipulation"
                 title="Als Bild herunterladen"
                 aria-label="Als Bild herunterladen"
               >
@@ -313,38 +313,38 @@ export default function ShiftPlanWeekNav({
             )}
 
             {!currentDay.shifts.length ? (
-              <p className="text-sm text-cyan-400/70 py-2">Keine Schichten eingetragen.</p>
+              <p className="py-2 text-sm text-gray-500">Keine Schichten eingetragen.</p>
             ) : (
               <div className="space-y-4">
                 {(currentDay.dayTitle || currentDay.location || currentDay.notes) && (
-                  <div className="space-y-1.5 pb-3 border-b border-cyan-500/20">
+                  <div className="space-y-1.5 border-b border-gray-200 pb-3">
                     {currentDay.dayTitle && (
-                      <p className="text-sm font-medium text-cyan-200">{currentDay.dayTitle}</p>
+                      <p className="text-sm font-medium text-gray-900">{currentDay.dayTitle}</p>
                     )}
                     {currentDay.location && (
-                      <p className="text-xs text-cyan-400/90">📍 {currentDay.location}</p>
+                      <p className="text-xs text-gray-600">📍 {currentDay.location}</p>
                     )}
                     {currentDay.notes && (
-                      <p className="text-xs text-cyan-300/80 leading-snug" title={currentDay.notes}>
+                      <p className="leading-snug text-xs text-gray-600" title={currentDay.notes}>
                         {currentDay.notes}
                       </p>
                     )}
                   </div>
                 )}
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-cyan-400/90 mb-2">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
                     Schichten
                   </p>
                   <ul className="space-y-2">
                     {currentDay.shifts.map((s) => (
                       <li
                         key={s.id}
-                        className="flex flex-col gap-0.5 rounded-lg bg-card/60 border border-cyan-500/15 px-3 py-2.5"
+                        className="flex flex-col gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5"
                       >
-                        <span className="text-xs font-semibold text-cyan-300">
+                        <span className="text-xs font-semibold text-gray-700">
                           {slotLabel(s)}
                         </span>
-                        <div className="text-sm text-cyan-100">
+                        <div className="text-sm text-gray-600">
                           {s.assignments?.length > 0
                             ? formatAssignments(s.assignments, profileNames)
                             : "–"}
@@ -372,11 +372,11 @@ export default function ShiftPlanWeekNav({
               onKeyDown={(e) =>
                 hasShifts && (e.key === "Enter" || e.key === " ") && setOverlayDay(day)
               }
-              className={`min-w-0 rounded border p-2 flex flex-col text-left relative ${
+              className={`relative flex min-w-0 flex-col rounded border p-2 text-left ${
                 day.dateStr === todayStr
-                  ? "border-cyan-400/60 bg-cyan-500/10 ring-1 ring-cyan-400/30"
-                  : "border-cyan-500/15 bg-card/40"
-              } ${hasShifts ? "cursor-pointer hover:bg-card/60 focus:outline-none focus:ring-1 focus:ring-cyan-400/50" : ""}`}
+                  ? "border-blue-300 bg-blue-50/50 ring-1 ring-blue-200"
+                  : "border-gray-200 bg-gray-50"
+              } ${hasShifts ? "cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-300" : ""}`}
             >
               {renderDayCard(day)}
               {hasShifts && (
@@ -387,7 +387,7 @@ export default function ShiftPlanWeekNav({
                     setExportFormat("png");
                     setExportDay(day);
                   }}
-                  className="absolute top-1.5 right-1.5 rounded p-1 text-cyan-400/80 hover:text-cyan-300 hover:bg-cyan-500/20 focus:outline-none"
+                  className="absolute right-1.5 top-1.5 rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
                   title="Als Bild herunterladen (PNG)"
                   aria-label="Als Bild herunterladen"
                 >
@@ -409,68 +409,68 @@ export default function ShiftPlanWeekNav({
         >
           <div
             ref={overlayCardRef}
-            className="rounded-xl border border-cyan-500/30 bg-card shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
+            className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-cyan-500/20 bg-card/80 px-4 py-3 flex justify-between items-center shrink-0 gap-2">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3">
               <div>
-                <h3 className="text-sm font-semibold text-cyan-400">
+                <h3 className="text-sm font-semibold text-gray-900">
                   {overlayDay.dateStr && formatDateLabel(overlayDay.dateStr, { weekday: "long" })}
                 </h3>
                 {overlayDay.dateStr === getTodayDateString() && (
-                  <span className="mt-1 inline-block rounded bg-cyan-500/30 px-2 py-0.5 text-[10px] font-bold uppercase text-cyan-200">
+                  <span className="mt-1 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-600">
                     Heute
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-[10px] text-cyan-400/70 mr-1">Download:</span>
+                <span className="mr-1 text-[10px] text-gray-500">Download:</span>
                 <button
                   type="button"
                   onClick={() => captureOverlayAsImage("png")}
-                  className="rounded px-2 py-1 text-[10px] text-cyan-300 hover:bg-cyan-500/20 focus:outline-none"
+                  className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-200 focus:outline-none"
                 >
                   PNG
                 </button>
                 <button
                   type="button"
                   onClick={() => captureOverlayAsImage("jpeg")}
-                  className="rounded px-2 py-1 text-[10px] text-cyan-300 hover:bg-cyan-500/20 focus:outline-none"
+                  className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-200 focus:outline-none"
                 >
                   JPG
                 </button>
                 <button
                   type="button"
                   onClick={() => setOverlayDay(null)}
-                  className="rounded p-1 text-cyan-400 hover:bg-cyan-500/20 focus:outline-none"
+                  className="rounded p-1 text-gray-600 hover:bg-gray-200 focus:outline-none"
                   aria-label="Schließen"
                 >
                   ✕
                 </button>
               </div>
             </div>
-            <div className="p-4 overflow-y-auto space-y-3">
+            <div className="space-y-3 overflow-y-auto p-4">
               {overlayDay.dayTitle && (
-                <p className="text-sm font-medium text-cyan-200">{overlayDay.dayTitle}</p>
+                <p className="text-sm font-medium text-gray-900">{overlayDay.dayTitle}</p>
               )}
               {overlayDay.location && (
-                <p className="text-xs text-cyan-400/90">Ort: {overlayDay.location}</p>
+                <p className="text-xs text-gray-600">Ort: {overlayDay.location}</p>
               )}
               {overlayDay.notes && (
-                <p className="text-xs text-cyan-200/90 whitespace-pre-wrap">{overlayDay.notes}</p>
+                <p className="whitespace-pre-wrap text-xs text-gray-600">{overlayDay.notes}</p>
               )}
-              <div className="pt-2 border-t border-cyan-500/20">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-cyan-400/90 mb-2">
+              <div className="border-t border-gray-200 pt-2">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                   Zeitfenster
                 </p>
                 <ul className="space-y-2">
                   {overlayDay.shifts.map((s) => (
                     <li
                       key={s.id}
-                      className="rounded border border-cyan-500/20 bg-card/40 px-3 py-2 text-xs"
+                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs"
                     >
-                      <span className="font-medium text-cyan-300">{slotLabelDetail(s)}</span>
-                      <p className="mt-1 text-cyan-200/90">
+                      <span className="font-medium text-gray-700">{slotLabelDetail(s)}</span>
+                      <p className="mt-1 text-gray-600">
                         {formatAssignmentsPlain(s.assignments, profileNames)}
                       </p>
                     </li>

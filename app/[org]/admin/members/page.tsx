@@ -121,23 +121,23 @@ export default async function AdminMembersPage({
   return (
     <div className="mx-auto max-w-4xl p-6">
       <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Members" />
-      <h1 className="mt-4 text-2xl font-bold text-cyan-100">Members – {org.name}</h1>
-      <p className="mt-1 text-sm text-cyan-300">Manage & import (organisation)</p>
+      <h1 className="mt-4 text-2xl font-bold text-gray-900">Members – {org.name}</h1>
+      <p className="mt-1 text-sm text-gray-600">Manage & import (organisation)</p>
 
       <div className="mt-6">
         <InviteLinkBlock orgSlug={orgSlug} />
       </div>
 
-      <div className="mt-6 rounded-lg border border-cyan-500/30 bg-card p-4">
-        <h2 className="text-sm font-semibold text-cyan-100">Excel import</h2>
-        <p className="mt-1 text-xs text-cyan-400/80">
+      <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-900">Excel import</h2>
+        <p className="mt-1 text-xs text-gray-600">
           Download template, fill in (Name, optional Score, Teams, Leads), then upload here. Existing names are skipped.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <a
             href="/api/members-template"
             download="Members-Template.xlsx"
-            className="text-sm text-cyan-400 hover:text-cyan-300 underline"
+            className="text-sm text-blue-600 underline hover:text-blue-700"
           >
             Download template
           </a>
@@ -149,15 +149,15 @@ export default async function AdminMembersPage({
         <AddMemberForm orgSlug={orgSlug} committees={committeeList} />
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-cyan-500/30 bg-card">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-cyan-500/20 bg-cyan-500/5">
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-cyan-400">Name</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-cyan-400">Teams</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-cyan-400">Lead</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-cyan-400">Status</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-cyan-400">Actions</th>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Name</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Teams</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Lead</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -173,7 +173,7 @@ export default async function AdminMembersPage({
             ))}
             {(!members || members.length === 0) && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-cyan-400/80">No members yet.</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">No members yet.</td>
               </tr>
             )}
           </tbody>

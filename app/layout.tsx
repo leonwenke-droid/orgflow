@@ -56,7 +56,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               href="https://lyniqmedia.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-cyan-400/90 transition-colors"
+              className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               powered by LYNIQ Media
             </a>

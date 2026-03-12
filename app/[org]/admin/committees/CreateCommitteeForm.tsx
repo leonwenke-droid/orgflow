@@ -31,12 +31,12 @@ export default function CreateCommitteeForm({
         type="text"
         name="name"
         placeholder="Neues Komitee (z. B. Dekoration)"
-        className="flex-1 rounded border border-cyan-500/30 bg-background px-3 py-2 text-cyan-100 placeholder:text-cyan-500/50"
+        className="flex-1 rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400"
         required
       />
       <button
         type="submit"
-        className="rounded bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
+        className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
       >
         Anlegen
       </button>

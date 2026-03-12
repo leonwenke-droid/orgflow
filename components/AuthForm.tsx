@@ -42,7 +42,7 @@ export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
   return (
     <form onSubmit={onSubmit} className="space-y-3 text-sm">
       <div>
-        <label className="mb-1 block text-xs font-semibold text-cyan-400">
+        <label className="mb-1 block text-xs font-semibold text-gray-700">
           Email
         </label>
         <input
@@ -50,11 +50,11 @@ export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs"
+          className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold text-cyan-400">
+        <label className="mb-1 block text-xs font-semibold text-gray-700">
           Password
         </label>
         <input
@@ -62,11 +62,11 @@ export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs"
+          className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
         />
       </div>
       {error && (
-        <p className="text-xs text-red-300">
+        <p className="text-xs text-red-600">
           {error}
         </p>
       )}

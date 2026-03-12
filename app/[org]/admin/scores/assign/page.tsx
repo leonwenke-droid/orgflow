@@ -68,10 +68,10 @@ export default async function AssignPointsPage({
       <div className="mb-6">
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Assign points" />
       </div>
-      <h1 className="text-2xl font-bold text-cyan-100">
+      <h1 className="text-2xl font-bold text-gray-900">
         Assign points individually
       </h1>
-      <p className="mt-1 text-sm text-cyan-300">
+      <p className="mt-1 text-sm text-gray-600">
         Enter event or resource points for organisation members (e.g. event, material).
       </p>
       <AssignPointsForm

@@ -24,58 +24,58 @@ export default async function OrgSettingsPage({
   return (
     <div className="mx-auto max-w-2xl p-6">
       <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Settings" />
-      <h1 className="mt-4 text-2xl font-bold text-cyan-100">
+      <h1 className="mt-4 text-2xl font-bold text-gray-900">
         Organisation settings – {org.name}
       </h1>
-      <p className="mt-1 text-sm text-cyan-300">
+      <p className="mt-1 text-sm text-gray-600">
         Edit organisation name, teams and permissions.
       </p>
 
       <div className="mt-8 space-y-6">
-        <section className="rounded-xl border border-cyan-500/25 bg-card/50 p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-cyan-400/90 mb-4">
+        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
             Organisation
           </h2>
           <dl className="space-y-3 text-sm">
             <div>
-              <dt className="text-cyan-400/80">Name</dt>
-              <dd className="text-cyan-100">{org.name}</dd>
+              <dt className="text-gray-500">Name</dt>
+              <dd className="text-gray-900">{org.name}</dd>
             </div>
             <div>
-              <dt className="text-cyan-400/80">Slug</dt>
-              <dd className="text-cyan-100 font-mono">/{org.slug}</dd>
+              <dt className="text-gray-500">Slug</dt>
+              <dd className="font-mono text-gray-900">/{org.slug}</dd>
             </div>
             {org.subdomain && (
               <div>
-                <dt className="text-cyan-400/80">Subdomain</dt>
-                <dd className="text-cyan-100">{org.subdomain}</dd>
+                <dt className="text-gray-500">Subdomain</dt>
+                <dd className="text-gray-900">{org.subdomain}</dd>
               </div>
             )}
           </dl>
-          <p className="mt-4 text-xs text-cyan-400/70">
+          <p className="mt-4 text-xs text-gray-500">
             Contact your administrator to change organisation details.
           </p>
         </section>
 
-        <section className="rounded-xl border border-cyan-500/25 bg-card/50 p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-cyan-400/90 mb-4">
+        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
             Teams
           </h2>
           <Link
             href={`/${orgSlug}/admin/committees`}
-            className="text-sm text-cyan-400 hover:text-cyan-300 underline"
+            className="text-sm text-blue-600 underline hover:text-blue-700"
           >
             Manage teams →
           </Link>
         </section>
 
-        <section className="rounded-xl border border-cyan-500/25 bg-card/50 p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-cyan-400/90 mb-4">
+        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">
             Members & permissions
           </h2>
           <Link
             href={`/${orgSlug}/admin/members`}
-            className="text-sm text-cyan-400 hover:text-cyan-300 underline"
+            className="text-sm text-blue-600 underline hover:text-blue-700"
           >
             Manage members & roles →
           </Link>
@@ -83,7 +83,7 @@ export default async function OrgSettingsPage({
 
         <Link
           href={`/${orgSlug}/admin`}
-          className="inline-block rounded-lg border border-cyan-500/40 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/10"
+          className="inline-block rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
         >
           ← Back to admin
         </Link>

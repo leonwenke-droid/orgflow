@@ -34,9 +34,9 @@ export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
   };
 
   return (
-    <div className="rounded-lg border border-cyan-500/30 bg-card p-4">
-      <h2 className="text-sm font-semibold text-cyan-100">Invite link</h2>
-      <p className="mt-1 text-xs text-cyan-400/80">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <h2 className="text-sm font-semibold text-gray-900">Invite link</h2>
+      <p className="mt-1 text-xs text-gray-600">
         Create a link to invite members. Share it via email or messaging.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -44,7 +44,7 @@ export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
           type="button"
           onClick={createLink}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 rounded bg-cyan-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-cyan-700 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
           <Link2 className="h-3.5 w-3.5" />
           {loading ? "Creating…" : "Create invite link"}
@@ -53,7 +53,7 @@ export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
           <button
             type="button"
             onClick={copyLink}
-            className="inline-flex items-center gap-1.5 rounded border border-cyan-500/40 px-3 py-1.5 text-xs font-medium text-cyan-200 hover:bg-cyan-500/10"
+            className="inline-flex items-center gap-1.5 rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
           >
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             {copied ? "Copied" : "Copy link"}
@@ -61,7 +61,7 @@ export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
         )}
       </div>
       {inviteUrl && (
-        <p className="mt-2 truncate text-xs text-cyan-400/70 font-mono max-w-full">
+        <p className="mt-2 max-w-full truncate font-mono text-xs text-gray-500">
           {inviteUrl}
         </p>
       )}

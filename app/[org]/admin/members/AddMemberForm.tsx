@@ -58,66 +58,66 @@ export default function AddMemberForm({
   };
 
   return (
-    <div className="rounded-lg border border-cyan-500/30 bg-card p-4">
-      <h2 className="text-sm font-semibold text-cyan-100">Add member manually</h2>
-      <p className="mt-1 text-xs text-cyan-400/80">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <h2 className="text-sm font-semibold text-gray-900">Add member manually</h2>
+      <p className="mt-1 text-xs text-gray-600">
         Name required, optional team. Email only for team lead. Member appears in the list immediately.
       </p>
       <form onSubmit={handleSubmit} className="mt-3 space-y-3 text-sm">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-cyan-400">Name</label>
+          <label className="mb-1 block text-xs font-semibold text-gray-700">Name</label>
           <input
             type="text"
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="e.g. Max Mustermann"
-            className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs text-cyan-100"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-xs text-gray-900"
           />
         </div>
-        <label className="flex cursor-pointer items-center gap-2 text-xs text-cyan-300">
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
           <input
             type="checkbox"
             checked={asLead}
             onChange={(e) => setAsLead(e.target.checked)}
-            className="rounded border-cyan-500/50"
+            className="rounded border-gray-400"
           />
           Add as team lead
         </label>
         {asLead && (
           <div>
-            <label className="mb-1 block text-xs font-semibold text-cyan-400">Email (for team lead)</label>
+            <label className="mb-1 block text-xs font-semibold text-gray-700">Email (for team lead)</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="max@example.com"
-              className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs text-cyan-100"
+              className="w-full rounded border border-gray-300 bg-white p-2 text-xs text-gray-900"
             />
           </div>
         )}
         {committees.length > 0 && (
           <details className="group">
-            <summary className="cursor-pointer text-xs font-semibold text-cyan-400 hover:text-cyan-300">
+            <summary className="cursor-pointer text-xs font-semibold text-gray-700 hover:text-gray-900">
               Teams ({committeeIds.size} selected) ▾
             </summary>
-            <div className="mt-1 flex flex-wrap gap-2 rounded border border-cyan-500/30 bg-card/60 p-2">
+            <div className="mt-1 flex flex-wrap gap-2 rounded border border-gray-200 bg-gray-50 p-2">
               {committees.map((c) => (
-                <label key={c.id} className="flex cursor-pointer items-center gap-1.5 text-xs text-cyan-100">
-                  <input type="checkbox" checked={committeeIds.has(c.id)} onChange={() => toggleCommittee(c.id)} className="rounded border-cyan-500/40" />
+                <label key={c.id} className="flex cursor-pointer items-center gap-1.5 text-xs text-gray-700">
+                  <input type="checkbox" checked={committeeIds.has(c.id)} onChange={() => toggleCommittee(c.id)} className="rounded border-gray-400" />
                   {c.name}
                 </label>
               ))}
             </div>
           </details>
         )}
-        {error && <p className="text-xs text-red-300">{error}</p>}
-        {success && <p className="text-xs text-green-400">Member added.</p>}
+        {error && <p className="text-xs text-red-600">{error}</p>}
+        {success && <p className="text-xs text-green-600">Member added.</p>}
         <button
           type="submit"
           disabled={loading}
-          className="rounded bg-cyan-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-cyan-700 disabled:opacity-50"
+          className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
           {loading ? "Adding…" : "Add member"}
         </button>

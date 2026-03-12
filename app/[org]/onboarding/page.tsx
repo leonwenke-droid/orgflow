@@ -26,65 +26,65 @@ export default async function OnboardingPage(props: {
 
   return (
     <div className="mx-auto max-w-2xl p-6">
-      <h1 className="text-2xl font-bold text-cyan-100">
+      <h1 className="text-2xl font-bold text-gray-900">
         Set up organisation – {org.name}
       </h1>
-      <p className="mt-1 text-sm text-cyan-300">
+      <p className="mt-1 text-sm text-gray-600">
         As an authorised person you can set up the organisation: import members, create teams and assign admins.
       </p>
 
-      <ol className="mt-8 space-y-6 list-decimal list-inside text-sm text-cyan-200">
+      <ol className="mt-8 list-inside list-decimal space-y-6 text-sm text-gray-700">
         <li>
-          <strong className="text-cyan-100">Members</strong>
-          <p className="mt-1 text-cyan-400/80">
+          <strong className="text-gray-900">Members</strong>
+          <p className="mt-1 text-gray-600">
             In the admin area you can manage members and add them via Excel import. Download the template, fill in (Name, optional Score, Teams, Leads), then upload.
           </p>
           <Link
             href={`/${orgSlug}/admin/members`}
-            className="mt-2 inline-block text-cyan-400 hover:text-cyan-300 underline"
+            className="mt-2 inline-block text-blue-600 underline hover:text-blue-700"
           >
             → Members &amp; Excel import
           </Link>
         </li>
         <li>
-          <strong className="text-cyan-100">Teams</strong>
-          <p className="mt-1 text-cyan-400/80">
+          <strong className="text-gray-900">Teams</strong>
+          <p className="mt-1 text-gray-600">
             Create and edit teams for the organisation.
           </p>
           <Link
             href={`/${orgSlug}/admin/committees`}
-            className="mt-2 inline-block text-cyan-400 hover:text-cyan-300 underline"
+            className="mt-2 inline-block text-blue-600 underline hover:text-blue-700"
           >
             → Teams
           </Link>
         </li>
         <li>
-          <strong className="text-cyan-100">Assign admins</strong>
-          <p className="mt-1 text-cyan-400/80">
+          <strong className="text-gray-900">Assign admins</strong>
+          <p className="mt-1 text-gray-600">
             In the members area admins can change member roles (Admin/Team lead for this organisation).
           </p>
           <Link
             href={`/${orgSlug}/admin/members`}
-            className="mt-2 inline-block text-cyan-400 hover:text-cyan-300 underline"
+            className="mt-2 inline-block text-blue-600 underline hover:text-blue-700"
           >
             → Members &amp; roles
           </Link>
         </li>
         <li>
-          <strong className="text-cyan-100">Manage everything</strong>
-          <p className="mt-1 text-cyan-400/80">
+          <strong className="text-gray-900">Manage everything</strong>
+          <p className="mt-1 text-gray-600">
             Tasks, shifts, resources and treasury – all via your organisation&apos;s admin dashboard.
           </p>
           <Link
             href={`/${orgSlug}/admin`}
-            className="mt-2 inline-block rounded bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
+            className="mt-2 inline-block rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
           >
             Open admin dashboard
           </Link>
         </li>
       </ol>
 
-      <p className="mt-8 text-xs text-cyan-400/70">
+      <p className="mt-8 text-xs text-gray-500">
         After setup, all admins and members can use the dashboard and admin features as usual.
       </p>
     </div>

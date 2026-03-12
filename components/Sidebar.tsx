@@ -89,18 +89,18 @@ export default function Sidebar({
   const linkClassName = (href: string) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
       isActive(href)
-        ? "bg-slate-700 text-white"
-        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+        ? "bg-blue-50 text-blue-600"
+        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
     }`;
 
   const sidebarContent = (
     <>
-      <div className="flex h-14 items-center px-5 border-b border-slate-800">
-        <span className="text-lg font-bold tracking-tight text-white">OrgFlow</span>
+      <div className="flex h-14 items-center px-5 border-b border-gray-200">
+        <span className="text-lg font-bold tracking-tight text-gray-900">OrgFlow</span>
       </div>
       {orgName && (
-        <div className="border-b border-slate-800 px-5 py-3">
-          <p className="truncate text-xs text-slate-400">{orgName}</p>
+        <div className="border-b border-gray-200 px-5 py-3">
+          <p className="truncate text-xs text-gray-500">{orgName}</p>
         </div>
       )}
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
@@ -111,7 +111,7 @@ export default function Sidebar({
           </FullPageLink>
         ))}
       </nav>
-      <div className="space-y-0.5 border-t border-slate-800 px-3 py-3">
+      <div className="space-y-0.5 border-t border-gray-200 px-3 py-3">
         {bottomItems(orgSlug).map(({ href, label, icon: Icon }) => (
           <FullPageLink key={href} href={href} className={linkClassName(href)}>
             <Icon className="h-4 w-4 shrink-0" />
@@ -128,7 +128,7 @@ export default function Sidebar({
   return (
     <>
       {/* Desktop: always visible */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col bg-slate-900 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-gray-200 bg-white lg:flex">
         {sidebarContent}
       </aside>
       {/* Mobile: overlay when open */}
@@ -139,7 +139,7 @@ export default function Sidebar({
             onClick={onClose}
             aria-hidden
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-56 flex-col bg-slate-900 lg:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-gray-200 bg-white shadow-xl lg:hidden">
             {sidebarContent}
           </aside>
         </>

@@ -54,11 +54,11 @@ export default function CommitteeRow({
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded border border-cyan-500/30 bg-background px-2 py-1 text-cyan-100"
+          className="flex-1 rounded border border-gray-300 bg-white px-2 py-1 text-gray-900"
           autoFocus
         />
       ) : (
-        <span className="text-cyan-100">{committee.name}</span>
+        <span className="text-gray-900">{committee.name}</span>
       )}
       <div className="flex items-center gap-1">
         {editing ? (
@@ -67,14 +67,14 @@ export default function CommitteeRow({
               type="button"
               onClick={handleSave}
               disabled={loading}
-              className="rounded bg-cyan-600 px-2 py-1 text-xs text-white hover:bg-cyan-700 disabled:opacity-50"
+              className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
             >
               {loading ? "…" : "Speichern"}
             </button>
             <button
               type="button"
               onClick={() => { setEditing(false); setName(committee.name); setError(null); }}
-              className="rounded border border-cyan-500/40 px-2 py-1 text-xs text-cyan-300 hover:bg-cyan-500/10"
+              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
             >
               Abbrechen
             </button>
@@ -84,7 +84,7 @@ export default function CommitteeRow({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="rounded border border-cyan-500/40 px-2 py-1 text-xs text-cyan-400 hover:bg-cyan-500/10"
+              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
             >
               Bearbeiten
             </button>
@@ -92,14 +92,14 @@ export default function CommitteeRow({
               type="button"
               onClick={handleDelete}
               disabled={loading}
-              className="rounded border border-red-500/50 px-2 py-1 text-xs text-red-400 hover:bg-red-500/10 disabled:opacity-50"
+              className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
             >
               Löschen
             </button>
           </>
         )}
       </div>
-      {error && <p className="w-full text-xs text-red-400">{error}</p>}
+      {error && <p className="w-full text-xs text-red-600">{error}</p>}
     </li>
   );
 }

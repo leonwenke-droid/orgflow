@@ -32,10 +32,10 @@ export default async function OrgLoginPage({
     <div className="mx-auto max-w-sm">
       <div className="card space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-cyan-400">
+          <h2 className="text-sm font-semibold text-gray-700">
             Anmelden – {org.name}
           </h2>
-          <p className="mt-1 text-xs text-cyan-400/80">
+          <p className="mt-1 text-xs text-gray-600">
             Für das Admin-Board dieses Jahrgangs.
           </p>
         </div>

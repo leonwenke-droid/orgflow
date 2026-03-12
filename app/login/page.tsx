@@ -25,10 +25,10 @@ export default async function LoginPage({
     <div className="mx-auto max-w-sm">
       <div className="card space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-cyan-400">
+          <h2 className="text-sm font-semibold text-gray-700">
             Sign in
           </h2>
-          <p className="mt-1 text-xs text-cyan-400/80">
+          <p className="mt-1 text-xs text-gray-600">
             Sign in to access your organisation or create a new one.
           </p>
         </div>

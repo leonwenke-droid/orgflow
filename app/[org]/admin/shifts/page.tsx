@@ -31,17 +31,17 @@ export default async function AdminShiftsPage({
   return (
     <div className="mx-auto max-w-4xl p-6">
       <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Shifts" />
-      <h1 className="mt-4 text-2xl font-bold text-cyan-100">Shifts – {org.name}</h1>
-      <p className="mt-1 text-sm text-cyan-300">Plan (organisation)</p>
-      <ul className="mt-6 space-y-2 rounded-lg border border-cyan-500/30 bg-card p-4">
+      <h1 className="mt-4 text-2xl font-bold text-gray-900">Shifts – {org.name}</h1>
+      <p className="mt-1 text-sm text-gray-600">Plan (organisation)</p>
+      <ul className="mt-6 space-y-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         {(shifts ?? []).map((s: any) => (
           <li key={s.id} className="flex justify-between text-sm">
-            <span className="text-cyan-100">{s.event_name ?? "-"} · {s.date}</span>
-            <span className="text-cyan-400/80">{s.start_time}–{s.end_time}</span>
+            <span className="text-gray-900">{s.event_name ?? "-"} · {s.date}</span>
+            <span className="text-gray-600">{s.start_time}–{s.end_time}</span>
           </li>
         ))}
         {(!shifts || shifts.length === 0) && (
-          <li className="text-cyan-400/80">No shifts yet.</li>
+          <li className="text-gray-500">No shifts yet.</li>
         )}
       </ul>
     </div>

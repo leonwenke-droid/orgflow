@@ -198,11 +198,11 @@ export default async function OrgDashboardPage({
 
   return (
     <div className="space-y-8">
-      <header className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-cyan-200 tracking-tight">
+      <header className="space-y-1">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
           Dashboard
         </h1>
-        <p className="text-sm text-cyan-400/90">
+        <p className="text-sm text-gray-600">
           {org.school_short && `${org.school_short} · `}
           Overview of treasury, tasks and shifts
         </p>
@@ -210,7 +210,7 @@ export default async function OrgDashboardPage({
           <p className="pt-2">
             <a
               href={`/${orgSlug}/login`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-500/15 px-4 py-2 text-sm font-medium text-cyan-200 transition hover:bg-cyan-500/25 hover:text-cyan-100"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
             >
               Sign in
             </a>
@@ -219,9 +219,9 @@ export default async function OrgDashboardPage({
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-cyan-500/25 bg-card/50 p-5 shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-emerald-500/15 text-emerald-400">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
                 <svg
                   className="w-5 h-5"
                   fill="none"
@@ -238,24 +238,24 @@ export default async function OrgDashboardPage({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xs font-medium text-cyan-400/90">
+                <h3 className="text-xs font-medium text-gray-500">
                   Treasury balance
                 </h3>
-                <p className="text-xl font-bold text-cyan-100">
+                <p className="text-xl font-bold text-gray-900">
                   {treasury ? treasury.amount.toLocaleString("de-DE") : "–"} €
                 </p>
               </div>
             </div>
-            <p className="mt-3 text-xs text-cyan-400/70 border-t border-cyan-500/15 pt-2">
+            <p className="mt-3 border-t border-gray-100 pt-2 text-xs text-gray-500">
                 {treasury
                 ? `Updated ${formatDateTimeForDisplay(treasury.created_at)}`
                 : "No entries yet"}
             </p>
           </div>
 
-        <div className="rounded-xl border border-cyan-500/25 bg-card/50 p-5 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-500/15 text-cyan-400">
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
                 <svg
                   className="w-4 h-4"
                   fill="none"
@@ -271,33 +271,33 @@ export default async function OrgDashboardPage({
                   />
                 </svg>
               </div>
-              <h3 className="text-xs font-medium text-cyan-400/90">
+              <h3 className="text-xs font-medium text-gray-500">
                 Team activity
               </h3>
             </div>
             <ul className="space-y-2 text-xs">
-              <li className="flex justify-between items-center">
-                <span className="text-cyan-300/90">Shifts completed</span>
-                <span className="font-semibold tabular-nums text-cyan-200">
+              <li className="flex items-center justify-between">
+                <span className="text-gray-600">Shifts completed</span>
+                <span className="tabular-nums font-semibold text-gray-900">
                   {activity.shifts_done_30d}
                 </span>
               </li>
-              <li className="flex justify-between items-center">
-                <span className="text-cyan-300/90">Tasks completed</span>
-                <span className="font-semibold tabular-nums text-cyan-200">
+              <li className="flex items-center justify-between">
+                <span className="text-gray-600">Tasks completed</span>
+                <span className="tabular-nums font-semibold text-gray-900">
                   {activity.tasks_done_30d}
                 </span>
               </li>
-              <li className="flex justify-between items-center">
-                <span className="text-cyan-300/90">
+              <li className="flex items-center justify-between">
+                <span className="text-gray-600">
                   Event & resource management
                 </span>
-                <span className="font-semibold tabular-nums text-cyan-200">
+                <span className="tabular-nums font-semibold text-gray-900">
                   {activity.materials_30d}
                 </span>
               </li>
               {activity.materials_30d > 0 && (
-                <li className="flex justify-between items-center pl-3 text-cyan-400/70">
+                <li className="flex items-center justify-between pl-3 text-gray-500">
                   <span>Small · Medium · Large</span>
                   <span className="tabular-nums">
                     {activity.materials_small_30d} / {activity.materials_medium_30d}{" "}
@@ -305,45 +305,45 @@ export default async function OrgDashboardPage({
                   </span>
                 </li>
               )}
-              <li className="flex justify-between items-center border-t border-cyan-500/15 pt-2 mt-2">
-                <span className="text-cyan-300/90 font-medium">
+              <li className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2">
+                <span className="font-medium text-gray-600">
                   Active participants
                 </span>
-                <span className="font-semibold tabular-nums text-cyan-200">
+                <span className="tabular-nums font-semibold text-gray-900">
                   {activity.active_participants_30d} / {activity.total_members}
                 </span>
               </li>
             </ul>
           </div>
 
-        <div className="rounded-xl border border-cyan-500/25 bg-card/50 p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-500/15 text-cyan-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 ><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
             </div>
-            <h3 className="text-xs font-medium text-cyan-400/90">Open tasks</h3>
+            <h3 className="text-xs font-medium text-gray-500">Open tasks</h3>
           </div>
-          <div className="text-2xl font-bold text-cyan-100">
+          <div className="text-2xl font-bold text-gray-900">
             {aggregate.total_open}
           </div>
-          <p className="mt-1 text-xs text-cyan-400/70">
+          <p className="mt-1 text-xs text-gray-500">
             {aggregate.total_in_progress} in progress · {aggregate.total_overdue} overdue
           </p>
         </div>
 
-        <div className="rounded-xl border border-cyan-500/25 bg-card/50 p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500/15 text-blue-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 ><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             </div>
-            <h3 className="text-xs font-medium text-cyan-400/90">Upcoming shifts</h3>
+            <h3 className="text-xs font-medium text-gray-500">Upcoming shifts</h3>
           </div>
-          <div className="text-2xl font-bold text-cyan-100">
+          <div className="text-2xl font-bold text-gray-900">
             {shifts.filter((s: { date: string }) => new Date(s.date) >= new Date()).length}
           </div>
-          <p className="mt-1 text-xs text-cyan-400/70">
+          <p className="mt-1 text-xs text-gray-500">
             {shifts.length} total
           </p>
         </div>
@@ -351,26 +351,26 @@ export default async function OrgDashboardPage({
 
       {false && (
         <section className="mb-2">
-          <h2 className="mb-2 text-sm font-semibold text-cyan-400">
+          <h2 className="mb-2 text-sm font-semibold text-gray-600">
             Livecharts per team
           </h2>
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7">
             {livechartCommittees.map((c) => (
               <div
                 key={c.id}
-                className="h-16 min-w-0 rounded border border-cyan-500/20 bg-card/40 flex flex-col items-center justify-center px-1.5 py-1 text-center"
+                className="flex h-16 min-w-0 flex-col items-center justify-center rounded border border-gray-200 bg-white px-1.5 py-1 text-center shadow-sm"
               >
                 <span
-                  className="truncate w-full text-[10px] font-semibold text-cyan-400"
+                  className="w-full truncate text-[10px] font-semibold text-gray-700"
                   title={c.name}
                 >
                   {c.name}
                 </span>
-                <span className="text-[9px] text-cyan-400/50">Chart</span>
+                <span className="text-[9px] text-gray-500">Chart</span>
               </div>
             ))}
             {livechartCommittees.length === 0 && (
-              <p className="col-span-full py-2 text-xs text-cyan-400/70">
+              <p className="col-span-full py-2 text-xs text-gray-500">
                 No teams created yet.
               </p>
             )}
@@ -380,16 +380,16 @@ export default async function OrgDashboardPage({
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-500/80">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
             Shift plan
           </h2>
-          <p className="mt-1 text-xs text-cyan-400/80">
+          <p className="mt-1 text-xs text-gray-600">
             Use ← / → to switch weeks · Tap day card for details
           </p>
         </div>
-        <div className="rounded-xl border border-cyan-500/25 bg-card/50 p-5">
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           {!shifts || shifts.length === 0 ? (
-            <p className="text-cyan-400/70 text-xs">
+            <p className="text-xs text-gray-500">
               No shifts in the system yet.
             </p>
           ) : (
