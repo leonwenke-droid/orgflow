@@ -53,15 +53,15 @@ export default function TreasuryUploadForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 text-sm">
-      <div className="flex gap-4 text-xs text-cyan-300">
-        <label className="flex items-center gap-1 cursor-pointer">
+      <div className="flex gap-4 text-xs text-gray-600">
+        <label className="flex cursor-pointer items-center gap-1">
           <input
             type="radio"
             name="treasury-mode"
             value="excel"
             checked={mode === "excel"}
             onChange={() => setMode("excel")}
-            className="border-cyan-500/60"
+            className="border-gray-400"
           />
           Per Excel (.xlsx)
         </label>
@@ -72,7 +72,7 @@ export default function TreasuryUploadForm({
             value="manual"
             checked={mode === "manual"}
             onChange={() => setMode("manual")}
-            className="border-cyan-500/60"
+            className="border-gray-400"
           />
           Manuell eingeben
         </label>
@@ -81,31 +81,31 @@ export default function TreasuryUploadForm({
       {mode === "excel" ? (
         <>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-cyan-400">
+            <label className="mb-1 block text-xs font-semibold text-gray-700">
               Excel-Datei (.xlsx)
             </label>
             <input
               type="file"
               accept=".xlsx"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs"
+              className="block w-full rounded border border-gray-300 bg-white p-2 text-xs"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-cyan-400">
+            <label className="mb-1 block text-xs font-semibold text-gray-700">
               Zelle mit Kassenstand (z. B. M9)
             </label>
             <input
               type="text"
               value={cellRef}
               onChange={(e) => setCellRef(e.target.value.toUpperCase())}
-              className="w-32 rounded border border-cyan-500/30 bg-card/60 p-1.5 text-xs"
+              className="w-32 rounded border border-gray-300 bg-white p-1.5 text-xs"
             />
           </div>
         </>
       ) : (
         <div>
-          <label className="mb-1 block text-xs font-semibold text-cyan-400">
+          <label className="mb-1 block text-xs font-semibold text-gray-700">
             Kassenstand in Euro
           </label>
           <input
@@ -113,7 +113,7 @@ export default function TreasuryUploadForm({
             step="0.01"
             value={manualAmount}
             onChange={(e) => setManualAmount(e.target.value)}
-            className="w-40 rounded border border-cyan-500/30 bg-card/60 p-1.5 text-xs"
+            className="w-40 rounded border border-gray-300 bg-white p-1.5 text-xs"
             placeholder="z. B. 1234,56"
           />
         </div>
@@ -127,11 +127,11 @@ export default function TreasuryUploadForm({
         {loading ? "Wird gespeichert…" : "Kassenstand aktualisieren"}
       </button>
 
-      <p className="text-[11px] text-cyan-400/70">
+      <p className="text-[11px] text-gray-500">
         Nur das Finanzkomitee sollte den Kassenstand aktualisieren.
       </p>
       {message && (
-        <p className="text-xs text-cyan-400/80">
+        <p className="text-xs text-gray-600">
           {message} – Dashboard aktualisiert sich automatisch.
         </p>
       )}

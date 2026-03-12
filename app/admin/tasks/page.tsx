@@ -125,10 +125,10 @@ export default async function AdminTasksPage(props: PageProps) {
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
-          <h2 className="text-sm font-semibold text-cyan-400">
+          <h2 className="text-sm font-semibold text-gray-700">
             Aufgaben & Kanban
           </h2>
-          <Suspense fallback={<span className="text-[10px] text-cyan-400/60">Komitee …</span>}>
+          <Suspense fallback={<span className="text-[10px] text-gray-500">Komitee …</span>}>
             <CommitteeFilter committees={committeesForFilter} />
           </Suspense>
         </div>
@@ -141,10 +141,10 @@ export default async function AdminTasksPage(props: PageProps) {
         {STATUS_COLUMNS.map((col) => (
           <div key={col.key} className="card flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-cyan-400">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600">
                 {col.label}
               </h3>
-              <span className="text-[10px] text-cyan-400/70">
+              <span className="text-[10px] text-gray-500">
                 {tasksFiltered.filter((t) => t.status === col.key).length} Aufgaben
               </span>
             </div>
@@ -154,24 +154,24 @@ export default async function AdminTasksPage(props: PageProps) {
                 .map((t) => (
                   <article
                     key={t.id}
-                    className="rounded-lg border border-cyan-500/20 bg-card/80 p-2"
+                    className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <h4 className="text-[11px] font-semibold">
                           {t.title}
                         </h4>
-                        <p className="text-[10px] text-cyan-100/70">
+                        <p className="text-[10px] text-gray-600">
                           Komitee: {(t.committees as { name?: string })?.name ?? "–"}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1 text-[9px]">
                         {t.due_at && (
-                          <span className="rounded bg-cyan-500/10 px-1 py-0.5 text-cyan-200">
+                          <span className="rounded bg-gray-100 px-1 py-0.5 text-gray-700">
                             {new Date(t.due_at).toLocaleDateString("de-DE")}
                           </span>
                         )}
-                        <span className="text-cyan-400/70">
+                        <span className="text-gray-500">
                           {t.proof_required
                             ? t.proof_url
                               ? "Beleg vorhanden"
@@ -180,7 +180,7 @@ export default async function AdminTasksPage(props: PageProps) {
                         </span>
                       </div>
                     </div>
-                    <div className="mt-1.5 space-y-0.5 text-[10px] text-cyan-100/80">
+                    <div className="mt-1.5 space-y-0.5 text-[10px] text-gray-600">
                       <p>
                         Ausgestellt von: {t.created_by ? profileNames.get(t.created_by) ?? "–" : "–"}
                       </p>
@@ -189,7 +189,7 @@ export default async function AdminTasksPage(props: PageProps) {
                       </p>
                     </div>
                     {t.description && (
-                      <p className="mt-1 line-clamp-2 text-[10px] text-cyan-100/60">
+                      <p className="mt-1 line-clamp-2 text-[10px] text-gray-500">
                         {t.description}
                       </p>
                     )}
@@ -203,7 +203,7 @@ export default async function AdminTasksPage(props: PageProps) {
                             href={t.proof_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rounded bg-cyan-500/20 px-2 py-0.5 text-cyan-300 hover:bg-cyan-500/30"
+                            className="rounded bg-blue-100 px-2 py-0.5 text-blue-700 hover:bg-blue-200"
                           >
                             Beweis ansehen
                           </a>
@@ -211,13 +211,13 @@ export default async function AdminTasksPage(props: PageProps) {
                       </div>
                     )}
                     <div className="mt-1.5 flex items-center justify-between">
-                      <span className="rounded bg-cyan-500/15 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-cyan-300">
+                      <span className="rounded bg-gray-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-700">
                         {col.label}
                       </span>
                       <form action={deleteTask} className="inline">
                         <input type="hidden" name="taskId" value={t.id} />
                         <SubmitButtonWithSpinner
-                          className="inline-flex items-center gap-1.5 rounded bg-red-500/20 px-2 py-0.5 text-[9px] text-red-300 hover:bg-red-500/30 disabled:opacity-70"
+                          className="inline-flex items-center gap-1.5 rounded bg-red-100 px-2 py-0.5 text-[9px] text-red-600 hover:bg-red-200 disabled:opacity-70"
                           title="Aufgabe entfernen"
                           loadingLabel="…"
                         >
@@ -228,7 +228,7 @@ export default async function AdminTasksPage(props: PageProps) {
                   </article>
                 ))}
               {!tasksFiltered.filter((t) => t.status === col.key).length && (
-                <p className="text-[11px] text-cyan-400/60">
+                <p className="text-[11px] text-gray-500">
                   Keine Aufgaben in dieser Spalte.
                 </p>
               )}

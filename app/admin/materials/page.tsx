@@ -223,7 +223,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Material" />
       )}
       <section className="card">
-        <h2 className="text-sm font-semibold text-cyan-400 mb-3">
+        <h2 className="mb-3 text-sm font-semibold text-gray-700">
           Neues Event- & Ressourcenmanagement erfassen
         </h2>
         <AddMaterialForm
@@ -233,24 +233,24 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
       </section>
 
       <section className="card overflow-hidden">
-        <h2 className="text-sm font-semibold text-cyan-400 mb-4">Historie</h2>
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <h2 className="mb-4 text-sm font-semibold text-gray-700">Historie</h2>
+        <div className="-mx-4 overflow-x-auto sm:mx-0">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
-              <tr className="border-b border-cyan-500/20">
-                <th className="p-3 text-left text-xs font-semibold text-cyan-400/90">Datum</th>
-                <th className="p-3 text-left text-xs font-semibold text-cyan-400/90">Personen</th>
-                <th className="p-3 text-left text-xs font-semibold text-cyan-400/90">Event</th>
-                <th className="p-3 text-left text-xs font-semibold text-cyan-400/90">Was besorgt</th>
-                <th className="p-3 text-left text-xs font-semibold text-cyan-400/90">Größe</th>
-                <th className="p-3 text-left text-xs font-semibold text-cyan-400/90">Punkte</th>
-                <th className="p-3 text-left text-xs font-semibold text-cyan-400/90 w-20"></th>
+              <tr className="border-b border-gray-200">
+                <th className="p-3 text-left text-xs font-semibold text-gray-500">Datum</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500">Personen</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500">Event</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500">Was besorgt</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500">Größe</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500">Punkte</th>
+                <th className="w-20 p-3 text-left text-xs font-semibold text-gray-500"></th>
               </tr>
             </thead>
             <tbody>
               {materialsForOrg.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-cyan-400/60">
+                  <td colSpan={7} className="p-6 text-center text-gray-500">
                     Noch keine Einträge.
                   </td>
                 </tr>
@@ -271,30 +271,30 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                   return (
                   <tr
                     key={m.id}
-                    className="border-b border-cyan-500/10 hover:bg-cyan-500/5 transition"
+                    className="border-b border-gray-100 transition hover:bg-gray-50"
                   >
-                    <td className="p-3 text-cyan-400/90">
+                    <td className="p-3 text-gray-600">
                       {new Date(m.created_at).toLocaleDateString("de-DE")}
                     </td>
-                    <td className="p-3 text-cyan-400/90">
+                    <td className="p-3 text-gray-600">
                       {names || "—"}
                     </td>
-                    <td className="p-3 text-cyan-400/90">{m.event_name}</td>
-                    <td className="p-3 text-cyan-400/90">{m.item_description}</td>
+                    <td className="p-3 text-gray-600">{m.event_name}</td>
+                    <td className="p-3 text-gray-600">{m.item_description}</td>
                     <td className="p-3">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                        className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${
                           m.size === "small"
-                            ? "bg-green-500/20 text-green-400"
+                            ? "bg-green-100 text-green-700"
                             : m.size === "medium"
-                            ? "bg-amber-500/20 text-amber-400"
-                            : "bg-cyan-500/20 text-cyan-400"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-blue-100 text-blue-700"
                         }`}
                       >
                         {m.size === "small" ? "Klein" : m.size === "medium" ? "Mittel" : "Groß"}
                       </span>
                     </td>
-                    <td className="p-3 font-semibold text-cyan-300">
+                    <td className="p-3 font-semibold text-gray-700">
                       +{pointsPerPerson} {userIds.length > 1 ? `× ${userIds.length} = +${totalPoints}` : ""}
                     </td>
                     <td className="p-3">

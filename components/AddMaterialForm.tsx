@@ -27,7 +27,7 @@ function SubmitButton() {
       {pending ? (
         <>
           <span
-            className="inline-block h-3.5 w-3.5 rounded-full border-2 border-cyan-300 border-t-transparent animate-spin"
+            className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-300 border-t-transparent"
             aria-hidden
           />
           Erfassen …
@@ -63,17 +63,17 @@ export default function AddMaterialForm({
   return (
     <form ref={formRef} action={formAction} className="space-y-4">
       {state?.error && (
-        <p className="text-xs text-red-300">{state.error}</p>
+        <p className="text-xs text-red-600">{state.error}</p>
       )}
       {state?.success && (
-        <p className="text-xs text-green-400">Event- & Ressourcenmanagement erfasst.</p>
+        <p className="text-xs text-green-600">Event- & Ressourcenmanagement erfasst.</p>
       )}
 
-      <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs">
-        <span className="font-semibold text-cyan-400">Bewertung pro Person:</span>
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs">
+        <span className="font-semibold text-gray-700">Bewertung pro Person:</span>
         <table className="mt-1.5 w-full text-left">
           <thead>
-            <tr className="text-cyan-400/80">
+            <tr className="text-gray-500">
               <th className="py-0.5">Größe</th>
               <th className="py-0.5">Punkte</th>
               <th className="py-0.5">Beispiele</th>
@@ -81,10 +81,10 @@ export default function AddMaterialForm({
           </thead>
           <tbody>
             {SIZE_OPTIONS.map((s) => (
-              <tr key={s.value} className="border-t border-cyan-500/10">
+              <tr key={s.value} className="border-t border-gray-100">
                 <td className="py-1 font-medium">{s.label}</td>
-                <td className="py-1 text-cyan-300">+{s.points}</td>
-                <td className="py-1 text-cyan-400/70">{s.examples}</td>
+                <td className="py-1 text-gray-700">+{s.points}</td>
+                <td className="py-1 text-gray-500">{s.examples}</td>
               </tr>
             ))}
           </tbody>
@@ -93,7 +93,7 @@ export default function AddMaterialForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
-          <label className="block text-xs font-semibold text-cyan-400">
+          <label className="block text-xs font-semibold text-gray-700">
             Person(en)
           </label>
           {personSlots.map((key, idx) => (
@@ -101,7 +101,7 @@ export default function AddMaterialForm({
               <select
                 name="user_ids"
                 required={idx === 0}
-                className="flex-1 min-w-0 rounded border border-cyan-500/30 bg-card/60 p-2 text-sm text-cyan-100"
+                className="min-w-0 flex-1 rounded border border-gray-300 bg-white p-2 text-sm text-gray-900"
               >
                 <option value="">Auswählen …</option>
                 {profiles.map((p) => (
@@ -114,7 +114,7 @@ export default function AddMaterialForm({
                 <button
                   type="button"
                   onClick={() => removePerson(key)}
-                  className="shrink-0 rounded px-2 py-1.5 text-[10px] text-cyan-400/80 hover:bg-cyan-500/20 hover:text-cyan-300"
+                  className="shrink-0 rounded px-2 py-1.5 text-[10px] text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 >
                   Entfernen
                 </button>
@@ -124,13 +124,13 @@ export default function AddMaterialForm({
           <button
             type="button"
             onClick={addPerson}
-            className="text-xs text-cyan-400/90 hover:text-cyan-300 hover:underline"
+            className="text-xs text-blue-600 hover:underline hover:text-blue-700"
           >
             + Weitere Person hinzufügen
           </button>
         </div>
         <div className="space-y-1">
-          <label className="block text-xs font-semibold text-cyan-400">
+          <label className="block text-xs font-semibold text-gray-700">
             Event
           </label>
           <input
@@ -138,17 +138,17 @@ export default function AddMaterialForm({
             name="event_name"
             placeholder="z.B. Halloween Party"
             required
-            className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-sm text-cyan-100 placeholder:text-cyan-400/40"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 placeholder:text-gray-400"
           />
         </div>
         <div className="space-y-1">
-          <label className="block text-xs font-semibold text-cyan-400">
+          <label className="block text-xs font-semibold text-gray-700">
             Größe & Punkte
           </label>
           <select
             name="size"
             required
-            className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-sm text-cyan-100"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900"
           >
             {SIZE_OPTIONS.map((s) => (
               <option key={s.value} value={s.value}>
@@ -158,7 +158,7 @@ export default function AddMaterialForm({
           </select>
         </div>
         <div className="space-y-1 sm:col-span-2">
-          <label className="block text-xs font-semibold text-cyan-400">
+          <label className="block text-xs font-semibold text-gray-700">
             Beschreibung
           </label>
           <input
@@ -166,7 +166,7 @@ export default function AddMaterialForm({
             name="description"
             placeholder="z.B. Waffeleisen + Teig"
             required
-            className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-sm text-cyan-100 placeholder:text-cyan-400/40"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 placeholder:text-gray-400"
           />
         </div>
       </div>

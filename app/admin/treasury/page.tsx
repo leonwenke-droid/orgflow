@@ -80,20 +80,20 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Treasury" />
       )}
       <section className="card space-y-2">
-        <h2 className="text-sm font-semibold text-cyan-400">
+        <h2 className="text-sm font-semibold text-gray-700">
           Treasury balance
         </h2>
-        <p className="text-xs text-cyan-400/80">
+        <p className="text-xs text-gray-600">
           You can either{" "}
           <span className="font-semibold">enter the balance manually</span> or update via{" "}
           <span className="font-semibold">Excel (.xlsx)</span>. By default, Excel uses cell{" "}
-          <code className="rounded bg-cyan-500/10 px-1">
+          <code className="rounded bg-gray-100 px-1">
             {defaultCellRef}
           </code>{" "}
           as the balance – you can change this in the form.
         </p>
         {lastUpdate && (
-          <p className="text-xs text-cyan-400/70">
+          <p className="text-xs text-gray-500">
             Last balance:{" "}
             <span className="font-semibold">
               {Number(lastUpdate.amount).toLocaleString("de-DE")} €

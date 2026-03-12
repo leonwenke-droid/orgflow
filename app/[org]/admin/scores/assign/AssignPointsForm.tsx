@@ -44,16 +44,16 @@ export default function AssignPointsForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-cyan-500/30 bg-card p-6">
+    <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div>
-        <label className="mb-1 block text-xs font-semibold text-cyan-400">
+        <label className="mb-1 block text-xs font-semibold text-gray-700">
           Mitglied
         </label>
         <select
           required
           value={profileId}
           onChange={(e) => setProfileId(e.target.value)}
-          className="w-full rounded border border-cyan-500/30 bg-background p-2 text-sm"
+          className="w-full rounded border border-gray-300 bg-white p-2 text-sm"
         >
           <option value="">— wählen —</option>
           {members.map((m) => (
@@ -64,7 +64,7 @@ export default function AssignPointsForm({
         </select>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold text-cyan-400">
+        <label className="mb-1 block text-xs font-semibold text-gray-700">
           Punkte (positiv oder negativ)
         </label>
         <input
@@ -73,12 +73,12 @@ export default function AssignPointsForm({
           value={points}
           onChange={(e) => setPoints(e.target.value)}
           placeholder="z. B. 10 oder -5"
-          className="w-full rounded border border-cyan-500/30 bg-background p-2 text-sm"
+          className="w-full rounded border border-gray-300 bg-white p-2 text-sm"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold text-cyan-400">
-          Begründung <span className="text-cyan-500/70">(Pflicht)</span>
+        <label className="mb-1 block text-xs font-semibold text-gray-700">
+          Begründung <span className="text-gray-500">(Pflicht)</span>
         </label>
         <textarea
           required
@@ -86,18 +86,18 @@ export default function AssignPointsForm({
           onChange={(e) => setReason(e.target.value)}
           placeholder="z. B. Materialbeschaffung für Karnevalsparty, Veranstaltung unterstützt …"
           rows={3}
-          className="w-full rounded border border-cyan-500/30 bg-background p-2 text-sm resize-y"
+          className="w-full resize-y rounded border border-gray-300 bg-white p-2 text-sm"
         />
       </div>
       {message && (
-        <p className={message.type === "error" ? "text-sm text-red-300" : "text-sm text-emerald-300"}>
+        <p className={message.type === "error" ? "text-sm text-red-600" : "text-sm text-green-600"}>
           {message.text}
         </p>
       )}
       <button
         type="submit"
         disabled={loading}
-        className="rounded bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+        className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
       >
         {loading ? "Wird gespeichert…" : "Punkte vergeben"}
       </button>

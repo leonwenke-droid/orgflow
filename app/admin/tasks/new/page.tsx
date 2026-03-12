@@ -162,28 +162,28 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Neue Aufgabe" />
       )}
       <div className="card max-w-xl space-y-4">
-        <h2 className="text-sm font-semibold text-cyan-400">
+        <h2 className="text-sm font-semibold text-gray-700">
           Neue Aufgabe anlegen
         </h2>
       <form action={createTask} className="space-y-3 text-sm">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-cyan-400">
+          <label className="mb-1 block text-xs font-semibold text-gray-700">
             Titel
           </label>
           <input
             name="title"
             required
-            className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-cyan-400">
+          <label className="mb-1 block text-xs font-semibold text-gray-700">
             Beschreibung
           </label>
           <textarea
             name="description"
             rows={3}
-            className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
           />
         </div>
         {committeeList.length === 0 && (
@@ -206,18 +206,18 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
         />
         <div className="grid gap-3 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-semibold text-cyan-400">
+            <label className="mb-1 block text-xs font-semibold text-gray-700">
               Deadline
             </label>
             <DueDateTimePicker name="due_at" />
           </div>
           <div className="flex items-end">
-            <label className="inline-flex items-center gap-2 text-xs text-cyan-100/80">
+            <label className="inline-flex items-center gap-2 text-xs text-gray-600">
               <input
                 type="checkbox"
                 name="proof_required"
                 defaultChecked
-                className="rounded border-cyan-500/40 bg-card/60"
+                className="rounded border-gray-400"
               />
               Beleg verpflichtend
             </label>

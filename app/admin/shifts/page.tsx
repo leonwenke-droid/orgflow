@@ -733,21 +733,21 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
       {effectiveOrgSlug && (
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Schichten" />
       )}
-      <h2 className="text-sm font-semibold text-cyan-400">
+      <h2 className="text-sm font-semibold text-gray-700">
         Schichten & Auto-Zuteilung
       </h2>
-      <section className="card space-y-2 sm:space-y-3 text-xs">
-        <h3 className="text-xs font-semibold text-cyan-400">Neue Schichten</h3>
-        <p className="text-cyan-100/80 text-[11px] hidden sm:block">
+      <section className="card space-y-2 text-xs sm:space-y-3">
+        <h3 className="text-xs font-semibold text-gray-700">Neue Schichten</h3>
+        <p className="hidden text-[11px] text-gray-600 sm:block">
           Pausenverkauf (1. + 2. Pause) oder einzelne Veranstaltung.
         </p>
         <CreateShiftsForm action={createShifts} organizationId={orgId ?? undefined} />
       </section>
-      <section className="rounded-xl border border-cyan-500/15 bg-card/50 shadow-sm overflow-hidden">
-        <div className="border-b border-cyan-500/15 bg-cyan-500/5 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3">
           <div>
-            <h3 className="text-sm font-semibold text-cyan-300">Schichtplan</h3>
-            <p className="text-[11px] text-cyan-400/70 mt-0.5">Vergangene Schichten: Antreten bestätigen oder Ersatz eintragen.</p>
+            <h3 className="text-sm font-semibold text-gray-900">Schichtplan</h3>
+            <p className="mt-0.5 text-[11px] text-gray-600">Vergangene Schichten: Antreten bestätigen oder Ersatz eintragen.</p>
           </div>
           {shifts && shifts.length > 0 && (
             <ShiftAttendancePdfExport
@@ -760,7 +760,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         {shiftsError ? (
           <p className="text-xs text-red-300">{shiftsError.message}</p>
         ) : (!shifts || shifts.length === 0) ? (
-          <p className="text-sm text-cyan-400/70">Noch keine Schichten. Formular oben nutzen.</p>
+          <p className="text-sm text-gray-500">Noch keine Schichten. Formular oben nutzen.</p>
         ) : (
           <ShiftPlanTableWithEdit
             shifts={shifts}

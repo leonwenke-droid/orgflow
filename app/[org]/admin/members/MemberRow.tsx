@@ -163,7 +163,7 @@ export default function MemberRow({
   const committeeNames = committeeNamesForIds(Array.from(committeeIds), committees);
 
   return (
-    <tr className="border-b border-cyan-500/10 last:border-0 hover:bg-cyan-500/5">
+    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
       <td className="py-2 pr-3">
         {editingName ? (
           <div className="flex items-center gap-1">
@@ -171,16 +171,16 @@ export default function MemberRow({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="min-w-[140px] rounded border border-cyan-500/30 bg-background px-2 py-0.5 text-sm text-cyan-100"
+              className="min-w-[140px] rounded border border-gray-300 bg-white px-2 py-0.5 text-sm text-gray-900"
               autoFocus
             />
-            <button type="button" onClick={handleSaveName} disabled={loading} className="rounded bg-cyan-600 px-2 py-0.5 text-[10px] text-white hover:bg-cyan-700 disabled:opacity-50">Speichern</button>
-            <button type="button" onClick={() => { setEditingName(false); setName(member.full_name ?? ""); setError(null); }} className="rounded border border-cyan-500/40 px-2 py-0.5 text-[10px] text-cyan-400">Abbrechen</button>
+            <button type="button" onClick={handleSaveName} disabled={loading} className="rounded bg-blue-600 px-2 py-0.5 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">Speichern</button>
+            <button type="button" onClick={() => { setEditingName(false); setName(member.full_name ?? ""); setError(null); }} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-600">Abbrechen</button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <span className="font-medium text-cyan-100">{isCurrentUser ? "Du" : (member.full_name ?? "–")}</span>
-            <button type="button" onClick={() => setEditingName(true)} className="text-[10px] text-cyan-500 hover:text-cyan-400">Bearbeiten</button>
+            <span className="font-medium text-gray-900">{isCurrentUser ? "Du" : (member.full_name ?? "–")}</span>
+            <button type="button" onClick={() => setEditingName(true)} className="text-[10px] text-blue-600 hover:text-blue-700">Bearbeiten</button>
           </div>
         )}
       </td>
@@ -189,22 +189,22 @@ export default function MemberRow({
           <button
             type="button"
             onClick={() => setShowCommittees(!showCommittees)}
-            className="rounded border border-cyan-500/30 bg-background/50 px-2 py-0.5 text-xs text-cyan-200 hover:bg-cyan-500/10"
+            className="rounded border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-50"
           >
             {committeeNames || "–"} ▾
           </button>
           {showCommittees && (
-            <div className="absolute left-0 top-full z-10 mt-1 min-w-[180px] rounded-lg border border-cyan-500/30 bg-card py-2 shadow-lg">
+            <div className="absolute left-0 top-full z-10 mt-1 min-w-[180px] rounded-lg border border-gray-200 bg-white py-2 shadow-lg">
               <div className="max-h-48 space-y-1 overflow-y-auto px-2">
                 {committees.map((c) => (
-                  <label key={c.id} className="flex cursor-pointer items-center gap-2 px-2 py-0.5 text-xs text-cyan-100 hover:bg-cyan-500/10">
-                    <input type="checkbox" checked={committeeIds.has(c.id)} onChange={() => toggleCommittee(c.id)} className="rounded border-cyan-500/40" />
+                  <label key={c.id} className="flex cursor-pointer items-center gap-2 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-50">
+                    <input type="checkbox" checked={committeeIds.has(c.id)} onChange={() => toggleCommittee(c.id)} className="rounded border-gray-400" />
                     {c.name}
                   </label>
                 ))}
               </div>
-              <div className="mt-2 border-t border-cyan-500/20 px-2 pt-2">
-                <button type="button" onClick={handleCommitteesSave} disabled={loading} className="w-full rounded bg-cyan-600 py-1 text-[10px] text-white hover:bg-cyan-700 disabled:opacity-50">Speichern</button>
+              <div className="mt-2 border-t border-gray-200 px-2 pt-2">
+                <button type="button" onClick={handleCommitteesSave} disabled={loading} className="w-full rounded bg-blue-600 py-1 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">Speichern</button>
               </div>
             </div>
           )}
@@ -213,20 +213,20 @@ export default function MemberRow({
       <td className="py-2 pr-3">
         {showLeadEmailForm ? (
           <form onSubmit={handleSubmitLeadWithEmail} className="flex flex-wrap items-center gap-1">
-            <input type="email" required value={leadEmail} onChange={(e) => setLeadEmail(e.target.value)} placeholder="E-Mail" className="min-w-[140px] rounded border border-cyan-500/30 bg-background px-2 py-0.5 text-xs text-cyan-100" />
-            <button type="submit" disabled={loading} className="rounded bg-cyan-600 px-2 py-0.5 text-[10px] text-white hover:bg-cyan-700 disabled:opacity-50">Speichern</button>
-            <button type="button" onClick={() => { setShowLeadEmailForm(false); setIsLead(false); setError(null); }} className="rounded border border-cyan-500/40 px-2 py-0.5 text-[10px] text-cyan-400">Abbrechen</button>
+            <input type="email" required value={leadEmail} onChange={(e) => setLeadEmail(e.target.value)} placeholder="E-Mail" className="min-w-[140px] rounded border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-900" />
+            <button type="submit" disabled={loading} className="rounded bg-blue-600 px-2 py-0.5 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">Speichern</button>
+            <button type="button" onClick={() => { setShowLeadEmailForm(false); setIsLead(false); setError(null); }} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-600">Abbrechen</button>
           </form>
         ) : (
-          <label className="flex cursor-pointer items-center gap-1.5 text-cyan-300">
-            <input type="checkbox" checked={isLead} onChange={(e) => handleLeadChange(e.target.checked)} className="rounded border-cyan-500/40" />
+          <label className="flex cursor-pointer items-center gap-1.5 text-gray-600">
+            <input type="checkbox" checked={isLead} onChange={(e) => handleLeadChange(e.target.checked)} className="rounded border-gray-400" />
             <span className="text-xs">Lead</span>
           </label>
         )}
       </td>
       <td className="py-2 pr-3">
         {effectiveStatus && (
-          <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${effectiveStatus === "confirmed" ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
+            <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${effectiveStatus === "confirmed" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
             {effectiveStatus === "confirmed" ? "Angemeldet" : "Ausstehend"}
           </span>
         )}
@@ -234,12 +234,12 @@ export default function MemberRow({
       <td className="py-2">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1">
-            <button type="button" onClick={handleDelete} disabled={loading} className="rounded border border-red-500/60 px-2 py-0.5 text-[10px] text-red-300 hover:bg-red-500/10 disabled:opacity-50">Entfernen</button>
+            <button type="button" onClick={handleDelete} disabled={loading} className="rounded border border-red-300 px-2 py-0.5 text-[10px] text-red-600 hover:bg-red-50 disabled:opacity-50">Entfernen</button>
             {hasLeadRole && effectiveStatus === "pending" && (
-              <button type="button" onClick={handleResendInvite} disabled={loading} className="rounded border border-cyan-500/60 px-2 py-0.5 text-[10px] text-cyan-300 hover:bg-cyan-500/10 disabled:opacity-50">Einladung erneut</button>
+              <button type="button" onClick={handleResendInvite} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50">Einladung erneut</button>
             )}
           </div>
-          {error && <span className="text-[10px] text-red-400">{error}</span>}
+          {error && <span className="text-[10px] text-red-600">{error}</span>}
         </div>
       </td>
     </tr>

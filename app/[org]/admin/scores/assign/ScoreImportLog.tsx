@@ -52,22 +52,22 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
   }
 
   return (
-    <section className="mt-10 rounded-lg border border-cyan-500/25 bg-card/50 p-6">
-      <h2 className="text-sm font-semibold text-cyan-300 mb-3">
+    <section className="mt-10 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <h2 className="mb-3 text-sm font-semibold text-gray-900">
         Protokoll: Individuell vergebene Punkte
       </h2>
       {error && (
-        <p className="mb-4 text-sm text-red-300" role="alert">
+        <p className="mb-4 text-sm text-red-600" role="alert">
           {error}
         </p>
       )}
-      <p className="text-xs text-cyan-400/80 mb-4">
+      <p className="mb-4 text-xs text-gray-600">
         Wann, wie viele Punkte, an wen, Begründung und Vergeber.
       </p>
       <div className="overflow-x-auto">
         <table className="min-w-full text-xs border-collapse">
           <thead>
-            <tr className="border-b border-cyan-500/20 text-left text-cyan-400/90">
+            <tr className="border-b border-gray-200 text-left text-gray-500">
               <th className="py-2 pr-4 font-medium">Datum & Uhrzeit</th>
               <th className="py-2 pr-4 font-medium">Empfänger</th>
               <th className="py-2 pr-4 font-medium text-right">Punkte</th>
@@ -78,8 +78,8 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
           </thead>
           <tbody>
             {entries.map((e) => (
-              <tr key={e.id} className="border-b border-cyan-500/10 text-cyan-200/90">
-                <td className="py-2.5 pr-4 whitespace-nowrap text-cyan-400/90">
+              <tr key={e.id} className="border-b border-gray-100 text-gray-700">
+                <td className="whitespace-nowrap py-2.5 pr-4 text-gray-600">
                   {formatDate(e.created_at)}
                 </td>
                 <td className="py-2.5 pr-4">{e.recipientName}</td>
@@ -89,7 +89,7 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
                 <td className="py-2.5 pr-4 max-w-[200px] truncate" title={e.reason}>
                   {e.reason}
                 </td>
-                <td className="py-2.5 text-cyan-400/80">{e.createdBy}</td>
+                <td className="py-2.5 text-gray-600">{e.createdBy}</td>
                 <td className="py-2.5 text-right">
                   {e.canRemove ? (
                     <form action={handleRemove} className="inline">
@@ -97,7 +97,7 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
                       <button
                         type="submit"
                         disabled={removingId === e.id}
-                        className="rounded px-2 py-1 text-[10px] text-red-300 hover:bg-red-500/20 hover:text-red-200 disabled:opacity-50"
+                        className="rounded px-2 py-1 text-[10px] text-red-600 hover:bg-red-100 disabled:opacity-50"
                         title="Punkte entfernen"
                       >
                         {removingId === e.id ? "…" : "Entfernen"}
