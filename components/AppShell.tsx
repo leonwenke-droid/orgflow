@@ -40,6 +40,8 @@ function AppShellInner({
   const orgSlug = useOrgSlug();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const showSidebar = !!(orgSlug && user);
+
   return (
     <>
       <Sidebar
@@ -48,7 +50,7 @@ function AppShellInner({
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
       />
-      <div className="min-w-0 flex-1 lg:pl-56">
+      <div className={`min-w-0 flex-1 ${showSidebar ? "lg:pl-56" : ""}`}>
         <AppHeader user={user} onMenuOpen={() => setMobileOpen(true)} />
         {children}
       </div>
