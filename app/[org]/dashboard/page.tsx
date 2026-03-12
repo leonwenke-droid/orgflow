@@ -7,6 +7,7 @@ import { removePastShifts } from "../../../lib/cleanupShifts";
 import { getDashboardDisplayNames } from "../../../lib/displayName";
 import { formatWeekRangeLabel, formatDateTimeForDisplay, getTodayDateString } from "../../../lib/dateFormat";
 import ShiftPlanWeekNav from "../../../components/ShiftPlanWeekNav";
+import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, isSuperAdmin } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -218,135 +219,53 @@ export default async function OrgDashboardPage({
         )}
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[
+          {
+            icon: CheckSquare,
+            label: "Open Tasks",
+            value: aggregate.total_open,
+            sub: "tasks need attention"
+          },
+          {
+            icon: CalendarDays,
+            label: "Upcoming Shifts",
+            value: (shifts as { date: string }[]).filter((s) => {
+              const d = new Date(s.date);
+              const now = new Date();
+              const in7 = new Date(now);
+              in7.setDate(in7.getDate() + 7);
+              return d >= now && d <= in7;
+            }).length,
+            sub: "in the next 7 days"
+          },
+          {
+            icon: Wallet,
+            label: "Treasury",
+            value: treasury ? `€${treasury.amount.toLocaleString("de-DE")}` : "–",
+            sub: "current balance"
+          },
+          {
+            icon: Users,
+            label: "Active Members",
+            value: activity.active_participants_30d,
+            sub: "last 30 days"
+          }
+        ].map(({ icon: Icon, label, value, sub }) => (
+          <div
+            key={label}
+            className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-500 dark:text-muted">{label}</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-gray-800">
+                <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
-                <h3 className="text-xs font-medium text-gray-500">
-                  Treasury balance
-                </h3>
-                <p className="text-xl font-bold text-gray-900">
-                  {treasury ? treasury.amount.toLocaleString("de-DE") : "–"} €
-                </p>
-              </div>
             </div>
-            <p className="mt-3 border-t border-gray-100 pt-2 text-xs text-gray-500">
-                {treasury
-                ? `Updated ${formatDateTimeForDisplay(treasury.created_at)}`
-                : "No entries yet"}
-            </p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-foreground-dark">{value}</p>
+            <p className="mt-1 text-xs text-gray-400 dark:text-muted">{sub}</p>
           </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xs font-medium text-gray-500">
-                Team activity
-              </h3>
-            </div>
-            <ul className="space-y-2 text-xs">
-              <li className="flex items-center justify-between">
-                <span className="text-gray-600">Shifts completed</span>
-                <span className="tabular-nums font-semibold text-gray-900">
-                  {activity.shifts_done_30d}
-                </span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="text-gray-600">Tasks completed</span>
-                <span className="tabular-nums font-semibold text-gray-900">
-                  {activity.tasks_done_30d}
-                </span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="text-gray-600">
-                  Event & resource management
-                </span>
-                <span className="tabular-nums font-semibold text-gray-900">
-                  {activity.materials_30d}
-                </span>
-              </li>
-              {activity.materials_30d > 0 && (
-                <li className="flex items-center justify-between pl-3 text-gray-500">
-                  <span>Small · Medium · Large</span>
-                  <span className="tabular-nums">
-                    {activity.materials_small_30d} / {activity.materials_medium_30d}{" "}
-                    / {activity.materials_large_30d}
-                  </span>
-                </li>
-              )}
-              <li className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2">
-                <span className="font-medium text-gray-600">
-                  Active participants
-                </span>
-                <span className="tabular-nums font-semibold text-gray-900">
-                  {activity.active_participants_30d} / {activity.total_members}
-                </span>
-              </li>
-            </ul>
-          </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                ><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-            </div>
-            <h3 className="text-xs font-medium text-gray-500">Open tasks</h3>
-          </div>
-          <div className="text-2xl font-bold text-gray-900">
-            {aggregate.total_open}
-          </div>
-          <p className="mt-1 text-xs text-gray-500">
-            {aggregate.total_in_progress} in progress · {aggregate.total_overdue} overdue
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                ><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            </div>
-            <h3 className="text-xs font-medium text-gray-500">Upcoming shifts</h3>
-          </div>
-          <div className="text-2xl font-bold text-gray-900">
-            {shifts.filter((s: { date: string }) => new Date(s.date) >= new Date()).length}
-          </div>
-          <p className="mt-1 text-xs text-gray-500">
-            {shifts.length} total
-          </p>
-        </div>
+        ))}
       </section>
 
       {false && (
@@ -387,7 +306,7 @@ export default async function OrgDashboardPage({
             Use ← / → to switch weeks · Tap day card for details
           </p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
           {!shifts || shifts.length === 0 ? (
             <p className="text-xs text-gray-500">
               No shifts in the system yet.

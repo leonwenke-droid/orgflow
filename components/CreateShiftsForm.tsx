@@ -15,10 +15,10 @@ function SubmitButton() {
       {pending ? (
         <>
           <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-300 border-t-transparent" aria-hidden />
-          Schichten werden angelegt …
+          Creating shifts…
         </>
       ) : (
-        "Schicht(en) anlegen"
+        "Create shift(s)"
       )}
     </button>
   );
@@ -65,7 +65,7 @@ export default function CreateShiftsForm({
               onChange={() => setType("pausenverkauf")}
               className="rounded border-gray-400"
             />
-            Pausenverkauf (1. & 2. Pause)
+            Break sales (1st & 2nd break)
           </label>
           <label className="inline-flex items-center gap-2">
             <input
@@ -81,7 +81,7 @@ export default function CreateShiftsForm({
         </div>
       </div>
       <div className="space-y-1">
-        <label className="text-[11px] font-semibold text-gray-700">Datum</label>
+        <label className="text-[11px] font-semibold text-gray-700">Date</label>
         <CalendarPicker name="date" required />
       </div>
       <div className="space-y-1 md:col-span-2">
@@ -92,7 +92,7 @@ export default function CreateShiftsForm({
           required
           placeholder={
             type === "pausenverkauf"
-              ? "z.B. Schultag 12.02., Pausenverkauf"
+              ? "e.g. School day 12.02., break sales"
               : "z.B. Abi-Party in der Aula"
           }
           className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs sm:min-h-0 sm:p-2"

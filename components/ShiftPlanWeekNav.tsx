@@ -149,7 +149,7 @@ export default function ShiftPlanWeekNav({
 
   if (!week) {
     return (
-      <p className="text-xs text-gray-500">Keine Schichten in diesem Zeitraum.</p>
+      <p className="text-xs text-gray-500">No shifts in this period.</p>
     );
   }
 
@@ -272,7 +272,7 @@ export default function ShiftPlanWeekNav({
             }}
             disabled={!canDayRight}
             className="shrink-0 rounded-xl border border-gray-300 bg-white p-3 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation"
-            aria-label="Nächster Tag"
+            aria-label="Next day"
           >
             →
           </button>
@@ -313,7 +313,7 @@ export default function ShiftPlanWeekNav({
             )}
 
             {!currentDay.shifts.length ? (
-              <p className="py-2 text-sm text-gray-500">Keine Schichten eingetragen.</p>
+              <p className="py-2 text-sm text-gray-500">No shifts entered.</p>
             ) : (
               <div className="space-y-4">
                 {(currentDay.dayTitle || currentDay.location || currentDay.notes) && (
@@ -333,7 +333,7 @@ export default function ShiftPlanWeekNav({
                 )}
                 <div>
                   <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
-                    Schichten
+                    Shifts
                   </p>
                   <ul className="space-y-2">
                     {currentDay.shifts.map((s) => (
@@ -443,7 +443,7 @@ export default function ShiftPlanWeekNav({
                   type="button"
                   onClick={() => setOverlayDay(null)}
                   className="rounded p-1 text-gray-600 hover:bg-gray-200 focus:outline-none"
-                  aria-label="Schließen"
+                  aria-label="Close"
                 >
                   ✕
                 </button>
@@ -485,33 +485,33 @@ export default function ShiftPlanWeekNav({
       {exportDay && (
         <div
           ref={exportDivRef}
-          className="fixed left-[-9999px] top-0 w-[400px] rounded-xl border border-cyan-500/30 bg-slate-800 p-4 text-left"
+          className="fixed left-[-9999px] top-0 w-[400px] rounded-xl border border-blue-500/30 bg-slate-800 p-4 text-left"
           style={{ color: "rgb(207 250 254)", fontFamily: "inherit" }}
         >
-          <h3 className="text-base font-semibold text-cyan-400 border-b border-cyan-500/20 pb-2 mb-3">
+          <h3 className="text-base font-semibold text-blue-400 border-b border-blue-500/20 pb-2 mb-3">
             {formatDateLabel(exportDay.dateStr, { weekday: "long" })}
           </h3>
           {exportDay.dayTitle && (
-            <p className="text-sm font-medium text-cyan-200 mb-1">{exportDay.dayTitle}</p>
+            <p className="text-sm font-medium text-blue-200 mb-1">{exportDay.dayTitle}</p>
           )}
           {exportDay.location && (
-            <p className="text-xs text-cyan-400/90 mb-1">Ort: {exportDay.location}</p>
+            <p className="text-xs text-blue-400/90 mb-1">Ort: {exportDay.location}</p>
           )}
           {exportDay.notes && (
-            <p className="text-xs text-cyan-200/90 whitespace-pre-wrap mb-3">{exportDay.notes}</p>
+            <p className="text-xs text-blue-200/90 whitespace-pre-wrap mb-3">{exportDay.notes}</p>
           )}
-          <div className="pt-2 border-t border-cyan-500/20">
-            <p className="text-xs font-semibold uppercase tracking-wide text-cyan-400/90 mb-2">
+          <div className="pt-2 border-t border-blue-500/20">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-400/90 mb-2">
               Zeitfenster
             </p>
             <ul className="space-y-2">
               {exportDay.shifts.map((s) => (
                 <li
                   key={s.id}
-                  className="rounded border border-cyan-500/20 bg-slate-700/50 px-3 py-2 text-xs"
+                  className="rounded border border-blue-500/20 bg-slate-700/50 px-3 py-2 text-xs"
                 >
-                  <span className="font-medium text-cyan-300">{slotLabelDetail(s)}</span>
-                  <p className="mt-1 text-cyan-200/90">
+                  <span className="font-medium text-blue-300">{slotLabelDetail(s)}</span>
+                  <p className="mt-1 text-blue-200/90">
                     {formatAssignmentsPlain(s.assignments, profileNames)}
                   </p>
                 </li>

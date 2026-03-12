@@ -121,7 +121,7 @@ export default function MemberRow({
     e.preventDefault();
     const email = leadEmail.trim();
     if (!email) {
-      setError("E-Mail ist für Komiteeleitung erforderlich.");
+      setError("Email is required for team lead.");
       return;
     }
     setLoading(true);
@@ -136,7 +136,7 @@ export default function MemberRow({
   }
 
   async function handleDelete() {
-    if (!window.confirm("Mitglied wirklich vollständig löschen?")) return;
+    if (!window.confirm("Really delete member completely?")) return;
     setLoading(true);
     setError(null);
     const { error } = await deleteMemberAction(orgSlug, member.id);

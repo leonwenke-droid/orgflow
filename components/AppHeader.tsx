@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { Menu } from "lucide-react";
 import FullPageLink from "./FullPageLink";
 import LogoutButton from "./LogoutButton";
+import ThemeToggle from "./ThemeToggle";
 
 const RESERVED = ["admin", "dashboard", "login", "super-admin", "task", "api", "claim-org", "auth", "create-organisation", "join"];
 
@@ -59,11 +60,12 @@ export default function AppHeader({ user, onMenuOpen }: { user: User | null; onM
             <Menu className="h-5 w-5" />
           </button>
         )}
-        <h1 className="text-xl font-semibold tracking-tight text-gray-900">
+        <h1 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
           {orgName ? `OrgFlow – ${orgName}` : "OrgFlow"}
         </h1>
       </div>
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         {!user && orgSlug && (
           <FullPageLink
             href={`/${orgSlug}/login`}

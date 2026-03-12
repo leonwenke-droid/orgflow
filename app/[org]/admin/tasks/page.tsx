@@ -28,8 +28,8 @@ export default async function AdminTasksPage(props: {
 
   return (
     <div className="mx-auto max-w-4xl p-6">
-      <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Aufgaben" />
-      <h1 className="mt-4 text-2xl font-bold text-gray-900">Aufgaben – {org.name}</h1>
+      <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Tasks" />
+      <h1 className="mt-4 text-2xl font-bold text-gray-900">Tasks – {org.name}</h1>
       <p className="mt-1 text-sm text-gray-600">Manage (organisation)</p>
       <ul className="mt-6 space-y-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         {(tasks ?? []).map((t: { id: string; title: string | null; status: string | null; committees: { name: string | null }[] }) => (
@@ -41,7 +41,7 @@ export default async function AdminTasksPage(props: {
           </li>
         ))}
         {(!tasks || tasks.length === 0) && (
-          <li className="text-gray-500">Noch keine Aufgaben.</li>
+          <li className="text-gray-500">No tasks yet.</li>
         )}
       </ul>
     </div>

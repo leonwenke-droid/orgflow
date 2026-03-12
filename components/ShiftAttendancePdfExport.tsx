@@ -50,9 +50,9 @@ const MARGIN = 12;
 const BOTTOM_LIMIT = PAGE_HEIGHT - 18;
 const LINE = 4;
 const CARD_PAD = 3;
-const cyan = [6, 182, 212] as [number, number, number];
-const cyanLight = [230, 248, 250] as [number, number, number];
-const cyanBorder = [6, 182, 212] as [number, number, number];
+const blue = [37, 99, 235] as [number, number, number];
+const blueLight = [239, 246, 255] as [number, number, number];
+const blueBorder = [37, 99, 235] as [number, number, number];
 const greenBg = [22, 101, 52] as [number, number, number];
 const greenText = [74, 222, 128] as [number, number, number];
 const redBg = [127, 29, 29] as [number, number, number];
@@ -107,10 +107,10 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
 
       const dateCardW = PAGE_WIDTH - MARGIN * 2;
       const dateCardH = LINE + CARD_PAD * 2;
-      doc.setFillColor(...cyanLight);
-      doc.setDrawColor(...cyanBorder);
+      doc.setFillColor(...blueLight);
+      doc.setDrawColor(...blueBorder);
       doc.rect(MARGIN, y, dateCardW, dateCardH, "FD");
-      doc.setTextColor(...cyan);
+      doc.setTextColor(...blue);
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
       doc.text(formatDateLabel(dateStr), MARGIN + CARD_PAD, y + dateCardH / 2 + 1);
@@ -125,8 +125,8 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
         const eventHeaderH = LINE + CARD_PAD * 2;
         const eventCardX = MARGIN + 4;
         const eventCardW = dateCardW - 8;
-        doc.setFillColor(...cyanLight);
-        doc.setDrawColor(...cyanBorder);
+        doc.setFillColor(...blueLight);
+        doc.setDrawColor(...blueBorder);
         doc.rect(eventCardX, y, eventCardW, eventHeaderH, "FD");
         doc.setTextColor(...text);
         doc.setFontSize(9);
@@ -181,14 +181,14 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
               if (repName) {
                 doc.text(`✗ ${name}`, textX, blockY + blockPad + LINE * 0.8);
                 doc.text(`Ersatz: `, textX, blockY + blockPad + LINE + LINE * 0.8);
-                doc.setTextColor(...cyan);
+                doc.setTextColor(...blue);
                 const ersatzLabelW = doc.getTextWidth("Ersatz: ");
                 doc.text(repName, textX + ersatzLabelW, blockY + blockPad + LINE + LINE * 0.8);
               } else {
                 const txt = `✗ ${name}`;
                 doc.text(txt, textX, blockY + blockPad + LINE * 0.8);
                 const nameW = doc.getTextWidth(txt);
-                doc.setDrawColor(...cyan);
+                doc.setDrawColor(...blue);
                 doc.line(textX, blockY + blockPad + LINE * 0.7, textX + nameW, blockY + blockPad + LINE * 0.7);
               }
             } else {

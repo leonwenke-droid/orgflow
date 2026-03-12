@@ -64,10 +64,10 @@ export default async function TaskPage({
   if (verifiedToken === token) {
     return (
       <div className="card max-w-xl">
-        <h2 className="mb-2 text-sm font-semibold text-cyan-400">
+        <h2 className="mb-2 text-sm font-semibold text-blue-400">
           Persönliche Aufgabe
         </h2>
-        <p className="text-xs text-cyan-400/80 mb-4">
+        <p className="text-xs text-blue-400/80 mb-4">
           Dieser Link ist nur für dich. Du kannst den Status ändern und bei Bedarf einen Beleg hochladen.
         </p>
         <TaskConfirmationForm
@@ -88,10 +88,10 @@ export default async function TaskPage({
 
   return (
     <div className="card max-w-xl">
-      <h2 className="mb-2 text-sm font-semibold text-cyan-400">
+      <h2 className="mb-2 text-sm font-semibold text-blue-400">
         Aufgabenlink bestätigen
       </h2>
-      <p className="text-xs text-cyan-400/80 mb-4">
+      <p className="text-xs text-blue-400/80 mb-4">
         Gib einmalig deinen Namen ein, damit wir prüfen können, ob dieser Link für dich bestimmt ist.
       </p>
       <NameVerificationForm token={token} verifyAction={verifyTaskOwner} />

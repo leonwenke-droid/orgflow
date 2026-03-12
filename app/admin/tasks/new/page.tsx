@@ -143,7 +143,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
   if (!profile || !["admin", "lead"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300">
-        Zugriff nur für Admins & Komiteeleitungen.
+        Access only for admins & team leads.
       </p>
     );
   }
@@ -163,7 +163,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
       )}
       <div className="card max-w-xl space-y-4">
         <h2 className="text-sm font-semibold text-gray-700">
-          Neue Aufgabe anlegen
+          New task
         </h2>
       <form action={createTask} className="space-y-3 text-sm">
         <div>
@@ -201,7 +201,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
             committee_id: m.committee_id != null ? String(m.committee_id) : null,
             committee_ids: userIdToCommitteeIds.get(String(m.id)) ?? []
           }))}
-          committeeName="Komitee"
+          committeeName="Team"
           ownerName="Verantwortliche Person"
         />
         <div className="grid gap-3 md:grid-cols-2">

@@ -22,12 +22,12 @@ export default function AssignPointsForm({
     e.preventDefault();
     const num = parseInt(points, 10);
     if (!profileId || isNaN(num)) {
-      setMessage({ type: "error", text: "Mitglied wählen und Punkte (Zahl) angeben." });
+      setMessage({ type: "error", text: "Select member and enter points (number)." });
       return;
     }
     const trimmedReason = reason.trim();
     if (!trimmedReason) {
-      setMessage({ type: "error", text: "Bitte eine Begründung angeben." });
+      setMessage({ type: "error", text: "Please provide a reason." });
       return;
     }
     setLoading(true);
@@ -84,7 +84,7 @@ export default function AssignPointsForm({
           required
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="z. B. Materialbeschaffung für Karnevalsparty, Veranstaltung unterstützt …"
+          placeholder="e.g. Material procurement for event, supported event …"
           rows={3}
           className="w-full resize-y rounded border border-gray-300 bg-white p-2 text-sm"
         />

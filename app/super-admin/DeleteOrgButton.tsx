@@ -44,19 +44,19 @@ export default function DeleteOrgButton({
           onSubmit={handleSubmit}
           className="mt-3 rounded-lg border border-red-500/30 bg-card p-4"
         >
-          <p className="text-sm font-medium text-cyan-100">
+          <p className="text-sm font-medium text-blue-100">
             Organisation wirklich entfernen?
           </p>
-          <p className="mt-1 text-xs text-cyan-400/80">
+          <p className="mt-1 text-xs text-blue-400/80">
             Zum Bestätigen bitte den exakten Organisationsnamen eingeben:{" "}
-            <strong className="text-cyan-200">{orgName}</strong>
+            <strong className="text-blue-200">{orgName}</strong>
           </p>
           <input
             type="text"
             value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
             placeholder={orgName}
-            className="mt-3 w-full rounded border border-cyan-500/30 bg-background px-3 py-2 text-sm text-cyan-100 placeholder:text-cyan-500/50"
+            className="mt-3 w-full rounded border border-blue-500/30 bg-background px-3 py-2 text-sm text-blue-100 placeholder:text-blue-500/50"
           />
           {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
           <div className="mt-3 flex gap-2">
@@ -70,7 +70,7 @@ export default function DeleteOrgButton({
             <button
               type="button"
               onClick={() => { setOpen(false); setConfirmation(""); setError(null); }}
-              className="rounded border border-cyan-500/40 px-3 py-1.5 text-xs text-cyan-300 hover:bg-cyan-500/10"
+              className="rounded border border-blue-500/40 px-3 py-1.5 text-xs text-blue-300 hover:bg-blue-500/10"
             >
               Abbrechen
             </button>

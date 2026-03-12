@@ -90,13 +90,13 @@ export default function ShiftEditModal({
       >
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 px-3 py-2.5 sm:py-2">
           <h3 className="text-xs font-semibold text-gray-900">
-            {personsOnly ? "Personen" : isEventGroup ? "Veranstaltung bearbeiten (alle Schichten)" : "Schicht bearbeiten"}
+            {personsOnly ? "Persons" : isEventGroup ? "Edit event (all shifts)" : "Edit shift"}
           </h3>
           <button
             type="button"
             onClick={onClose}
             className="-m-2 flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-2 text-gray-600 hover:bg-blue-100 focus:outline-none touch-manipulation"
-            aria-label="Schließen"
+            aria-label="Close"
           >
             ✕
           </button>
@@ -126,7 +126,7 @@ export default function ShiftEditModal({
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] font-semibold text-gray-700 block mb-0.5">Datum</label>
+                <label className="text-[10px] font-semibold text-gray-700 block mb-0.5">Date</label>
                 <input
                   type="date"
                   name="date"
@@ -180,7 +180,7 @@ export default function ShiftEditModal({
                 name="notes"
                 rows={2}
                 defaultValue={shift.notes ?? ""}
-                placeholder="Infos für den Jahrgang …"
+                placeholder="Info for the cohort …"
                 className="w-full rounded border border-gray-300 bg-white p-2 text-xs resize-y"
               />
             </div>
@@ -312,7 +312,7 @@ export default function ShiftEditModal({
               </select>
               <SubmitButtonWithSpinner
                 className="inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 hover:bg-blue-200 disabled:opacity-70"
-                loadingLabel="Hinzufügen…"
+                loadingLabel="Adding…"
               >
                 Hinzufügen
               </SubmitButtonWithSpinner>

@@ -43,7 +43,7 @@ export default function TreasuryUploadForm({
 
     const data = await res.json();
     setLoading(false);
-    setMessage(data.message || "Kassenstand aktualisiert.");
+    setMessage(data.message || "Treasury balance updated.");
   };
 
   const isSubmitDisabled =
@@ -93,7 +93,7 @@ export default function TreasuryUploadForm({
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-gray-700">
-              Zelle mit Kassenstand (z. B. M9)
+              Cell with treasury balance (e.g. M9)
             </label>
             <input
               type="text"
@@ -106,7 +106,7 @@ export default function TreasuryUploadForm({
       ) : (
         <div>
           <label className="mb-1 block text-xs font-semibold text-gray-700">
-            Kassenstand in Euro
+            Treasury balance in EUR
           </label>
           <input
             type="number"
@@ -124,15 +124,15 @@ export default function TreasuryUploadForm({
         disabled={isSubmitDisabled}
         className="btn-primary text-xs"
       >
-        {loading ? "Wird gespeichert…" : "Kassenstand aktualisieren"}
+        {loading ? "Saving…" : "Update treasury balance"}
       </button>
 
       <p className="text-[11px] text-gray-500">
-        Nur das Finanzkomitee sollte den Kassenstand aktualisieren.
+        Only the finance team should update the treasury balance.
       </p>
       {message && (
         <p className="text-xs text-gray-600">
-          {message} – Dashboard aktualisiert sich automatisch.
+          {message} – Dashboard will update automatically.
         </p>
       )}
     </form>

@@ -55,7 +55,7 @@ export default function NameVerificationForm({
         disabled={loading}
         className="btn-primary text-xs"
       >
-        {loading ? "Prüfen…" : "Bestätigen"}
+        {loading ? "Verifying…" : "Confirm"}
       </button>
     </form>
   );

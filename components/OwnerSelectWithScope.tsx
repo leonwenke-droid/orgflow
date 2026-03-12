@@ -44,7 +44,7 @@ export default function OwnerSelectWithScope({
       <input type="hidden" name="committee_id" value={scope === "year" ? "" : committeeId} />
       <div>
         <label className="mb-1 block text-xs font-semibold text-gray-700">
-          Verantwortliche Person aus
+          Responsible person from
         </label>
         <div className="flex flex-wrap gap-3 mb-1.5">
           <label className="inline-flex items-center gap-2 text-xs text-gray-600">
@@ -55,7 +55,7 @@ export default function OwnerSelectWithScope({
               onChange={() => setScope("committee")}
               className="rounded border-gray-400"
             />
-            Nur gewähltes Komitee
+            Selected team only
           </label>
           <label className="inline-flex items-center gap-2 text-xs text-gray-600">
             <input
@@ -65,13 +65,13 @@ export default function OwnerSelectWithScope({
               onChange={() => setScope("year")}
               className="rounded border-gray-400"
             />
-            Gesamter Jahrgang
+            Entire cohort
           </label>
         </div>
         {scope === "committee" && (
           <div className="mt-2">
             <label className="mb-1 block text-xs font-semibold text-gray-700">
-              {committeeName} (Pflicht)
+              {committeeName} (required)
             </label>
             <select
               required={scope === "committee"}
@@ -79,7 +79,7 @@ export default function OwnerSelectWithScope({
               onChange={(e) => setCommitteeId(e.target.value)}
               className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
             >
-              <option value="">Bitte Komitee wählen…</option>
+              <option value="">Please select team…</option>
               {committees.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -89,12 +89,12 @@ export default function OwnerSelectWithScope({
           </div>
         )}
         <p className="mb-1.5 text-[10px] text-gray-500">
-          Bei „Nur gewähltes Komitee“ werden nur Mitglieder angezeigt, die diesem Komitee zugeordnet sind (primäres Komitee oder weitere Zugehörigkeiten).
+          With "Selected team only", only members assigned to that team are shown (primary or additional).
         </p>
         <MemberSelect
           name="owner_id"
           options={ownerOptions}
-          placeholder={scope === "committee" && !committeeId ? "Zuerst Komitee wählen…" : "Name eingeben oder wählen…"}
+          placeholder={scope === "committee" && !committeeId ? "Select team first…" : "Enter or select name…"}
         />
       </div>
     </div>

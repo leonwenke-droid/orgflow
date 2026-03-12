@@ -112,7 +112,7 @@ export default function LeadSetupClient({
   if (status === "checking") {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <p className="text-sm text-cyan-300">Einladung wird geprüft …</p>
+        <p className="text-sm text-blue-300">Einladung wird geprüft …</p>
       </div>
     );
   }
@@ -126,30 +126,30 @@ export default function LeadSetupClient({
   }
 
   return (
-    <div className="mx-auto max-w-md rounded-xl border border-cyan-500/30 bg-card/80 p-6 shadow-lg">
-      <h1 className="text-lg font-semibold text-cyan-100">Passwort festlegen</h1>
-      <p className="mt-1 text-xs text-cyan-300">
+    <div className="mx-auto max-w-md rounded-xl border border-blue-500/30 bg-card/80 p-6 shadow-lg">
+      <h1 className="text-lg font-semibold text-blue-100">Passwort festlegen</h1>
+      <p className="mt-1 text-xs text-blue-300">
         Bitte lege ein Passwort für deinen Zugang fest. Danach wirst du direkt zum Admin-Dashboard weitergeleitet.
       </p>
       <form onSubmit={handleSubmit} className="mt-4 space-y-3 text-sm">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-cyan-400">Passwort</label>
+          <label className="mb-1 block text-xs font-semibold text-blue-400">Passwort</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded border border-cyan-500/30 bg-background px-2 py-1.5 text-xs text-cyan-100"
+            className="w-full rounded border border-blue-500/30 bg-background px-2 py-1.5 text-xs text-blue-100"
             autoComplete="new-password"
             required
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-cyan-400">Passwort wiederholen</label>
+          <label className="mb-1 block text-xs font-semibold text-blue-400">Passwort wiederholen</label>
           <input
             type="password"
             value={passwordRepeat}
             onChange={(e) => setPasswordRepeat(e.target.value)}
-            className="w-full rounded border border-cyan-500/30 bg-background px-2 py-1.5 text-xs text-cyan-100"
+            className="w-full rounded border border-blue-500/30 bg-background px-2 py-1.5 text-xs text-blue-100"
             autoComplete="new-password"
             required
           />
@@ -158,7 +158,7 @@ export default function LeadSetupClient({
         <button
           type="submit"
           disabled={status === "saving"}
-          className="w-full rounded bg-cyan-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-cyan-700 disabled:opacity-50"
+          className="w-full rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
           {status === "saving" ? "Wird gespeichert …" : "Passwort speichern & weiter"}
         </button>

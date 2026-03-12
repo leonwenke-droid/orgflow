@@ -36,7 +36,7 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
     <div className={className}>
       <input type="hidden" name={name} value={dueAtValue} readOnly />
       <div className="space-y-2">
-        <label className="text-[11px] font-semibold text-gray-700">Datum</label>
+        <label className="text-[11px] font-semibold text-gray-700">Date</label>
         <CalendarPicker
           defaultValue={date}
           min={minDate}
@@ -61,7 +61,7 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
           onClick={() => setTimeOverlayOpen(false)}
           role="dialog"
           aria-modal="true"
-          aria-label="Uhrzeit wählen"
+          aria-label="Select time"
         >
           <div
             className="max-w-xs w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"

@@ -35,7 +35,7 @@ export default function CommitteeRow({
   }
 
   async function handleDelete() {
-    if (!confirm(`Komitee „${committee.name}" wirklich löschen?`)) return;
+    if (!confirm(`Really delete team "${committee.name}"?`)) return;
     setLoading(true);
     setError(null);
     const { error: err } = await deleteCommitteeAction(orgSlug, committee.id);

@@ -33,7 +33,7 @@ export default async function OrgLoginPage({
       <div className="card space-y-4">
         <div>
           <h2 className="text-sm font-semibold text-gray-700">
-            Anmelden – {org.name}
+            Sign in – {org.name}
           </h2>
           <p className="mt-1 text-xs text-gray-600">
             Für das Admin-Board dieses Jahrgangs.

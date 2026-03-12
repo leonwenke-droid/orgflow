@@ -620,7 +620,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   if (!profile || !["admin", "lead", "super_admin"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300">
-        Zugriff nur für Admins & Komiteeleitungen.
+        Access only for admins & team leads.
       </p>
     );
   }
@@ -731,15 +731,15 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   return (
     <div className="space-y-4">
       {effectiveOrgSlug && (
-        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Schichten" />
+        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Shifts" />
       )}
       <h2 className="text-sm font-semibold text-gray-700">
-        Schichten & Auto-Zuteilung
+        Shifts & auto-assignment
       </h2>
       <section className="card space-y-2 text-xs sm:space-y-3">
         <h3 className="text-xs font-semibold text-gray-700">Neue Schichten</h3>
         <p className="hidden text-[11px] text-gray-600 sm:block">
-          Pausenverkauf (1. + 2. Pause) oder einzelne Veranstaltung.
+          Break sales (1st + 2nd break) or single event.
         </p>
         <CreateShiftsForm action={createShifts} organizationId={orgId ?? undefined} />
       </section>
@@ -760,7 +760,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         {shiftsError ? (
           <p className="text-xs text-red-300">{shiftsError.message}</p>
         ) : (!shifts || shifts.length === 0) ? (
-          <p className="text-sm text-gray-500">Noch keine Schichten. Formular oben nutzen.</p>
+          <p className="text-sm text-gray-500">No shifts yet. Use form above.</p>
         ) : (
           <ShiftPlanTableWithEdit
             shifts={shifts}

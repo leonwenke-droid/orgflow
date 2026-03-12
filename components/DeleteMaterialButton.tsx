@@ -14,7 +14,7 @@ export default function DeleteMaterialButton({ materialId, deleteAction }: Props
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!confirm("Erfassung und zugehörige Punkte entfernen?")) return;
+    if (!confirm("Remove entry and associated points?")) return;
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       await deleteAction(formData);

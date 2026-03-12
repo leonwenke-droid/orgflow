@@ -13,9 +13,9 @@ import CommitteeFilter from "../../../components/CommitteeFilter";
 export const dynamic = "force-dynamic";
 
 const STATUS_COLUMNS = [
-  { key: "offen", label: "Offen" },
-  { key: "in_arbeit", label: "In Arbeit" },
-  { key: "erledigt", label: "Erledigt" }
+  { key: "offen", label: "Open" },
+  { key: "in_arbeit", label: "In progress" },
+  { key: "erledigt", label: "Done" }
 ] as const;
 
 async function deleteTask(formData: FormData) {
@@ -61,7 +61,7 @@ export default async function AdminTasksPage(props: PageProps) {
   if (!profile || !["admin", "lead", "super_admin"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300">
-        Zugriff nur für Admins & Komiteeleitungen.
+        Access only for admins & team leads.
       </p>
     );
   }
@@ -121,19 +121,19 @@ export default async function AdminTasksPage(props: PageProps) {
   return (
     <div className="space-y-4">
       {effectiveOrgSlug && (
-        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Aufgaben" />
+        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Tasks" />
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           <h2 className="text-sm font-semibold text-gray-700">
-            Aufgaben & Kanban
+            Tasks & Kanban
           </h2>
-          <Suspense fallback={<span className="text-[10px] text-gray-500">Komitee …</span>}>
+          <Suspense fallback={<span className="text-[10px] text-gray-500">Team …</span>}>
             <CommitteeFilter committees={committeesForFilter} />
           </Suspense>
         </div>
         <Link href={effectiveOrgSlug ? `/admin/tasks/new?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks/new"} className="btn-primary text-xs">
-          Neue Aufgabe anlegen
+          New task
         </Link>
       </div>
 
@@ -145,7 +145,7 @@ export default async function AdminTasksPage(props: PageProps) {
                 {col.label}
               </h3>
               <span className="text-[10px] text-gray-500">
-                {tasksFiltered.filter((t) => t.status === col.key).length} Aufgaben
+                {tasksFiltered.filter((t) => t.status === col.key).length} tasks
               </span>
             </div>
             <div className="space-y-2 text-xs">
@@ -162,7 +162,7 @@ export default async function AdminTasksPage(props: PageProps) {
                           {t.title}
                         </h4>
                         <p className="text-[10px] text-gray-600">
-                          Komitee: {(t.committees as { name?: string })?.name ?? "–"}
+                          Team: {(t.committees as { name?: string })?.name ?? "–"}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1 text-[9px]">
@@ -229,7 +229,7 @@ export default async function AdminTasksPage(props: PageProps) {
                 ))}
               {!tasksFiltered.filter((t) => t.status === col.key).length && (
                 <p className="text-[11px] text-gray-500">
-                  Keine Aufgaben in dieser Spalte.
+                  No tasks in this column.
                 </p>
               )}
             </div>

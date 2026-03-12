@@ -291,7 +291,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                             : "bg-blue-100 text-blue-700"
                         }`}
                       >
-                        {m.size === "small" ? "Klein" : m.size === "medium" ? "Mittel" : "Groß"}
+                        {m.size === "small" ? "Small" : m.size === "medium" ? "Medium" : "Large"}
                       </span>
                     </td>
                     <td className="p-3 font-semibold text-gray-700">

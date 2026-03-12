@@ -50,7 +50,7 @@ function AppShellInner({
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
       />
-      <div className={`min-w-0 flex-1 ${showSidebar ? "lg:pl-56" : ""}`}>
+      <div className={`min-w-0 flex-1 ${showSidebar ? "lg:pl-60" : ""}`}>
         <AppHeader user={user} onMenuOpen={() => setMobileOpen(true)} />
         {children}
       </div>

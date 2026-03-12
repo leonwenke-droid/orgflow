@@ -172,7 +172,7 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
                 type="button"
                 onClick={() => setOverlayDay(null)}
                 className="rounded p-1 text-gray-600 hover:bg-gray-100 focus:outline-none"
-                aria-label="Schließen"
+                aria-label="Close"
               >
                 ✕
               </button>

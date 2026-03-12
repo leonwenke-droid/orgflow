@@ -8,7 +8,7 @@ export default function MemberSelect({
   options,
   name,
   defaultValue,
-  placeholder = "Name suchen oder wählen…",
+  placeholder = "Search or select name…",
   className = ""
 }: {
   options: Option[];
@@ -21,7 +21,7 @@ export default function MemberSelect({
   const [selected, setSelected] = useState<Option | null>(() => {
     if (!defaultValue) return null;
     const o = options.find((op) => op.id === defaultValue);
-    return o ? { id: o.id, full_name: String(o.full_name ?? "").trim() || "(ohne Namen)" } : null;
+    return o ? { id: o.id, full_name: String(o.full_name ?? "").trim() || "(no name)" } : null;
   });
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,7 +30,7 @@ export default function MemberSelect({
 
   const safeOptions = options.map((o) => ({
     id: o.id,
-    full_name: String(o.full_name ?? "").trim() || "(ohne Namen)"
+    full_name: String(o.full_name ?? "").trim() || "(no name)"
   }));
   const filtered =
     query.trim() === ""
@@ -55,7 +55,7 @@ export default function MemberSelect({
     <div ref={containerRef} className={`relative ${className}`}>
       <input type="hidden" name={name} value={selected?.id ?? ""} />
       <label htmlFor={inputId} className="sr-only">
-        Verantwortliche Person
+        Responsible person
       </label>
       <input
         id={inputId}
@@ -85,7 +85,7 @@ export default function MemberSelect({
         >
           {filtered.length === 0 ? (
             <li className="px-3 py-2 text-gray-500">
-              {options.length === 0 ? "Keine Personen geladen. Bitte zuerst Komitee wählen oder „Gesamter Jahrgang“ nutzen." : "Keine Treffer"}
+              {options.length === 0 ? "No people loaded. Select team first or use \"Entire cohort\"." : "No matches"}
             </li>
           ) : (
             filtered.map((opt) => (

@@ -88,17 +88,17 @@ export default async function NewOrganizationPage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-2xl space-y-6">
-        <h1 className="text-2xl font-bold text-cyan-100">
+        <h1 className="text-2xl font-bold text-blue-100">
           Create new organisation
         </h1>
-        <p className="text-sm text-cyan-300">
+        <p className="text-sm text-blue-300">
           Create a new organisation. Your current organisation remains unchanged.
         </p>
 
         <form action={createOrganization} className="space-y-6">
-          <div className="space-y-4 rounded-lg bg-card border border-cyan-500/30 p-6">
+          <div className="space-y-4 rounded-lg bg-card border border-blue-500/30 p-6">
             <div>
-              <label className="mb-2 block text-sm font-medium text-cyan-300">
+              <label className="mb-2 block text-sm font-medium text-blue-300">
                 Full name *
               </label>
               <input
@@ -106,12 +106,12 @@ export default async function NewOrganizationPage() {
                 name="name"
                 placeholder="Class of 2027 - Example School"
                 required
-                className="w-full rounded border border-cyan-500/30 bg-background p-2.5 text-sm text-cyan-100"
+                className="w-full rounded border border-blue-500/30 bg-background p-2.5 text-sm text-blue-100"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-cyan-300">
+              <label className="mb-2 block text-sm font-medium text-blue-300">
                 URL slug * (lowercase, numbers, -)
               </label>
               <input
@@ -120,15 +120,15 @@ export default async function NewOrganizationPage() {
                 placeholder="abi-2027-ueg"
                 pattern="[a-z0-9-]+"
                 required
-                className="w-full rounded border border-cyan-500/30 bg-background p-2.5 text-sm text-cyan-100"
+                className="w-full rounded border border-blue-500/30 bg-background p-2.5 text-sm text-blue-100"
               />
-              <p className="mt-1 text-xs text-cyan-400">
+              <p className="mt-1 text-xs text-blue-400">
                 URL: /<strong>example-org</strong>
               </p>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-cyan-300">
+              <label className="mb-2 block text-sm font-medium text-blue-300">
                 Subdomain (optional)
               </label>
               <input
@@ -136,15 +136,15 @@ export default async function NewOrganizationPage() {
                 name="subdomain"
                 placeholder="ueg-2027"
                 pattern="[a-z0-9-]*"
-                className="w-full rounded border border-cyan-500/30 bg-background p-2.5 text-sm text-cyan-100"
+                className="w-full rounded border border-blue-500/30 bg-background p-2.5 text-sm text-blue-100"
               />
-              <p className="mt-1 text-xs text-cyan-400">
+              <p className="mt-1 text-xs text-blue-400">
                 Subdomain: <strong>ueg-2027</strong>.abiorga.app
               </p>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-cyan-300">
+              <label className="mb-2 block text-sm font-medium text-blue-300">
                 Organisation name *
               </label>
               <input
@@ -152,36 +152,36 @@ export default async function NewOrganizationPage() {
                 name="school_name"
                 placeholder="Example School"
                 required
-                className="w-full rounded border border-cyan-500/30 bg-background p-2.5 text-sm text-cyan-100"
+                className="w-full rounded border border-blue-500/30 bg-background p-2.5 text-sm text-blue-100"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-cyan-300">
+              <label className="mb-2 block text-sm font-medium text-blue-300">
                 Short name
               </label>
               <input
                 type="text"
                 name="school_short"
                 placeholder="EXS"
-                className="w-full rounded border border-cyan-500/30 bg-background p-2.5 text-sm text-cyan-100"
+                className="w-full rounded border border-blue-500/30 bg-background p-2.5 text-sm text-blue-100"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-cyan-300">
+              <label className="mb-2 block text-sm font-medium text-blue-300">
                 City
               </label>
               <input
                 type="text"
                 name="school_city"
                 placeholder="Berlin"
-                className="w-full rounded border border-cyan-500/30 bg-background p-2.5 text-sm text-cyan-100"
+                className="w-full rounded border border-blue-500/30 bg-background p-2.5 text-sm text-blue-100"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-cyan-300">
+              <label className="mb-2 block text-sm font-medium text-blue-300">
                 Year *
               </label>
               <input
@@ -191,7 +191,7 @@ export default async function NewOrganizationPage() {
                 max="2050"
                 placeholder="2027"
                 required
-                className="w-full rounded border border-cyan-500/30 bg-background p-2.5 text-sm text-cyan-100"
+                className="w-full rounded border border-blue-500/30 bg-background p-2.5 text-sm text-blue-100"
               />
             </div>
           </div>
@@ -199,13 +199,13 @@ export default async function NewOrganizationPage() {
           <div className="flex gap-3">
             <button
               type="submit"
-              className="flex-1 rounded-lg bg-cyan-600 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700"
+              className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
             >
               Create organisation
             </button>
             <Link
               href="/super-admin"
-              className="rounded-lg border border-cyan-500/40 bg-card px-4 py-2.5 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/10"
+              className="rounded-lg border border-blue-500/40 bg-card px-4 py-2.5 text-sm font-semibold text-blue-200 hover:bg-blue-500/10"
             >
               Cancel
             </Link>

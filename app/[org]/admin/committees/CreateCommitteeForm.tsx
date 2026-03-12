@@ -30,7 +30,7 @@ export default function CreateCommitteeForm({
       <input
         type="text"
         name="name"
-        placeholder="Neues Komitee (z. B. Dekoration)"
+        placeholder="New team (e.g. Decoration)"
         className="flex-1 rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400"
         required
       />

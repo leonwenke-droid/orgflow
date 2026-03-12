@@ -10,7 +10,7 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) {
-      setMessage({ ok: false, text: "Bitte eine Datei wählen." });
+      setMessage({ ok: false, text: "Please select a file." });
       return;
     }
     setLoading(true);
@@ -52,7 +52,7 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
         disabled={loading || !file}
         className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {loading ? "Importiere…" : "Hochladen"}
+        {loading ? "Importing…" : "Upload"}
       </button>
       {message && (
         <span className={message.ok ? "text-green-600" : "text-amber-600"}>

@@ -117,7 +117,7 @@ export default function CalendarPicker({
           type="button"
           onClick={nextMonth}
           className="rounded p-1 text-gray-600 hover:bg-gray-100"
-          aria-label="Nächster Monat"
+          aria-label="Next month"
         >
           ›
         </button>

@@ -257,7 +257,7 @@ export default function ShiftPlanTableWithEdit({
                           <input type="hidden" name="eventDate" value={dateStr} />
                           <SubmitButtonWithSpinner
                             className="flex min-h-[36px] items-center justify-center rounded bg-red-100 px-2 py-1 text-[10px] text-red-600 hover:bg-red-200 disabled:opacity-70 sm:min-h-0"
-                            title="Veranstaltung löschen"
+                            title="Delete event"
                             loadingLabel="…"
                           >
                             Löschen

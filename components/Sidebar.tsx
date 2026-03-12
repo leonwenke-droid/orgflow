@@ -9,8 +9,10 @@ import {
   CheckSquare,
   CalendarDays,
   Users,
+  UsersRound,
   Package,
   Wallet,
+  Trophy,
   Settings2,
   ShieldCheck,
 } from "lucide-react";
@@ -29,18 +31,34 @@ const RESERVED = [
   "join",
 ];
 
-const navItems = (org: string) => [
-  { href: `/${org}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
-  { href: `/admin/tasks?org=${encodeURIComponent(org)}`, label: "Tasks", icon: CheckSquare },
-  { href: `/admin/shifts?org=${encodeURIComponent(org)}`, label: "Shifts", icon: CalendarDays },
-  { href: `/${org}/admin/members`, label: "Members", icon: Users },
-  { href: `/admin/materials?org=${encodeURIComponent(org)}`, label: "Resources", icon: Package },
-  { href: `/admin/treasury?org=${encodeURIComponent(org)}`, label: "Finance", icon: Wallet },
-];
+type NavItem = { href: string; label: string; icon: React.ElementType };
 
-const bottomItems = (org: string) => [
-  { href: `/${org}/admin`, label: "Admin", icon: ShieldCheck },
-  { href: `/${org}/settings`, label: "Settings", icon: Settings2 },
+const getNavSections = (org: string): { title: string; items: NavItem[] }[] => [
+  {
+    title: "Core",
+    items: [
+      { href: `/${org}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
+      { href: `/${org}/admin/tasks`, label: "Tasks", icon: CheckSquare },
+      { href: `/${org}/admin/shifts`, label: "Shifts", icon: CalendarDays },
+      { href: `/${org}/admin/members`, label: "Members", icon: Users },
+      { href: `/${org}/admin/committees`, label: "Teams", icon: UsersRound },
+    ],
+  },
+  {
+    title: "Organisation",
+    items: [
+      { href: `/${org}/admin/materials`, label: "Resources", icon: Package },
+      { href: `/${org}/admin/treasury`, label: "Finance", icon: Wallet },
+      { href: `/${org}/admin/scores/assign`, label: "Engagement", icon: Trophy },
+    ],
+  },
+  {
+    title: "Administration",
+    items: [
+      { href: `/${org}/settings`, label: "Settings", icon: Settings2 },
+      { href: `/${org}/admin`, label: "Admin Overview", icon: ShieldCheck },
+    ],
+  },
 ];
 
 export default function Sidebar({
@@ -78,60 +96,59 @@ export default function Sidebar({
   if (!orgSlug || !user) return null;
 
   const isActive = (href: string) => {
-    if (href.startsWith("/admin/")) {
-      const base = href.split("?")[0];
-      const currentOrg = searchParams?.get("org")?.trim() || null;
-      return pathname.startsWith(base) && currentOrg === orgSlug;
-    }
-    return pathname === href || pathname.startsWith(href + "/");
+    const currentOrg = searchParams?.get("org")?.trim() || null;
+    if (href.includes("/admin/materials"))
+      return (pathname === "/admin/materials" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/materials`);
+    if (href.includes("/admin/treasury"))
+      return (pathname === "/admin/treasury" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/treasury`);
+    return pathname === href || (href !== `/${orgSlug}/dashboard` && pathname.startsWith(href));
   };
 
   const linkClassName = (href: string) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
       isActive(href)
-        ? "bg-blue-50 text-blue-600"
-        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+        ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
     }`;
 
   const sidebarContent = (
     <>
-      <div className="flex h-14 items-center px-5 border-b border-gray-200">
-        <span className="text-lg font-bold tracking-tight text-gray-900">OrgFlow</span>
+      <div className="flex h-14 items-center border-b border-gray-200 px-5 dark:border-gray-700">
+        <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-gray-100">OrgFlow</span>
       </div>
       {orgName && (
-        <div className="border-b border-gray-200 px-5 py-3">
-          <p className="truncate text-xs text-gray-500">{orgName}</p>
+        <div className="border-b border-gray-200 px-5 py-3 dark:border-gray-700">
+          <p className="truncate text-xs text-gray-500 dark:text-gray-400">{orgName}</p>
         </div>
       )}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-        {navItems(orgSlug).map(({ href, label, icon: Icon }) => (
-          <FullPageLink key={href} href={href} className={linkClassName(href)}>
-            <Icon className="h-4 w-4 shrink-0" />
-            {label}
-          </FullPageLink>
+      <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+        {getNavSections(orgSlug).map((section) => (
+          <div key={section.title}>
+            <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              {section.title}
+            </p>
+            <div className="space-y-0.5">
+              {section.items.map(({ href, label, icon: Icon }) => (
+                <FullPageLink key={href} href={href} className={linkClassName(href)}>
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {label}
+                </FullPageLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
-      <div className="space-y-0.5 border-t border-gray-200 px-3 py-3">
-        {bottomItems(orgSlug).map(({ href, label, icon: Icon }) => (
-          <FullPageLink key={href} href={href} className={linkClassName(href)}>
-            <Icon className="h-4 w-4 shrink-0" />
-            {label}
-          </FullPageLink>
-        ))}
-        <div className="pt-2">
-          <LogoutButton returnTo={`/${orgSlug}/dashboard`} />
-        </div>
+      <div className="shrink-0 border-t border-gray-200 px-3 py-3 dark:border-gray-700">
+        <LogoutButton returnTo={`/${orgSlug}/dashboard`} />
       </div>
     </>
   );
 
   return (
     <>
-      {/* Desktop: always visible */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-gray-200 bg-white lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 lg:flex">
         {sidebarContent}
       </aside>
-      {/* Mobile: overlay when open */}
       {mobileOpen && (
         <>
           <div
@@ -139,7 +156,7 @@ export default function Sidebar({
             onClick={onClose}
             aria-hidden
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-gray-200 bg-white shadow-xl lg:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 lg:hidden">
             {sidebarContent}
           </aside>
         </>

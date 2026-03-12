@@ -108,8 +108,8 @@ export default function AuthCallbackClient({
   if (status === "loading") {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <p className="text-sm text-cyan-300">Anmeldung wird abgeschlossen …</p>
-        <p className="mt-2 text-xs text-cyan-500">Du wirst gleich weitergeleitet.</p>
+        <p className="text-sm text-blue-300">Anmeldung wird abgeschlossen …</p>
+        <p className="mt-2 text-xs text-blue-500">Du wirst gleich weitergeleitet.</p>
       </div>
     );
   }
@@ -121,7 +121,7 @@ export default function AuthCallbackClient({
         {nextUrl && nextUrl.startsWith("/") && (
           <a
             href={nextUrl}
-            className="mt-4 inline-block text-sm text-cyan-400 underline hover:text-cyan-300"
+            className="mt-4 inline-block text-sm text-blue-400 underline hover:text-blue-300"
           >
             Trotzdem fortfahren
           </a>

@@ -21,7 +21,7 @@ function SubmitButton() {
           Wird ausgeführt …
         </>
       ) : (
-        "Wöchentlichen Lead-Bonus jetzt ausführen"
+        "Run weekly lead bonus now"
       )}
     </button>
   );

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import AppShell from "../components/AppShell";
 import ToastContainer from "../components/Toast";
+import ThemeProvider from "../components/ThemeProvider";
 
 export const metadata = {
   title: "OrgFlow",
@@ -44,24 +45,26 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground">
-        <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-6">
-          <AppShell user={user}>
-            <main className="flex-1 pb-10">{children}</main>
-          </AppShell>
-          <ToastContainer />
-          <footer className="mt-8 border-t border-gray-200 pt-4 text-xs text-gray-500">
+        <ThemeProvider>
+          <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-6">
+            <AppShell user={user}>
+              <main className="flex-1 pb-10">{children}</main>
+            </AppShell>
+            <ToastContainer />
+            <footer className="mt-8 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
             <a
               href="https://lyniqmedia.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-gray-500 transition-colors hover:text-gray-700 dark:hover:text-gray-300"
             >
               powered by LYNIQ Media
             </a>
           </footer>
         </div>
+        </ThemeProvider>
       </body>
     </html>
   );

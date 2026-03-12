@@ -6,9 +6,9 @@ import { useFormState, useFormStatus } from "react-dom";
 type Profile = { id: string; full_name: string };
 
 const SIZE_OPTIONS = [
-  { value: "small", label: "Klein", points: 5, examples: "Kuchen, Getränke, kleine Deko" },
-  { value: "medium", label: "Mittel", points: 10, examples: "Waffeleisen, größere Einkäufe, Equipment" },
-  { value: "large", label: "Groß", points: 15, examples: "Komplette Event-Ausstattung" }
+  { value: "small", label: "Small", points: 5, examples: "Cake, drinks, small decorations" },
+  { value: "medium", label: "Medium", points: 10, examples: "Waffle iron, larger purchases, equipment" },
+  { value: "large", label: "Large", points: 15, examples: "Complete event setup" }
 ] as const;
 
 type AddMaterialAction = (

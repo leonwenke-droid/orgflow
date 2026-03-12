@@ -80,7 +80,7 @@ export default function TaskConfirmationForm({
 
       <div className="space-y-2">
         <p className="text-xs text-gray-600">
-          Aktueller Status:{" "}
+          Current status:{" "}
           <span className="font-semibold">{status.toUpperCase()}</span>
         </p>
         <div className="flex gap-2 text-xs">
@@ -90,7 +90,7 @@ export default function TaskConfirmationForm({
             disabled={loading || status === "in_arbeit"}
             onClick={() => onUpdate("in_arbeit")}
           >
-            In Arbeit setzen
+            Set in progress
           </button>
           <button
             type="button"
@@ -98,13 +98,12 @@ export default function TaskConfirmationForm({
             disabled={loading || disabledErledigt}
             onClick={() => onUpdate("erledigt")}
           >
-            Als erledigt markieren
+            Mark as done
           </button>
         </div>
         {disabledErledigt && (
           <p className="text-[11px] text-red-600">
-            Für diese Aufgabe ist ein Beleg Pflicht. Bitte lade zuerst eine
-            Datei hoch.
+            Proof is required for this task. Please upload a file first.
           </p>
         )}
       </div>
@@ -112,7 +111,7 @@ export default function TaskConfirmationForm({
       <div className="space-y-2">
         <div>
           <label className="mb-1 block text-xs font-semibold text-gray-700">
-            Beleg hochladen (PNG / JPG / PDF)
+            Upload proof (PNG / JPG / PDF)
           </label>
           <input
             type="file"
@@ -123,7 +122,7 @@ export default function TaskConfirmationForm({
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold text-gray-700">
-            Kommentar (optional, nur intern sichtbar)
+            Comment (optional, internal only)
           </label>
           <textarea
             rows={3}
