@@ -67,7 +67,7 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
     <>
       <div
         ref={containerRef}
-        className="max-h-[60vh] overflow-y-auto rounded-lg border border-cyan-500/20 bg-card/30"
+        className="max-h-[60vh] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50"
       >
         <div className="flex flex-col gap-3 p-3">
           {days.map((day) => {
@@ -77,7 +77,7 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <p
                     className={`text-xs font-semibold shrink-0 ${
-                      day.isToday ? "text-cyan-300" : "text-cyan-400/90"
+                      day.isToday ? "text-blue-600" : "text-gray-700"
                     }`}
                   >
                     {day.weekdayName}{" "}
@@ -87,26 +87,26 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
                       : ""}
                   </p>
                   {day.isToday && (
-                    <span className="rounded bg-cyan-500/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan-200">
+                    <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
                       Heute
                     </span>
                   )}
                 </div>
                 {!hasShifts ? (
-                  <p className="mt-1 text-[11px] text-cyan-400/50">–</p>
+                  <p className="mt-1 text-[11px] text-gray-400">–</p>
                 ) : (
                   <>
-                    <div className="mt-1 border-t border-cyan-500/15 pt-1.5 space-y-1">
+                    <div className="mt-1 border-t border-gray-200 pt-1.5 space-y-1">
                       {day.dayTitle && (
-                        <p className="text-[10px] font-medium text-cyan-200/90 line-clamp-2">
+                        <p className="text-[10px] font-medium text-gray-600 line-clamp-2">
                           {day.dayTitle}
                         </p>
                       )}
                       {day.location && (
-                        <p className="text-[10px] text-cyan-400/70">Ort: {day.location}</p>
+                        <p className="text-[10px] text-gray-600">Ort: {day.location}</p>
                       )}
                       {day.notes && (
-                        <p className="text-[10px] text-cyan-200/70 line-clamp-2" title={day.notes}>
+                        <p className="text-[10px] text-gray-600 line-clamp-2" title={day.notes}>
                           {day.notes}
                         </p>
                       )}
@@ -117,8 +117,8 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
                           key={s.id}
                           className="rounded bg-card/50 px-1.5 py-1 text-[10px]"
                         >
-                          <span className="text-cyan-400">{slotLabel(s)}</span>
-                          <span className="ml-1 text-cyan-200">
+                          <span className="text-gray-700">{slotLabel(s)}</span>
+                          <span className="ml-1 text-gray-600">
                             {s.assignmentUserIds?.length > 0
                               ? s.assignmentUserIds.map(getName).join(", ")
                               : "–"}
@@ -142,9 +142,9 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
                 }
                 className={`min-w-0 rounded border p-3 flex flex-col text-left transition-colors ${
                   day.isToday
-                    ? "border-cyan-400/60 bg-cyan-500/10 ring-1 ring-cyan-400/30"
-                    : "border-cyan-500/15 bg-card/40"
-                } ${hasShifts ? "cursor-pointer hover:bg-card/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50" : ""}`}
+                    ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200"
+                    : "border-gray-200 bg-white"
+                } ${hasShifts ? "cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50" : ""}`}
               >
                 {content}
               </div>
@@ -162,16 +162,16 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
           aria-label="Schichtdetails"
         >
           <div
-            className="rounded-xl border border-cyan-500/30 bg-card shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
+            className="rounded-xl border border-gray-200 bg-white shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-cyan-500/20 bg-card/80 px-4 py-3 flex justify-between items-center shrink-0">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 flex justify-between items-center shrink-0">
               <div>
-                <h3 className="text-sm font-semibold text-cyan-400">
+                <h3 className="text-sm font-semibold text-gray-700">
                   {formatDateLabel(overlayDay.dateStr, { weekday: "long" })}
                 </h3>
                 {overlayDay.isToday && (
-                  <span className="mt-1 inline-block rounded bg-cyan-500/30 px-2 py-0.5 text-[10px] font-bold uppercase text-cyan-200">
+                  <span className="mt-1 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-700">
                     Heute
                   </span>
                 )}
@@ -179,7 +179,7 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
               <button
                 type="button"
                 onClick={() => setOverlayDay(null)}
-                className="rounded p-1 text-cyan-400 hover:bg-cyan-500/20 focus:outline-none"
+                className="rounded p-1 text-gray-600 hover:bg-gray-100 focus:outline-none"
                 aria-label="Schließen"
               >
                 ✕
@@ -187,28 +187,28 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
             </div>
             <div className="p-4 overflow-y-auto space-y-3">
               {overlayDay.dayTitle && (
-                <p className="text-sm font-medium text-cyan-200">{overlayDay.dayTitle}</p>
+                <p className="text-sm font-medium text-gray-700">{overlayDay.dayTitle}</p>
               )}
               {overlayDay.location && (
-                <p className="text-xs text-cyan-400/90">Ort: {overlayDay.location}</p>
+                <p className="text-xs text-gray-600">Ort: {overlayDay.location}</p>
               )}
               {overlayDay.notes && (
-                <p className="text-xs text-cyan-200/90 whitespace-pre-wrap">{overlayDay.notes}</p>
+                <p className="text-xs text-gray-600 whitespace-pre-wrap">{overlayDay.notes}</p>
               )}
-              <div className="pt-2 border-t border-cyan-500/20">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-cyan-400/90 mb-2">
+              <div className="pt-2 border-t border-gray-200">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700 mb-2">
                   Zeitfenster
                 </p>
                 <ul className="space-y-2">
                   {overlayDay.shifts.map((s) => (
                     <li
                       key={s.id}
-                      className="rounded border border-cyan-500/20 bg-card/40 px-3 py-2 text-xs"
+                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs"
                     >
-                      <span className="font-medium text-cyan-300">
+                      <span className="font-medium text-gray-700">
                         {slotLabelDetail(s)}
                       </span>
-                      <p className="mt-1 text-cyan-200/90">
+                      <p className="mt-1 text-gray-600">
                         {s.assignmentUserIds?.length > 0
                           ? (s.assignmentUserIds ?? []).map((id) => profileNames[id] ?? id).join(", ")
                           : "–"}

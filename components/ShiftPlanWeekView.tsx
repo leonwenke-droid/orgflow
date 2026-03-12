@@ -69,7 +69,7 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
     const name = a.user_id ? getName(a.user_id) : "–";
     const replacementName = a.replacement_user_id ? getName(a.replacement_user_id) : null;
     if (a.status === "erledigt") return <span key={a.id} className="text-[10px] text-green-300/90">✓ {name}</span>;
-    if (a.status === "abgesagt") return <span key={a.id} className="text-[10px]"><span className="text-red-400/90">✗ </span><span className={replacementName ? "text-red-200/80" : "line-through text-cyan-400/50"}>{name}</span>{replacementName && <span className="text-[9px] text-cyan-300/90"> ({replacementName})</span>}</span>;
+    if (a.status === "abgesagt") return <span key={a.id} className="text-[10px]"><span className="text-red-600">✗ </span><span className={replacementName ? "text-red-600/90" : "line-through text-gray-500"}>{name}</span>{replacementName && <span className="text-[9px] text-gray-600"> ({replacementName})</span>}</span>;
     return <span key={a.id} className="text-[10px] text-amber-300/90">{name}</span>;
   };
 
@@ -79,9 +79,9 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
         {weeks.map(({ weekLabel, monday, days }) => (
           <div
             key={monday}
-            className="rounded-lg border border-cyan-500/20 bg-card/30 p-3"
+            className="rounded-lg border border-gray-200 bg-gray-50 p-3"
           >
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-cyan-400/90">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-700">
               Woche {weekLabel}
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 min-w-0">
@@ -89,24 +89,24 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
                 const hasShifts = day.shifts.length > 0;
                 const content = (
                   <>
-                    <p className="text-[11px] font-semibold text-cyan-400/90 shrink-0">
+                    <p className="text-[11px] font-semibold text-gray-700 shrink-0">
                       {day.weekdayName} {day.dateStr.slice(8, 10)}.{day.dateStr.slice(5, 7)}.
                     </p>
                     {!hasShifts ? (
-                      <p className="mt-1 text-[11px] text-cyan-400/50">–</p>
+                      <p className="mt-1 text-[11px] text-gray-400">–</p>
                     ) : (
                       <>
-                        <div className="mt-1 border-t border-cyan-500/15 pt-1.5 space-y-1">
+                        <div className="mt-1 border-t border-gray-200 pt-1.5 space-y-1">
                           {day.dayTitle && (
-                            <p className="text-[10px] font-medium text-cyan-200/90 line-clamp-2">
+                            <p className="text-[10px] font-medium text-gray-600 line-clamp-2">
                               {day.dayTitle}
                             </p>
                           )}
                           {day.location && (
-                            <p className="text-[10px] text-cyan-400/70">Ort: {day.location}</p>
+                            <p className="text-[10px] text-gray-600">Ort: {day.location}</p>
                           )}
                           {day.notes && (
-                            <p className="text-[10px] text-cyan-200/70 line-clamp-2" title={day.notes}>
+                            <p className="text-[10px] text-gray-600 line-clamp-2" title={day.notes}>
                               {day.notes}
                             </p>
                           )}
@@ -117,8 +117,8 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
                               key={s.id}
                               className="rounded bg-card/50 px-1.5 py-1 text-[10px]"
                             >
-                              <span className="text-cyan-400">{slotLabel(s)}</span>
-                              <div className="mt-0.5 ml-1 flex flex-wrap gap-x-1.5 gap-y-0.5 text-cyan-200 [&>span]:after:content-['·'] [&>span]:after:ml-1 [&>span]:after:text-cyan-500/60 [&>span:last-child]:after:content-none [&>span:last-child]:after:ml-0">
+                              <span className="text-gray-700">{slotLabel(s)}</span>
+                              <div className="mt-0.5 ml-1 flex flex-wrap gap-x-1.5 gap-y-0.5 text-gray-600 [&>span]:after:content-['·'] [&>span]:after:ml-1 [&>span]:after:text-gray-400 [&>span:last-child]:after:content-none [&>span:last-child]:after:ml-0">
                                 {s.assignments?.length > 0
                                   ? s.assignments.map(renderAssignment)
                                   : "–"}
@@ -139,8 +139,8 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
                     onKeyDown={(e) =>
                       hasShifts && (e.key === "Enter" || e.key === " ") && setOverlayDay(day)
                     }
-                    className={`min-w-0 rounded border border-cyan-500/15 bg-card/40 p-2 flex flex-col text-left ${
-                      hasShifts ? "cursor-pointer hover:bg-card/60 focus:outline-none focus:ring-1 focus:ring-cyan-400/50" : ""
+                    className={`min-w-0 rounded border border-gray-200 bg-white p-2 flex flex-col text-left ${
+                      hasShifts ? "cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50" : ""
                     }`}
                   >
                     {content}
@@ -161,17 +161,17 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
           aria-label="Schichtdetails"
         >
           <div
-            className="rounded-xl border border-cyan-500/30 bg-card shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
+            className="rounded-xl border border-gray-200 bg-white shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-cyan-500/20 bg-card/80 px-4 py-3 flex items-center justify-between shrink-0">
-              <h3 className="text-sm font-semibold text-cyan-400">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 flex items-center justify-between shrink-0">
+              <h3 className="text-sm font-semibold text-gray-700">
                 {overlayDay.dateStr && formatDateLabel(overlayDay.dateStr, { weekday: "long" })}
               </h3>
               <button
                 type="button"
                 onClick={() => setOverlayDay(null)}
-                className="rounded p-1 text-cyan-400 hover:bg-cyan-500/20 focus:outline-none"
+                className="rounded p-1 text-gray-600 hover:bg-gray-100 focus:outline-none"
                 aria-label="Schließen"
               >
                 ✕
@@ -179,28 +179,28 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
             </div>
             <div className="p-4 overflow-y-auto space-y-3">
               {overlayDay.dayTitle && (
-                <p className="text-sm font-medium text-cyan-200">{overlayDay.dayTitle}</p>
+                <p className="text-sm font-medium text-gray-700">{overlayDay.dayTitle}</p>
               )}
               {overlayDay.location && (
-                <p className="text-xs text-cyan-400/90">Ort: {overlayDay.location}</p>
+                <p className="text-xs text-gray-600">Ort: {overlayDay.location}</p>
               )}
               {overlayDay.notes && (
-                <p className="text-xs text-cyan-200/90 whitespace-pre-wrap">{overlayDay.notes}</p>
+                <p className="text-xs text-gray-600 whitespace-pre-wrap">{overlayDay.notes}</p>
               )}
-              <div className="pt-2 border-t border-cyan-500/20">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-cyan-400/90 mb-2">
+              <div className="pt-2 border-t border-gray-200">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700 mb-2">
                   Zeitfenster
                 </p>
                 <ul className="space-y-2">
                   {overlayDay.shifts.map((s) => (
                     <li
                       key={s.id}
-                      className="rounded border border-cyan-500/20 bg-card/40 px-3 py-2 text-xs"
+                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs"
                     >
-                      <span className="font-medium text-cyan-300">
+                      <span className="font-medium text-gray-700">
                         {slotLabelDetail(s)}
                       </span>
-                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-cyan-200/90 text-xs">
+                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-gray-600 text-xs">
                         {s.assignments?.length > 0
                           ? s.assignments.map((a) => {
                               const name = a.user_id ? (profileNames[a.user_id] ?? a.user_id) : "–";

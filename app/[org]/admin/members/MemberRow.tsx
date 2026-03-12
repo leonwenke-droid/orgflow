@@ -236,7 +236,7 @@ export default function MemberRow({
           <div className="flex items-center gap-1">
             <button type="button" onClick={handleDelete} disabled={loading} className="rounded border border-red-300 px-2 py-0.5 text-[10px] text-red-600 hover:bg-red-50 disabled:opacity-50">Entfernen</button>
             {hasLeadRole && effectiveStatus === "pending" && (
-              <button type="button" onClick={handleResendInvite} disabled={loading} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-700 hover:bg-gray-50 disabled:opacity-50">Einladung erneut</button>
+              <button type="button" onClick={handleResendInvite} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50">Einladung erneut</button>
             )}
           </div>
           {error && <span className="text-[10px] text-red-600">{error}</span>}

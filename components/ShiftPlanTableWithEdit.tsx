@@ -140,8 +140,8 @@ export default function ShiftPlanTableWithEdit({
               ))}
             </select>
             <div className="flex gap-1.5">
-              <SubmitButtonWithSpinner className="rounded bg-gray-100 px-2 py-1 text-[10px] text-gray-700 hover:bg-gray-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">OK</SubmitButtonWithSpinner>
-              <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-100 sm:px-1.5 sm:py-0.5">Abbr.</button>
+              <SubmitButtonWithSpinner className="rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">OK</SubmitButtonWithSpinner>
+              <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-blue-100 sm:px-1.5 sm:py-0.5">Abbr.</button>
             </div>
           </form>
         )}
@@ -208,8 +208,8 @@ export default function ShiftPlanTableWithEdit({
                     </select>
                   </div>
                   <div className="flex gap-1.5">
-                    <SubmitButtonWithSpinner className="rounded bg-gray-100 px-2 py-1 text-[10px] text-gray-700 hover:bg-gray-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">OK</SubmitButtonWithSpinner>
-                    <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-100 sm:px-1.5 sm:py-0.5">Abbr.</button>
+                    <SubmitButtonWithSpinner className="rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">OK</SubmitButtonWithSpinner>
+                    <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-blue-100 sm:px-1.5 sm:py-0.5">Abbr.</button>
                   </div>
                 </form>
               )}
@@ -251,7 +251,7 @@ export default function ShiftPlanTableWithEdit({
                         {eventName || "—"}
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
-                        <button type="button" onClick={() => { setEditingShifts(dayShifts); setEditingPersonsOnly(false); }} className="flex min-h-[36px] items-center justify-center rounded bg-gray-100 px-2 py-1 text-[10px] text-gray-700 hover:bg-gray-200 sm:min-h-0" title="Veranstaltung bearbeiten">✎</button>
+                        <button type="button" onClick={() => { setEditingShifts(dayShifts); setEditingPersonsOnly(false); }} className="flex min-h-[36px] items-center justify-center rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 sm:min-h-0" title="Veranstaltung bearbeiten">✎</button>
                         <form action={deleteEventShifts} className="inline">
                           <input type="hidden" name="eventName" value={eventName} />
                           <input type="hidden" name="eventDate" value={dateStr} />
@@ -307,7 +307,7 @@ export default function ShiftPlanTableWithEdit({
                               </div>
                             </div>
                             <div className="flex items-center gap-1 shrink-0 touch-manipulation">
-                              <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded bg-gray-100 text-sm text-gray-700 hover:bg-gray-200" title="Personen" aria-label="Personen">✎</button>
+                              <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded bg-blue-100 text-sm text-blue-700 hover:bg-blue-200" title="Personen" aria-label="Personen">✎</button>
                               <form action={deleteShift} className="inline">
                                 <input type="hidden" name="shiftId" value={s.id} />
                                 <SubmitButtonWithSpinner className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 disabled:opacity-70 text-sm" title="Entfernen" loadingLabel="…" aria-label="Entfernen">✕</SubmitButtonWithSpinner>
@@ -371,7 +371,7 @@ export default function ShiftPlanTableWithEdit({
                         </td>
                         <td className="py-2 px-2 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="rounded bg-gray-100 px-2 py-1 text-[11px] text-gray-700 hover:bg-gray-200" title="Personen">✎</button>
+                            <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="rounded bg-blue-100 px-2 py-1 text-[11px] text-blue-700 hover:bg-blue-200" title="Personen">✎</button>
                             <form action={deleteShift} className="inline">
                               <input type="hidden" name="shiftId" value={s.id} />
                               <SubmitButtonWithSpinner className="rounded bg-red-500/20 px-2 py-1 text-[11px] text-red-300 hover:bg-red-500/30 disabled:opacity-70" title="Entfernen" loadingLabel="…">✕</SubmitButtonWithSpinner>

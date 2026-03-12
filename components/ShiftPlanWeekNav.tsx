@@ -169,7 +169,7 @@ export default function ShiftPlanWeekNav({
             {day.weekdayName} {day.dateStr.slice(8, 10)}.{day.dateStr.slice(5, 7)}.
           </p>
           {isToday && (
-            <span className="rounded bg-gray-200 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-700">
+            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-blue-600">
               Heute
             </span>
           )}
@@ -287,12 +287,12 @@ export default function ShiftPlanWeekNav({
             }
             className={`relative flex flex-col rounded-xl border-2 p-4 text-left ${
               currentDay.dateStr === todayStr
-                ? "border-gray-400 bg-gray-50 ring-2 ring-gray-200"
+                ? "border-blue-400 bg-blue-50/50 ring-2 ring-blue-200"
                 : "border-gray-200 bg-white"
             } ${currentDay.shifts.length > 0 ? "cursor-pointer active:bg-gray-50" : ""}`}
           >
             {currentDay.dateStr === todayStr && (
-              <span className="absolute right-12 top-3 rounded-md bg-gray-200 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-700">
+              <span className="absolute right-12 top-3 rounded-md bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-600">
                 Heute
               </span>
             )}
@@ -374,7 +374,7 @@ export default function ShiftPlanWeekNav({
               }
               className={`relative flex min-w-0 flex-col rounded border p-2 text-left ${
                 day.dateStr === todayStr
-                  ? "border-gray-300 bg-gray-50 ring-1 ring-gray-200"
+                  ? "border-blue-300 bg-blue-50/50 ring-1 ring-blue-200"
                   : "border-gray-200 bg-gray-50"
               } ${hasShifts ? "cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-300" : ""}`}
             >
@@ -418,7 +418,7 @@ export default function ShiftPlanWeekNav({
                   {overlayDay.dateStr && formatDateLabel(overlayDay.dateStr, { weekday: "long" })}
                 </h3>
                 {overlayDay.dateStr === getTodayDateString() && (
-                  <span className="mt-1 inline-block rounded bg-gray-200 px-2 py-0.5 text-[10px] font-bold uppercase text-gray-700">
+                  <span className="mt-1 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-600">
                     Heute
                   </span>
                 )}

@@ -36,7 +36,7 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
     <div className={className}>
       <input type="hidden" name={name} value={dueAtValue} readOnly />
       <div className="space-y-2">
-        <label className="text-[11px] font-semibold text-cyan-400">Datum</label>
+        <label className="text-[11px] font-semibold text-gray-700">Datum</label>
         <CalendarPicker
           defaultValue={date}
           min={minDate}
@@ -45,11 +45,11 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
         />
       </div>
       <div className="mt-2">
-        <label className="text-[11px] font-semibold text-cyan-400">Uhrzeit</label>
+        <label className="text-[11px] font-semibold text-gray-700">Uhrzeit</label>
         <button
           type="button"
           onClick={() => setTimeOverlayOpen(true)}
-          className="mt-1 w-full rounded border border-cyan-500/30 bg-card/60 px-3 py-2 text-left text-sm text-cyan-200 hover:bg-card/80"
+          className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-50"
         >
           {time || "18:00"}
         </button>
@@ -64,25 +64,25 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
           aria-label="Uhrzeit wählen"
         >
           <div
-            className="rounded-xl border border-cyan-500/30 bg-card shadow-xl max-w-xs w-full overflow-hidden"
+            className="max-w-xs w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-cyan-500/20 bg-card/80 px-4 py-3">
-              <h3 className="text-sm font-semibold text-cyan-400">Uhrzeit (Deadline)</h3>
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+              <h3 className="text-sm font-semibold text-gray-900">Uhrzeit (Deadline)</h3>
             </div>
             <div className="p-4">
               <input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-sm text-cyan-200"
+                className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900"
               />
             </div>
-            <div className="border-t border-cyan-500/20 bg-card/80 px-4 py-3 flex justify-end">
+            <div className="flex justify-end border-t border-gray-200 bg-gray-50 px-4 py-3">
               <button
                 type="button"
                 onClick={() => setTimeOverlayOpen(false)}
-                className="rounded bg-cyan-500/30 px-4 py-2 text-xs font-medium text-cyan-200 hover:bg-cyan-500/50"
+                className="rounded bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700"
               >
                 Fertig
               </button>

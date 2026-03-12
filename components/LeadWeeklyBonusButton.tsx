@@ -17,7 +17,7 @@ function SubmitButton() {
     >
       {pending ? (
         <>
-          <span className="inline-block h-3 w-3 rounded-full border-2 border-cyan-300 border-t-transparent animate-spin" />
+          <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-blue-300 border-t-transparent" />
           Wird ausgeführt …
         </>
       ) : (
@@ -34,7 +34,7 @@ export default function LeadWeeklyBonusButton({ action }: { action: Action }) {
     <form action={formAction} className="space-y-2">
       <SubmitButton />
       {state?.message && (
-        <p className="text-xs text-cyan-400/80">{state.message}</p>
+        <p className="text-xs text-gray-600">{state.message}</p>
       )}
     </form>
   );

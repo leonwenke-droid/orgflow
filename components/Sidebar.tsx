@@ -89,7 +89,7 @@ export default function Sidebar({
   const linkClassName = (href: string) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
       isActive(href)
-        ? "bg-gray-100 text-gray-900"
+        ? "bg-blue-50 text-blue-600"
         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
     }`;
 

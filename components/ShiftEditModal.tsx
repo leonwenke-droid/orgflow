@@ -95,7 +95,7 @@ export default function ShiftEditModal({
           <button
             type="button"
             onClick={onClose}
-            className="-m-2 flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-2 text-gray-600 hover:bg-gray-100 focus:outline-none touch-manipulation"
+            className="-m-2 flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-2 text-gray-600 hover:bg-blue-100 focus:outline-none touch-manipulation"
             aria-label="Schließen"
           >
             ✕
@@ -215,7 +215,7 @@ export default function ShiftEditModal({
                                 <option value="">Ersetzen</option>
                                 {members.filter((m) => m.id !== a.user_id).map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
                               </select>
-                              <SubmitButtonWithSpinner className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-blue-700" loadingLabel="…">Ersetzen</SubmitButtonWithSpinner>
+                              <SubmitButtonWithSpinner className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-700" loadingLabel="…">Ersetzen</SubmitButtonWithSpinner>
                             </form>
                             <form action={async () => { await removeAssignment(a.id); onRefresh?.(); }}>
                               <SubmitButtonWithSpinner className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] text-red-600" title="Entfernen" loadingLabel="…">✕</SubmitButtonWithSpinner>
@@ -229,7 +229,7 @@ export default function ShiftEditModal({
                         <option value="">Hinzufügen …</option>
                         {members.filter((m) => !aList.some((a) => a.user_id === m.id)).map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
                       </select>
-                      <SubmitButtonWithSpinner className="rounded shrink-0 bg-gray-100 px-2 py-0.5 text-[10px] text-blue-700" loadingLabel="…">+</SubmitButtonWithSpinner>
+                      <SubmitButtonWithSpinner className="rounded shrink-0 bg-blue-100 px-2 py-0.5 text-[10px] text-blue-700" loadingLabel="…">+</SubmitButtonWithSpinner>
                     </form>
                   </div>
                 ))}
@@ -271,7 +271,7 @@ export default function ShiftEditModal({
                           ))}
                       </select>
                       <SubmitButtonWithSpinner
-                        className="inline-flex items-center gap-1.5 rounded bg-gray-100 px-2 py-1 text-[11px] text-gray-700 hover:bg-gray-200 disabled:opacity-70"
+                        className="inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-1 text-[11px] text-blue-700 hover:bg-blue-200 disabled:opacity-70"
                         loadingLabel="…"
                       >
                         Ersetzen
@@ -311,7 +311,7 @@ export default function ShiftEditModal({
                   ))}
               </select>
               <SubmitButtonWithSpinner
-                className="inline-flex items-center gap-1.5 rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200 disabled:opacity-70"
+                className="inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 hover:bg-blue-200 disabled:opacity-70"
                 loadingLabel="Hinzufügen…"
               >
                 Hinzufügen

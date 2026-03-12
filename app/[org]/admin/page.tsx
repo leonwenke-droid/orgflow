@@ -80,8 +80,8 @@ export default async function AdminDashboard({
           <h2 className="sr-only">Overview</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="flex items-center gap-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gray-100">
-                <Users className="h-8 w-8 text-gray-600" />
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-100">
+                <Users className="h-8 w-8 text-blue-600" />
               </div>
               <div>
                 <p className="text-sm font-medium uppercase tracking-wider text-gray-500">Members</p>
@@ -117,13 +117,13 @@ export default async function AdminDashboard({
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <Link
               href={`/${orgSlug}/admin/members`}
-              className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+              className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition group-hover:bg-gray-200">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 transition group-hover:bg-blue-200">
                 <UserCog className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <span className="font-semibold text-gray-900 group-hover:text-gray-900">Members</span>
+                <span className="font-semibold text-gray-900 group-hover:text-blue-600">Members</span>
                 <p className="text-sm text-gray-600">Manage &amp; import</p>
               </div>
             </Link>
@@ -153,13 +153,13 @@ export default async function AdminDashboard({
             </Link>
             <Link
               href={`/admin/shifts?org=${encodeURIComponent(orgSlug)}`}
-              className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+              className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50"
             >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition group-hover:bg-gray-200">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 transition group-hover:bg-blue-200">
                 <CalendarClock className="h-6 w-6" />
               </div>
               <div className="min-w-0">
-                <span className="font-semibold text-gray-900 group-hover:text-gray-900">Shifts</span>
+                <span className="font-semibold text-gray-900 group-hover:text-blue-600">Shifts</span>
                 <p className="text-sm text-gray-600">Plan &amp; assign</p>
               </div>
             </Link>

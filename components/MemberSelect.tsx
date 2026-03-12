@@ -75,16 +75,16 @@ export default function MemberSelect({
           setQuery(selected ? "" : v);
         }}
         onFocus={() => setOpen(true)}
-        className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs"
+        className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
       />
       {open && (
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded border border-cyan-500/30 bg-card py-1 text-xs shadow-lg"
+          className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded border border-gray-200 bg-white py-1 text-xs shadow-lg"
         >
           {filtered.length === 0 ? (
-            <li className="px-3 py-2 text-cyan-400/70">
+            <li className="px-3 py-2 text-gray-500">
               {options.length === 0 ? "Keine Personen geladen. Bitte zuerst Komitee wählen oder „Gesamter Jahrgang“ nutzen." : "Keine Treffer"}
             </li>
           ) : (
@@ -93,7 +93,7 @@ export default function MemberSelect({
                 key={opt.id}
                 role="option"
                 aria-selected={selected?.id === opt.id}
-                className="cursor-pointer px-3 py-2 text-cyan-100 hover:bg-cyan-500/20"
+                className="cursor-pointer px-3 py-2 text-gray-900 hover:bg-gray-100"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setSelected(opt);

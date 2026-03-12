@@ -28,7 +28,7 @@ export default function DeleteMaterialButton({ materialId, deleteAction }: Props
       <button
         type="submit"
         disabled={pending}
-        className="text-[10px] text-cyan-400/70 hover:text-red-400 disabled:opacity-50"
+        className="text-[10px] text-gray-500 hover:text-red-600 disabled:opacity-50"
       >
         {pending ? "…" : "Entfernen"}
       </button>

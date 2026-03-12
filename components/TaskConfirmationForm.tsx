@@ -65,10 +65,10 @@ export default function TaskConfirmationForm({
       <div>
         <h3 className="text-base font-semibold">{task.title}</h3>
         {task.description && (
-          <p className="mt-1 text-xs text-cyan-100/80">{task.description}</p>
+          <p className="mt-1 text-xs text-gray-600">{task.description}</p>
         )}
         {task.due_at && (
-          <p className="mt-2 text-[11px] text-cyan-400/80">
+          <p className="mt-2 text-[11px] text-gray-600">
             Deadline:{" "}
             {new Date(task.due_at).toLocaleString("de-DE", {
               dateStyle: "short",
@@ -79,7 +79,7 @@ export default function TaskConfirmationForm({
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs text-cyan-400/80">
+        <p className="text-xs text-gray-600">
           Aktueller Status:{" "}
           <span className="font-semibold">{status.toUpperCase()}</span>
         </p>
@@ -102,7 +102,7 @@ export default function TaskConfirmationForm({
           </button>
         </div>
         {disabledErledigt && (
-          <p className="text-[11px] text-red-300">
+          <p className="text-[11px] text-red-600">
             Für diese Aufgabe ist ein Beleg Pflicht. Bitte lade zuerst eine
             Datei hoch.
           </p>
@@ -111,31 +111,31 @@ export default function TaskConfirmationForm({
 
       <div className="space-y-2">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-cyan-400">
+          <label className="mb-1 block text-xs font-semibold text-gray-700">
             Beleg hochladen (PNG / JPG / PDF)
           </label>
           <input
             type="file"
             accept="image/png,image/jpeg,application/pdf"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs"
+            className="block w-full rounded border border-gray-300 bg-white p-2 text-xs"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-cyan-400">
+          <label className="mb-1 block text-xs font-semibold text-gray-700">
             Kommentar (optional, nur intern sichtbar)
           </label>
           <textarea
             rows={3}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
           />
         </div>
       </div>
 
       {message && (
-        <p className="text-xs text-cyan-400/80">
+        <p className="text-xs text-gray-600">
           {message}
         </p>
       )}

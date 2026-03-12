@@ -216,7 +216,7 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
     <button
       type="button"
       onClick={exportPdf}
-      className="rounded bg-cyan-500/20 px-3 py-1.5 text-xs text-cyan-300 hover:bg-cyan-500/30 focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+      className="rounded bg-gray-100 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
     >
       Anwesenheit als PDF exportieren
     </button>

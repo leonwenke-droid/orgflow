@@ -27,11 +27,11 @@ export default function CommitteeFilter({
 
   return (
     <div className={className}>
-      <label className="text-[10px] font-semibold text-cyan-400 block mb-1">Komitee</label>
+      <label className="mb-1 block text-[10px] font-semibold text-gray-700">Komitee</label>
       <select
         value={current}
         onChange={(e) => handleChange(e.target.value)}
-        className="rounded border border-cyan-500/30 bg-card/60 px-2 py-1.5 text-xs text-cyan-200 min-w-[160px]"
+        className="min-w-[160px] rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-900"
       >
         <option value="">Alle Komitees</option>
         {committees.map((c) => (

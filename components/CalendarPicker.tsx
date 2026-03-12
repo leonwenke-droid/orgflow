@@ -91,7 +91,7 @@ export default function CalendarPicker({
   };
 
   return (
-    <div className={`rounded-lg border border-cyan-500/30 bg-card/60 p-3 ${className}`}>
+    <div className={`rounded-lg border border-gray-300 bg-white p-3 ${className}`}>
       {!omitHiddenInput && (
         <input
           type="hidden"
@@ -105,18 +105,18 @@ export default function CalendarPicker({
         <button
           type="button"
           onClick={prevMonth}
-          className="rounded p-1 text-cyan-400 hover:bg-cyan-500/20"
+          className="rounded p-1 text-gray-600 hover:bg-gray-100"
           aria-label="Vorheriger Monat"
         >
           ‹
         </button>
-        <span className="text-xs font-semibold text-cyan-200">
+        <span className="text-xs font-semibold text-gray-900">
           {MONTHS[month]} {year}
         </span>
         <button
           type="button"
           onClick={nextMonth}
-          className="rounded p-1 text-cyan-400 hover:bg-cyan-500/20"
+          className="rounded p-1 text-gray-600 hover:bg-gray-100"
           aria-label="Nächster Monat"
         >
           ›
@@ -124,7 +124,7 @@ export default function CalendarPicker({
       </div>
       <div className="grid grid-cols-7 gap-0.5 text-center">
         {WEEKDAYS.map((wd) => (
-          <div key={wd} className="py-0.5 text-[10px] font-medium text-cyan-400/80">
+          <div key={wd} className="py-0.5 text-[10px] font-medium text-gray-500">
             {wd}
           </div>
         ))}
@@ -141,10 +141,10 @@ export default function CalendarPicker({
               disabled={disabled}
               className={`rounded py-1 text-xs ${
                 disabled
-                  ? "cursor-not-allowed text-cyan-400/30"
+                  ? "cursor-not-allowed text-gray-300"
                   : isSelected
-                    ? "bg-cyan-500/40 text-white"
-                    : "text-cyan-200 hover:bg-cyan-500/20"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               {day}

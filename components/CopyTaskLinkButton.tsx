@@ -22,7 +22,7 @@ export default function CopyTaskLinkButton({ token }: Props) {
     <button
       type="button"
       onClick={handleClick}
-      className="rounded bg-cyan-500/20 px-2 py-0.5 text-cyan-300 hover:bg-cyan-500/30"
+      className="rounded bg-gray-100 px-2 py-0.5 text-gray-700 hover:bg-gray-200"
       title="Link kopieren"
     >
       {copied ? "Kopiert!" : "Link kopieren"}

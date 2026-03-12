@@ -45,17 +45,17 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
         type="file"
         accept=".xlsx,.xls"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-        className="text-sm text-cyan-200 file:mr-2 file:rounded file:border-0 file:bg-cyan-600 file:px-3 file:py-1.5 file:text-white file:hover:bg-cyan-700"
+        className="text-sm text-gray-600 file:mr-2 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white file:hover:bg-blue-700"
       />
       <button
         type="submit"
         disabled={loading || !file}
-        className="rounded bg-cyan-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-cyan-700 disabled:opacity-50"
+        className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
         {loading ? "Importiere…" : "Hochladen"}
       </button>
       {message && (
-        <span className={message.ok ? "text-cyan-300" : "text-amber-400"}>
+        <span className={message.ok ? "text-green-600" : "text-amber-600"}>
           {message.text}
         </span>
       )}

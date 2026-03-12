@@ -33,7 +33,7 @@ export default function NameVerificationForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="mb-1 block text-xs font-semibold text-cyan-400">
+        <label className="mb-1 block text-xs font-semibold text-gray-700">
           Dein Name
         </label>
         <input
@@ -41,7 +41,7 @@ export default function NameVerificationForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="z. B. Max Mustermann"
-          className="w-full rounded border border-cyan-500/30 bg-card/60 p-2 text-xs"
+          className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
           autoFocus
           required
           disabled={loading}
