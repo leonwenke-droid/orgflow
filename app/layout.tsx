@@ -5,6 +5,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import AppShell from "../components/AppShell";
 import ToastContainer from "../components/Toast";
 import ThemeProvider from "../components/ThemeProvider";
+import { LocaleProvider } from "../components/LocaleProvider";
 
 export const metadata = {
   title: "OrgFlow",
@@ -48,6 +49,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark">
         <ThemeProvider>
+          <LocaleProvider>
           <div className="mx-auto flex min-h-screen max-w-6xl flex-col bg-background px-4 py-6 dark:bg-background-dark">
             <AppShell user={user}>
               <main className="flex-1 pb-10">{children}</main>
@@ -64,6 +66,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             </a>
           </footer>
         </div>
+        </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

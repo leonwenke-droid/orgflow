@@ -50,7 +50,7 @@ function dateForInput(d: string | null | undefined): string {
 
 /** Basis-Name ohne Schicht-Suffix (z. B. " – 1. Pause") für die Bearbeitung der gesamten Veranstaltung. */
 function baseEventNameForEdit(eventName: string): string {
-  return String(eventName ?? "").trim().replace(/\s*–\s*[12]\.\s*Pause$/i, "").trim() || String(eventName ?? "");
+  return String(eventName ?? "").trim().replace(/\s*–\s*[12]\.\s*(?:Pause|Break)$/i, "").trim() || String(eventName ?? "");
 }
 
 function timeStr(t: string | null | undefined): string {

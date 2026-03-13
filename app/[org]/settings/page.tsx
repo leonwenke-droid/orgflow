@@ -6,6 +6,7 @@ import { getCurrentOrganization, isOrgAdmin } from "../../../lib/getOrganization
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import AdminForbidden from "../admin/AdminForbidden";
 import ThemeToggle from "../../../components/ThemeToggle";
+import LanguageToggle from "../../../components/LanguageToggle";
 
 export default async function OrgSettingsPage({
   params
@@ -62,9 +63,15 @@ export default async function OrgSettingsPage({
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
             Appearance
           </h2>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <span className="text-sm text-gray-600 dark:text-muted">Toggle light/dark mode (saved in browser)</span>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <span className="text-sm text-gray-600 dark:text-muted">Toggle light/dark mode (saved in browser)</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <LanguageToggle />
+              <span className="text-sm text-gray-600 dark:text-muted">Language: English / Deutsch</span>
+            </div>
           </div>
         </section>
 

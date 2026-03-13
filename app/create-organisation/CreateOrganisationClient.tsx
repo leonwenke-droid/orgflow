@@ -7,10 +7,22 @@ import { ChevronRight, ChevronLeft, Check } from "lucide-react";
 
 const ORG_TYPES = [
   { value: "school", label: "School" },
+  { value: "club", label: "Club" },
   { value: "sports_club", label: "Sports club" },
   { value: "volunteer_group", label: "Volunteer group" },
   { value: "event_crew", label: "Event crew" },
-  { value: "other", label: "Other" },
+  { value: "ngo", label: "NGO" },
+  { value: "conference", label: "Conference" },
+  { value: "custom", label: "Custom" },
+];
+
+const MODULES = [
+  { key: "tasks", label: "Tasks", description: "Assign and track tasks" },
+  { key: "shifts", label: "Shifts", description: "Shift planning and scheduling" },
+  { key: "finance", label: "Finance", description: "Treasury and budget" },
+  { key: "resources", label: "Resources", description: "Materials and procurement" },
+  { key: "engagement", label: "Engagement", description: "Points and activity tracking" },
+  { key: "events", label: "Events", description: "Event management (coming soon)" },
 ];
 
 export default function CreateOrganisationClient() {
@@ -21,6 +33,7 @@ export default function CreateOrganisationClient() {
   const [formData, setFormData] = useState({
     name: "",
     orgType: "school",
+    modules: ["tasks", "shifts", "finance", "resources", "engagement"] as string[],
     teams: [""],
     inviteEmails: "",
   });
@@ -68,6 +81,7 @@ export default function CreateOrganisationClient() {
         body: JSON.stringify({
           name: formData.name.trim(),
           orgType: formData.orgType,
+          modules: formData.modules,
           teams: formData.teams.filter((t) => t.trim()),
         }),
       });
@@ -104,7 +118,7 @@ export default function CreateOrganisationClient() {
         </div>
 
         <div className="mb-8 flex gap-2">
-          {[1, 2, 3, 4, 5].map((s) => (
+          {[1, 2, 3, 4, 5, 6].map((s) => (
             <div
               key={s}
               className={`h-2 flex-1 rounded-full ${
@@ -181,6 +195,43 @@ export default function CreateOrganisationClient() {
           {step === 3 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">
+                Select modules
+              </h2>
+              <p className="text-sm text-gray-600">
+                Choose which features your organisation needs. You can change this later in settings.
+              </p>
+              <div className="space-y-3">
+                {MODULES.map((m) => (
+                  <label
+                    key={m.key}
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-4 hover:border-blue-200"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.modules.includes(m.key)}
+                      onChange={() => {
+                        setFormData((d) => ({
+                          ...d,
+                          modules: d.modules.includes(m.key)
+                            ? d.modules.filter((x) => x !== m.key)
+                            : [...d.modules, m.key],
+                        }));
+                      }}
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600"
+                    />
+                    <div>
+                      <span className="font-medium text-gray-900">{m.label}</span>
+                      <p className="text-xs text-gray-500">{m.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-6">
+              <h2 className="text-xl font-semibold text-gray-900">
                 Create teams
               </h2>
               <p className="text-sm text-gray-600">
@@ -217,7 +268,7 @@ export default function CreateOrganisationClient() {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">
                 Invite members
@@ -246,7 +297,7 @@ export default function CreateOrganisationClient() {
             </div>
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">Finish</h2>
               <p className="text-sm text-gray-600">
@@ -260,6 +311,12 @@ export default function CreateOrganisationClient() {
                   <strong>Type:</strong>{" "}
                   {ORG_TYPES.find((t) => t.value === formData.orgType)?.label ??
                     "–"}
+                </p>
+                <p>
+                  <strong>Modules:</strong>{" "}
+                  {formData.modules.length > 0
+                    ? formData.modules.map((k) => MODULES.find((m) => m.key === k)?.label ?? k).join(", ")
+                    : "None"}
                 </p>
                 <p>
                   <strong>Teams:</strong>{" "}
@@ -284,12 +341,13 @@ export default function CreateOrganisationClient() {
               <ChevronLeft className="h-4 w-4" />
               Back
             </button>
-            {step < 5 ? (
+            {step < 6 ? (
               <button
                 type="button"
-                onClick={() => setStep((s) => Math.min(5, s + 1))}
+                onClick={() => setStep((s) => Math.min(6, s + 1))}
                 disabled={
-                  step === 1 && !formData.name.trim()
+                  (step === 1 && !formData.name.trim()) ||
+                  (step === 3 && formData.modules.length === 0)
                 }
                 className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -300,7 +358,7 @@ export default function CreateOrganisationClient() {
               <button
                 type="button"
                 onClick={handleFinish}
-                disabled={loading || !formData.name.trim()}
+                disabled={loading || !formData.name.trim() || formData.modules.length === 0}
                 className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Creating…" : "Create organisation"}

@@ -162,7 +162,8 @@ async function createShifts(
 ): Promise<{ error?: string; success?: boolean }> {
   "use server";
   try {
-    const type = formData.get("type")?.toString() || "pausenverkauf";
+    const rawType = formData.get("type")?.toString() || "recurring";
+    const type = rawType === "recurring" ? "pausenverkauf" : rawType;
     const date = formData.get("date")?.toString();
     const eventName = formData.get("event_name")?.toString().trim() || "";
     const startTime = formData.get("start_time")?.toString() || "";

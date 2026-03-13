@@ -22,6 +22,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const name = (body.name as string)?.trim();
     const orgType = (body.orgType as string) || "other";
+    const modules = Array.isArray(body.modules)
+      ? (body.modules as string[]).map((m: string) => String(m).trim()).filter(Boolean)
+      : ["tasks", "shifts", "finance", "resources", "engagement"];
     const teams = Array.isArray(body.teams)
       ? (body.teams as string[]).map((t: string) => String(t).trim()).filter(Boolean)
       : [];
@@ -53,6 +56,15 @@ export async function POST(req: Request) {
     }
 
     const orgId = randomUUID();
+    const features: Record<string, boolean> = {
+      tasks: modules.includes("tasks"),
+      shifts: modules.includes("shifts"),
+      treasury: modules.includes("finance"),
+      resources: modules.includes("resources"),
+      materials: modules.includes("resources"),
+      engagement_tracking: modules.includes("engagement"),
+      events: modules.includes("events"),
+    };
     const insertPayload = {
       id: orgId,
       name,
@@ -62,9 +74,18 @@ export async function POST(req: Request) {
       school_short: null,
       school_city: null,
       year: new Date().getFullYear(),
+      org_type: ["school", "club", "sports_club", "volunteer_group", "event_crew", "ngo", "conference", "custom"].includes(orgType) ? orgType : "other",
       is_active: true,
       setup_token: null,
-      setup_token_used_at: null
+      setup_token_used_at: null,
+      settings: {
+        currency: "EUR",
+        timezone: "Europe/Berlin",
+        features,
+        engagement_weights: { task_done: 8, shift_done: 10, material_small: 5, material_medium: 10, material_large: 15 },
+        contact_email: "",
+        contact_phone: "",
+      },
     };
 
     const { data: org, error: orgError } = await serviceClient

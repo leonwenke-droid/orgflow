@@ -37,7 +37,7 @@ export default function CreateShiftsForm({
   organizationId?: string;
 }) {
   const [state, formAction] = useFormState(action, null);
-  const [type, setType] = useState<"pausenverkauf" | "event">("pausenverkauf");
+  const [type, setType] = useState<"recurring" | "event">("recurring");
 
   useEffect(() => {
     if (state?.success) {
@@ -60,12 +60,12 @@ export default function CreateShiftsForm({
             <input
               type="radio"
               name="type"
-              value="pausenverkauf"
-              checked={type === "pausenverkauf"}
-              onChange={() => setType("pausenverkauf")}
+              value="recurring"
+              checked={type === "recurring"}
+              onChange={() => setType("recurring")}
               className="rounded border-gray-400"
             />
-            Break sales (1st & 2nd break)
+            Recurring shifts (fixed time slots)
           </label>
           <label className="inline-flex items-center gap-2">
             <input
@@ -91,9 +91,9 @@ export default function CreateShiftsForm({
           name="event_name"
           required
           placeholder={
-            type === "pausenverkauf"
-              ? "e.g. School day 12.02., break sales"
-              : "e.g. Prom in the hall"
+            type === "recurring"
+              ? "e.g. Sales day 12.02., morning shift"
+              : "e.g. Summer festival, conference"
           }
           className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
         />
@@ -182,7 +182,7 @@ export default function CreateShiftsForm({
       </div>
       <div className="space-y-1 md:col-span-2">
         <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
-          Info for cohort
+          Info for team
         </label>
         <textarea
           name="notes"

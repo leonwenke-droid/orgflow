@@ -65,7 +65,7 @@ export default function OwnerSelectWithScope({
               onChange={() => setScope("year")}
               className="rounded border-gray-400"
             />
-            Entire cohort
+            All members
           </label>
         </div>
         {scope === "committee" && (

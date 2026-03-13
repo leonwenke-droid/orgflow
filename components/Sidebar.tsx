@@ -33,33 +33,35 @@ const RESERVED = [
 
 type NavItem = { href: string; label: string; icon: React.ElementType };
 
-const getNavSections = (org: string): { title: string; items: NavItem[] }[] => [
-  {
-    title: "Core",
-    items: [
-      { href: `/${org}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
-      { href: `/${org}/admin/tasks`, label: "Tasks", icon: CheckSquare },
-      { href: `/${org}/admin/shifts`, label: "Shifts", icon: CalendarDays },
-      { href: `/${org}/admin/members`, label: "Members", icon: Users },
-      { href: `/${org}/admin/committees`, label: "Teams", icon: UsersRound },
-    ],
-  },
-  {
-    title: "Organisation",
-    items: [
-      { href: `/${org}/admin/materials`, label: "Resources", icon: Package },
-      { href: `/${org}/admin/treasury`, label: "Finance", icon: Wallet },
-      { href: `/${org}/admin/scores/assign`, label: "Engagement", icon: Trophy },
-    ],
-  },
-  {
-    title: "Administration",
-    items: [
-      { href: `/${org}/settings`, label: "Settings", icon: Settings2 },
-      { href: `/${org}/admin`, label: "Admin Overview", icon: ShieldCheck },
-    ],
-  },
-];
+type OrgModules = {
+  tasks?: boolean;
+  shifts?: boolean;
+  finance?: boolean;
+  resources?: boolean;
+  engagement?: boolean;
+  events?: boolean;
+};
+
+function getNavSections(org: string, modules?: OrgModules): { title: string; items: NavItem[] }[] {
+  const m = modules ?? {};
+  const core: NavItem[] = [
+    { href: `/${org}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
+    ...(m.tasks !== false ? [{ href: `/${org}/admin/tasks`, label: "Tasks", icon: CheckSquare }] : []),
+    ...(m.shifts !== false ? [{ href: `/${org}/admin/shifts`, label: "Shifts", icon: CalendarDays }] : []),
+    { href: `/${org}/admin/members`, label: "Members", icon: Users },
+    { href: `/${org}/admin/committees`, label: "Teams", icon: UsersRound },
+  ];
+  const orgItems: NavItem[] = [
+    ...(m.resources !== false ? [{ href: `/${org}/admin/materials`, label: "Resources", icon: Package }] : []),
+    ...(m.finance !== false ? [{ href: `/${org}/admin/treasury`, label: "Finance", icon: Wallet }] : []),
+    ...(m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, label: "Engagement", icon: Trophy }] : []),
+  ];
+  return [
+    { title: "Core", items: core },
+    { title: "Organisation", items: orgItems },
+    { title: "Administration", items: [{ href: `/${org}/settings`, label: "Settings", icon: Settings2 }, { href: `/${org}/admin`, label: "Admin Overview", icon: ShieldCheck }] },
+  ];
+}
 
 export default function Sidebar({
   user,
@@ -75,17 +77,22 @@ export default function Sidebar({
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const [orgName, setOrgName] = useState<string | null>(null);
+  const [modules, setModules] = useState<OrgModules | null>(null);
 
   useEffect(() => {
     if (!orgSlug) {
       setOrgName(null);
+      setModules(null);
       return;
     }
     let cancelled = false;
-    fetch(`/api/org-name?slug=${encodeURIComponent(orgSlug)}`)
+    fetch(`/api/org-settings?slug=${encodeURIComponent(orgSlug)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!cancelled && data?.name) setOrgName(data.name);
+        if (!cancelled && data) {
+          if (data.name) setOrgName(data.name);
+          if (data.modules) setModules(data.modules);
+        }
       })
       .catch(() => {});
     return () => {
@@ -126,7 +133,9 @@ export default function Sidebar({
         </div>
       )}
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
-        {getNavSections(orgSlug).map((section) => (
+        {getNavSections(orgSlug, modules ?? undefined)
+        .filter((s) => s.items.length > 0)
+        .map((section) => (
           <div key={section.title}>
             <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               {section.title}

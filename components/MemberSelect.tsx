@@ -85,7 +85,7 @@ export default function MemberSelect({
         >
           {filtered.length === 0 ? (
             <li className="px-3 py-2 text-gray-500">
-              {options.length === 0 ? "No people loaded. Select team first or use \"Entire cohort\"." : "No matches"}
+              {options.length === 0 ? "No people loaded. Select team first or use \"All members\"." : "No matches"}
             </li>
           ) : (
             filtered.map((opt) => (
