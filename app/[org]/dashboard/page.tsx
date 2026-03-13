@@ -3,6 +3,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { removePastShifts } from "../../../lib/cleanupShifts";
 import { getDashboardDisplayNames } from "../../../lib/displayName";
 import { formatWeekRangeLabel, formatDateTimeForDisplay, getTodayDateString } from "../../../lib/dateFormat";
@@ -179,20 +180,26 @@ export default async function OrgDashboardPage({
     data: { user }
   } = await supabase.auth.getUser();
 
-  // Daten immer mit Service-Role laden (umgeht RLS-Rekursion), falls Key gesetzt
-  const supabaseForData = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : undefined;
+  // Access check: dashboard is public, but only org members/super-admin should get full data via service role.
+  const isSuper = user ? await isSuperAdmin() : false;
+  const userOrg = user ? await getCurrentUserOrganization() : null;
+  const canAccessOrgData = !!user && (isSuper || userOrg?.id === org.id);
+
+  // Data client selection:
+  // - Org member / super-admin: use service role (avoids RLS recursion) when available
+  // - Otherwise: use anon client to keep behavior consistent with public dashboard and avoid cross-org redirects
+  const supabaseForData: SupabaseClient | undefined = canAccessOrgData
+    ? (process.env.SUPABASE_SERVICE_ROLE_KEY ? createSupabaseServiceRoleClient() : undefined)
+    : (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+          })
+        : undefined);
   const { treasury, aggregate, activity, shifts, profileNames, committees } =
     await getData(org.id, supabaseForData);
 
-  // Eingeloggt mit anderer Org: zu deren Dashboard weiterleiten. Ohne Login oder ohne Org: Dashboard öffentlich anzeigen.
-  if (user) {
-    const userOrg = await getCurrentUserOrganization();
-    const isSuper = await isSuperAdmin();
-    const canAccess = isSuper || (userOrg?.id === org.id);
-    if (!canAccess && userOrg) redirect(`/${userOrg.slug}/dashboard`);
-  }
+  // IMPORTANT: Do not redirect to another organisation's dashboard.
+  // If user is logged in but not a member of this org, keep showing the public dashboard.
   const livechartCommittees = committees.filter(
     (c) => !/Jahrgangssprecher/i.test(c.name)
   );
