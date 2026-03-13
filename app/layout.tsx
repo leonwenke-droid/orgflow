@@ -46,9 +46,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground">
+      <body className="min-h-screen bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark">
         <ThemeProvider>
-          <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-6">
+          <div className="mx-auto flex min-h-screen max-w-6xl flex-col bg-background px-4 py-6 dark:bg-background-dark">
             <AppShell user={user}>
               <main className="flex-1 pb-10">{children}</main>
             </AppShell>

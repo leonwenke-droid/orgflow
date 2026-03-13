@@ -48,13 +48,13 @@ export default function AppHeader({ user, onMenuOpen }: { user: User | null; onM
     : orgSlug ? `/${orgSlug}/dashboard` : "/";
 
   return (
-    <header className="mb-6 flex items-center justify-between" role="banner">
+    <header className="mb-6 flex items-center justify-between bg-transparent" role="banner">
       <div className="flex items-center gap-3">
         {onMenuOpen && (
           <button
             type="button"
             onClick={onMenuOpen}
-            className="lg:hidden rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            className="lg:hidden rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
@@ -69,7 +69,7 @@ export default function AppHeader({ user, onMenuOpen }: { user: User | null; onM
         {!user && orgSlug && (
           <FullPageLink
             href={`/${orgSlug}/login`}
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
           >
             Sign in
           </FullPageLink>
