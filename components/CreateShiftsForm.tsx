@@ -54,8 +54,8 @@ export default function CreateShiftsForm({
         <p className="text-xs text-red-600 md:col-span-2">{state.error}</p>
       )}
       <div className="space-y-1">
-        <span className="text-[11px] font-semibold text-gray-700">Art</span>
-        <div className="flex flex-col gap-1 text-[11px] text-gray-600">
+        <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Art</span>
+        <div className="flex flex-col gap-1 text-[11px] text-gray-600 dark:text-gray-400">
           <label className="inline-flex items-center gap-2">
             <input
               type="radio"
@@ -76,16 +76,16 @@ export default function CreateShiftsForm({
               onChange={() => setType("event")}
               className="rounded border-gray-400"
             />
-            Veranstaltung (eigener Zeitrahmen)
+            Event (custom time frame)
           </label>
         </div>
       </div>
       <div className="space-y-1">
-        <label className="text-[11px] font-semibold text-gray-700">Date</label>
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Date</label>
         <CalendarPicker name="date" required />
       </div>
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-gray-700">Titel</label>
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Title</label>
         <input
           type="text"
           name="event_name"
@@ -93,16 +93,16 @@ export default function CreateShiftsForm({
           placeholder={
             type === "pausenverkauf"
               ? "e.g. School day 12.02., break sales"
-              : "z.B. Abi-Party in der Aula"
+              : "e.g. Prom in the hall"
           }
-          className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs sm:min-h-0 sm:p-2"
+          className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
         />
       </div>
       {type === "event" && (
         <>
           <div className="space-y-1 md:col-span-2">
-            <label className="text-[11px] font-semibold text-gray-700">
-              Zeitrahmen
+            <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+              Time frame
             </label>
             <div className="flex flex-wrap items-center gap-2">
               <input
@@ -110,7 +110,7 @@ export default function CreateShiftsForm({
                 name="start_time"
                 defaultValue="09:00"
                 required={type === "event"}
-                className="min-h-[44px] rounded border border-gray-300 bg-white p-2.5 text-xs sm:min-h-0 sm:p-2"
+                className="min-h-[44px] rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
               />
               <span className="text-xs text-gray-500">bis</span>
               <input
@@ -118,7 +118,7 @@ export default function CreateShiftsForm({
                 name="end_time"
                 defaultValue="12:00"
                 required={type === "event"}
-                className="min-h-[44px] rounded border border-gray-300 bg-white p-2.5 text-xs sm:min-h-0 sm:p-2"
+                className="min-h-[44px] rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
               />
             </div>
           </div>
@@ -130,24 +130,24 @@ export default function CreateShiftsForm({
                 value="1"
                 className="rounded border-gray-400"
               />
-              <span className="text-[11px] font-semibold text-gray-700">
-                Auf- und Abbauphase (je 30 Min.) hinzufügen
+              <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+                Add setup & teardown (30 min each)
               </span>
             </label>
-            <p className="ml-6 text-[10px] text-gray-500">
+            <p className="ml-6 text-[10px] text-gray-500 dark:text-gray-400">
               Erste Schicht startet 30 Min. früher (Aufbau), letzte endet 30 Min. später (Abbau). Zusätzliche Engagement-Punkte.
             </p>
           </div>
           <div className="space-y-1 md:col-span-2">
-            <label className="text-[11px] font-semibold text-gray-700">
-              Schichtintervall
+            <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+              Shift interval
             </label>
-            <p className="mb-1 text-[10px] text-gray-500">
+            <p className="mb-1 text-[10px] text-gray-500 dark:text-gray-400">
               Der Zeitraum wird in Abschnitte geteilt; pro Abschnitt können andere Personen eingeteilt werden.
             </p>
             <select
               name="interval_minutes"
-              className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs sm:min-h-0 sm:p-2"
+              className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
               defaultValue="120"
             >
               <option value="30">30 Minuten</option>
@@ -160,35 +160,35 @@ export default function CreateShiftsForm({
         </>
       )}
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-gray-700">
-          Benötigte Personen pro Schicht
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+          Required persons per shift
         </label>
         <input
           type="number"
           name="required_slots"
           min={0}
           defaultValue={4}
-          className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs sm:min-h-0 sm:p-2"
+          className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
         />
       </div>
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-gray-700">Ort</label>
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Location</label>
         <input
           type="text"
           name="location"
-          placeholder="z.B. Mensa, Aula …"
-          className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs sm:min-h-0 sm:p-2"
+          placeholder="e.g. Canteen, Hall …"
+          className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
         />
       </div>
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-gray-700">
-          Infos für den Jahrgang
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+          Info for cohort
         </label>
         <textarea
           name="notes"
           rows={3}
-          placeholder="z.B. Wer hat die Kasse, was wird verkauft, wichtige Hinweise – werden im Dashboard angezeigt."
-          className="min-h-[60px] w-full resize-y rounded border border-gray-300 bg-white p-2.5 text-xs sm:p-2"
+          placeholder="e.g. Who has the cash register, what is sold, important notes – shown on dashboard."
+          className="min-h-[60px] w-full resize-y rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:p-2"
         />
       </div>
       <div className="md:col-span-2 pt-1">

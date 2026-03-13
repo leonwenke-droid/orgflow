@@ -223,8 +223,8 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Material" />
       )}
       <section className="card">
-        <h2 className="mb-3 text-sm font-semibold text-gray-700">
-          Neues Event- & Ressourcenmanagement erfassen
+        <h2 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+          Record new event & resource management
         </h2>
         <AddMaterialForm
           profiles={profiles ?? []}
@@ -233,17 +233,17 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
       </section>
 
       <section className="card overflow-hidden">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700">Historie</h2>
+        <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">History</h2>
         <div className="-mx-4 overflow-x-auto sm:mx-0">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="p-3 text-left text-xs font-semibold text-gray-500">Datum</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500">Personen</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500">Event</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500">Was besorgt</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500">Size</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500">Punkte</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Date</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Persons</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Event</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Procured</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Size</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Points</th>
                 <th className="w-20 p-3 text-left text-xs font-semibold text-gray-500"></th>
               </tr>
             </thead>

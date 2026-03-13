@@ -58,24 +58,24 @@ export default function AddMemberForm({
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <h2 className="text-sm font-semibold text-gray-900">Add member manually</h2>
-      <p className="mt-1 text-xs text-gray-600">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+      <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Add member manually</h2>
+      <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
         Name required, optional team. Email only for team lead. Member appears in the list immediately.
       </p>
       <form onSubmit={handleSubmit} className="mt-3 space-y-3 text-sm">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700">Name</label>
+          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">Name</label>
           <input
             type="text"
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="e.g. Max Mustermann"
-            className="w-full rounded border border-gray-300 bg-white p-2 text-xs text-gray-900"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
-        <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-600">
+        <label className="flex cursor-pointer items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
           <input
             type="checkbox"
             checked={asLead}
@@ -86,25 +86,25 @@ export default function AddMemberForm({
         </label>
         {asLead && (
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700">Email (for team lead)</label>
+            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">Email (for team lead)</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="max@example.com"
-              className="w-full rounded border border-gray-300 bg-white p-2 text-xs text-gray-900"
+              className="w-full rounded border border-gray-300 bg-white p-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
         )}
         {committees.length > 0 && (
           <details className="group">
-            <summary className="cursor-pointer text-xs font-semibold text-gray-700 hover:text-gray-900">
+            <summary className="cursor-pointer text-xs font-semibold text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
               Teams ({committeeIds.size} selected) ▾
             </summary>
-            <div className="mt-1 flex flex-wrap gap-2 rounded border border-gray-200 bg-gray-50 p-2">
+            <div className="mt-1 flex flex-wrap gap-2 rounded border border-gray-200 bg-gray-50 p-2 dark:border-gray-600 dark:bg-gray-800">
               {committees.map((c) => (
-                <label key={c.id} className="flex cursor-pointer items-center gap-1.5 text-xs text-gray-700">
+                <label key={c.id} className="flex cursor-pointer items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300">
                   <input type="checkbox" checked={committeeIds.has(c.id)} onChange={() => toggleCommittee(c.id)} className="rounded border-gray-400" />
                   {c.name}
                 </label>

@@ -75,13 +75,13 @@ export default function MemberSelect({
           setQuery(selected ? "" : v);
         }}
         onFocus={() => setOpen(true)}
-        className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
+        className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
       />
       {open && (
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded border border-gray-200 bg-white py-1 text-xs shadow-lg"
+          className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded border border-gray-200 bg-white py-1 text-xs shadow-lg dark:border-gray-600 dark:bg-gray-800"
         >
           {filtered.length === 0 ? (
             <li className="px-3 py-2 text-gray-500">

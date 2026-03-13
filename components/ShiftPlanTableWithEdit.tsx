@@ -133,7 +133,7 @@ export default function ShiftPlanTableWithEdit({
         {showReplacement && (
           <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await updateAssignmentStatus(a.id, "abgesagt", uid); setNotAttendedAssignmentId(null); setEditingAssignmentId(null); router.refresh(); }} className="space-y-1.5 border-t border-gray-200 pt-1">
             <label className="mb-0.5 block text-[10px] text-gray-600">Ersatz</label>
-            <select name="replacement_user_id" className="max-w-full rounded border border-gray-300 bg-white px-1.5 py-1.5 text-[10px] sm:py-0.5" defaultValue={a.replacement_user_id ?? ""}>
+            <select name="replacement_user_id" className="max-w-full rounded border border-gray-300 bg-white px-1.5 py-1.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:py-0.5" defaultValue={a.replacement_user_id ?? ""}>
               <option value="">– Kein Ersatz</option>
               {membersSortedByLoad.filter((m) => m.id !== a.user_id).map((m) => (
                 <option key={m.id} value={m.id}>{m.full_name}</option>
@@ -200,7 +200,7 @@ export default function ShiftPlanTableWithEdit({
                 <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await markAssignmentNotAttended(a.id, uid); setNotAttendedAssignmentId(null); router.refresh(); }} className="space-y-1.5">
                   <div>
                     <label className="mb-0.5 block text-[10px] text-gray-600">Ersatz</label>
-                    <select name="replacement_user_id" className="max-w-full rounded border border-gray-300 bg-white px-1.5 py-1.5 text-[10px] sm:py-0.5">
+                    <select name="replacement_user_id" className="max-w-full rounded border border-gray-300 bg-white px-1.5 py-1.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:py-0.5">
                       <option value="">–</option>
                       {membersSortedByLoad.filter((m) => m.id !== a.user_id).map((m) => (
                         <option key={m.id} value={m.id}>{m.full_name}</option>

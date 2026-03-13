@@ -45,7 +45,7 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
         type="file"
         accept=".xlsx,.xls"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-        className="text-sm text-gray-600 file:mr-2 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white file:hover:bg-blue-700"
+        className="text-sm text-gray-600 file:mr-2 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white file:hover:bg-blue-700 dark:text-gray-400"
       />
       <button
         type="submit"

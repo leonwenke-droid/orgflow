@@ -121,7 +121,7 @@ export default function ShiftEditModal({
                 name="event_name"
                 required
                 defaultValue={isEventGroup ? baseEventNameForEdit(shift.event_name) : shift.event_name}
-                className="w-full rounded border border-gray-300 bg-white p-2.5 sm:p-2 text-xs min-h-[44px] sm:min-h-0"
+                className="w-full rounded border border-gray-300 bg-white p-2.5 text-xs min-h-[44px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -132,7 +132,7 @@ export default function ShiftEditModal({
                   name="date"
                   required
                   defaultValue={dateForInput(shift.date)}
-                  className="w-full rounded border border-gray-300 bg-white p-2.5 sm:p-2 text-xs min-h-[44px] sm:min-h-0"
+                  className="w-full rounded border border-gray-300 bg-white p-2.5 text-xs min-h-[44px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
                 />
               </div>
               {!isEventGroup && (
@@ -144,7 +144,7 @@ export default function ShiftEditModal({
                     name="start_time"
                     required
                     defaultValue={timeForInput(shift.start_time)}
-                    className="w-full rounded border border-gray-300 bg-white p-2.5 sm:p-2 text-xs min-h-[44px] sm:min-h-0"
+                    className="w-full rounded border border-gray-300 bg-white p-2.5 text-xs min-h-[44px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
                   />
                   <span className="text-gray-700/80 text-xs">–</span>
                   <input
@@ -152,7 +152,7 @@ export default function ShiftEditModal({
                     name="end_time"
                     required
                     defaultValue={timeForInput(shift.end_time)}
-                    className="w-full rounded border border-gray-300 bg-white p-2.5 sm:p-2 text-xs min-h-[44px] sm:min-h-0"
+                    className="w-full rounded border border-gray-300 bg-white p-2.5 text-xs min-h-[44px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
                   />
                 </div>
               </div>
@@ -171,7 +171,7 @@ export default function ShiftEditModal({
                 name="location"
                 defaultValue={shift.location ?? ""}
                 placeholder="z.B. Mensa, Aula …"
-                className="w-full rounded border border-gray-300 bg-white p-2.5 sm:p-2 text-xs min-h-[44px] sm:min-h-0"
+                className="w-full rounded border border-gray-300 bg-white p-2.5 text-xs min-h-[44px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
               />
             </div>
             <div>
@@ -181,7 +181,7 @@ export default function ShiftEditModal({
                 rows={2}
                 defaultValue={shift.notes ?? ""}
                 placeholder="Info for the cohort …"
-                className="w-full rounded border border-gray-300 bg-white p-2 text-xs resize-y"
+                className="w-full rounded border border-gray-300 bg-white p-2 text-xs resize-y dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
             <SubmitButtonWithSpinner
@@ -208,10 +208,10 @@ export default function ShiftEditModal({
                     ) : (
                       <ul className="space-y-1.5">
                         {aList.map((a) => (
-                          <li key={a.id} className="flex items-center gap-2 rounded border border-gray-200 bg-white px-2 py-1.5">
+                          <li key={a.id} className="flex items-center gap-2 rounded border border-gray-200 bg-white px-2 py-1.5 dark:border-gray-600 dark:bg-gray-800">
                             <span className="flex-1 text-[11px] text-gray-900 truncate">{profileNames.get(a.user_id ?? "") ?? "–"}</span>
                             <form action={async (fd: FormData) => { const uid = fd.get("user_id")?.toString(); if (uid) { await replaceAssignment(a.id, fd); onRefresh?.(); } }} className="flex items-center gap-1">
-                              <select name="user_id" className="rounded border border-gray-300 bg-white px-1 py-0.5 text-[10px]">
+                              <select name="user_id" className="rounded border border-gray-300 bg-white px-1 py-0.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
                                 <option value="">Ersetzen</option>
                                 {members.filter((m) => m.id !== a.user_id).map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
                               </select>
@@ -225,7 +225,7 @@ export default function ShiftEditModal({
                       </ul>
                     )}
                     <form action={async (fd: FormData) => { const uid = fd.get("user_id")?.toString(); if (uid) { await assignToShift(s.id, fd); onRefresh?.(); } }} className="flex items-center gap-2">
-                      <select name="user_id" className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] flex-1 min-w-0">
+                      <select name="user_id" className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] flex-1 min-w-0 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
                         <option value="">Add …</option>
                         {members.filter((m) => !aList.some((a) => a.user_id === m.id)).map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
                       </select>
@@ -299,7 +299,7 @@ export default function ShiftEditModal({
             >
               <select
                 name="user_id"
-                className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[11px]"
+                className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[11px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               >
                 <option value="">Add …</option>
                 {members

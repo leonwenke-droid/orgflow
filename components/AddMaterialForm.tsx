@@ -101,7 +101,7 @@ export default function AddMaterialForm({
               <select
                 name="user_ids"
                 required={idx === 0}
-                className="min-w-0 flex-1 rounded border border-gray-300 bg-white p-2 text-sm text-gray-900"
+                className="min-w-0 flex-1 rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               >
                 <option value="">Select …</option>
                 {profiles.map((p) => (
@@ -148,7 +148,7 @@ export default function AddMaterialForm({
           <select
             name="size"
             required
-            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           >
             {SIZE_OPTIONS.map((s) => (
               <option key={s.value} value={s.value}>

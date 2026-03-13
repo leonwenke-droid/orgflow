@@ -29,5 +29,26 @@ a {
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800;
+}
+
+/* Dark mode: inputs, selects, textareas */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="time"],
+.dark input[type="file"],
+.dark select,
+.dark textarea {
+  @apply border-gray-600 bg-gray-800 text-gray-100;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  @apply text-gray-400;
+}
+.dark select option {
+  @apply bg-gray-800 text-gray-100;
 }

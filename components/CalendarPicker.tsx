@@ -91,7 +91,7 @@ export default function CalendarPicker({
   };
 
   return (
-    <div className={`rounded-lg border border-gray-300 bg-white p-3 ${className}`}>
+    <div className={`rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-800 ${className}`}>
       {!omitHiddenInput && (
         <input
           type="hidden"
@@ -105,18 +105,18 @@ export default function CalendarPicker({
         <button
           type="button"
           onClick={prevMonth}
-          className="rounded p-1 text-gray-600 hover:bg-gray-100"
+          className="rounded p-1 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
           aria-label="Vorheriger Monat"
         >
           ‹
         </button>
-        <span className="text-xs font-semibold text-gray-900">
+        <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">
           {MONTHS[month]} {year}
         </span>
         <button
           type="button"
           onClick={nextMonth}
-          className="rounded p-1 text-gray-600 hover:bg-gray-100"
+          className="rounded p-1 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
           aria-label="Next month"
         >
           ›
@@ -124,7 +124,7 @@ export default function CalendarPicker({
       </div>
       <div className="grid grid-cols-7 gap-0.5 text-center">
         {WEEKDAYS.map((wd) => (
-          <div key={wd} className="py-0.5 text-[10px] font-medium text-gray-500">
+          <div key={wd} className="py-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">
             {wd}
           </div>
         ))}
@@ -144,7 +144,7 @@ export default function CalendarPicker({
                   ? "cursor-not-allowed text-gray-300"
                   : isSelected
                     ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
               }`}
             >
               {day}

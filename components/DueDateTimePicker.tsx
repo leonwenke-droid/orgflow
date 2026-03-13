@@ -49,7 +49,7 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
         <button
           type="button"
           onClick={() => setTimeOverlayOpen(true)}
-          className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-50"
+          className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
         >
           {time || "18:00"}
         </button>
@@ -75,7 +75,7 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900"
+                className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
             <div className="flex justify-end border-t border-gray-200 bg-gray-50 px-4 py-3">

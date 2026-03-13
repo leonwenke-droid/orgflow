@@ -117,7 +117,7 @@ export default function TaskConfirmationForm({
             type="file"
             accept="image/png,image/jpeg,application/pdf"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full rounded border border-gray-300 bg-white p-2 text-xs"
+            className="block w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <div>
@@ -128,7 +128,7 @@ export default function TaskConfirmationForm({
             rows={3}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
       </div>

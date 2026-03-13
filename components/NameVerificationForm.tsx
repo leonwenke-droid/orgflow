@@ -41,7 +41,7 @@ export default function NameVerificationForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="z. B. Max Mustermann"
-          className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
+          className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           autoFocus
           required
           disabled={loading}

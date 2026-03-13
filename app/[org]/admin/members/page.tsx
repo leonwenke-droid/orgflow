@@ -128,9 +128,9 @@ export default async function AdminMembersPage({
         <InviteLinkBlock orgSlug={orgSlug} />
       </div>
 
-      <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-900">Excel import</h2>
-        <p className="mt-1 text-xs text-gray-600">
+      <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Excel import</h2>
+        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
           Download template, fill in (Name, optional Score, Teams, Leads), then upload here. Existing names are skipped.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -152,7 +152,7 @@ export default async function AdminMembersPage({
       <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50">
+            <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-800">
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Name</th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Teams</th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Lead</th>
