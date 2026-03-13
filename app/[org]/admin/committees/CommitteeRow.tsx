@@ -54,11 +54,11 @@ export default function CommitteeRow({
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded border border-gray-300 bg-white px-2 py-1 text-gray-900"
+          className="flex-1 rounded border border-gray-300 bg-white px-2 py-1 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           autoFocus
         />
       ) : (
-        <span className="text-gray-900">{committee.name}</span>
+        <span className="text-gray-900 dark:text-gray-100">{committee.name}</span>
       )}
       <div className="flex items-center gap-1">
         {editing ? (
@@ -74,7 +74,7 @@ export default function CommitteeRow({
             <button
               type="button"
               onClick={() => { setEditing(false); setName(committee.name); setError(null); }}
-              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Abbrechen
             </button>
@@ -84,7 +84,7 @@ export default function CommitteeRow({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
+              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               Edit
             </button>
@@ -92,14 +92,14 @@ export default function CommitteeRow({
               type="button"
               onClick={handleDelete}
               disabled={loading}
-              className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
+              className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30"
             >
               Delete
             </button>
           </>
         )}
       </div>
-      {error && <p className="w-full text-xs text-red-600">{error}</p>}
+      {error && <p className="w-full text-xs text-red-600 dark:text-red-400">{error}</p>}
     </li>
   );
 }

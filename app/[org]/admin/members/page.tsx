@@ -121,8 +121,8 @@ export default async function AdminMembersPage({
   return (
     <div className="mx-auto max-w-4xl p-6">
       <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Members" />
-      <h1 className="mt-4 text-2xl font-bold text-gray-900">Members – {org.name}</h1>
-      <p className="mt-1 text-sm text-gray-600">Manage & import (organisation)</p>
+      <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">Members – {org.name}</h1>
+      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage & import (organisation)</p>
 
       <div className="mt-6">
         <InviteLinkBlock orgSlug={orgSlug} />
@@ -149,15 +149,15 @@ export default async function AdminMembersPage({
         <AddMemberForm orgSlug={orgSlug} committees={committeeList} />
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-card-dark">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-800">
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Name</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Teams</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Lead</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Actions</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Name</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Teams</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Lead</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
             </tr>
           </thead>
           <tbody>

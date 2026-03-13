@@ -69,11 +69,11 @@ export default function AddMaterialForm({
         <p className="text-xs text-green-600">Event- & Ressourcenmanagement erfasst.</p>
       )}
 
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs">
-        <span className="font-semibold text-gray-700">Bewertung pro Person:</span>
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs dark:border-gray-600 dark:bg-gray-800">
+        <span className="font-semibold text-gray-700 dark:text-gray-300">Bewertung pro Person:</span>
         <table className="mt-1.5 w-full text-left">
           <thead>
-            <tr className="text-gray-500">
+            <tr className="text-gray-500 dark:text-gray-400">
               <th className="py-0.5">Size</th>
               <th className="py-0.5">Punkte</th>
               <th className="py-0.5">Beispiele</th>
@@ -81,10 +81,10 @@ export default function AddMaterialForm({
           </thead>
           <tbody>
             {SIZE_OPTIONS.map((s) => (
-              <tr key={s.value} className="border-t border-gray-100">
-                <td className="py-1 font-medium">{s.label}</td>
-                <td className="py-1 text-gray-700">+{s.points}</td>
-                <td className="py-1 text-gray-500">{s.examples}</td>
+              <tr key={s.value} className="border-t border-gray-100 dark:border-gray-700">
+                <td className="py-1 font-medium dark:text-gray-200">{s.label}</td>
+                <td className="py-1 text-gray-700 dark:text-gray-300">+{s.points}</td>
+                <td className="py-1 text-gray-500 dark:text-gray-400">{s.examples}</td>
               </tr>
             ))}
           </tbody>
@@ -93,7 +93,7 @@ export default function AddMaterialForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
-          <label className="block text-xs font-semibold text-gray-700">
+          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
             Person(en)
           </label>
           {personSlots.map((key, idx) => (
@@ -114,7 +114,7 @@ export default function AddMaterialForm({
                 <button
                   type="button"
                   onClick={() => removePerson(key)}
-                  className="shrink-0 rounded px-2 py-1.5 text-[10px] text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  className="shrink-0 rounded px-2 py-1.5 text-[10px] text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                 >
                   Entfernen
                 </button>
@@ -130,7 +130,7 @@ export default function AddMaterialForm({
           </button>
         </div>
         <div className="space-y-1">
-          <label className="block text-xs font-semibold text-gray-700">
+          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
             Event
           </label>
           <input
@@ -138,11 +138,11 @@ export default function AddMaterialForm({
             name="event_name"
             placeholder="z.B. Halloween Party"
             required
-            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 placeholder:text-gray-400"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400"
           />
         </div>
         <div className="space-y-1">
-          <label className="block text-xs font-semibold text-gray-700">
+          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
             Size & points
           </label>
           <select
@@ -158,7 +158,7 @@ export default function AddMaterialForm({
           </select>
         </div>
         <div className="space-y-1 sm:col-span-2">
-          <label className="block text-xs font-semibold text-gray-700">
+          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
             Beschreibung
           </label>
           <input
@@ -166,7 +166,7 @@ export default function AddMaterialForm({
             name="description"
             placeholder="z.B. Waffeleisen + Teig"
             required
-            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 placeholder:text-gray-400"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400"
           />
         </div>
       </div>
