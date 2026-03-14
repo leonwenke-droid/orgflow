@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { formatCurrency } from "../../../../lib/currency";
 
 export const runtime = "nodejs";
 
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json({
-        message: `Kassenstand manuell auf ${amount.toLocaleString("de-DE")} € gesetzt.`
+        message: `Kassenstand manuell auf ${formatCurrency(amount)} € gesetzt.`
       });
     }
 
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      message: `Kassenstand aus Zelle ${cellRef} auf ${amount.toLocaleString("de-DE")} € gesetzt.`
+      message: `Kassenstand aus Zelle ${cellRef} auf ${formatCurrency(amount)} € gesetzt.`
     });
   } catch (e) {
     console.error(e);

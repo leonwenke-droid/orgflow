@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { removePastShifts } from "../../../lib/cleanupShifts";
 import { getDashboardDisplayNames } from "../../../lib/displayName";
 import { formatWeekRangeLabel, formatDateTimeForDisplay, getTodayDateString } from "../../../lib/dateFormat";
+import { formatCurrency } from "../../../lib/currency";
 import ShiftPlanWeekNav from "../../../components/ShiftPlanWeekNav";
 import EmptyState from "../../../components/EmptyState";
 import OnboardingBanner from "../../../components/OnboardingBanner";
@@ -254,7 +255,7 @@ export default async function OrgDashboardPage({
           {
             icon: Wallet,
             label: "Treasury",
-            value: treasury ? `€${treasury.amount.toLocaleString("de-DE")}` : "–",
+            value: treasury ? `€${formatCurrency(treasury.amount)}` : "–",
             sub: "current balance"
           },
           {

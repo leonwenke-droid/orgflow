@@ -5,6 +5,7 @@ import TreasuryUploadForm from "../../../components/TreasuryUploadForm";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { getCurrentOrganization, isOrgAdmin, getCurrentUserOrganization } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
+import { formatCurrency } from "../../../lib/currency";
 
 export const dynamic = "force-dynamic";
 
@@ -96,7 +97,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
           <p className="text-xs text-gray-500">
             Last balance:{" "}
             <span className="font-semibold">
-              {Number(lastUpdate.amount).toLocaleString("de-DE")} €
+              {formatCurrency(Number(lastUpdate.amount))} €
             </span>{" "}
             ({new Date(lastUpdate.created_at).toLocaleString("de-DE")})
           </p>
