@@ -12,7 +12,7 @@ import EmptyState from "../../../components/EmptyState";
 import OnboardingBanner from "../../../components/OnboardingBanner";
 import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
-import { getCurrentOrganization, getCurrentUserOrganization, isSuperAdmin } from "../../../lib/getOrganization";
+import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
@@ -197,8 +197,9 @@ export default async function OrgDashboardPage({
             auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
           })
         : undefined);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
   const { treasury, aggregate, activity, shifts, profileNames, committees } =
-    await getData(org.id, supabaseForData);
+    await getData(orgIdForData, supabaseForData);
 
   // IMPORTANT: Do not redirect to another organisation's dashboard.
   // If user is logged in but not a member of this org, keep showing the public dashboard.
