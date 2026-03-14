@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 export default function TreasuryUploadForm({
   organizationId,
@@ -9,6 +11,7 @@ export default function TreasuryUploadForm({
   organizationId?: string;
   defaultCellRef: string;
 }) {
+  const { locale } = useLocale();
   const [mode, setMode] = useState<"excel" | "manual">("excel");
   const [file, setFile] = useState<File | null>(null);
   const [cellRef, setCellRef] = useState(defaultCellRef);
@@ -53,7 +56,7 @@ export default function TreasuryUploadForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 text-sm">
-      <div className="flex gap-4 text-xs text-gray-600">
+      <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-400">
         <label className="flex cursor-pointer items-center gap-1">
           <input
             type="radio"
@@ -63,7 +66,7 @@ export default function TreasuryUploadForm({
             onChange={() => setMode("excel")}
             className="border-gray-400"
           />
-          Per Excel (.xlsx)
+          {t("finance.excel_upload", locale)}
         </label>
         <label className="flex items-center gap-1 cursor-pointer">
           <input
@@ -74,47 +77,47 @@ export default function TreasuryUploadForm({
             onChange={() => setMode("manual")}
             className="border-gray-400"
           />
-          Manuell eingeben
+          {t("finance.manual_entry", locale)}
         </label>
       </div>
 
       {mode === "excel" ? (
         <>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700">
-              Excel-Datei (.xlsx)
+            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {t("finance.excel_upload", locale)}
             </label>
             <input
               type="file"
               accept=".xlsx"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full rounded border border-gray-300 bg-white p-2 text-xs"
+              className="block w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700">
-              Cell with treasury balance (e.g. M9)
+            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {t("finance.cell_label", locale)}
             </label>
             <input
               type="text"
               value={cellRef}
               onChange={(e) => setCellRef(e.target.value.toUpperCase())}
-              className="w-32 rounded border border-gray-300 bg-white p-1.5 text-xs"
+              className="w-32 rounded border border-gray-300 bg-white p-1.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
         </>
       ) : (
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700">
-            Treasury balance in EUR
+          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+            {t("finance.balance_label", locale)}
           </label>
           <input
             type="number"
             step="0.01"
             value={manualAmount}
             onChange={(e) => setManualAmount(e.target.value)}
-            className="w-40 rounded border border-gray-300 bg-white p-1.5 text-xs"
-            placeholder="z. B. 1234,56"
+            className="w-40 rounded border border-gray-300 bg-white p-1.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            placeholder="1234.56"
           />
         </div>
       )}
@@ -124,14 +127,14 @@ export default function TreasuryUploadForm({
         disabled={isSubmitDisabled}
         className="btn-primary text-xs"
       >
-        {loading ? "Saving…" : "Update treasury balance"}
+        {loading ? t("finance.saving", locale) : t("finance.update_btn", locale)}
       </button>
 
-      <p className="text-[11px] text-gray-500">
-        Only the finance team should update the treasury balance.
+      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+        {t("finance.only_team_note", locale)}
       </p>
       {message && (
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-gray-600 dark:text-gray-400">
           {message} – Dashboard will update automatically.
         </p>
       )}

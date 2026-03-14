@@ -3,8 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { getEngagementScoresAction, type ScoreRow } from "./actions";
+import { useLocale } from "../../../components/LocaleProvider";
+import { t } from "../../../lib/i18n";
 
 export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = null }: { orgSlug: string; currentAuthUserId?: string | null }) {
+  const { locale } = useLocale();
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [scores, setScores] = useState<ScoreRow[] | null>(null);
@@ -28,31 +31,31 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 px-6 py-5">
+    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-card-dark">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 px-6 py-5 dark:border-gray-700">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Engagement Scores</h2>
-          <p className="mt-0.5 text-sm text-gray-600">
-            {!expanded && "Rangliste nach Punkten – auf «Mehr anzeigen» klicken zum Laden."}
-            {expanded && scores !== null && `${scores.length} Mitglieder`}
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Engagement Scores</h2>
+          <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
+            {!expanded && t("engagement.points_title", locale)}
+            {expanded && scores !== null && `${scores.length} ${t("engagement.members_count", locale)}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {expanded && scores !== null && (
             <Link
               href={`/${orgSlug}/admin/scores/export`}
-              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
-              Exportieren
+              {t("engagement.export", locale)}
             </Link>
           )}
           <button
             type="button"
             onClick={() => (scores !== null ? setExpanded((e) => !e) : loadScores())}
             disabled={loading}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+            className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
           >
-            {loading ? "Lade…" : expanded && scores !== null ? "Weniger anzeigen" : "Mehr anzeigen"}
+            {loading ? t("engagement.loading", locale) : expanded && scores !== null ? t("engagement.show_less", locale) : t("engagement.show_more", locale)}
           </button>
         </div>
       </div>

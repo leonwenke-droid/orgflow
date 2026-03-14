@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import ShiftEditModal from "./ShiftEditModal";
 import SubmitButtonWithSpinner from "./SubmitButtonWithSpinner";
 import { formatDateLabel } from "../lib/dateFormat";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 type Member = { id: string; full_name: string; load_index?: number; responsibility_malus?: number };
 
@@ -64,6 +66,7 @@ export default function ShiftPlanTableWithEdit({
   markAssignmentNotAttended,
   updateAssignmentStatus
 }: Props) {
+  const { locale } = useLocale();
   const router = useRouter();
   const [editingShifts, setEditingShifts] = useState<any[] | null>(null);
 
@@ -310,7 +313,7 @@ export default function ShiftPlanTableWithEdit({
                               <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded bg-blue-100 text-sm text-blue-700 hover:bg-blue-200" title="Personen" aria-label="Personen">✎</button>
                               <form action={deleteShift} className="inline">
                                 <input type="hidden" name="shiftId" value={s.id} />
-                                <SubmitButtonWithSpinner className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 disabled:opacity-70 text-sm" title="Entfernen" loadingLabel="…" aria-label="Entfernen">✕</SubmitButtonWithSpinner>
+                                <SubmitButtonWithSpinner className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 disabled:opacity-70 text-sm dark:bg-red-900/30 dark:text-red-400" title={t("common.remove", locale)} loadingLabel="…" aria-label={t("common.remove", locale)}>✕</SubmitButtonWithSpinner>
                               </form>
                             </div>
                           </div>
@@ -374,7 +377,7 @@ export default function ShiftPlanTableWithEdit({
                             <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="rounded bg-blue-100 px-2 py-1 text-[11px] text-blue-700 hover:bg-blue-200" title="Personen">✎</button>
                             <form action={deleteShift} className="inline">
                               <input type="hidden" name="shiftId" value={s.id} />
-                              <SubmitButtonWithSpinner className="rounded bg-red-500/20 px-2 py-1 text-[11px] text-red-300 hover:bg-red-500/30 disabled:opacity-70" title="Entfernen" loadingLabel="…">✕</SubmitButtonWithSpinner>
+                              <SubmitButtonWithSpinner className="rounded bg-red-500/20 px-2 py-1 text-[11px] text-red-300 hover:bg-red-500/30 disabled:opacity-70 dark:bg-red-900/30 dark:text-red-400" title={t("common.remove", locale)} loadingLabel="…">✕</SubmitButtonWithSpinner>
                             </form>
                           </div>
                         </td>

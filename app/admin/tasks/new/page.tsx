@@ -8,6 +8,7 @@ import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import OwnerSelectWithScope from "../../../../components/OwnerSelectWithScope";
 import DueDateTimePicker from "../../../../components/DueDateTimePicker";
 import SubmitButtonWithSpinner from "../../../../components/SubmitButtonWithSpinner";
+import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,7 @@ async function createTask(formData: FormData) {
   const ownerId = formData.get("owner_id")?.toString() || null;
   const dueAt = formData.get("due_at")?.toString() || null;
   const proofRequired = formData.get("proof_required") === "on";
+  const eventId = formData.get("event_id")?.toString().trim() || null;
 
   if (!title) {
     throw new Error("Titel ist erforderlich");
@@ -57,6 +59,7 @@ async function createTask(formData: FormData) {
     due_at: dueAt ? new Date(dueAt).toISOString() : null,
     proof_required: proofRequired,
     access_token: token,
+    ...(eventId ? { event_id: eventId } : {}),
     ...(orgId ? { organization_id: orgId } : {})
   });
 
@@ -117,6 +120,9 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
 
   const committeeQuery = service.from("committees").select("id, name").order("name");
   const membersQuery = service.from("profiles").select("id, full_name, committee_id").order("full_name");
+  const eventsQuery = orgId
+    ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
+    : Promise.resolve({ data: [] as { id: string; name: string }[] });
   if (orgId) {
     committeeQuery.eq("organization_id", orgId);
     membersQuery.eq("organization_id", orgId);
@@ -125,12 +131,15 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
   const [
     { data: committees, error: committeesError },
     { data: members, error: membersError },
-    { data: profileCommittees }
+    { data: profileCommittees },
+    { data: eventsData }
   ] = await Promise.all([
     committeeQuery,
     membersQuery,
-    service.from("profile_committees").select("user_id, committee_id")
+    service.from("profile_committees").select("user_id, committee_id"),
+    eventsQuery
   ]);
+  const eventsList = (eventsData ?? []) as { id: string; name: string }[];
 
   const userIdToCommitteeIds = new Map<string, string[]>();
   for (const pc of profileCommittees ?? []) {
@@ -156,36 +165,56 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
     name: String(c.name ?? "")
   }));
 
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+
   return (
     <div className="space-y-4">
       {orgSlug && (
-        <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Neue Aufgabe" />
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("tasks.breadcrumb_new", locale)} />
       )}
       <div className="card max-w-xl space-y-4">
-        <h2 className="text-sm font-semibold text-gray-700">
-          New task
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          {t("tasks.new_task", locale)}
         </h2>
       <form action={createTask} className="space-y-3 text-sm">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700">
-            Titel
+          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+            {t("tasks.title_label", locale)}
           </label>
           <input
             name="title"
             required
-            className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
+            placeholder={t("placeholders.task_title", locale)}
+            className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700">
-            Beschreibung
+          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+            {t("tasks.description_label", locale)}
           </label>
           <textarea
             name="description"
             rows={3}
-            className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
+            className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
+        {eventsList.length > 0 && (
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {t("shifts.event_optional", locale)}
+            </label>
+            <select
+              name="event_id"
+              className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            >
+              <option value="">{t("shifts.event_none", locale)}</option>
+              {eventsList.map((ev) => (
+                <option key={ev.id} value={ev.id}>{ev.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         {committeeList.length === 0 && (
           <p className="rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
             Keine Komitees in der Datenbank. Bitte in Supabase unter Tabelle{" "}
@@ -206,29 +235,29 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
         />
         <div className="grid gap-3 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700">
-              Deadline
+            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {t("tasks.deadline", locale)}
             </label>
             <DueDateTimePicker name="due_at" />
           </div>
           <div className="flex items-end">
-            <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+            <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
               <input
                 type="checkbox"
                 name="proof_required"
                 defaultChecked
                 className="rounded border-gray-400"
               />
-              Beleg verpflichtend
+              {t("tasks.proof_required", locale)}
             </label>
           </div>
         </div>
         <div className="pt-2">
           <SubmitButtonWithSpinner
             className="btn-primary text-xs inline-flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
-            loadingLabel="Speichern…"
+            loadingLabel={t("tasks.saving", locale)}
           >
-            Aufgabe speichern
+            {t("tasks.save", locale)}
           </SubmitButtonWithSpinner>
         </div>
       </form>

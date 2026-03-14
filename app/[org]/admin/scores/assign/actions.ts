@@ -14,14 +14,14 @@ export async function assignPoints(
 ) {
   const org = await getCurrentOrganization(orgSlug);
   if (!(await isOrgAdmin(org.id))) {
-    return { error: "Keine Berechtigung." };
+    return { errorKey: "engagement.unauthorized" };
   }
   if (!profileId || typeof points !== "number") {
-    return { error: "Mitglied und Punkte angeben." };
+    return { errorKey: "engagement.assign_validation" };
   }
   const trimmedReason = String(reason ?? "").trim();
   if (!trimmedReason) {
-    return { error: "Reason is required." };
+    return { errorKey: "engagement.reason_required" };
   }
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -70,12 +70,12 @@ export async function assignPoints(
 export async function removeScoreImport(orgSlug: string, logId: string) {
   const org = await getCurrentOrganization(orgSlug);
   if (!(await isOrgAdmin(org.id))) {
-    return { error: "Keine Berechtigung." };
+    return { errorKey: "engagement.unauthorized" };
   }
-  if (!logId) return { error: "Eintrag nicht gefunden." };
+  if (!logId) return { errorKey: "engagement.entry_not_found" };
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return { error: "Server-Konfiguration: SUPABASE_SERVICE_ROLE_KEY fehlt. Entfernen nicht möglich." };
+    return { errorKey: "engagement.remove_error" };
   }
   const supabase = createSupabaseServiceRoleClient();
 
@@ -85,7 +85,7 @@ export async function removeScoreImport(orgSlug: string, logId: string) {
     .eq("id", logId)
     .eq("organization_id", org.id)
     .single();
-  if (fetchErr || !logRow) return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
+  if (fetchErr || !logRow) return { errorKey: "engagement.entry_not_found" };
 
   let eventId = logRow.engagement_event_id as string | null;
   if (!eventId) {

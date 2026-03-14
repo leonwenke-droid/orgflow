@@ -10,6 +10,7 @@ import CreateShiftsForm from "../../../components/CreateShiftsForm";
 import ShiftPlanTableWithEdit from "../../../components/ShiftPlanTableWithEdit";
 import ShiftAttendancePdfExport, { type ShiftForPdf } from "../../../components/ShiftAttendancePdfExport";
 import EmptyState from "../../../components/EmptyState";
+import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -158,9 +159,9 @@ async function autoAssignForShifts(
 }
 
 async function createShifts(
-  _prev: { error?: string } | null,
+  _prev: { error?: string; errorKey?: string } | null,
   formData: FormData
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; errorKey?: string; success?: boolean }> {
   "use server";
   try {
     const rawType = formData.get("type")?.toString() || "recurring";
@@ -175,6 +176,7 @@ async function createShifts(
       formData.get("required_slots")?.toString() || "0"
     ) || 0;
     const organizationId = formData.get("organization_id")?.toString() || null;
+    const eventId = formData.get("event_id")?.toString().trim() || null;
 
     if (!date) {
       return { error: "Datum ist erforderlich." };
@@ -200,8 +202,8 @@ async function createShifts(
       createdBy = profile?.id ?? null;
     }
 
-    const baseRow = (overrides: Partial<{ event_name: string; date: string; start_time: string; end_time: string; location: string | null; notes: string | null; created_by: string | null; required_slots: number }>) =>
-      ({ event_name: "", date, start_time: "", end_time: "", location, notes, created_by: createdBy, required_slots: requiredSlots, ...overrides, ...(organizationId ? { organization_id: organizationId } : {}) });
+    const baseRow = (overrides: Partial<{ event_name: string; date: string; start_time: string; end_time: string; location: string | null; notes: string | null; created_by: string | null; required_slots: number; event_id: string | null }>) =>
+      ({ event_name: "", date, start_time: "", end_time: "", location, notes, created_by: createdBy, required_slots: requiredSlots, ...(eventId ? { event_id: eventId } : {}), ...overrides, ...(organizationId ? { organization_id: organizationId } : {}) });
 
     if (type === "pausenverkauf") {
       const rows = [
@@ -215,17 +217,14 @@ async function createShifts(
       if (error || !created?.length) {
         console.error(error);
         return {
-          error:
-            error?.message ||
-            "Schichten für Pausenverkauf konnten nicht angelegt werden. Ist die Spalte required_slots in der Tabelle shifts vorhanden?"
+          error: error?.message ?? undefined,
+          errorKey: "shifts.error_create",
         };
       }
       await autoAssignForShifts(service, created as SimpleShift[], organizationId);
     } else {
       if (!startTime || !endTime) {
-        return {
-          error: "Zeitrahmen (Start und Ende) sind für Veranstaltungen erforderlich."
-        };
+        return { errorKey: "shifts.error_timeframe" };
       }
       const intervalMinutes = Math.max(1, Number(formData.get("interval_minutes")?.toString() || "120") || 120);
       const addSetupTeardown = formData.get("add_setup_teardown") === "1";
@@ -282,6 +281,7 @@ async function createShifts(
           required_slots: requiredSlots,
           has_aufbau: hasAufbau,
           has_abbau: hasAbbau,
+          ...(eventId ? { event_id: eventId } : {}),
           ...(organizationId ? { organization_id: organizationId } : {})
         });
       }
@@ -293,9 +293,8 @@ async function createShifts(
       if (error || !created?.length) {
         console.error(error);
         return {
-          error:
-            error?.message ||
-            "Veranstaltungs-Schichten konnten nicht angelegt werden."
+          error: error?.message ?? undefined,
+          errorKey: "shifts.error_create",
         };
       }
       await autoAssignForShifts(service, created as SimpleShift[], organizationId);
@@ -648,6 +647,9 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
 
   await removePastShifts(service);
 
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+
   const todayStr = new Date().toLocaleDateString("en-CA", {
     timeZone: "Europe/Berlin"
   });
@@ -658,6 +660,9 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
   const profilesQuery = service.from("profiles").select("id, full_name").order("full_name");
+  const eventsQuery = orgId
+    ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
+    : Promise.resolve({ data: [] as { id: string; name: string }[] });
   if (orgId) {
     shiftsQuery.eq("organization_id", orgId);
     profilesQuery.eq("organization_id", orgId);
@@ -667,15 +672,18 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     { data: shiftsRaw, error: shiftsError },
     { data: assignmentsRaw },
     { data: profiles },
-    { data: counters }
+    { data: counters },
+    { data: eventsList }
   ] = await Promise.all([
     shiftsQuery,
     service
       .from("shift_assignments")
       .select("id, shift_id, status, user_id, replacement_user_id"),
     profilesQuery,
-    service.from("user_counters").select("user_id, load_index, responsibility_malus")
+    service.from("user_counters").select("user_id, load_index, responsibility_malus"),
+    eventsQuery
   ]);
+  const events = (eventsList ?? []).map((e: { id: string; name: string }) => ({ id: e.id, name: e.name }));
 
   if (shiftsError) {
     console.error("[admin/shifts] Schichten laden:", shiftsError);
@@ -739,17 +747,17 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         Shifts & auto-assignment
       </h2>
       <section className="card space-y-2 text-xs sm:space-y-3">
-        <h3 className="text-xs font-semibold text-gray-700">New shifts</h3>
-        <p className="hidden text-[11px] text-gray-600 sm:block">
-          Break sales (1st + 2nd break) or single event.
+        <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t("admin.new_shifts", locale)}</h3>
+        <p className="hidden text-[11px] text-gray-600 dark:text-gray-400 sm:block">
+          {t("shifts.help_text", locale)}
         </p>
-        <CreateShiftsForm action={createShifts} organizationId={orgId ?? undefined} />
+        <CreateShiftsForm action={createShifts} organizationId={orgId ?? undefined} events={events} />
       </section>
       <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-card-dark">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Shift plan</h3>
-            <p className="mt-0.5 text-[11px] text-gray-600">Past shifts: confirm attendance or enter replacement.</p>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("admin.shift_plan", locale)}</h3>
+            <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-400">{t("admin.shift_plan_hint", locale)}</p>
           </div>
           {shifts && shifts.length > 0 && (
             <ShiftAttendancePdfExport

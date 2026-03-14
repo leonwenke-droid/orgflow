@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { updateMemberNameAction, updateMemberCommitteesAction, updateMemberRoleAction, setMemberAsLeadAction, deleteMemberAction, resendLeadInviteAction } from "./actions";
+import { useLocale } from "../../../../components/LocaleProvider";
+import { t } from "../../../../lib/i18n";
 
 type Committee = { id: string; name: string };
 type Member = {
@@ -33,6 +35,7 @@ export default function MemberRow({
   currentAuthUserId?: string | null;
   inviteStatus?: "pending" | "confirmed";
 }) {
+  const { locale } = useLocale();
   const isCurrentUser = !!currentAuthUserId && member.auth_user_id === currentAuthUserId;
   const hasLeadRole = member.role === "lead" || member.role === "admin";
   const effectiveStatus: "pending" | "confirmed" | null =
@@ -227,16 +230,16 @@ export default function MemberRow({
       <td className="py-2 pr-3">
         {effectiveStatus && (
             <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${effectiveStatus === "confirmed" ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"}`}>
-            {effectiveStatus === "confirmed" ? "Angemeldet" : "Ausstehend"}
+            {effectiveStatus === "confirmed" ? t("members.status_confirmed", locale) : t("members.status_pending", locale)}
           </span>
         )}
       </td>
       <td className="py-2">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1">
-            <button type="button" onClick={handleDelete} disabled={loading} className="rounded border border-red-300 px-2 py-0.5 text-[10px] text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30">Entfernen</button>
+            <button type="button" onClick={handleDelete} disabled={loading} className="rounded border border-red-300 px-2 py-0.5 text-[10px] text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30">{t("common.remove", locale)}</button>
             {hasLeadRole && effectiveStatus === "pending" && (
-              <button type="button" onClick={handleResendInvite} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/30">Einladung erneut</button>
+              <button type="button" onClick={handleResendInvite} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/30">{t("members.resend_invite", locale)}</button>
             )}
           </div>
           {error && <span className="text-[10px] text-red-600 dark:text-red-400">{error}</span>}

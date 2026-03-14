@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { assignPoints } from "./actions";
+import { useLocale } from "../../../../../components/LocaleProvider";
+import { t } from "../../../../../lib/i18n";
 
 type Member = { id: string; full_name: string };
 
@@ -12,6 +14,7 @@ export default function AssignPointsForm({
   orgSlug: string;
   members: Member[];
 }) {
+  const { locale } = useLocale();
   const [profileId, setProfileId] = useState("");
   const [points, setPoints] = useState("");
   const [reason, setReason] = useState("");
@@ -22,18 +25,22 @@ export default function AssignPointsForm({
     e.preventDefault();
     const num = parseInt(points, 10);
     if (!profileId || isNaN(num)) {
-      setMessage({ type: "error", text: "Select member and enter points (number)." });
+      setMessage({ type: "error", text: t("engagement.assign_validation", locale) });
       return;
     }
     const trimmedReason = reason.trim();
     if (!trimmedReason) {
-      setMessage({ type: "error", text: "Please provide a reason." });
+      setMessage({ type: "error", text: t("engagement.reason_required", locale) });
       return;
     }
     setLoading(true);
     setMessage(null);
     const result = await assignPoints(orgSlug, profileId, num, trimmedReason);
     setLoading(false);
+    if ("errorKey" in result && result.errorKey) {
+      setMessage({ type: "error", text: t(result.errorKey, locale) });
+      return;
+    }
     if (result.error) {
       setMessage({ type: "error", text: result.error });
       return;

@@ -2,6 +2,8 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 type Props = {
   materialId: string;
@@ -9,6 +11,7 @@ type Props = {
 };
 
 export default function DeleteMaterialButton({ materialId, deleteAction }: Props) {
+  const { locale } = useLocale();
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -30,7 +33,7 @@ export default function DeleteMaterialButton({ materialId, deleteAction }: Props
         disabled={pending}
         className="text-[10px] text-gray-500 hover:text-red-600 disabled:opacity-50"
       >
-        {pending ? "…" : "Entfernen"}
+        {pending ? "…" : t("common.remove", locale)}
       </button>
     </form>
   );

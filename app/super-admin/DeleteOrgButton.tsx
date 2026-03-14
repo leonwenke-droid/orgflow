@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { deleteOrganizationAction } from "./actions";
+import { useLocale } from "../../components/LocaleProvider";
+import { t } from "../../lib/i18n";
 
 export default function DeleteOrgButton({
   orgId,
@@ -10,6 +12,7 @@ export default function DeleteOrgButton({
   orgId: string;
   orgName: string;
 }) {
+  const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const [confirmation, setConfirmation] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,7 +40,7 @@ export default function DeleteOrgButton({
         onClick={() => setOpen(true)}
         className="inline-flex items-center rounded-md border border-red-500/50 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/20"
       >
-        Entfernen
+        {t("common.remove", locale)}
       </button>
       {open && (
         <form

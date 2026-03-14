@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import CalendarPicker from "./CalendarPicker";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const { locale } = useLocale();
   return (
     <button
       type="submit"
@@ -15,29 +18,33 @@ function SubmitButton() {
       {pending ? (
         <>
           <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-300 border-t-transparent" aria-hidden />
-          Creating shifts…
+          {t("shifts.creating", locale)}
         </>
       ) : (
-        "Create shift(s)"
+        t("shifts.submit", locale)
       )}
     </button>
   );
 }
 
 type CreateShiftsAction = (
-  prev: { error?: string; success?: boolean } | null,
+  prev: { error?: string; errorKey?: string; success?: boolean } | null,
   formData: FormData
-) => Promise<{ error?: string; success?: boolean }>;
+) => Promise<{ error?: string; errorKey?: string; success?: boolean }>;
 
 export default function CreateShiftsForm({
   action,
-  organizationId
+  organizationId,
+  events = []
 }: {
   action: CreateShiftsAction;
   organizationId?: string;
+  events?: { id: string; name: string }[];
 }) {
+  const { locale } = useLocale();
   const [state, formAction] = useFormState(action, null);
   const [type, setType] = useState<"recurring" | "event">("recurring");
+  const errorMessage = state?.errorKey ? t(state.errorKey, locale) : state?.error;
 
   useEffect(() => {
     if (state?.success) {
@@ -50,11 +57,11 @@ export default function CreateShiftsForm({
   return (
     <form action={formAction} className="grid gap-3 sm:gap-2 md:grid-cols-2">
       {organizationId && <input type="hidden" name="organization_id" value={organizationId} />}
-      {state?.error && (
-        <p className="text-xs text-red-600 md:col-span-2">{state.error}</p>
+      {errorMessage && (
+        <p className="text-xs text-red-600 dark:text-red-400 md:col-span-2">{errorMessage}</p>
       )}
       <div className="space-y-1">
-        <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Art</span>
+        <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.type_label", locale)}</span>
         <div className="flex flex-col gap-1 text-[11px] text-gray-600 dark:text-gray-400">
           <label className="inline-flex items-center gap-2">
             <input
@@ -65,7 +72,7 @@ export default function CreateShiftsForm({
               onChange={() => setType("recurring")}
               className="rounded border-gray-400"
             />
-            Recurring shifts (fixed time slots)
+            {t("shifts.type_recurring", locale)}
           </label>
           <label className="inline-flex items-center gap-2">
             <input
@@ -76,25 +83,35 @@ export default function CreateShiftsForm({
               onChange={() => setType("event")}
               className="rounded border-gray-400"
             />
-            Event (custom time frame)
+            {t("shifts.type_event", locale)}
           </label>
         </div>
       </div>
       <div className="space-y-1">
-        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Date</label>
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.date", locale)}</label>
         <CalendarPicker name="date" required />
       </div>
+      {events.length > 0 && (
+        <div className="space-y-1 md:col-span-2">
+          <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.event_optional", locale)}</label>
+          <select
+            name="event_id"
+            className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
+          >
+            <option value="">{t("shifts.event_none", locale)}</option>
+            {events.map((ev) => (
+              <option key={ev.id} value={ev.id}>{ev.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Title</label>
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.title", locale)}</label>
         <input
           type="text"
           name="event_name"
           required
-          placeholder={
-            type === "recurring"
-              ? "e.g. Sales day 12.02., morning shift"
-              : "e.g. Summer festival, conference"
-          }
+          placeholder={type === "recurring" ? t("shifts.placeholder_title_recurring", locale) : t("shifts.placeholder_title_event", locale)}
           className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
         />
       </div>
@@ -102,7 +119,7 @@ export default function CreateShiftsForm({
         <>
           <div className="space-y-1 md:col-span-2">
             <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
-              Time frame
+              {t("shifts.time_frame", locale)}
             </label>
             <div className="flex flex-wrap items-center gap-2">
               <input
@@ -112,7 +129,7 @@ export default function CreateShiftsForm({
                 required={type === "event"}
                 className="min-h-[44px] rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
               />
-              <span className="text-xs text-gray-500">bis</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{t("shifts.until", locale)}</span>
               <input
                 type="time"
                 name="end_time"
@@ -131,37 +148,37 @@ export default function CreateShiftsForm({
                 className="rounded border-gray-400"
               />
               <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
-                Add setup & teardown (30 min each)
+                {t("shifts.add_setup_teardown", locale)}
               </span>
             </label>
             <p className="ml-6 text-[10px] text-gray-500 dark:text-gray-400">
-              Erste Schicht startet 30 Min. früher (Aufbau), letzte endet 30 Min. später (Abbau). Zusätzliche Engagement-Punkte.
+              {t("shifts.setup_teardown_note", locale)}
             </p>
           </div>
           <div className="space-y-1 md:col-span-2">
             <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
-              Shift interval
+              {t("shifts.interval_label", locale)}
             </label>
             <p className="mb-1 text-[10px] text-gray-500 dark:text-gray-400">
-              Der Zeitraum wird in Abschnitte geteilt; pro Abschnitt können andere Personen eingeteilt werden.
+              {t("shifts.interval_hint", locale)}
             </p>
             <select
               name="interval_minutes"
               className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
               defaultValue="120"
             >
-              <option value="30">30 Minuten</option>
-              <option value="45">45 Minuten</option>
-              <option value="60">1 Stunde</option>
-              <option value="120">2 Stunden</option>
-              <option value="180">3 Stunden</option>
+              <option value="30">{t("shifts.interval_30", locale)}</option>
+              <option value="45">{t("shifts.interval_45", locale)}</option>
+              <option value="60">{t("shifts.interval_60", locale)}</option>
+              <option value="120">{t("shifts.interval_120", locale)}</option>
+              <option value="180">{t("shifts.interval_180", locale)}</option>
             </select>
           </div>
         </>
       )}
       <div className="space-y-1 md:col-span-2">
         <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
-          Required persons per shift
+          {t("shifts.required_persons", locale)}
         </label>
         <input
           type="number"
@@ -172,22 +189,22 @@ export default function CreateShiftsForm({
         />
       </div>
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">Location</label>
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.location", locale)}</label>
         <input
           type="text"
           name="location"
-          placeholder="e.g. Canteen, Hall …"
+          placeholder={t("shifts.location_placeholder", locale)}
           className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
         />
       </div>
       <div className="space-y-1 md:col-span-2">
         <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
-          Info for team
+          {t("shifts.info_for_team", locale)}
         </label>
         <textarea
           name="notes"
           rows={3}
-          placeholder="e.g. Who has the cash register, what is sold, important notes – shown on dashboard."
+          placeholder={t("shifts.info_for_team_placeholder", locale)}
           className="min-h-[60px] w-full resize-y rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:p-2"
         />
       </div>

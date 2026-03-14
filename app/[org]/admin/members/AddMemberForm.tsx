@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { addMemberAction } from "./actions";
+import { useLocale } from "../../../../components/LocaleProvider";
+import { t } from "../../../../lib/i18n";
 
 type Committee = { id: string; name: string };
 
@@ -12,6 +14,7 @@ export default function AddMemberForm({
   orgSlug: string;
   committees: Committee[];
 }) {
+  const { locale } = useLocale();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [committeeIds, setCommitteeIds] = useState<Set<string>>(new Set());
@@ -71,7 +74,7 @@ export default function AddMemberForm({
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="e.g. Max Mustermann"
+            placeholder={t("members.placeholder_name", locale)}
             className="w-full rounded border border-gray-300 bg-white p-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
