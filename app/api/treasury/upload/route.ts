@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
-import { formatCurrency } from "../../../../lib/currency";
+import { formatCurrency, parseTreasuryAmount } from "../../../../lib/currency";
 
 export const runtime = "nodejs";
 
@@ -21,8 +21,7 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      const normalized = String(rawAmount).replace(/\./g, "").replace(",", ".");
-      const amount = Number(normalized);
+      const amount = parseTreasuryAmount(String(rawAmount).trim());
       if (Number.isNaN(amount)) {
         return NextResponse.json(
           { message: "Der eingegebene Betrag ist keine gültige Zahl." },
