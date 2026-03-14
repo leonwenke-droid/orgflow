@@ -9,6 +9,7 @@ import { removePastShifts } from "../../../lib/cleanupShifts";
 import CreateShiftsForm from "../../../components/CreateShiftsForm";
 import ShiftPlanTableWithEdit from "../../../components/ShiftPlanTableWithEdit";
 import ShiftAttendancePdfExport, { type ShiftForPdf } from "../../../components/ShiftAttendancePdfExport";
+import EmptyState from "../../../components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
@@ -761,7 +762,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         {shiftsError ? (
           <p className="text-xs text-red-300">{shiftsError.message}</p>
         ) : (!shifts || shifts.length === 0) ? (
-          <p className="text-sm text-gray-500">No shifts yet. Use form above.</p>
+          <EmptyState messageKey="empty.shifts" actionHref={effectiveOrgSlug ? `/${effectiveOrgSlug}/admin/shifts` : "/admin/shifts"} actionLabelKey="cta.create_shift" />
         ) : (
           <ShiftPlanTableWithEdit
             shifts={shifts}

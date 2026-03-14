@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   CheckSquare,
   CalendarDays,
+  CalendarRange,
   Users,
   UsersRound,
   Package,
@@ -55,6 +56,7 @@ function getNavSections(org: string, modules?: OrgModules): { title: string; ite
     ...(m.resources !== false ? [{ href: `/${org}/admin/materials`, label: "Resources", icon: Package }] : []),
     ...(m.finance !== false ? [{ href: `/${org}/admin/treasury`, label: "Finance", icon: Wallet }] : []),
     ...(m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, label: "Engagement", icon: Trophy }] : []),
+    ...(m.events ? [{ href: `/${org}/admin/events`, label: "Events", icon: CalendarRange }] : []),
   ];
   return [
     { title: "Core", items: core },

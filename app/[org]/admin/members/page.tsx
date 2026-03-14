@@ -10,6 +10,7 @@ import MembersExcelUpload from "./MembersExcelUpload";
 import AddMemberForm from "./AddMemberForm";
 import MemberRow from "./MemberRow";
 import InviteLinkBlock from "./InviteLinkBlock";
+import EmptyState from "../../../../components/EmptyState";
 
 export default async function AdminMembersPage({
   params
@@ -173,7 +174,9 @@ export default async function AdminMembersPage({
             ))}
             {(!members || members.length === 0) && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">No members yet.</td>
+                <td colSpan={5} className="p-0">
+                  <EmptyState messageKey="empty.members" actionHref={`/${orgSlug}/admin/members`} actionLabelKey="cta.invite_members" className="rounded-none border-0" />
+                </td>
               </tr>
             )}
           </tbody>

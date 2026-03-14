@@ -8,6 +8,7 @@ import AdminForbidden from "../AdminForbidden";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import CreateCommitteeForm from "./CreateCommitteeForm";
 import CommitteeRow from "./CommitteeRow";
+import EmptyState from "../../../../components/EmptyState";
 
 export default async function AdminCommitteesPage(props: {
   params: Promise<{ org: string }> | { org: string };
@@ -41,7 +42,9 @@ export default async function AdminCommitteesPage(props: {
           <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
         ))}
         {(!committees || committees.length === 0) && (
-          <li className="text-gray-500 dark:text-gray-400">No teams yet.</li>
+          <li className="list-none">
+            <EmptyState messageKey="empty.teams" actionHref={`/${orgSlug}/admin/committees`} actionLabelKey="cta.create_team" />
+          </li>
         )}
       </ul>
     </div>

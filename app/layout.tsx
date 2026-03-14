@@ -6,6 +6,7 @@ import AppShell from "../components/AppShell";
 import ToastContainer from "../components/Toast";
 import ThemeProvider from "../components/ThemeProvider";
 import { LocaleProvider } from "../components/LocaleProvider";
+import EmailVerificationBanner from "../components/EmailVerificationBanner";
 
 export const metadata = {
   title: "OrgFlow",
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <ThemeProvider>
           <LocaleProvider>
           <div className="mx-auto flex min-h-screen max-w-6xl flex-col bg-background px-4 py-6 dark:bg-background-dark">
+            <EmailVerificationBanner />
             <AppShell user={user}>
               <main className="flex-1 pb-10">{children}</main>
             </AppShell>

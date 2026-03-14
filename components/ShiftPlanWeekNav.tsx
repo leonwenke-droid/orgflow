@@ -2,6 +2,32 @@
 
 import { useRef, useState, useEffect } from "react";
 import html2canvas from "html2canvas";
+
+function ClaimSlotButton({ orgSlug, shiftId }: { orgSlug: string; shiftId: string }) {
+  const [loading, setLoading] = useState(false);
+  const handleClick = async () => {
+    setLoading(true);
+    const res = await fetch("/api/shifts/claim", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orgSlug, shiftId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setLoading(false);
+    if (res.ok) window.location.reload();
+    else window.alert(data.message || "Failed to sign up.");
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={loading}
+      className="mt-1 inline-block rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+    >
+      {loading ? "…" : "Sign up"}
+    </button>
+  );
+}
 import type { WeekData, DayData, ShiftSlot, ShiftAssignment } from "./ShiftPlanWeekView";
 import { formatDateLabel, getTodayDateString } from "../lib/dateFormat";
 
@@ -80,12 +106,16 @@ type Props = {
   weeks: WeekData[];
   currentWeekIndex: number;
   profileNames: Record<string, string>;
+  orgSlug?: string;
+  showClaimButton?: boolean;
 };
 
 export default function ShiftPlanWeekNav({
   weeks,
   currentWeekIndex,
-  profileNames
+  profileNames,
+  orgSlug,
+  showClaimButton = false
 }: Props) {
   const safeIndex = Math.max(0, Math.min(currentWeekIndex, weeks.length - 1));
   const [weekIndex, setWeekIndex] = useState(safeIndex);
@@ -192,16 +222,23 @@ export default function ShiftPlanWeekNav({
               )}
             </div>
             <div className="mt-2 space-y-1">
-              {day.shifts.map((s) => (
-                <div key={s.id} className="rounded bg-gray-50 px-1.5 py-1 text-[10px]">
-                  <span className="text-gray-700">{slotLabel(s)}</span>
-                  <div className="ml-1 text-gray-600">
-                    {s.assignments?.length > 0
+              {day.shifts.map((s) => {
+                const required = s.required_slots ?? 1;
+                const count = s.assignments?.length ?? 0;
+                const hasFreeSlot = showClaimButton && orgSlug && count < required;
+                return (
+                <div key={s.id} className="rounded bg-gray-50 px-1.5 py-1 text-[10px] dark:bg-gray-800">
+                  <span className="text-gray-700 dark:text-gray-300">{slotLabel(s)}</span>
+                  <div className="ml-1 text-gray-600 dark:text-gray-400">
+                    {count > 0
                       ? formatAssignments(s.assignments, profileNames)
                       : "–"}
                   </div>
+                  {hasFreeSlot && (
+                    <ClaimSlotButton orgSlug={orgSlug} shiftId={s.id} />
+                  )}
                 </div>
-              ))}
+              );})}
             </div>
           </>
         )}
@@ -336,21 +373,26 @@ export default function ShiftPlanWeekNav({
                     Shifts
                   </p>
                   <ul className="space-y-2">
-                    {currentDay.shifts.map((s) => (
+                    {currentDay.shifts.map((s) => {
+                      const required = s.required_slots ?? 1;
+                      const count = s.assignments?.length ?? 0;
+                      const hasFreeSlot = showClaimButton && orgSlug && count < required;
+                      return (
                       <li
                         key={s.id}
-                        className="flex flex-col gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5"
+                        className="flex flex-col gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 dark:border-gray-600 dark:bg-gray-800"
                       >
-                        <span className="text-xs font-semibold text-gray-700">
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                           {slotLabel(s)}
                         </span>
-                        <div className="text-sm text-gray-600">
-                          {s.assignments?.length > 0
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {count > 0
                             ? formatAssignments(s.assignments, profileNames)
                             : "–"}
                         </div>
+                        {hasFreeSlot && <ClaimSlotButton orgSlug={orgSlug} shiftId={s.id} />}
                       </li>
-                    ))}
+                    );})}
                   </ul>
                 </div>
               </div>

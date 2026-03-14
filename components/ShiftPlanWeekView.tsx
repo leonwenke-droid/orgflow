@@ -15,6 +15,7 @@ export type ShiftSlot = {
   event_name: string;
   start_time: string;
   end_time: string;
+  required_slots?: number;
   assignments: ShiftAssignment[];
 };
 

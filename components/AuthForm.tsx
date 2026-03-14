@@ -1,6 +1,7 @@
  "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
   const [email, setEmail] = useState("");
@@ -73,6 +74,11 @@ export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
       <button type="submit" className="btn-primary text-xs" disabled={loading}>
         {loading ? "Signing in…" : "Sign in"}
       </button>
+      <p className="text-xs text-gray-500">
+        <Link href={redirectTo ? `/auth/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}` : "/auth/forgot-password"} className="text-blue-600 hover:underline">
+          Forgot password?
+        </Link>
+      </p>
     </form>
   );
 }

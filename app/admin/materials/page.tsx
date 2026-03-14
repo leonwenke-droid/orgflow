@@ -6,6 +6,7 @@ import { getCurrentOrganization, isOrgAdmin, getOrgIdForData, getCurrentUserOrga
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { revalidatePath } from "next/cache";
 import AddMaterialForm from "../../../components/AddMaterialForm";
+import EmptyState from "../../../components/EmptyState";
 import DeleteMaterialButton from "../../../components/DeleteMaterialButton";
 
 export const dynamic = "force-dynamic";
@@ -222,7 +223,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
       {effectiveOrgSlug && (
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Material" />
       )}
-      <section className="card">
+      <section id="record-material" className="card">
         <h2 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
           Record new event & resource management
         </h2>
@@ -250,8 +251,8 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
             <tbody>
               {materialsForOrg.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-gray-500">
-                    No entries yet.
+                  <td colSpan={7} className="p-0">
+                    <EmptyState messageKey="empty.resources" actionHref="#record-material" actionLabelKey="cta.record_material" className="m-4 rounded-xl" />
                   </td>
                 </tr>
               ) : (

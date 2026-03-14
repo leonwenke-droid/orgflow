@@ -8,6 +8,8 @@ import { removePastShifts } from "../../../lib/cleanupShifts";
 import { getDashboardDisplayNames } from "../../../lib/displayName";
 import { formatWeekRangeLabel, formatDateTimeForDisplay, getTodayDateString } from "../../../lib/dateFormat";
 import ShiftPlanWeekNav from "../../../components/ShiftPlanWeekNav";
+import EmptyState from "../../../components/EmptyState";
+import OnboardingBanner from "../../../components/OnboardingBanner";
 import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, isSuperAdmin } from "../../../lib/getOrganization";
@@ -64,7 +66,7 @@ async function getData(organizationId: string, supabaseOverride?: SupabaseClient
     supabase
       .from("shifts")
       .select(
-        "id, event_name, date, start_time, end_time, location, notes, shift_assignments ( id, status, user_id, replacement_user_id )"
+        "id, event_name, date, start_time, end_time, location, notes, required_slots, shift_assignments ( id, status, user_id, replacement_user_id )"
       )
       .eq("organization_id", organizationId)
       .order("date", { ascending: true }),
@@ -226,6 +228,8 @@ export default async function OrgDashboardPage({
         )}
       </header>
 
+      {user && <OnboardingBanner />}
+
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
           {
@@ -315,9 +319,7 @@ export default async function OrgDashboardPage({
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
           {!shifts || shifts.length === 0 ? (
-            <p className="text-xs text-gray-500">
-              No shifts in the system yet.
-            </p>
+            <EmptyState messageKey="empty.shifts" actionHref={`/${orgSlug}/admin/shifts`} actionLabelKey="cta.create_shift" />
           ) : (
             (() => {
               const toDateKey = (d: unknown) => {
@@ -384,6 +386,7 @@ export default async function OrgDashboardPage({
                         end_time: unknown;
                         location: string | null;
                         notes: string | null;
+                        required_slots?: number | null;
                         shift_assignments?: {
                           id: string;
                           status: string;
@@ -412,6 +415,7 @@ export default async function OrgDashboardPage({
                           event_name: s.event_name ?? "",
                           start_time: String(s.start_time ?? ""),
                           end_time: String(s.end_time ?? ""),
+                          required_slots: s.required_slots ?? 1,
                           assignments: (
                             (s.shift_assignments ?? []) as {
                               id: string;
@@ -442,6 +446,8 @@ export default async function OrgDashboardPage({
                   weeks={weeksData}
                   currentWeekIndex={currentWeekIndex >= 0 ? currentWeekIndex : 0}
                   profileNames={profileNamesObj}
+                  orgSlug={orgSlug}
+                  showClaimButton={canAccessOrgData}
                 />
               );
             })()

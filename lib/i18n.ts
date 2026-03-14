@@ -28,6 +28,13 @@ export const translations: Record<Locale, Record<string, string>> = {
     "common.back": "Back",
     "common.next": "Next",
     "common.loading": "Loading…",
+    "cta.create_task": "New task",
+    "cta.create_shift": "Create shift",
+    "cta.invite_members": "Invite members",
+    "cta.create_team": "Create team",
+    "cta.record_transaction": "Record transaction",
+    "cta.record_material": "Record material",
+    "onboarding.welcome": "Welcome! Create your first task or shift to get started.",
   },
   de: {
     "dashboard.title": "Dashboard",
@@ -54,6 +61,13 @@ export const translations: Record<Locale, Record<string, string>> = {
     "common.back": "Zurück",
     "common.next": "Weiter",
     "common.loading": "Laden…",
+    "cta.create_task": "Neue Aufgabe",
+    "cta.create_shift": "Schicht anlegen",
+    "cta.invite_members": "Mitglieder einladen",
+    "cta.create_team": "Team anlegen",
+    "cta.record_transaction": "Buchung erfassen",
+    "cta.record_material": "Material erfassen",
+    "onboarding.welcome": "Willkommen! Lege deine erste Aufgabe oder Schicht an, um loszulegen.",
   },
 };
 

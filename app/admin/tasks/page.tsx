@@ -9,6 +9,7 @@ import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import CopyTaskLinkButton from "../../../components/CopyTaskLinkButton";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import CommitteeFilter from "../../../components/CommitteeFilter";
+import EmptyState from "../../../components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
@@ -137,6 +138,14 @@ export default async function AdminTasksPage(props: PageProps) {
         </Link>
       </div>
 
+      {tasksFiltered.length === 0 && (
+        <EmptyState
+          messageKey="empty.tasks"
+          actionHref={effectiveOrgSlug ? `/admin/tasks/new?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks/new"}
+          actionLabelKey="cta.create_task"
+        />
+      )}
+      {tasksFiltered.length > 0 && (
       <div className="grid gap-4 md:grid-cols-3">
         {STATUS_COLUMNS.map((col) => (
           <div key={col.key} className="card flex flex-col gap-2">
@@ -236,6 +245,7 @@ export default async function AdminTasksPage(props: PageProps) {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }
