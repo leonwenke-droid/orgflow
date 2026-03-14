@@ -259,9 +259,9 @@ export default async function OrgDashboardPage({
           },
           {
             icon: Users,
-            label: "Active Members",
-            value: activity.active_participants_30d,
-            sub: "last 30 days"
+            label: "Members",
+            value: activity.total_members,
+            sub: "in this organisation"
           }
         ].map(({ icon: Icon, label, value, sub }) => (
           <div
