@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     });
     if (!isAdmin) {
       return NextResponse.json(
-        { message: "Keine Berechtigung für diese Organisation." },
+        { message: "Forbidden", errorKey: "common.unauthorized" },
         { status: 403 }
       );
     }

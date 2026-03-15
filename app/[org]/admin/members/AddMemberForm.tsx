@@ -36,20 +36,24 @@ export default function AddMemberForm({
     e.preventDefault();
     const name = fullName.trim();
     if (!name) {
-      setError("Name is required.");
+      setError(t("members.error_name_required", locale));
       return;
     }
     setLoading(true);
     setError(null);
     setSuccess(false);
-    const { error: err } = await addMemberAction(orgSlug, name, {
+    const result = await addMemberAction(orgSlug, name, {
       email: email.trim() || undefined,
       committeeIds: Array.from(committeeIds),
       asLead
     });
     setLoading(false);
-    if (err) {
-      setError(err);
+    if (result.errorKey) {
+      setError(t(result.errorKey, locale));
+      return;
+    }
+    if (result.error) {
+      setError(result.error);
       return;
     }
     setSuccess(true);

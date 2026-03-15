@@ -586,15 +586,16 @@ async function deleteEventShifts(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
-type ShiftsPageProps = { searchParams?: Promise<{ org?: string }> | { org?: string } };
+type ShiftsPageProps = { searchParams?: Promise<{ org?: string; event?: string }> | { org?: string; event?: string } };
 
 export default async function ShiftsPage(props: ShiftsPageProps) {
   unstable_noStore();
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ org?: string }>)
-    : (raw ?? {}) as { org?: string };
+    ? await (raw as Promise<{ org?: string; event?: string }>)
+    : (raw ?? {}) as { org?: string; event?: string };
   const orgSlug = searchParams?.org?.trim() || null;
+  const eventIdFilter = searchParams?.event?.trim() || null;
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -666,6 +667,9 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   if (orgId) {
     shiftsQuery.eq("organization_id", orgId);
     profilesQuery.eq("organization_id", orgId);
+  }
+  if (eventIdFilter) {
+    shiftsQuery.eq("event_id", eventIdFilter);
   }
 
   const [
@@ -743,7 +747,27 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
       {effectiveOrgSlug && (
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Shifts" />
       )}
-      <h2 className="text-sm font-semibold text-gray-700">
+      {events.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="font-medium text-gray-600 dark:text-gray-400">{t("shifts.event_optional", locale)}:</span>
+          <Link
+            href={effectiveOrgSlug ? `/admin/shifts?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/shifts"}
+            className={`rounded-lg px-3 py-1.5 ${!eventIdFilter ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200" : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"}`}
+          >
+            {t("shifts.event_none", locale)}
+          </Link>
+          {events.map((ev) => (
+            <Link
+              key={ev.id}
+              href={effectiveOrgSlug ? `/admin/shifts?org=${encodeURIComponent(effectiveOrgSlug)}&event=${encodeURIComponent(ev.id)}` : `/admin/shifts?event=${encodeURIComponent(ev.id)}`}
+              className={`rounded-lg px-3 py-1.5 ${eventIdFilter === ev.id ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200" : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"}`}
+            >
+              {ev.name}
+            </Link>
+          ))}
+        </div>
+      )}
+      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
         Shifts & auto-assignment
       </h2>
       <section className="card space-y-2 text-xs sm:space-y-3">

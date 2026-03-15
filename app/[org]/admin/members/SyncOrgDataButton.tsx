@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { syncOrgDataAction } from "./actions";
+import { useLocale } from "../../../../components/LocaleProvider";
+import { t } from "../../../../lib/i18n";
 
 export default function SyncOrgDataButton({ orgSlug }: { orgSlug: string }) {
   const router = useRouter();
+  const { locale } = useLocale();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -14,6 +17,10 @@ export default function SyncOrgDataButton({ orgSlug }: { orgSlug: string }) {
     setMessage(null);
     const result = await syncOrgDataAction(orgSlug);
     setLoading(false);
+    if (result.errorKey) {
+      setMessage(t(result.errorKey, locale));
+      return;
+    }
     if (result.error) {
       setMessage(result.error);
       return;

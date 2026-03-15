@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { regenerateSetupTokenAction } from "./actions";
+import { useLocale } from "../../components/LocaleProvider";
+import { t } from "../../lib/i18n";
 
 type Org = {
   id: string;
@@ -18,6 +20,7 @@ export default function SetupLinkBlock({
   org: Org;
   initialLink: string | null;
 }) {
+  const { locale } = useLocale();
   const [link, setLink] = useState<string | null>(initialLink);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +34,10 @@ export default function SetupLinkBlock({
     setError(null);
     const result = await regenerateSetupTokenAction(org.id);
     setLoading(false);
+    if (result.errorKey) {
+      setError(t(result.errorKey, locale));
+      return;
+    }
     if (result.error) {
       setError(result.error);
       return;

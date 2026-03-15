@@ -22,10 +22,14 @@ export default function DeleteOrgButton({
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error: err } = await deleteOrganizationAction(orgId, orgName, confirmation);
+    const result = await deleteOrganizationAction(orgId, orgName, confirmation);
     setLoading(false);
-    if (err) {
-      setError(err);
+    if (result.errorKey) {
+      setError(t(result.errorKey, locale));
+      return;
+    }
+    if (result.error) {
+      setError(result.error);
       return;
     }
     setOpen(false);

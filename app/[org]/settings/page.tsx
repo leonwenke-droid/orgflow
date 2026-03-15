@@ -1,7 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { getCurrentOrganization, isOrgAdmin } from "../../../lib/getOrganization";
+import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import AdminForbidden from "../admin/AdminForbidden";
 import ThemeToggle from "../../../components/ThemeToggle";
@@ -19,8 +19,9 @@ export default async function OrgSettingsPage({
       ? (await (params as Promise<{ org: string }>)).org
       : (params as { org: string }).org;
   const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
-  if (!(await isOrgAdmin(org.id))) {
+  if (!(await isOrgAdmin(orgIdForData))) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
 
@@ -48,6 +49,16 @@ export default async function OrgSettingsPage({
             </p>
           )}
           <EditOrgForm orgSlug={orgSlug} initialName={org.name} initialSlug={org.slug} />
+        </section>
+
+        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
+            {t("settings.plan", locale)}
+          </h2>
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            {org.plan === "team" ? t("settings.plan_team", locale) : org.plan === "pro" ? t("settings.plan_pro", locale) : t("settings.plan_free", locale)}
+          </p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-muted">{t("settings.plan_contact", locale)}</p>
         </section>
 
         <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">

@@ -11,9 +11,9 @@ export async function deleteOrganizationAction(
   orgId: string,
   orgName: string,
   confirmation: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   if (!(await isSuperAdmin())) {
-    return { error: "Keine Berechtigung." };
+    return { error: null, errorKey: "common.unauthorized" };
   }
   const trimmed = (confirmation || "").trim();
   const expectedName = (orgName || "").trim();
@@ -35,9 +35,9 @@ export async function deleteOrganizationAction(
  */
 export async function regenerateSetupTokenAction(
   orgId: string
-): Promise<{ error: string | null; token?: string; slug?: string }> {
+): Promise<{ error: string | null; errorKey?: string; token?: string; slug?: string }> {
   if (!(await isSuperAdmin())) {
-    return { error: "Keine Berechtigung." };
+    return { error: null, errorKey: "common.unauthorized" };
   }
 
   const supabase = createServerComponentClient({ cookies });

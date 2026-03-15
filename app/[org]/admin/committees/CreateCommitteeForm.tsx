@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createCommitteeAction } from "./actions";
 import Link from "next/link";
+import { useLocale } from "../../../../components/LocaleProvider";
+import { t } from "../../../../lib/i18n";
 
 type Committee = { id: string; name: string };
 
@@ -15,18 +17,25 @@ export default function CreateCommitteeForm({
   committees: Committee[];
 }) {
   const router = useRouter();
+  const { locale } = useLocale();
   const [limitError, setLimitError] = useState<string | null>(null);
+  const [otherError, setOtherError] = useState<string | null>(null);
 
   async function handleSubmit(formData: FormData) {
     setLimitError(null);
+    setOtherError(null);
     const name = formData.get("name")?.toString()?.trim();
     if (!name) return;
-    const { error } = await createCommitteeAction(orgSlug, name);
-    if (error) {
-      if (error.includes("limit")) {
-        setLimitError(error);
+    const result = await createCommitteeAction(orgSlug, name);
+    if (result.errorKey) {
+      setOtherError(t(result.errorKey, locale));
+      return;
+    }
+    if (result.error) {
+      if (result.error.includes("limit")) {
+        setLimitError(result.error);
       } else {
-        alert(error);
+        setOtherError(result.error);
       }
       return;
     }
@@ -35,6 +44,11 @@ export default function CreateCommitteeForm({
 
   return (
     <form action={handleSubmit} className="mt-6 flex flex-col gap-2">
+      {otherError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200">
+          <p className="font-medium">{otherError}</p>
+        </div>
+      )}
       {limitError && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
           <p className="font-medium">{limitError}</p>

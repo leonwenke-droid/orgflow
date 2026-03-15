@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getCurrentOrganization, isOrgAdmin } from "../../../lib/getOrganization";
+import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -12,7 +12,8 @@ export async function updateOrganizationAction(
   payload: { name?: string; slug?: string }
 ): Promise<{ error?: string }> {
   const org = await getCurrentOrganization(orgSlug);
-  if (!(await isOrgAdmin(org.id))) {
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  if (!(await isOrgAdmin(orgIdForData))) {
     return { error: "Not authorized to update this organization." };
   }
 

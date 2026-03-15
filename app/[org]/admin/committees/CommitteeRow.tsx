@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { updateCommitteeNameAction, deleteCommitteeAction } from "./actions";
+import { useLocale } from "../../../../components/LocaleProvider";
+import { t } from "../../../../lib/i18n";
 
 type Committee = { id: string; name: string };
 
@@ -12,6 +14,7 @@ export default function CommitteeRow({
   orgSlug: string;
   committee: Committee;
 }) {
+  const { locale } = useLocale();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(committee.name);
   const [loading, setLoading] = useState(false);
@@ -24,10 +27,14 @@ export default function CommitteeRow({
     }
     setLoading(true);
     setError(null);
-    const { error: err } = await updateCommitteeNameAction(orgSlug, committee.id, name.trim());
+    const result = await updateCommitteeNameAction(orgSlug, committee.id, name.trim());
     setLoading(false);
-    if (err) {
-      setError(err);
+    if (result.errorKey) {
+      setError(t(result.errorKey, locale));
+      return;
+    }
+    if (result.error) {
+      setError(result.error);
       return;
     }
     setEditing(false);
@@ -38,10 +45,14 @@ export default function CommitteeRow({
     if (!confirm(`Really delete team "${committee.name}"?`)) return;
     setLoading(true);
     setError(null);
-    const { error: err } = await deleteCommitteeAction(orgSlug, committee.id);
+    const result = await deleteCommitteeAction(orgSlug, committee.id);
     setLoading(false);
-    if (err) {
-      setError(err);
+    if (result.errorKey) {
+      setError(t(result.errorKey, locale));
+      return;
+    }
+    if (result.error) {
+      setError(result.error);
       return;
     }
     window.location.reload();

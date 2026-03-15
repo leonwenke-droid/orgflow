@@ -10,12 +10,12 @@ import { canAddTeam } from "../../../../lib/planLimits";
 export async function createCommitteeAction(
   orgSlug: string,
   name: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "No permission." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
   const trimmed = (name || "").trim();
-  if (!trimmed) return { error: "Name is required." };
+  if (!trimmed) return { error: null, errorKey: "members.error_name_required" };
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()
@@ -41,12 +41,12 @@ export async function updateCommitteeNameAction(
   orgSlug: string,
   committeeId: string,
   name: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "No permission." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
   const trimmed = (name || "").trim();
-  if (!trimmed) return { error: "Name is required." };
+  if (!trimmed) return { error: null, errorKey: "members.error_name_required" };
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()
@@ -65,10 +65,10 @@ export async function updateCommitteeNameAction(
 export async function deleteCommitteeAction(
   orgSlug: string,
   committeeId: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "No permission." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()

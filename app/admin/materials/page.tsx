@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 async function addMaterialProcurement(
   _prev: { error?: string; success?: boolean } | null,
   formData: FormData
-): Promise<{ error?: string; success?: boolean }> {
+): Promise<{ error?: string; errorKey?: string; success?: boolean }> {
   "use server";
 
   const supabase = createServerComponentClient({ cookies });
@@ -22,7 +22,7 @@ async function addMaterialProcurement(
     data: { user }
   } = await supabase.auth.getUser();
   if (!user?.id) {
-    return { error: "Nicht angemeldet." };
+    return { errorKey: "common.unauthorized" };
   }
 
   const service = createSupabaseServiceRoleClient();
@@ -33,7 +33,7 @@ async function addMaterialProcurement(
     .single();
 
   if (!profile || !["admin", "lead"].includes(profile.role)) {
-    return { error: "Keine Berechtigung." };
+    return { errorKey: "materials.error_unauthorized" };
   }
 
   const userIds = formData.getAll("user_ids").filter((v): v is string => typeof v === "string" && v.trim().length > 0);
@@ -42,7 +42,7 @@ async function addMaterialProcurement(
   const size = formData.get("size")?.toString() as "small" | "medium" | "large" | null;
 
   if (!userIds.length || !eventName || !description || !size || !["small", "medium", "large"].includes(size)) {
-    return { error: "At least one person, event, description and size are required." };
+    return { errorKey: "materials.error_required" };
   }
 
   const orgId = (profile as { organization_id?: string | null }).organization_id ?? null;
@@ -66,7 +66,7 @@ async function addMaterialProcurement(
     .single();
 
   if (matError || !material) {
-    return { error: matError?.message ?? "Fehler beim Speichern." };
+    return { errorKey: "materials.error_save" };
   }
 
   const points = size === "small" ? 5 : size === "medium" ? 10 : 15;

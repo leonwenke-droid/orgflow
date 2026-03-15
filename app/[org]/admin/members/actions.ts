@@ -100,7 +100,7 @@ async function sendInviteViaN8n(
  * Weist alle Profile und Engagement-Scores dem Jahrgangs-Org aaaa... zu (nur für Slug abi-2026-tgg / abi2026-tgg).
  * organization_id = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa ist die eine Org für diesen Jahrgang (Multi-Tenant).
  */
-export async function syncOrgDataAction(orgSlug: string): Promise<{ error: string | null; updated?: number }> {
+export async function syncOrgDataAction(orgSlug: string): Promise<{ error: string | null; errorKey?: string; updated?: number }> {
   const slug = (orgSlug || "").trim();
   const allowedSlugs = ["abi-2026-tgg", "abi2026-tgg"];
   if (!allowedSlugs.includes(slug)) {
@@ -108,7 +108,7 @@ export async function syncOrgDataAction(orgSlug: string): Promise<{ error: strin
   }
 
   const org = await getCurrentOrganization(slug);
-  if (!(await isOrgAdmin(org.id))) return { error: "Keine Berechtigung." };
+  if (!(await isOrgAdmin(org.id))) return { error: null, errorKey: "common.unauthorized" };
 
   const service = createSupabaseServiceRoleClient();
   const targetOrgId = LEGACY_DEFAULT_ORG_ID;
@@ -146,12 +146,12 @@ export async function updateMemberNameAction(
   orgSlug: string,
   profileId: string,
   fullName: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "Keine Berechtigung." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
   const name = (fullName || "").trim();
-  if (!name) return { error: "Name darf nicht leer sein." };
+  if (!name) return { error: null, errorKey: "members.error_name_required" };
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()
@@ -171,10 +171,10 @@ export async function updateMemberCommitteesAction(
   orgSlug: string,
   profileId: string,
   committeeIds: string[]
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "Keine Berechtigung." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()
@@ -212,10 +212,10 @@ export async function updateMemberRoleAction(
   orgSlug: string,
   profileId: string,
   role: "member" | "lead"
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "Keine Berechtigung." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()
@@ -234,10 +234,10 @@ export async function updateMemberRoleAction(
 export async function deleteMemberAction(
   orgSlug: string,
   profileId: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "Keine Berechtigung." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()
@@ -258,10 +258,10 @@ export async function deleteMemberAction(
 export async function resendLeadInviteAction(
   orgSlug: string,
   profileId: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "Keine Berechtigung." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const service = createSupabaseServiceRoleClient();
   const { data: profile, error: fetchErr } = await service
@@ -271,7 +271,7 @@ export async function resendLeadInviteAction(
     .eq("organization_id", orgIdForData)
     .single();
 
-  if (fetchErr || !profile) return { error: "Profil nicht gefunden." };
+  if (fetchErr || !profile) return { error: null, errorKey: "members.error_profile_not_found" };
   const email = (profile as { email?: string | null }).email ?? null;
   if (!email) return { error: "Für dieses Mitglied ist keine E-Mail hinterlegt." };
 
@@ -298,13 +298,13 @@ export async function setMemberAsLeadAction(
   orgSlug: string,
   profileId: string,
   email: string
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "Keine Berechtigung." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const emailTrimmed = (email || "").trim();
-  if (!emailTrimmed) return { error: "Email is required for team lead." };
+  if (!emailTrimmed) return { error: null, errorKey: "members.error_email_required_lead" };
 
   const service = createSupabaseServiceRoleClient();
   const { data: profile } = await service
@@ -314,7 +314,7 @@ export async function setMemberAsLeadAction(
     .eq("organization_id", orgIdForData)
     .single();
 
-  if (!profile) return { error: "Profil nicht gefunden." };
+  if (!profile) return { error: null, errorKey: "members.error_profile_not_found" };
 
   const { error: updateErr } = await service
     .from("profiles")
@@ -350,13 +350,13 @@ export async function addMemberAction(
   orgSlug: string,
   fullName: string,
   options?: { email?: string; committeeIds?: string[]; asLead?: boolean }
-): Promise<{ error: string | null }> {
+): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "No permission." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const name = (fullName || "").trim();
-  if (!name) return { error: "Name is required." };
+  if (!name) return { error: null, errorKey: "members.error_name_required" };
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()
@@ -367,7 +367,7 @@ export async function addMemberAction(
     .select("*", { count: "exact", head: true })
     .eq("organization_id", orgIdForData);
   if (!canAddMember(org.plan, count ?? 0)) {
-    return { error: "Member limit reached for your plan. Upgrade to add more members." };
+    return { error: null, errorKey: "members.error_member_limit" };
   }
 
   const { randomUUID } = await import("crypto");

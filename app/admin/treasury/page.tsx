@@ -2,10 +2,12 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import TreasuryUploadForm from "../../../components/TreasuryUploadForm";
+import TreasuryEntryForm from "../../../components/TreasuryEntryForm";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { getCurrentOrganization, isOrgAdmin, getCurrentUserOrganization } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { formatCurrency } from "../../../lib/currency";
+import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +75,23 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   if (orgId) treasuryQuery = treasuryQuery.eq("organization_id", orgId);
   const { data: lastUpdate } = await treasuryQuery.maybeSingle();
 
+  let entries: { id: string; date: string; description: string | null; amount_cents: number; type: string }[] = [];
+  if (orgId) {
+    try {
+      const { data: entriesData } = await service
+        .from("treasury_entries")
+        .select("id, date, description, amount_cents, type")
+        .eq("organization_id", orgId)
+        .order("date", { ascending: false })
+        .limit(50);
+      entries = (entriesData ?? []) as typeof entries;
+    } catch {
+      // Table may not exist yet
+    }
+  }
+
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
   const defaultCellRef = process.env.TREASURY_EXCEL_CELL ?? "M9";
 
   return (
@@ -107,6 +126,39 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
       <section className="card">
         <TreasuryUploadForm organizationId={orgId ?? undefined} defaultCellRef={defaultCellRef} />
       </section>
+
+      {orgId && (
+        <section className="card">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("finance.entries_title", locale)}</h2>
+          {entries.length === 0 ? (
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t("finance.entries_empty", locale)}</p>
+          ) : (
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-200 text-left text-gray-500 dark:border-gray-600 dark:text-gray-400">
+                    <th className="pb-2 pr-4">{t("finance.entry_date", locale)}</th>
+                    <th className="pb-2 pr-4">{t("finance.entry_description", locale)}</th>
+                    <th className="pb-2 pr-4">{t("finance.entry_type", locale)}</th>
+                    <th className="pb-2 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.map((e) => (
+                    <tr key={e.id} className="border-b border-gray-100 dark:border-gray-700">
+                      <td className="py-1.5 pr-4">{e.date}</td>
+                      <td className="py-1.5 pr-4">{e.description ?? "—"}</td>
+                      <td className="py-1.5 pr-4">{e.type === "income" ? t("finance.entry_type_income", locale) : t("finance.entry_type_expense", locale)}</td>
+                      <td className="py-1.5 text-right font-medium">{formatCurrency(Number(e.amount_cents) / 100)} €</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <TreasuryEntryForm organizationId={orgId} />
+        </section>
+      )}
     </div>
   );
 }

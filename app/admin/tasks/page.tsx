@@ -28,15 +28,16 @@ async function deleteTask(formData: FormData) {
   revalidatePath("/admin/tasks");
 }
 
-type PageProps = { searchParams?: Promise<{ committee?: string; org?: string }> | { committee?: string; org?: string } };
+type PageProps = { searchParams?: Promise<{ committee?: string; org?: string; event?: string }> | { committee?: string; org?: string; event?: string } };
 
 export default async function AdminTasksPage(props: PageProps) {
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ committee?: string; org?: string }>)
-    : (raw ?? {}) as { committee?: string; org?: string };
+    ? await (raw as Promise<{ committee?: string; org?: string; event?: string }>)
+    : (raw ?? {}) as { committee?: string; org?: string; event?: string };
   const committeeId = searchParams?.committee?.trim() || null;
   const orgSlug = searchParams?.org?.trim() || null;
+  const eventIdFilter = searchParams?.event?.trim() || null;
   const supabase = createServerComponentClient({ cookies });
   const {
     data: { user }
@@ -91,21 +92,29 @@ export default async function AdminTasksPage(props: PageProps) {
   const tasksQuery = service
     .from("tasks")
     .select(
-      "id, title, description, status, due_at, committee_id, owner_id, created_by, proof_required, proof_url, access_token, organization_id, committees ( name )"
+      "id, title, description, status, due_at, committee_id, owner_id, created_by, proof_required, proof_url, access_token, organization_id, event_id, committees ( name )"
     )
     .order("due_at", { ascending: true });
   const profilesQuery = service.from("profiles").select("id, full_name");
+  const eventsQuery = orgId
+    ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
+    : Promise.resolve({ data: [] as { id: string; name: string }[] });
   if (orgId) {
     committeeQuery.eq("organization_id", orgId);
     tasksQuery.eq("organization_id", orgId);
     profilesQuery.eq("organization_id", orgId);
   }
+  if (eventIdFilter) {
+    tasksQuery.eq("event_id", eventIdFilter);
+  }
 
-  const [{ data: committees }, { data: tasks }, { data: profiles }] = await Promise.all([
+  const [{ data: committees }, { data: tasks }, { data: profiles }, { data: eventsList }] = await Promise.all([
     committeeQuery,
     tasksQuery,
-    profilesQuery
+    profilesQuery,
+    eventsQuery
   ]);
+  const events = (eventsList ?? []) as { id: string; name: string }[];
 
   const profileNames = new Map(
     (profiles ?? []).map((p: { id: string; full_name: string }) => [p.id, p.full_name])
@@ -119,21 +128,43 @@ export default async function AdminTasksPage(props: PageProps) {
     ? (tasks ?? []).filter((t: { committee_id?: string | null }) => t.committee_id === committeeId)
     : (tasks ?? []);
 
+  const baseTasksUrl = effectiveOrgSlug ? `/admin/tasks?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks";
+  const baseTasksNewUrl = effectiveOrgSlug ? `/admin/tasks/new?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks/new";
+
   return (
     <div className="space-y-4">
       {effectiveOrgSlug && (
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Tasks" />
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-4">
-          <h2 className="text-sm font-semibold text-gray-700">
+        <div className="flex flex-wrap items-center gap-4">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             Tasks & Kanban
           </h2>
           <Suspense fallback={<span className="text-[10px] text-gray-500">Team …</span>}>
             <CommitteeFilter committees={committeesForFilter} />
           </Suspense>
+          {events.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <Link
+                href={baseTasksUrl}
+                className={`rounded px-2.5 py-1 ${!eventIdFilter ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"}`}
+              >
+                All events
+              </Link>
+              {events.map((ev) => (
+                <Link
+                  key={ev.id}
+                  href={`${baseTasksUrl}&event=${encodeURIComponent(ev.id)}`}
+                  className={`rounded px-2.5 py-1 ${eventIdFilter === ev.id ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"}`}
+                >
+                  {ev.name}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
-        <Link href={effectiveOrgSlug ? `/admin/tasks/new?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks/new"} className="btn-primary text-xs">
+        <Link href={baseTasksNewUrl} className="btn-primary text-xs">
           New task
         </Link>
       </div>
@@ -141,7 +172,7 @@ export default async function AdminTasksPage(props: PageProps) {
       {tasksFiltered.length === 0 && (
         <EmptyState
           messageKey="empty.tasks"
-          actionHref={effectiveOrgSlug ? `/admin/tasks/new?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks/new"}
+          actionHref={baseTasksNewUrl}
           actionLabelKey="cta.create_task"
         />
       )}

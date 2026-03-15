@@ -21,10 +21,10 @@ export type ScoreRow = {
 
 export async function getEngagementScoresAction(
   orgSlug: string
-): Promise<{ error: string | null; scores?: ScoreRow[] }> {
+): Promise<{ error: string | null; errorKey?: string; scores?: ScoreRow[] }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: "Keine Berechtigung." };
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()

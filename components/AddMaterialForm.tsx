@@ -14,9 +14,9 @@ const SIZE_OPTIONS = [
 ];
 
 type AddMaterialAction = (
-  prev: { error?: string; success?: boolean } | null,
+  prev: { error?: string; errorKey?: string; success?: boolean } | null,
   formData: FormData
-) => Promise<{ error?: string; success?: boolean }>;
+) => Promise<{ error?: string; errorKey?: string; success?: boolean }>;
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -66,8 +66,10 @@ export default function AddMaterialForm({
 
   return (
     <form ref={formRef} action={formAction} className="space-y-4">
-      {state?.error && (
-        <p className="text-xs text-red-600 dark:text-red-400">{state.error}</p>
+      {(state?.errorKey || state?.error) && (
+        <p className="text-xs text-red-600 dark:text-red-400">
+          {state?.errorKey ? t(state.errorKey, locale) : state?.error}
+        </p>
       )}
       {state?.success && (
         <p className="text-xs text-green-600 dark:text-green-400">{t("resources.recorded_success", locale)}</p>

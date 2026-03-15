@@ -1,7 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { getCurrentOrganization, isOrgAdmin } from "../../../../lib/getOrganization";
+import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
@@ -17,7 +17,8 @@ export default async function AdminEventsPage(props: {
     ? (await (params as Promise<{ org: string }>)).org
     : (params as { org: string }).org;
   const org = await getCurrentOrganization(orgSlug);
-  if (!(await isOrgAdmin(org.id))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createSupabaseServiceRoleClient()
@@ -25,7 +26,7 @@ export default async function AdminEventsPage(props: {
   const { data: events } = await supabase
     .from("events")
     .select("id, name, slug, start_date, end_date, created_at")
-    .eq("organization_id", org.id)
+    .eq("organization_id", orgIdForData)
     .order("start_date", { ascending: false });
 
   return (

@@ -22,6 +22,10 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
     setError(null);
     const result = await getEngagementScoresAction(orgSlug);
     setLoading(false);
+    if (result.errorKey) {
+      setError(t(result.errorKey, locale));
+      return;
+    }
     if (result.error) {
       setError(result.error);
       return;

@@ -17,7 +17,7 @@ export async function GET(
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) {
-    return NextResponse.json({ error: "Keine Berechtigung." }, { status: 403 });
+    return NextResponse.json({ error: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
   }
 
   const supabase = createSupabaseServiceRoleClient();
