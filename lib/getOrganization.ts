@@ -139,21 +139,42 @@ export async function getCurrentUserOrganization(): Promise<Organization | null>
       .eq("auth_user_id", user.id)
       .single();
     if (!profile?.organization_id) return null;
-    const { data: org } = await supabase
+    let { data: org } = await supabase
       .from("organizations")
       .select("*")
       .eq("id", profile.organization_id)
       .eq("is_active", true)
       .single();
+    // TGG legacy: profile.organization_id may be TGG_ORG_ID while org row has another id; resolve by slug
+    if (!org && profile.organization_id === TGG_ORG_ID) {
+      const { data: bySlug } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("slug", "abi-2026-tgg")
+        .eq("is_active", true)
+        .maybeSingle();
+      org = bySlug;
+    }
     return (org as Organization) ?? null;
   }
 
-  const { data: org } = await supabase
+  let { data: org } = await supabase
     .from("organizations")
     .select("*")
     .eq("id", orgId)
     .eq("is_active", true)
     .single();
+
+  // TGG legacy: RPC may return TGG_ORG_ID but org row might use different id; resolve by slug
+  if (!org && orgId === TGG_ORG_ID) {
+    const { data: bySlug } = await supabase
+      .from("organizations")
+      .select("*")
+      .eq("slug", "abi-2026-tgg")
+      .eq("is_active", true)
+      .maybeSingle();
+    org = bySlug;
+  }
 
   return (org as Organization) ?? null;
 }

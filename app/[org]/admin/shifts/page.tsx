@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
 
+/**
+ * /[org]/admin/shifts → redirect to /admin/shifts?org=... (canonical admin shifts URL with org in query).
+ */
 export default async function AdminShiftsRedirect({
   params,
 }: {
