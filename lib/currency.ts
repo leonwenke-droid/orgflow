@@ -1,13 +1,25 @@
 /**
- * Format amount as EUR with German locale (e.g. 312209.5 → "312.209,50").
- * Always shows 2 decimal places (cents) with comma.
+ * Format amount with optional currency. Uses locale for number format.
+ * currencyCode: ISO 4217 (e.g. EUR, USD). If omitted, no currency symbol.
  */
-export function formatCurrency(amount: number, locale = "de-DE"): string {
-  return Number(amount).toLocaleString(locale, {
+export function formatCurrency(
+  amount: number,
+  locale = "de-DE",
+  currencyCode?: string
+): string {
+  const options: Intl.NumberFormatOptions = {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+  };
+  if (currencyCode) {
+    options.style = "currency";
+    options.currency = currencyCode;
+  }
+  return Number(amount).toLocaleString(locale, options);
 }
+
+/** Default currency for display when org has none set. */
+export const DEFAULT_CURRENCY = "EUR";
 
 /**
  * Parse user input for treasury amount. Accepts both:

@@ -44,9 +44,9 @@ export default function TreasuryUploadForm({
       body: formData
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     setLoading(false);
-    setMessage(data.message || "Treasury balance updated.");
+    setMessage(data.errorKey ? t(data.errorKey, locale) : (data.message || "Treasury balance updated."));
   };
 
   const isSubmitDisabled =

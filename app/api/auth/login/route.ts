@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { checkRateLimit } from "../../../../lib/rateLimit";
 
 export const runtime = "nodejs";
 
+const LOGIN_RATE_LIMIT = 10; // per minute per IP
+
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("x-real-ip") ?? "unknown";
+    const limit = checkRateLimit(`login:${ip}`, LOGIN_RATE_LIMIT);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { message: "Too many login attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) } }
+      );
+    }
+
     const { email, password } = await req.json();
 
     if (!email || !password) {

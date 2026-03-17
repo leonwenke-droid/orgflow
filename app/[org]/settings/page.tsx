@@ -7,6 +7,7 @@ import AdminForbidden from "../admin/AdminForbidden";
 import ThemeToggle from "../../../components/ThemeToggle";
 import LanguageToggle from "../../../components/LanguageToggle";
 import EditOrgForm from "./EditOrgForm";
+import ModuleToggles from "./ModuleToggles";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 
 export default async function OrgSettingsPage({
@@ -49,6 +50,16 @@ export default async function OrgSettingsPage({
             </p>
           )}
           <EditOrgForm orgSlug={orgSlug} initialName={org.name} initialSlug={org.slug} />
+        </section>
+
+        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
+            {locale === "de" ? "Aktive Module" : "Active modules"}
+          </h2>
+          <ModuleToggles
+            orgSlug={orgSlug}
+            initialFeatures={(org.settings as { features?: Record<string, boolean> })?.features ?? {}}
+          />
         </section>
 
         <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">

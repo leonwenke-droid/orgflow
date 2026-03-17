@@ -177,8 +177,8 @@ export default function MemberRow({
               className="min-w-[140px] rounded border border-gray-300 bg-white px-2 py-0.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               autoFocus
             />
-            <button type="button" onClick={handleSaveName} disabled={loading} className="rounded bg-blue-600 px-2 py-0.5 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">Speichern</button>
-            <button type="button" onClick={() => { setEditingName(false); setName(member.full_name ?? ""); setError(null); }} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-600 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">Abbrechen</button>
+            <button type="button" onClick={handleSaveName} disabled={loading} className="rounded bg-blue-600 px-2 py-0.5 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">{t("common.save", locale)}</button>
+            <button type="button" onClick={() => { setEditingName(false); setName(member.full_name ?? ""); setError(null); }} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-600 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">{t("common.cancel", locale)}</button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
@@ -207,7 +207,7 @@ export default function MemberRow({
                 ))}
               </div>
               <div className="mt-2 border-t border-gray-200 px-2 pt-2 dark:border-gray-600">
-                <button type="button" onClick={handleCommitteesSave} disabled={loading} className="w-full rounded bg-blue-600 py-1 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">Speichern</button>
+                <button type="button" onClick={handleCommitteesSave} disabled={loading} className="w-full rounded bg-blue-600 py-1 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">{t("common.save", locale)}</button>
               </div>
             </div>
           )}
@@ -217,8 +217,8 @@ export default function MemberRow({
         {showLeadEmailForm ? (
           <form onSubmit={handleSubmitLeadWithEmail} className="flex flex-wrap items-center gap-1">
             <input type="email" required value={leadEmail} onChange={(e) => setLeadEmail(e.target.value)} placeholder="E-Mail" className="min-w-[140px] rounded border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400" />
-            <button type="submit" disabled={loading} className="rounded bg-blue-600 px-2 py-0.5 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">Speichern</button>
-            <button type="button" onClick={() => { setShowLeadEmailForm(false); setIsLead(false); setError(null); }} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-600 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">Abbrechen</button>
+            <button type="submit" disabled={loading} className="rounded bg-blue-600 px-2 py-0.5 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">{t("common.save", locale)}</button>
+            <button type="button" onClick={() => { setShowLeadEmailForm(false); setIsLead(false); setError(null); }} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-600 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">{t("common.cancel", locale)}</button>
           </form>
         ) : (
           <label className="flex cursor-pointer items-center gap-1.5 text-gray-600 dark:text-gray-400">

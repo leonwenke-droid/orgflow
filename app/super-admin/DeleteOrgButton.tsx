@@ -79,7 +79,7 @@ export default function DeleteOrgButton({
               onClick={() => { setOpen(false); setConfirmation(""); setError(null); }}
               className="rounded border border-blue-500/40 px-3 py-1.5 text-xs text-blue-300 hover:bg-blue-500/10"
             >
-              Abbrechen
+              {t("common.cancel", locale)}
             </button>
           </div>
         </form>

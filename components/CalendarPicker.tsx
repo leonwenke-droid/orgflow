@@ -2,12 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { getTodayDateString } from "../lib/dateFormat";
-
-const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-const MONTHS = [
-  "Januar", "Februar", "März", "April", "Mai", "Juni",
-  "Juli", "August", "September", "Oktober", "November", "Dezember"
-];
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
+import { getWeekdayNames, getMonthNames } from "../lib/date";
 
 function getDaysInMonth(year: number, month: number) {
   const first = new Date(year, month, 1);
@@ -45,6 +42,9 @@ export default function CalendarPicker({
   onChange,
   omitHiddenInput = false
 }: Props) {
+  const { locale } = useLocale();
+  const WEEKDAYS = useMemo(() => getWeekdayNames(locale), [locale]);
+  const MONTHS = useMemo(() => getMonthNames(locale), [locale]);
   const todayStr = useMemo(() => getTodayDateString(), []);
   const todayYMD = useMemo(() => {
     const [y, m, d] = todayStr.split("-").map(Number);
@@ -106,7 +106,7 @@ export default function CalendarPicker({
           type="button"
           onClick={prevMonth}
           className="rounded p-1 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-          aria-label="Vorheriger Monat"
+          aria-label={t("calendar.prev_month", locale)}
         >
           ‹
         </button>
@@ -117,7 +117,7 @@ export default function CalendarPicker({
           type="button"
           onClick={nextMonth}
           className="rounded p-1 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-          aria-label="Next month"
+          aria-label={t("calendar.next_month", locale)}
         >
           ›
         </button>

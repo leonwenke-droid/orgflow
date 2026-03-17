@@ -64,3 +64,34 @@ export async function updateOrganizationAction(
   }
   return {};
 }
+
+export type FeaturesMap = Record<string, boolean>;
+
+export async function updateOrgFeaturesAction(
+  orgSlug: string,
+  features: Partial<FeaturesMap>
+): Promise<{ error?: string; errorKey?: string }> {
+  const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  if (!(await isOrgAdmin(orgIdForData))) {
+    return { error: "Not authorized.", errorKey: "common.unauthorized" };
+  }
+
+  const current = (org.settings as { features?: FeaturesMap })?.features ?? {};
+  const next: FeaturesMap = { ...current };
+  for (const [k, v] of Object.entries(features)) {
+    if (typeof v === "boolean") next[k] = v;
+  }
+
+  const service = createSupabaseServiceRoleClient();
+  const { error } = await service
+    .from("organizations")
+    .update({ settings: { ...(org.settings as object), features: next } })
+    .eq("id", org.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/${orgSlug}`);
+  revalidatePath(`/${orgSlug}/settings`);
+  revalidatePath(`/${orgSlug}/admin`);
+  return {};
+}

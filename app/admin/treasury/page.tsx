@@ -62,10 +62,18 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   if (!orgId && profile.organization_id) orgId = profile.organization_id;
 
   let effectiveOrgSlug = orgSlug;
-  if (!effectiveOrgSlug && orgId) {
+  let orgSettings: { currency?: string } = {};
+  if (orgId) {
     const userOrg = await getCurrentUserOrganization();
-    effectiveOrgSlug = userOrg?.slug ?? null;
+    if (!effectiveOrgSlug && userOrg?.slug) effectiveOrgSlug = userOrg.slug;
+    const { data: orgRow } = await service.from("organizations").select("settings").eq("id", orgId).single();
+    orgSettings = (orgRow?.settings as { currency?: string }) ?? {};
   }
+
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const currencyCode = orgSettings.currency ?? "EUR";
+  const localeForCurrency = locale === "de" ? "de-DE" : "en-GB";
 
   let treasuryQuery = service
     .from("treasury_updates")
@@ -90,8 +98,15 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
     }
   }
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const entriesSumCents = entries.reduce((sum, e) => sum + (e.type === "income" ? Number(e.amount_cents) : -Number(e.amount_cents)), 0);
+  const byMonth: Record<string, { income: number; expense: number }> = {};
+  for (const e of entries) {
+    const monthKey = e.date.slice(0, 7);
+    if (!byMonth[monthKey]) byMonth[monthKey] = { income: 0, expense: 0 };
+    if (e.type === "income") byMonth[monthKey].income += Number(e.amount_cents);
+    else byMonth[monthKey].expense += Number(e.amount_cents);
+  }
+  const monthKeys = Object.keys(byMonth).sort().reverse().slice(0, 6);
   const defaultCellRef = process.env.TREASURY_EXCEL_CELL ?? "M9";
 
   return (
@@ -113,12 +128,12 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
           as the balance – you can change this in the form.
         </p>
         {lastUpdate && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Last balance:{" "}
             <span className="font-semibold">
-              {formatCurrency(Number(lastUpdate.amount))} €
+              {formatCurrency(Number(lastUpdate.amount), localeForCurrency, currencyCode)}
             </span>{" "}
-            ({new Date(lastUpdate.created_at).toLocaleString("de-DE")})
+            ({new Date(lastUpdate.created_at).toLocaleString(localeForCurrency)})
           </p>
         )}
       </section>
@@ -149,12 +164,37 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
                       <td className="py-1.5 pr-4">{e.date}</td>
                       <td className="py-1.5 pr-4">{e.description ?? "—"}</td>
                       <td className="py-1.5 pr-4">{e.type === "income" ? t("finance.entry_type_income", locale) : t("finance.entry_type_expense", locale)}</td>
-                      <td className="py-1.5 text-right font-medium">{formatCurrency(Number(e.amount_cents) / 100)} €</td>
+                      <td className="py-1.5 text-right font-medium">{formatCurrency(Number(e.amount_cents) / 100, localeForCurrency, currencyCode)}</td>
                     </tr>
                   ))}
+                  {entries.length > 0 && (
+                    <tr className="border-t-2 border-gray-200 font-semibold dark:border-gray-600">
+                      <td className="py-2 pr-4" colSpan={2}>{t("finance.entries_sum", locale)}</td>
+                      <td className="py-2 pr-4">—</td>
+                      <td className="py-2 text-right">{formatCurrency(entriesSumCents / 100, localeForCurrency, currencyCode)}</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
+          )}
+          {monthKeys.length > 0 && (
+            <details className="mt-3 rounded border border-gray-200 dark:border-gray-600">
+              <summary className="cursor-pointer px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">{t("finance.monthly_summary", locale)}</summary>
+              <ul className="list-none border-t border-gray-100 px-2 py-1.5 text-xs dark:border-gray-700">
+                {monthKeys.map((key) => {
+                  const { income, expense } = byMonth[key];
+                  const [y, m] = key.split("-");
+                  const label = locale === "de" ? `${m}/${y}` : `${y}-${m}`;
+                  return (
+                    <li key={key} className="flex justify-between gap-2 py-0.5 text-gray-600 dark:text-gray-400">
+                      <span>{label}</span>
+                      <span>+{formatCurrency(income / 100, localeForCurrency, currencyCode)} / −{formatCurrency(expense / 100, localeForCurrency, currencyCode)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
           )}
           <TreasuryEntryForm organizationId={orgId} />
         </section>

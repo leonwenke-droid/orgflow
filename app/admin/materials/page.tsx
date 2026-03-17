@@ -69,7 +69,13 @@ async function addMaterialProcurement(
     return { errorKey: "materials.error_save" };
   }
 
-  const points = size === "small" ? 5 : size === "medium" ? 10 : 15;
+  let points = size === "small" ? 5 : size === "medium" ? 10 : 15;
+  if (orgId) {
+    const { data: orgRow } = await service.from("organizations").select("settings").eq("id", orgId).single();
+    const settings = orgRow?.settings as { resource_categories?: Array<{ key: string; points: number }> } | null;
+    const cat = settings?.resource_categories?.find((c) => c.key === size);
+    if (cat && Number(cat.points) >= 0) points = Number(cat.points);
+  }
   const eventType = `material_${size}`;
 
   const { error: partError } = await service
@@ -175,9 +181,20 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
   if (!orgId && profile.organization_id) orgId = profile.organization_id;
 
   let effectiveOrgSlug = orgSlug;
-  if (!effectiveOrgSlug && orgId) {
+  let resourceCategories: { value: "small" | "medium" | "large"; label: string; points: number; examples?: string }[] | null = null;
+  if (orgId) {
     const userOrg = await getCurrentUserOrganization();
-    effectiveOrgSlug = userOrg?.slug ?? null;
+    if (!effectiveOrgSlug && userOrg?.slug) effectiveOrgSlug = userOrg.slug;
+    const { data: orgRow } = await service.from("organizations").select("settings").eq("id", orgId).single();
+    const settings = orgRow?.settings as { resource_categories?: Array<{ key: string; name: string; points: number }> } | null;
+    const cats = settings?.resource_categories;
+    if (Array.isArray(cats) && cats.length >= 3) {
+      const keyOrder = ["small", "medium", "large"] as const;
+      resourceCategories = keyOrder.map((k) => {
+        const c = cats.find((x) => x.key === k);
+        return c ? { value: k, label: c.name, points: Number(c.points) || (k === "small" ? 5 : k === "medium" ? 10 : 15), examples: undefined } : { value: k, label: k, points: k === "small" ? 5 : k === "medium" ? 10 : 15, examples: undefined };
+      });
+    }
   }
 
   const profilesQuery = service.from("profiles").select("id, full_name").order("full_name");
@@ -230,6 +247,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
         <AddMaterialForm
           profiles={profiles ?? []}
           addMaterialProcurement={addMaterialProcurement}
+          resourceCategories={resourceCategories ?? undefined}
         />
       </section>
 

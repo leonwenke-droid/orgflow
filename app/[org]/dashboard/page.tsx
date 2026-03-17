@@ -11,9 +11,10 @@ import { formatCurrency } from "../../../lib/currency";
 import ShiftPlanWeekNav from "../../../components/ShiftPlanWeekNav";
 import EmptyState from "../../../components/EmptyState";
 import OnboardingBanner from "../../../components/OnboardingBanner";
+import OnboardingChecklist from "../../../components/OnboardingChecklist";
 import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
-import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin } from "../../../lib/getOrganization";
+import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
@@ -164,7 +165,9 @@ async function getData(organizationId: string, supabaseOverride?: SupabaseClient
     activity,
     shifts: shifts ?? [],
     profileNames,
-    committees: (committees ?? []) as { id: string; name: string }[]
+    committees: (committees ?? []) as { id: string; name: string }[],
+    tasksCount: (tasks ?? []).length,
+    shiftsCount: (shifts ?? []).length
   };
 }
 
@@ -199,8 +202,9 @@ export default async function OrgDashboardPage({
           })
         : undefined);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const { treasury, aggregate, activity, shifts, profileNames, committees } =
+  const { treasury, aggregate, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
     await getData(orgIdForData, supabaseForData);
+  const userIsAdmin = canAccessOrgData && (await isOrgAdmin(orgIdForData));
 
   // IMPORTANT: Do not redirect to another organisation's dashboard.
   // If user is logged in but not a member of this org, keep showing the public dashboard.
@@ -231,6 +235,16 @@ export default async function OrgDashboardPage({
       </header>
 
       {user && <OnboardingBanner />}
+
+      {user && canAccessOrgData && (
+        <OnboardingChecklist
+          orgSlug={orgSlug}
+          teamsCount={committees.length}
+          membersCount={activity.total_members}
+          tasksOrShiftsCount={tasksCount + shiftsCount}
+          isAdmin={userIsAdmin}
+        />
+      )}
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[

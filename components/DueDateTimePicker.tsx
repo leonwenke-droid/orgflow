@@ -3,6 +3,8 @@
 import { useState } from "react";
 import CalendarPicker from "./CalendarPicker";
 import { getTodayDateString } from "../lib/dateFormat";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 type Props = {
   name?: string;
@@ -23,6 +25,7 @@ function parseDefault(val: string | undefined, todayStr: string): { date: string
 }
 
 export default function DueDateTimePicker({ name = "due_at", defaultValue, className = "" }: Props) {
+  const { locale } = useLocale();
   const todayStr = getTodayDateString();
   const parsed = parseDefault(defaultValue, todayStr);
   const [date, setDate] = useState(parsed.date);
@@ -36,7 +39,7 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
     <div className={className}>
       <input type="hidden" name={name} value={dueAtValue} readOnly />
       <div className="space-y-2">
-        <label className="text-[11px] font-semibold text-gray-700">Date</label>
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.date", locale)}</label>
         <CalendarPicker
           defaultValue={date}
           min={minDate}
@@ -45,7 +48,7 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
         />
       </div>
       <div className="mt-2">
-        <label className="text-[11px] font-semibold text-gray-700">Uhrzeit</label>
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.time_label", locale)}</label>
         <button
           type="button"
           onClick={() => setTimeOverlayOpen(true)}
@@ -61,14 +64,14 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
           onClick={() => setTimeOverlayOpen(false)}
           role="dialog"
           aria-modal="true"
-          aria-label="Select time"
+          aria-label={t("tasks.time_label", locale)}
         >
           <div
-            className="max-w-xs w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
+            className="max-w-xs w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
-              <h3 className="text-sm font-semibold text-gray-900">Uhrzeit (Deadline)</h3>
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("tasks.time_deadline", locale)}</h3>
             </div>
             <div className="p-4">
               <input
@@ -78,13 +81,13 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
                 className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
-            <div className="flex justify-end border-t border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="flex justify-end border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
               <button
                 type="button"
                 onClick={() => setTimeOverlayOpen(false)}
-                className="rounded bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700"
+                className="rounded bg-blue-600 px-4 py-2 text-xs font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
               >
-                Fertig
+                {t("common.done", locale)}
               </button>
             </div>
           </div>

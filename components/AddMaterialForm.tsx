@@ -42,14 +42,21 @@ function SubmitButton() {
   );
 }
 
+export type ResourceCategoryOption = { value: "small" | "medium" | "large"; label: string; points: number; examples?: string };
+
 export default function AddMaterialForm({
   profiles,
-  addMaterialProcurement
+  addMaterialProcurement,
+  resourceCategories
 }: {
   profiles: Profile[];
   addMaterialProcurement: AddMaterialAction;
+  resourceCategories?: ResourceCategoryOption[] | null;
 }) {
   const { locale } = useLocale();
+  const options: ResourceCategoryOption[] = resourceCategories?.length
+    ? resourceCategories
+    : SIZE_OPTIONS.map((s) => ({ value: s.value, label: t(s.labelKey, locale), points: s.points, examples: t(s.examplesKey, locale) }));
   const [state, formAction] = useFormState(addMaterialProcurement, null);
   const [personSlots, setPersonSlots] = useState([0]);
   const formRef = useRef<HTMLFormElement>(null);
@@ -86,11 +93,11 @@ export default function AddMaterialForm({
             </tr>
           </thead>
           <tbody>
-            {SIZE_OPTIONS.map((s) => (
+            {options.map((s) => (
               <tr key={s.value} className="border-t border-gray-100 dark:border-gray-700">
-                <td className="py-1 font-medium dark:text-gray-200">{t(s.labelKey, locale)}</td>
+                <td className="py-1 font-medium dark:text-gray-200">{s.label}</td>
                 <td className="py-1 text-gray-700 dark:text-gray-300">+{s.points}</td>
-                <td className="py-1 text-gray-500 dark:text-gray-400">{t(s.examplesKey, locale)}</td>
+                <td className="py-1 text-gray-500 dark:text-gray-400">{s.examples ?? "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -156,9 +163,9 @@ export default function AddMaterialForm({
             required
             className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           >
-            {SIZE_OPTIONS.map((s) => (
+            {options.map((s) => (
               <option key={s.value} value={s.value}>
-                {t(s.labelKey, locale)} (+{s.points} {t("resources.points", locale)}) – {t(s.examplesKey, locale)}
+                {s.label} (+{s.points} {t("resources.points", locale)}){s.examples ? ` – ${s.examples}` : ""}
               </option>
             ))}
           </select>

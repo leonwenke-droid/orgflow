@@ -65,6 +65,14 @@ export async function POST(req: Request) {
       engagement_tracking: modules.includes("engagement"),
       events: modules.includes("events"),
     };
+    const safeOrgType = ["school", "club", "sports_club", "volunteer_group", "event_crew", "ngo", "conference", "custom"].includes(orgType) ? orgType : "other";
+    const typePresets: Record<string, { resource_categories?: Array<{ key: string; name: string; points: number }>; currency?: string }> = {
+      school: { resource_categories: [{ key: "small", name: "Small", points: 5 }, { key: "medium", name: "Medium", points: 10 }, { key: "large", name: "Large", points: 15 }], currency: "EUR" },
+      event_crew: { resource_categories: [{ key: "small", name: "Equipment", points: 5 }, { key: "medium", name: "Setup", points: 10 }, { key: "large", name: "Full day", points: 15 }], currency: "EUR" },
+      ngo: { currency: "EUR" },
+      conference: { currency: "EUR" },
+    };
+    const preset = typePresets[safeOrgType] ?? {};
     const insertPayload = {
       id: orgId,
       name,
@@ -74,14 +82,15 @@ export async function POST(req: Request) {
       school_short: null,
       school_city: null,
       year: new Date().getFullYear(),
-      org_type: ["school", "club", "sports_club", "volunteer_group", "event_crew", "ngo", "conference", "custom"].includes(orgType) ? orgType : "other",
+      org_type: safeOrgType,
       is_active: true,
       setup_token: null,
       setup_token_used_at: null,
       settings: {
-        currency: "EUR",
+        currency: preset.currency ?? "EUR",
         timezone: "Europe/Berlin",
         features,
+        resource_categories: preset.resource_categories ?? undefined,
         engagement_weights: { task_done: 8, shift_done: 10, material_small: 5, material_medium: 10, material_large: 15 },
         contact_email: "",
         contact_phone: "",

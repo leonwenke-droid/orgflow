@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       if (error) {
         console.error(error);
         return NextResponse.json(
-          { message: "Fehler beim Speichern in der Datenbank." },
+          { message: "Error saving to database.", errorKey: "finance.db_error" },
           { status: 500 }
         );
       }
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error(error);
       return NextResponse.json(
-        { message: "Fehler beim Speichern in der Datenbank." },
+        { message: "Error saving to database.", errorKey: "finance.db_error" },
         { status: 500 }
       );
     }
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { message: "Unerwarteter Fehler beim Upload." },
+      { message: "Unexpected upload error.", errorKey: "finance.upload_error" },
       { status: 500 }
     );
   }

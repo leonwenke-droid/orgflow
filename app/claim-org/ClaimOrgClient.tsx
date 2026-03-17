@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import AuthForm from "../../components/AuthForm";
+import { useLocale } from "../../components/LocaleProvider";
+import { t } from "../../lib/i18n";
 
 type Org = { id: string; name: string; slug: string };
 type User = { id: string; email?: string } | null;
@@ -101,6 +103,7 @@ export default function ClaimOrgClient({
 }
 
 function RegisterForm({ redirectTo, claimToken }: { redirectTo: string; claimToken?: string }) {
+  const { locale } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -135,25 +138,25 @@ function RegisterForm({ redirectTo, claimToken }: { redirectTo: string; claimTok
     <form className="mt-3 space-y-3 text-sm" onSubmit={onSubmit}>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-blue-400">First name</label>
+          <label className="mb-1 block text-xs font-semibold text-blue-400">{t("claim.first_name", locale)}</label>
           <input
             type="text"
             required
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className="w-full rounded border border-blue-500/30 bg-card/60 p-2 text-xs text-blue-100"
-            placeholder="z. B. Leon"
+            placeholder={t("claim.placeholder_first_name", locale)}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-blue-400">Last name</label>
+          <label className="mb-1 block text-xs font-semibold text-blue-400">{t("claim.last_name", locale)}</label>
           <input
             type="text"
             required
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className="w-full rounded border border-blue-500/30 bg-card/60 p-2 text-xs text-blue-100"
-            placeholder="z. B. Wenke"
+            placeholder={t("claim.placeholder_last_name", locale)}
           />
         </div>
       </div>

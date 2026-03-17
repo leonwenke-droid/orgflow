@@ -13,6 +13,7 @@ import {
   getAllOrganizations
 } from "../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../lib/supabaseServer";
+import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../lib/i18n";
 import DeleteOrgButton from "./DeleteOrgButton";
 import SetupLinkBlock from "./SetupLinkBlock";
 
@@ -29,17 +30,19 @@ export default async function SuperAdminDashboard() {
   }
 
   if (!(await isSuperAdmin())) {
+    const cookieStore = await cookies();
+    const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="text-xl font-bold text-blue-100">Keine Berechtigung</h1>
-        <p className="mt-3 text-sm text-blue-300">
-          You do not have permission for the Super Admin area. This area is for the technical administrator only.
+        <h1 className="text-xl font-bold text-blue-100 dark:text-gray-100">{t("super_admin.forbidden_title", locale)}</h1>
+        <p className="mt-3 text-sm text-blue-300 dark:text-gray-400">
+          {t("super_admin.forbidden_message", locale)}
         </p>
         <Link
           href="/"
-          className="mt-6 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="mt-6 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
         >
-          Zur Startseite
+          {t("super_admin.back_home", locale)}
         </Link>
       </div>
     );

@@ -177,12 +177,13 @@ async function createShifts(
     ) || 0;
     const organizationId = formData.get("organization_id")?.toString() || null;
     const eventId = formData.get("event_id")?.toString().trim() || null;
+    const autoAssign = formData.get("auto_assign") === "on";
 
     if (!date) {
-      return { error: "Datum ist erforderlich." };
+      return { error: "Date required.", errorKey: "shifts.date_required" };
     }
     if (!eventName) {
-      return { error: "Titel ist erforderlich." };
+      return { error: "Title required.", errorKey: "shifts.title_required" };
     }
 
     const supabase = createServerComponentClient({ cookies });
@@ -203,7 +204,7 @@ async function createShifts(
     }
 
     const baseRow = (overrides: Partial<{ event_name: string; date: string; start_time: string; end_time: string; location: string | null; notes: string | null; created_by: string | null; required_slots: number; event_id: string | null }>) =>
-      ({ event_name: "", date, start_time: "", end_time: "", location, notes, created_by: createdBy, required_slots: requiredSlots, ...(eventId ? { event_id: eventId } : {}), ...overrides, ...(organizationId ? { organization_id: organizationId } : {}) });
+      ({ event_name: "", date, start_time: "", end_time: "", location, notes, created_by: createdBy, required_slots: requiredSlots, auto_assign: autoAssign, ...(eventId ? { event_id: eventId } : {}), ...overrides, ...(organizationId ? { organization_id: organizationId } : {}) });
 
     if (type === "pausenverkauf") {
       const rows = [
@@ -281,6 +282,7 @@ async function createShifts(
           required_slots: requiredSlots,
           has_aufbau: hasAufbau,
           has_abbau: hasAbbau,
+          auto_assign: autoAssign,
           ...(eventId ? { event_id: eventId } : {}),
           ...(organizationId ? { organization_id: organizationId } : {})
         });

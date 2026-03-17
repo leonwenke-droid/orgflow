@@ -5,21 +5,21 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { getCurrentUserOrganization } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
-import OwnerSelectWithScope from "../../../../components/OwnerSelectWithScope";
-import DueDateTimePicker from "../../../../components/DueDateTimePicker";
-import SubmitButtonWithSpinner from "../../../../components/SubmitButtonWithSpinner";
+import NewTaskForm from "./NewTaskForm";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
-async function createTask(formData: FormData) {
+type CreateTaskState = { errorKey?: string; error?: string } | null;
+
+async function createTask(_prev: CreateTaskState, formData: FormData): Promise<CreateTaskState> {
   "use server";
 
   const supabase = createServerComponentClient({ cookies });
   const {
     data: { user }
   } = await supabase.auth.getUser();
-  if (!user?.id) throw new Error("Nicht eingeloggt");
+  if (!user?.id) return { errorKey: "tasks.not_logged_in" };
   const service = createSupabaseServiceRoleClient();
   const { data: profile } = await service
     .from("profiles")
@@ -28,7 +28,7 @@ async function createTask(formData: FormData) {
     .single();
 
   if (!profile || !["admin", "lead"].includes(profile.role)) {
-    throw new Error("Nicht autorisiert");
+    return { errorKey: "tasks.not_authorized" };
   }
 
   const title = formData.get("title")?.toString().trim();
@@ -40,11 +40,11 @@ async function createTask(formData: FormData) {
   const eventId = formData.get("event_id")?.toString().trim() || null;
 
   if (!title) {
-    throw new Error("Titel ist erforderlich");
+    return { errorKey: "tasks.title_required" };
   }
 
   if (dueAt && new Date(dueAt).getTime() < Date.now()) {
-    throw new Error("Die Deadline darf nicht in der Vergangenheit liegen.");
+    return { errorKey: "tasks.deadline_past" };
   }
 
   const token = crypto.randomUUID().replace(/-/g, "");
@@ -65,7 +65,7 @@ async function createTask(formData: FormData) {
 
   if (error) {
     console.error(error);
-    throw new Error("Fehler beim Anlegen der Aufgabe");
+    return { errorKey: "tasks.create_error" };
   }
 
   const org = await getCurrentUserOrganization();
@@ -84,9 +84,11 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
   const userId = user?.id;
 
   if (!userId) {
+    const cookieStore = await cookies();
+    const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
     return (
-      <p className="text-sm text-amber-300">
-        Session not recognised. Please <a href="/" className="underline">sign in</a> (via your cohort admin).
+      <p className="text-sm text-amber-300 dark:text-amber-200">
+        {t("tasks.session_sign_in", locale)} <a href="/" className="underline">{t("common.sign_in", locale)}</a>.
       </p>
     );
   }
@@ -150,9 +152,11 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
   }
 
   if (!profile || !["admin", "lead"].includes(profile.role)) {
+    const cookieStore = await cookies();
+    const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
     return (
-      <p className="text-sm text-red-300">
-        Access only for admins & team leads.
+      <p className="text-sm text-red-300 dark:text-red-200">
+        {t("tasks.access_admin_only", locale)}
       </p>
     );
   }
@@ -177,90 +181,17 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           {t("tasks.new_task", locale)}
         </h2>
-      <form action={createTask} className="space-y-3 text-sm">
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-            {t("tasks.title_label", locale)}
-          </label>
-          <input
-            name="title"
-            required
-            placeholder={t("placeholders.task_title", locale)}
-            className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-            {t("tasks.description_label", locale)}
-          </label>
-          <textarea
-            name="description"
-            rows={3}
-            className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-          />
-        </div>
-        {eventsList.length > 0 && (
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {t("shifts.event_optional", locale)}
-            </label>
-            <select
-              name="event_id"
-              className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            >
-              <option value="">{t("shifts.event_none", locale)}</option>
-              {eventsList.map((ev) => (
-                <option key={ev.id} value={ev.id}>{ev.name}</option>
-              ))}
-            </select>
-          </div>
-        )}
-        {committeeList.length === 0 && (
-          <p className="rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-            Keine Komitees in der Datenbank. Bitte in Supabase unter Tabelle{" "}
-            <strong>committees</strong> Einträge anlegen oder die Seed-Migration{" "}
-            <code className="text-[10px]">20260210110000_seed_committees.sql</code> ausführen.
-          </p>
-        )}
-        <OwnerSelectWithScope
-          committees={committeeList}
+        <NewTaskForm
+          action={createTask}
+          committeeList={committeeList}
           members={(members ?? []).map((m) => ({
             id: String(m.id),
             full_name: String(m.full_name ?? ""),
             committee_id: m.committee_id != null ? String(m.committee_id) : null,
             committee_ids: userIdToCommitteeIds.get(String(m.id)) ?? []
           }))}
-          committeeName="Team"
-          ownerName="Verantwortliche Person"
+          eventsList={eventsList}
         />
-        <div className="grid gap-3 md:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {t("tasks.deadline", locale)}
-            </label>
-            <DueDateTimePicker name="due_at" />
-          </div>
-          <div className="flex items-end">
-            <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-              <input
-                type="checkbox"
-                name="proof_required"
-                defaultChecked
-                className="rounded border-gray-400"
-              />
-              {t("tasks.proof_required", locale)}
-            </label>
-          </div>
-        </div>
-        <div className="pt-2">
-          <SubmitButtonWithSpinner
-            className="btn-primary text-xs inline-flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
-            loadingLabel={t("tasks.saving", locale)}
-          >
-            {t("tasks.save", locale)}
-          </SubmitButtonWithSpinner>
-        </div>
-      </form>
       </div>
     </div>
   );

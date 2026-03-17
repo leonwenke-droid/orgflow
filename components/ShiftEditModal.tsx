@@ -85,21 +85,21 @@ export default function ShiftEditModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={personsOnly ? "Personen zuweisen" : "Schicht bearbeiten"}
+      aria-label={personsOnly ? t("shifts.edit_persons", locale) : t("shifts.edit_shift", locale)}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-b-0 bg-white shadow-xl sm:max-h-[90vh] sm:rounded-xl sm:border-b border-gray-200 pb-[env(safe-area-inset-bottom)]"
+        className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-b-0 bg-white shadow-xl sm:max-h-[90vh] sm:rounded-xl sm:border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 pb-[env(safe-area-inset-bottom)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 px-3 py-2.5 sm:py-2">
-          <h3 className="text-xs font-semibold text-gray-900">
-            {personsOnly ? "Persons" : isEventGroup ? "Edit event (all shifts)" : "Edit shift"}
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 px-3 py-2.5 sm:py-2 dark:border-gray-700 dark:bg-gray-800">
+          <h3 className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+            {personsOnly ? t("shifts.edit_persons", locale) : isEventGroup ? t("shifts.edit_event_all", locale) : t("shifts.edit_shift", locale)}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="-m-2 flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-2 text-gray-600 hover:bg-blue-100 focus:outline-none touch-manipulation"
-            aria-label="Close"
+            className="-m-2 flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-2 text-gray-600 hover:bg-blue-100 focus:outline-none touch-manipulation dark:text-gray-300 dark:hover:bg-gray-700"
+            aria-label={t("common.close", locale)}
           >
             ✕
           </button>
@@ -118,7 +118,7 @@ export default function ShiftEditModal({
             className="space-y-2.5"
           >
             <div>
-              <label className="text-[10px] font-semibold text-gray-700 block mb-0.5">Veranstaltung</label>
+              <label className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 block mb-0.5">{t("shifts.event_label", locale)}</label>
               <input
                 type="text"
                 name="event_name"
@@ -129,7 +129,7 @@ export default function ShiftEditModal({
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] font-semibold text-gray-700 block mb-0.5">Date</label>
+                <label className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 block mb-0.5">{t("shifts.date", locale)}</label>
                 <input
                   type="date"
                   name="date"
@@ -140,7 +140,7 @@ export default function ShiftEditModal({
               </div>
               {!isEventGroup && (
               <div>
-                <label className="text-[10px] font-semibold text-gray-700 block mb-0.5">Uhrzeit</label>
+                <label className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 block mb-0.5">{t("shifts.time_label", locale)}</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="time"
@@ -168,46 +168,46 @@ export default function ShiftEditModal({
               </>
             )}
             <div>
-              <label className="text-[10px] font-semibold text-gray-700 block mb-0.5">Ort</label>
+              <label className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 block mb-0.5">{t("shifts.location", locale)}</label>
               <input
                 type="text"
                 name="location"
                 defaultValue={shift.location ?? ""}
-                placeholder="z.B. Mensa, Aula …"
+                placeholder={t("shifts.location_placeholder_short", locale)}
                 className="w-full rounded border border-gray-300 bg-white p-2.5 text-xs min-h-[44px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
               />
             </div>
             <div>
-              <label className="text-[10px] font-semibold text-gray-700 block mb-0.5">Infos</label>
+              <label className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 block mb-0.5">{t("shifts.notes_label", locale)}</label>
               <textarea
                 name="notes"
                 rows={2}
                 defaultValue={shift.notes ?? ""}
-                placeholder="Info for the cohort …"
+                placeholder={t("shifts.notes_placeholder", locale)}
                 className="w-full rounded border border-gray-300 bg-white p-2 text-xs resize-y dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
             <SubmitButtonWithSpinner
-              className="rounded bg-blue-600 px-3 py-2.5 text-[11px] text-white hover:bg-blue-700 sm:px-2.5 sm:py-1 disabled:opacity-70 min-h-[44px] sm:min-h-0 touch-manipulation"
+              className="rounded bg-blue-600 px-3 py-2.5 text-[11px] text-white hover:bg-blue-700 sm:px-2.5 sm:py-1 disabled:opacity-70 min-h-[44px] sm:min-h-0 touch-manipulation dark:bg-blue-500 dark:hover:bg-blue-600"
               loadingLabel="…"
             >
-              Speichern
+              {t("common.save", locale)}
             </SubmitButtonWithSpinner>
           </form>
           )}
 
           {isEventGroup ? (
             <details className="border-t border-gray-200 pt-2 group">
-              <summary className="list-none cursor-pointer flex items-center gap-2 py-1.5 text-[11px] font-semibold text-gray-700 hover:text-gray-900">
+              <summary className="list-none cursor-pointer flex items-center gap-2 py-1.5 text-[11px] font-semibold text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
                 <span className="w-4 h-4 flex items-center justify-center text-gray-500 transition-transform group-open:rotate-90" aria-hidden>▶</span>
-                Personen ({totalAssignments})
+                {t("shifts.persons_count", locale).replace("{count}", String(totalAssignments))}
               </summary>
               <div className="pl-6 pt-2 space-y-4">
                 {allShiftsWithAssignments!.map(({ shift: s, assignments: aList }) => (
                   <div key={s.id} className="rounded border border-gray-200 bg-gray-50 p-2 space-y-2">
                     <p className="text-[10px] font-semibold text-gray-700/90">{timeStr(s.start_time)}–{timeStr(s.end_time)}</p>
                     {aList.length === 0 ? (
-                      <p className="text-[11px] text-gray-700/60">Keine zugewiesen.</p>
+                      <p className="text-[11px] text-gray-700/60 dark:text-gray-400">{t("shifts.no_one_assigned", locale)}</p>
                     ) : (
                       <ul className="space-y-1.5">
                         {aList.map((a) => (
@@ -215,10 +215,10 @@ export default function ShiftEditModal({
                             <span className="flex-1 text-[11px] text-gray-900 truncate">{profileNames.get(a.user_id ?? "") ?? "–"}</span>
                             <form action={async (fd: FormData) => { const uid = fd.get("user_id")?.toString(); if (uid) { await replaceAssignment(a.id, fd); onRefresh?.(); } }} className="flex items-center gap-1">
                               <select name="user_id" className="rounded border border-gray-300 bg-white px-1 py-0.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                                <option value="">Ersetzen</option>
+                                <option value="">{t("shifts.replace", locale)}</option>
                                 {members.filter((m) => m.id !== a.user_id).map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
                               </select>
-                              <SubmitButtonWithSpinner className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-700" loadingLabel="…">Ersetzen</SubmitButtonWithSpinner>
+                              <SubmitButtonWithSpinner className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" loadingLabel="…">{t("shifts.replace", locale)}</SubmitButtonWithSpinner>
                             </form>
                             <form action={async () => { await removeAssignment(a.id); onRefresh?.(); }}>
                               <SubmitButtonWithSpinner className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] text-red-600 dark:bg-red-900/30 dark:text-red-400" title={t("common.remove", locale)} loadingLabel="…">✕</SubmitButtonWithSpinner>
@@ -229,7 +229,7 @@ export default function ShiftEditModal({
                     )}
                     <form action={async (fd: FormData) => { const uid = fd.get("user_id")?.toString(); if (uid) { await assignToShift(s.id, fd); onRefresh?.(); } }} className="flex items-center gap-2">
                       <select name="user_id" className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] flex-1 min-w-0 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                        <option value="">Add …</option>
+                        <option value="">{t("shifts.add_short", locale)}</option>
                         {members.filter((m) => !aList.some((a) => a.user_id === m.id)).map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
                       </select>
                       <SubmitButtonWithSpinner className="rounded shrink-0 bg-blue-100 px-2 py-0.5 text-[10px] text-blue-700" loadingLabel="…">+</SubmitButtonWithSpinner>
@@ -239,10 +239,10 @@ export default function ShiftEditModal({
               </div>
             </details>
           ) : (
-          <div className={personsOnly ? "" : "border-t border-gray-200 pt-2"}>
-            <p className="text-[10px] font-semibold text-gray-700 mb-1.5">Personen</p>
+          <div className={personsOnly ? "" : "border-t border-gray-200 pt-2 dark:border-gray-700"}>
+            <p className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{t("shifts.persons_count", locale).replace("{count}", String(assignments.length))}</p>
             {assignments.length === 0 ? (
-              <p className="text-[11px] text-gray-700/70 mb-1.5">Keine zugewiesen.</p>
+              <p className="text-[11px] text-gray-700/70 dark:text-gray-400 mb-1.5">{t("shifts.no_one_assigned", locale)}</p>
             ) : (
               <ul className="space-y-2">
                 {assignments.map((a) => (
@@ -262,9 +262,9 @@ export default function ShiftEditModal({
                     >
                       <select
                         name="user_id"
-                        className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px]"
+                        className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       >
-                        <option value="">Ersetzen …</option>
+                        <option value="">{t("shifts.replace", locale)} …</option>
                         {members
                           .filter((m) => m.id !== a.user_id)
                           .map((m) => (
@@ -274,10 +274,10 @@ export default function ShiftEditModal({
                           ))}
                       </select>
                       <SubmitButtonWithSpinner
-                        className="inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-1 text-[11px] text-blue-700 hover:bg-blue-200 disabled:opacity-70"
+                        className="inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-1 text-[11px] text-blue-700 hover:bg-blue-200 disabled:opacity-70 dark:bg-blue-900/30 dark:text-blue-300"
                         loadingLabel="…"
                       >
-                        Ersetzen
+                        {t("shifts.replace", locale)}
                       </SubmitButtonWithSpinner>
                     </form>
                     <form action={async () => { await removeAssignment(a.id); onRefresh?.(); }}>
@@ -304,7 +304,7 @@ export default function ShiftEditModal({
                 name="user_id"
                 className="rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[11px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               >
-                <option value="">Add …</option>
+                <option value="">{t("shifts.add_short", locale)}</option>
                 {members
                   .filter((m) => !assignments.some((a) => a.user_id === m.id))
                   .map((m) => (
@@ -314,10 +314,10 @@ export default function ShiftEditModal({
                   ))}
               </select>
               <SubmitButtonWithSpinner
-                className="inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 hover:bg-blue-200 disabled:opacity-70"
-                loadingLabel="Adding…"
+                className="inline-flex items-center gap-1.5 rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 hover:bg-blue-200 disabled:opacity-70 dark:bg-blue-900/30 dark:text-blue-300"
+                loadingLabel="…"
               >
-                Add
+                {t("shifts.add_short", locale).replace(" …", "")}
               </SubmitButtonWithSpinner>
             </form>
           </div>

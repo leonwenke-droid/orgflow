@@ -208,6 +208,14 @@ export default function CreateShiftsForm({
           className="min-h-[60px] w-full resize-y rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:p-2"
         />
       </div>
+      <div className="space-y-1 md:col-span-2">
+        <label className="inline-flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" name="auto_assign" value="on" className="rounded border-gray-400" />
+          <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+            {t("shifts.auto_assign_label", locale)}
+          </span>
+        </label>
+      </div>
       <div className="md:col-span-2 pt-1">
         <SubmitButton />
       </div>

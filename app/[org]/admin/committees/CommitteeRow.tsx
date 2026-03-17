@@ -42,7 +42,7 @@ export default function CommitteeRow({
   }
 
   async function handleDelete() {
-    if (!confirm(`Really delete team "${committee.name}"?`)) return;
+    if (!confirm(t("members.delete_team_confirm", locale).replace("{name}", committee.name))) return;
     setLoading(true);
     setError(null);
     const result = await deleteCommitteeAction(orgSlug, committee.id);
@@ -80,14 +80,14 @@ export default function CommitteeRow({
               disabled={loading}
               className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? "…" : "Speichern"}
+              {loading ? "…" : t("common.save", locale)}
             </button>
             <button
               type="button"
               onClick={() => { setEditing(false); setName(committee.name); setError(null); }}
               className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
-              Abbrechen
+              {t("common.cancel", locale)}
             </button>
           </>
         ) : (
@@ -97,7 +97,7 @@ export default function CommitteeRow({
               onClick={() => setEditing(true)}
               className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
-              Edit
+              {t("common.edit", locale)}
             </button>
             <button
               type="button"
@@ -105,7 +105,7 @@ export default function CommitteeRow({
               disabled={loading}
               className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30"
             >
-              Delete
+              {t("common.delete", locale)}
             </button>
           </>
         )}
