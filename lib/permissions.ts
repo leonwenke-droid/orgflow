@@ -8,6 +8,9 @@ import type { DbRole } from "../types";
 /** Roles that can manage org (teams, tasks, shifts, members) */
 export const ADMIN_ROLES: DbRole[] = ["super_admin", "admin", "owner", "lead"];
 
+/** Roles that can view/manage finance */
+export const FINANCE_ROLES: DbRole[] = ["super_admin", "owner", "admin", "lead", "finance"];
+
 /** Roles that can manage tasks within their team */
 export const TEAM_LEAD_ROLES: DbRole[] = ["admin", "owner", "lead"];
 
@@ -27,6 +30,10 @@ export function canManageTeamTasks(role: DbRole | null | undefined): boolean {
 
 export function canView(role: DbRole | null | undefined): boolean {
   return role != null && (MEMBER_ROLES.includes(role) || VIEWER_ROLES.includes(role));
+}
+
+export function canViewFinance(role: DbRole | null | undefined): boolean {
+  return role != null && FINANCE_ROLES.includes(role);
 }
 
 export function isReadOnly(role: DbRole | null | undefined): boolean {

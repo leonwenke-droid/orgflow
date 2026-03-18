@@ -3,11 +3,11 @@ import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import TreasuryUploadForm from "../../../components/TreasuryUploadForm";
 import TreasuryEntryForm from "../../../components/TreasuryEntryForm";
-import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import { getCurrentOrganization, isOrgAdmin, getCurrentUserOrganization } from "../../../lib/getOrganization";
+import { getCurrentOrganization, getCurrentUserOrganization } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { formatCurrency } from "../../../lib/currency";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+import { canViewFinance } from "../../../lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -35,17 +35,16 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
     );
   }
 
-  const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
+  const { data: profile } = await supabase
     .from("profiles")
     .select("id, role, organization_id")
     .eq("auth_user_id", userId)
     .single();
 
-  if (!profile || !["admin", "lead", "super_admin"].includes(profile.role)) {
+  if (!profile || !canViewFinance((profile as { role?: any }).role)) {
     return (
       <p className="text-sm text-red-300">
-        Access only for admins & team leads.
+        Access only for authorised roles.
       </p>
     );
   }
@@ -54,7 +53,8 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   if (orgSlug) {
     try {
       const org = await getCurrentOrganization(orgSlug);
-      if (await isOrgAdmin(org.id)) orgId = org.id;
+      // Finance access is enforced by RLS on treasury tables; here we only resolve orgId.
+      orgId = org.id;
     } catch {
       orgId = null;
     }
@@ -66,7 +66,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   if (orgId) {
     const userOrg = await getCurrentUserOrganization();
     if (!effectiveOrgSlug && userOrg?.slug) effectiveOrgSlug = userOrg.slug;
-    const { data: orgRow } = await service.from("organizations").select("settings").eq("id", orgId).single();
+    const { data: orgRow } = await supabase.from("organizations").select("settings").eq("id", orgId).single();
     orgSettings = (orgRow?.settings as { currency?: string }) ?? {};
   }
 
@@ -75,7 +75,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   const currencyCode = orgSettings.currency ?? "EUR";
   const localeForCurrency = locale === "de" ? "de-DE" : "en-GB";
 
-  let treasuryQuery = service
+  let treasuryQuery = supabase
     .from("treasury_updates")
     .select("amount, created_at")
     .order("created_at", { ascending: false })
@@ -86,7 +86,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   let entries: { id: string; date: string; description: string | null; amount_cents: number; type: string }[] = [];
   if (orgId) {
     try {
-      const { data: entriesData } = await service
+      const { data: entriesData } = await supabase
         .from("treasury_entries")
         .select("id, date, description, amount_cents, type")
         .eq("organization_id", orgId)

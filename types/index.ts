@@ -4,7 +4,7 @@
 
 export type OrgRole = "owner" | "admin" | "team_lead" | "member" | "viewer";
 
-export type DbRole = "super_admin" | "admin" | "lead" | "member" | "owner" | "viewer";
+export type DbRole = "super_admin" | "owner" | "admin" | "lead" | "finance" | "member" | "viewer";
 // DB uses: admin, lead, member. owner/viewer added via migration for future.
 
 export interface OrgMember {

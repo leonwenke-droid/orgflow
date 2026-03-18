@@ -114,7 +114,7 @@ export async function isOrgAdmin(orgId: string): Promise<boolean> {
   return (
     profile?.status !== "disabled" &&
     (profile?.role === "super_admin" ||
-      ((profile?.role === "admin" || profile?.role === "lead") &&
+      ((profile?.role === "admin" || profile?.role === "lead" || profile?.role === "owner") &&
         profile?.organization_id === orgId))
   );
 }

@@ -3,8 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import { getCurrentUserOrganization } from "../../../lib/getOrganization";
+import { canViewFinance } from "../../../lib/permissions";
 import { parseTreasuryAmount } from "../../../lib/currency";
 
 export async function addTreasuryEntryAction(
@@ -15,14 +14,13 @@ export async function addTreasuryEntryAction(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id) return { error: "Not signed in." };
 
-  const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
+  const { data: profile } = await supabase
     .from("profiles")
     .select("id, role, organization_id")
     .eq("auth_user_id", user.id)
     .single();
-  if (!profile || !["admin", "lead", "super_admin"].includes(profile.role))
-    return { error: "Access only for admins and team leads." };
+  if (!profile || !canViewFinance((profile as { role?: any }).role))
+    return { error: "Access only for authorised roles." };
 
   const orgId = organizationId || (profile as { organization_id?: string }).organization_id;
   if (!orgId) return { error: "Organization required." };
@@ -37,7 +35,7 @@ export async function addTreasuryEntryAction(
   const amountCents = Math.round(amount * 100);
   const amountCentsSigned = type === "expense" ? -Math.abs(amountCents) : Math.abs(amountCents);
 
-  const { error } = await service.from("treasury_entries").insert({
+  const { error } = await supabase.from("treasury_entries").insert({
     organization_id: orgId,
     date,
     description,
