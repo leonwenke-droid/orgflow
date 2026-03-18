@@ -1,6 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import type { DbRole } from "../types";
 
 /** Feste Org-ID für den Jahrgang TGG (alle Profile/Scores haben organization_id = diese ID). */
 export const TGG_ORG_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
@@ -117,6 +118,22 @@ export async function isOrgAdmin(orgId: string): Promise<boolean> {
       ((profile?.role === "admin" || profile?.role === "lead" || profile?.role === "owner") &&
         profile?.organization_id === orgId))
   );
+}
+
+/**
+ * Holt die Rolle des aktuellen Users in der gegebenen Organisation (für rollenbasierte UI).
+ */
+export async function getCurrentUserRoleInOrg(orgId: string): Promise<DbRole | null> {
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("auth_user_id", user.id)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  return (profile as { role?: DbRole } | null)?.role ?? null;
 }
 
 /**

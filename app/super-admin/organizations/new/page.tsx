@@ -139,7 +139,7 @@ export default async function NewOrganizationPage() {
                 className="w-full rounded border border-blue-500/30 bg-background p-2.5 text-sm text-blue-100"
               />
               <p className="mt-1 text-xs text-blue-400">
-                Subdomain: <strong>ueg-2027</strong>.abiorga.app
+                Subdomain: <strong>your-org</strong>.{process.env.NEXT_PUBLIC_ROOT_HOST || "orgflow.app"}
               </p>
             </div>
 

@@ -1,12 +1,12 @@
--- Komitees für ABI ORGA 2026 (mehrfach ausführbar)
+-- Neutrale Standard-Komitees (mehrfach ausführbar; für neue Organisationen)
 insert into committees (name)
 select name from (values
   ('Veranstaltungskomitee'),
-  ('Abibuch'),
+  ('Redaktion'),
   ('Finanzkomitee'),
-  ('Abiball'),
-  ('Socialmedia'),
-  ('Mottowoche'),
-  ('Abistreich')
+  ('Hauptveranstaltung'),
+  ('Social Media'),
+  ('Aktionen'),
+  ('Logistik')
 ) as t(name)
 where not exists (select 1 from committees c where c.name = t.name);

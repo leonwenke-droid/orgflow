@@ -4,6 +4,14 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import * as XLSX from "xlsx";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { randomUUID } from "crypto";
+import {
+  buildInviteUrl,
+  buildWhatsAppInviteText,
+  generateInviteToken,
+  hashInviteToken,
+  inviteExpiresAt
+} from "../../../lib/memberInvites";
+import { sendEmail as sendEmailMessage } from "../../../lib/email";
 
 export const runtime = "nodejs";
 
@@ -86,13 +94,25 @@ export async function POST(req: NextRequest) {
 
     const { data: org, error: orgErr } = await supabaseAuth
       .from("organizations")
-      .select("id")
+      .select("id, name")
       .or(`slug.eq.${orgSlug},subdomain.eq.${orgSlug}`)
       .eq("is_active", true)
       .single();
     if (orgErr || !org) {
       return NextResponse.json({ message: "Organisation nicht gefunden." }, { status: 404 });
     }
+    const orgName = (org as { id: string; name?: string }).name ?? "Organisation";
+
+    const service = createSupabaseServiceRoleClient();
+    const orgId = (org as { id: string }).id;
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").trim().replace(/\/$/, "");
+    const { data: requesterProfile } = await service
+      .from("profiles")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    const invitedBy = (requesterProfile as { id: string } | null)?.id ?? null;
 
     const { data: isAdmin } = await supabaseAuth.rpc("is_org_admin", {
       org_id: (org as { id: string }).id
@@ -126,10 +146,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const service = createSupabaseServiceRoleClient();
-    const orgId = (org as { id: string }).id;
-
     let created = 0;
+    const inviteLinks: { fullName: string; email?: string; inviteUrl: string; whatsappText: string }[] = [];
 
     const { data: existingProfiles } = await service
       .from("profiles")
@@ -176,6 +194,9 @@ export async function POST(req: NextRequest) {
 
         if (!fullName || existingNames.has(fullName.trim()) || (email && existingNames.has(email.toLowerCase()))) continue;
         const id = randomUUID();
+        const token = generateInviteToken();
+        const tokenHash = hashInviteToken(token);
+        const expiresAt = inviteExpiresAt();
         let committeeId: string | null = null;
         if (teamName) {
           if (!nameToCommitteeId.has(teamName)) {
@@ -200,7 +221,10 @@ export async function POST(req: NextRequest) {
           phone: phone || null,
           status: "invited",
           invite_status: "pending",
-          invited_at: new Date().toISOString()
+          invited_at: new Date().toISOString(),
+          invite_token_hash: tokenHash,
+          invite_expires_at: expiresAt.toISOString(),
+          invited_by: invitedBy
         });
         if (profErr) continue;
         if (committeeId) {
@@ -209,6 +233,28 @@ export async function POST(req: NextRequest) {
         existingNames.add(fullName.trim());
         if (email) existingNames.add(email.toLowerCase());
         created++;
+
+        const inviteUrl = buildInviteUrl(baseUrl, token);
+        const whatsappText = buildWhatsAppInviteText({
+          firstName: fullName.split(" ")[0] || null,
+          organizationName: orgName,
+          inviteUrl
+        });
+        inviteLinks.push({ fullName, email: email || undefined, inviteUrl, whatsappText });
+
+        if (email) {
+          const subject = `Invite to ${orgName} on OrgFlow`;
+          const text = [
+            `Hi${fullName ? ` ${fullName.split(" ")[0]}` : ""},`,
+            ``,
+            `you have been invited to OrgFlow for ${orgName}.`,
+            `Set your password here:`,
+            inviteUrl,
+            ``,
+            `OrgFlow`
+          ].join("\n");
+          await sendEmailMessage({ to: email, subject, text });
+        }
       }
     } else {
       const nameToRow = readRowsFromExcel(arrayBuffer);
@@ -233,6 +279,9 @@ export async function POST(req: NextRequest) {
       for (const [fullName, row] of nameToRow) {
         if (existingNames.has(fullName)) continue;
         const id = randomUUID();
+        const token = generateInviteToken();
+        const tokenHash = hashInviteToken(token);
+        const expiresAt = inviteExpiresAt();
         const role = row.leadsCommittee ? "lead" : "member";
         const committeeId = row.primaryCommittee
           ? nameToCommitteeId.get(row.primaryCommittee) ?? null
@@ -248,7 +297,10 @@ export async function POST(req: NextRequest) {
           email: null,
           status: "invited",
           invite_status: "pending",
-          invited_at: new Date().toISOString()
+          invited_at: new Date().toISOString(),
+          invite_token_hash: tokenHash,
+          invite_expires_at: expiresAt.toISOString(),
+          invited_by: invitedBy
         });
         if (profErr) continue;
 
@@ -269,13 +321,23 @@ export async function POST(req: NextRequest) {
             committeeIdsToInsert.map((cid) => ({ user_id: id, committee_id: cid }))
           );
         }
+        existingNames.add(fullName);
         created++;
+
+        const inviteUrl = buildInviteUrl(baseUrl, token);
+        const whatsappText = buildWhatsAppInviteText({
+          firstName: fullName.split(" ")[0] || null,
+          organizationName: orgName,
+          inviteUrl
+        });
+        inviteLinks.push({ fullName, inviteUrl, whatsappText });
       }
     }
 
     return NextResponse.json({
       message: `${created} Mitglieder importiert.`,
-      created
+      created,
+      inviteLinks: inviteLinks.length > 0 ? inviteLinks : undefined
     });
   } catch (e) {
     console.error(e);

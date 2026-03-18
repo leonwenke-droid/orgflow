@@ -153,7 +153,7 @@ export default async function SuperAdminDashboard() {
                     <div className="flex flex-wrap gap-3 text-xs text-blue-300">
                       <span>Slug: {org.slug}</span>
                       {org.subdomain && (
-                        <span>Subdomain: {org.subdomain}.abiorga.app</span>
+                        <span>Subdomain: {org.subdomain}.{process.env.NEXT_PUBLIC_ROOT_HOST || "orgflow.app"}</span>
                       )}
                       {org.school_city && <span>{org.school_city}</span>}
                     </div>

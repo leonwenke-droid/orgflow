@@ -3,8 +3,8 @@ import type { NextRequest } from "next/server";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 import { createClient } from "@supabase/supabase-js";
 
-// Lokal (localhost): NEXT_PUBLIC_ROOT_HOST weglassen – dann nur Pfad-URLs wie /abi-2026-tgg/dashboard
-const ROOT_HOST = process.env.NEXT_PUBLIC_ROOT_HOST; // z. B. "abiorga.app" (nur Produktion/Subdomain)
+// Lokal (localhost): NEXT_PUBLIC_ROOT_HOST weglassen – dann nur Pfad-URLs wie /my-org/dashboard
+const ROOT_HOST = process.env.NEXT_PUBLIC_ROOT_HOST; // z. B. "orgflow.app" (nur Produktion/Subdomain)
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -91,7 +91,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/", // für Subdomain-Redirect (z. B. tgg-2026.abiorga.app/ → /abi-2026-tgg/dashboard)
+    "/", // für Subdomain-Redirect (z. B. my-org.orgflow.app/ → /my-org/dashboard)
     "/admin",
     "/admin/:path*",
     "/dashboard",
@@ -101,6 +101,6 @@ export const config = {
     "/:org/admin",
     "/:org/admin/:path*",
     "/:org/login", // Org-Login erreichbar halten
-    "/:org", // ein Segment, z. B. /abi-2026-tgg
+    "/:org", // ein Segment, z. B. /my-org
   ]
 };

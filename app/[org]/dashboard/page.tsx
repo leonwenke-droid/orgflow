@@ -13,8 +13,9 @@ import OnboardingBanner from "../../../components/OnboardingBanner";
 import OnboardingChecklist from "../../../components/OnboardingChecklist";
 import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
-import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin } from "../../../lib/getOrganization";
-import { localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin, getCurrentUserRoleInOrg } from "../../../lib/getOrganization";
+import { canViewFinance } from "../../../lib/permissions";
+import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -198,9 +199,9 @@ export default async function OrgDashboardPage({
   if (!canAccessOrgData) {
     return (
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Access denied</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t("common.access_denied", locale)}</h1>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Please use the account that was invited to this organisation.
+          {t("dashboard.use_invited_account", locale)}
         </p>
       </div>
     );
@@ -210,6 +211,8 @@ export default async function OrgDashboardPage({
   const { treasury, aggregate, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
     await getData(orgIdForData);
   const userIsAdmin = await isOrgAdmin(orgIdForData);
+  const userRole = await getCurrentUserRoleInOrg(orgIdForData);
+  const userCanViewFinance = canViewFinance(userRole);
 
   const livechartCommittees = committees.filter(
     (c) => !/Jahrgangssprecher/i.test(c.name)
@@ -219,18 +222,18 @@ export default async function OrgDashboardPage({
     <div className="space-y-8">
       <header className="space-y-1">
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-          Dashboard
+          {t("dashboard.title", locale)}
         </h1>
         <p className="text-sm text-gray-600">
           {org.school_short && `${org.school_short} · `}
-          Overview of treasury, tasks and shifts
+          {t("dashboard.overview_subtitle", locale)}
         </p>
         <p className="pt-2">
           <a
             href={`/${orgSlug}/login`}
             className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
           >
-            Sign in
+            {t("common.sign_in", locale)}
           </a>
         </p>
       </header>
@@ -251,13 +254,13 @@ export default async function OrgDashboardPage({
         {[
           {
             icon: CheckSquare,
-            label: "Open Tasks",
+            label: t("dashboard.open_tasks", locale),
             value: aggregate.total_open,
-            sub: "tasks need attention"
+            sub: t("dashboard.tasks_need_attention", locale)
           },
           {
             icon: CalendarDays,
-            label: "Upcoming Shifts",
+            label: t("dashboard.upcoming_shifts", locale),
             value: (shifts as { date: string }[]).filter((s) => {
               const d = new Date(s.date);
               const now = new Date();
@@ -265,19 +268,21 @@ export default async function OrgDashboardPage({
               in7.setDate(in7.getDate() + 7);
               return d >= now && d <= in7;
             }).length,
-            sub: "in the next 7 days"
+            sub: t("dashboard.in_next_7_days", locale)
           },
-          {
-            icon: Wallet,
-            label: "Treasury",
-            value: treasury ? formatCurrency(treasury.amount, localeForMoney, currencyCode) : "–",
-            sub: "current balance"
-          },
+          ...(userCanViewFinance
+            ? [{
+                icon: Wallet,
+                label: t("dashboard.finance", locale),
+                value: treasury ? formatCurrency(treasury.amount, localeForMoney, currencyCode) : "–",
+                sub: t("dashboard.current_balance", locale)
+              }]
+            : []),
           {
             icon: Users,
-            label: "Members",
+            label: t("dashboard.members", locale),
             value: activity.total_members,
-            sub: "in this organisation"
+            sub: t("dashboard.in_this_org", locale)
           }
         ].map(({ icon: Icon, label, value, sub }) => (
           <div
@@ -328,10 +333,10 @@ export default async function OrgDashboardPage({
       <section className="space-y-4">
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            Shift plan
+            {t("dashboard.shift_plan", locale)}
           </h2>
           <p className="mt-1 text-xs text-gray-600">
-            Use ← / → to switch weeks · Tap day card for details
+            {t("dashboard.shift_plan_hint", locale)}
           </p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">

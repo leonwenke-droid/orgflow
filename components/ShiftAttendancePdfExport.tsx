@@ -187,9 +187,10 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
               doc.setTextColor(...redText);
               if (repName) {
                 doc.text(`✗ ${name}`, textX, blockY + blockPad + LINE * 0.8);
-                doc.text(`Ersatz: `, textX, blockY + blockPad + LINE + LINE * 0.8);
+                const ersatzLabel = t("shifts.replacement_label", locale);
+                doc.text(ersatzLabel, textX, blockY + blockPad + LINE + LINE * 0.8);
                 doc.setTextColor(...blue);
-                const ersatzLabelW = doc.getTextWidth("Ersatz: ");
+                const ersatzLabelW = doc.getTextWidth(ersatzLabel);
                 doc.text(repName, textX + ersatzLabelW, blockY + blockPad + LINE + LINE * 0.8);
               } else {
                 const txt = `✗ ${name}`;
@@ -204,7 +205,7 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
               doc.setDrawColor(...amberText);
               doc.rect(blockX, blockY, blockW, blockH, "S");
               doc.setTextColor(...amberText);
-              doc.text(`– ${name}  offen`, textX, blockY + blockPad + LINE * 0.8);
+              doc.text(`– ${name}  ${t("shifts.status_open", locale)}`, textX, blockY + blockPad + LINE * 0.8);
             }
             y += blockH + blockGap;
           }
@@ -215,7 +216,7 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
     }
 
     doc.save(`Anwesenheit-Schichtplan-${new Date().toISOString().slice(0, 10)}.pdf`);
-  }, [shifts, profileNames]);
+  }, [shifts, profileNames, locale]);
 
   if (!shifts || shifts.length === 0) return null;
 
@@ -225,7 +226,7 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
       onClick={exportPdf}
       className="rounded bg-gray-100 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
     >
-      Anwesenheit als PDF exportieren
+      {t("shifts.export_attendance_pdf", locale)}
     </button>
   );
 }

@@ -29,12 +29,12 @@ if (!url || !key) {
 /** Nur diese Komitees bleiben (wie in supabase/migrations/20260210110000_seed_committees.sql) */
 const SEED_COMMITTEE_NAMES = new Set([
   "Veranstaltungskomitee",
-  "Abibuch",
+  "Redaktion",
   "Finanzkomitee",
-  "Abiball",
-  "Socialmedia",
-  "Mottowoche",
-  "Abistreich"
+  "Hauptveranstaltung",
+  "Social Media",
+  "Aktionen",
+  "Logistik"
 ]);
 
 const supabase = createClient(url, key);

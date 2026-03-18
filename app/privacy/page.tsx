@@ -125,12 +125,17 @@ export default async function PrivacyPage() {
 
         <section className="space-y-2">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            {isDe ? "6. Speicherdauer" : "6. Retention"}
+            {isDe ? "6. Speicherdauer und Löschkonzept" : "6. Retention and deletion"}
           </h2>
           <p>
             {isDe
               ? "Daten werden nur so lange gespeichert, wie es für die jeweiligen Zwecke erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen."
               : "Data is stored only as long as necessary for the purposes described or as required by law."}
+          </p>
+          <p>
+            {isDe
+              ? "Sie können jederzeit über die Einstellungen in OrgFlow einen Datenexport anfordern und eine Löschanfrage stellen. Nach Bestätigung durch den Verantwortlichen werden Ihre Daten gelöscht, soweit nicht Aufbewahrungspflichten entgegenstehen. Organisationen können zudem nach Projektende eine Bereinigung anfragen."
+              : "You can request a data export and a deletion request at any time via the settings in OrgFlow. After confirmation by the controller, your data will be deleted unless retention obligations apply. Organisations may also request cleanup after project end."}
           </p>
         </section>
 
@@ -140,8 +145,8 @@ export default async function PrivacyPage() {
           </h2>
           <p>
             {isDe
-              ? "Sie haben Rechte auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21) nach DSGVO."
-              : "You have rights of access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction (Art. 18), portability (Art. 20) and objection (Art. 21) under the GDPR."}
+              ? "Sie haben Rechte auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21) nach DSGVO. In der App können Sie unter Einstellungen Ihre Daten exportieren und eine Löschanfrage stellen."
+              : "You have rights of access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction (Art. 18), portability (Art. 20) and objection (Art. 21) under the GDPR. In the app you can export your data and submit a deletion request via Settings."}
           </p>
           <p>
             {isDe ? "Kontakt für Anfragen:" : "Contact for requests:"}{" "}

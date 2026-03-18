@@ -201,7 +201,7 @@ export default function ShiftPlanTableWithEdit({
                     {name}
                   </button>
                 </div>
-                {replacementName && <div className="mt-1 pl-4 text-[10px] text-gray-600 truncate">Ersatz: {replacementName}</div>}
+                {replacementName && <div className="mt-1 pl-4 text-[10px] text-gray-600 truncate">{t("shifts.replacement_label", locale).trim()}: {replacementName}</div>}
               </li>
             );
           }
@@ -219,17 +219,17 @@ export default function ShiftPlanTableWithEdit({
               ) : (
                 <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await markAssignmentNotAttended(a.id, uid); setNotAttendedAssignmentId(null); router.refresh(); }} className="space-y-1.5">
                   <div>
-                    <label className="mb-0.5 block text-[10px] text-gray-600">Ersatz</label>
+                    <label className="mb-0.5 block text-[10px] text-gray-600">{t("shifts.replacement", locale)}</label>
                     <select name="replacement_user_id" className="max-w-full rounded border border-gray-300 bg-white px-1.5 py-1.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:py-0.5">
-                      <option value="">–</option>
+                      <option value="">{t("shifts.no_replacement", locale)}</option>
                       {membersSortedByLoad.filter((m) => m.id !== a.user_id).map((m) => (
                         <option key={m.id} value={m.id}>{m.full_name}</option>
                       ))}
                     </select>
                   </div>
                   <div className="flex gap-1.5">
-                    <SubmitButtonWithSpinner className="rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">OK</SubmitButtonWithSpinner>
-                    <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-blue-100 sm:px-1.5 sm:py-0.5">Abbr.</button>
+                    <SubmitButtonWithSpinner className="rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">{t("common.ok", locale)}</SubmitButtonWithSpinner>
+                    <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-blue-100 sm:px-1.5 sm:py-0.5">{t("common.cancel_short", locale)}</button>
                   </div>
                 </form>
               )}
@@ -271,16 +271,16 @@ export default function ShiftPlanTableWithEdit({
                         {eventName || "—"}
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
-                        <button type="button" onClick={() => { setEditingShifts(dayShifts); setEditingPersonsOnly(false); }} className="flex min-h-[36px] items-center justify-center rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 sm:min-h-0" title="Veranstaltung bearbeiten">✎</button>
+                        <button type="button" onClick={() => { setEditingShifts(dayShifts); setEditingPersonsOnly(false); }} className="flex min-h-[36px] items-center justify-center rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 sm:min-h-0" title={t("shifts.edit_event", locale)}>✎</button>
                         <form action={deleteEventShifts} className="inline">
                           <input type="hidden" name="eventName" value={eventName} />
                           <input type="hidden" name="eventDate" value={dateStr} />
                           <SubmitButtonWithSpinner
                             className="flex min-h-[36px] items-center justify-center rounded bg-red-100 px-2 py-1 text-[10px] text-red-600 hover:bg-red-200 disabled:opacity-70 sm:min-h-0"
-                            title="Delete event"
+                            title={t("shifts.delete_event", locale)}
                             loadingLabel="…"
                           >
-                            Delete
+                            {t("common.delete", locale)}
                           </SubmitButtonWithSpinner>
                         </form>
                       </div>

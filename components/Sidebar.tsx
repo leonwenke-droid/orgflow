@@ -43,8 +43,9 @@ type OrgModules = {
   events?: boolean;
 };
 
-function getNavSections(org: string, modules?: OrgModules): { title: string; items: NavItem[] }[] {
+function getNavSections(org: string, modules?: OrgModules, canViewFinance?: boolean): { title: string; items: NavItem[] }[] {
   const m = modules ?? {};
+  const showFinance = (m.finance !== false) && (canViewFinance !== false);
   const core: NavItem[] = [
     { href: `/${org}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
     ...(m.tasks !== false ? [{ href: `/${org}/admin/tasks`, label: "Tasks", icon: CheckSquare }] : []),
@@ -54,7 +55,7 @@ function getNavSections(org: string, modules?: OrgModules): { title: string; ite
   ];
   const orgItems: NavItem[] = [
     ...(m.resources !== false ? [{ href: `/${org}/admin/materials`, label: "Resources", icon: Package }] : []),
-    ...(m.finance !== false ? [{ href: `/${org}/admin/treasury`, label: "Finance", icon: Wallet }] : []),
+    ...(showFinance ? [{ href: `/${org}/admin/treasury`, label: "Finance", icon: Wallet }] : []),
     ...(m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, label: "Engagement", icon: Trophy }] : []),
     ...(m.events ? [{ href: `/${org}/admin/events`, label: "Events", icon: CalendarRange }] : []),
   ];
@@ -80,11 +81,13 @@ export default function Sidebar({
   const searchParams = useSearchParams();
   const [orgName, setOrgName] = useState<string | null>(null);
   const [modules, setModules] = useState<OrgModules | null>(null);
+  const [canViewFinance, setCanViewFinance] = useState<boolean>(true);
 
   useEffect(() => {
     if (!orgSlug) {
       setOrgName(null);
       setModules(null);
+      setCanViewFinance(true);
       return;
     }
     let cancelled = false;
@@ -94,6 +97,7 @@ export default function Sidebar({
         if (!cancelled && data) {
           if (data.name) setOrgName(data.name);
           if (data.modules) setModules(data.modules);
+          setCanViewFinance(data.canViewFinance !== false);
         }
       })
       .catch(() => {});
@@ -135,7 +139,7 @@ export default function Sidebar({
         </div>
       )}
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
-        {getNavSections(orgSlug, modules ?? undefined)
+        {getNavSections(orgSlug, modules ?? undefined, canViewFinance)
         .filter((s) => s.items.length > 0)
         .map((section) => (
           <div key={section.title}>
