@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
       events: features.events === true,
     },
     role: role ?? undefined,
-    canViewFinance: !!(user && role != null && canViewFinance(role)),
+    // Rolle unbekannt (null) → Finanzen anzeigen (Fail-open), damit Admins nicht ausgesperrt werden
+    canViewFinance: !user ? false : (role == null || canViewFinance(role)),
   });
 }

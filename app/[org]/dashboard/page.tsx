@@ -212,7 +212,8 @@ export default async function OrgDashboardPage({
     await getData(orgIdForData);
   const userIsAdmin = await isOrgAdmin(orgIdForData);
   const userRole = await getCurrentUserRoleInOrg(orgIdForData);
-  const userCanViewFinance = canViewFinance(userRole);
+  // Finanzen anzeigen: wenn Rolle berechtigt, oder unbekannt (Fail-open), oder Nutzer ist Org-Admin
+  const userCanViewFinance = userRole == null || canViewFinance(userRole) || userIsAdmin;
 
   const livechartCommittees = committees.filter(
     (c) => !/Jahrgangssprecher/i.test(c.name)
