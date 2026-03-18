@@ -1,8 +1,8 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
-import { hashInviteToken } from "../../../../lib/memberInvites";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { hashInviteToken } from "../../../lib/memberInvites";
 import InviteActivationClient from "./InviteActivationClient";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export default async function InvitePage({
   const service = createSupabaseServiceRoleClient();
   const { data: member } = await service
     .from("profiles")
-    .select("id, full_name, email, status, invite_status, invite_expires_at, organization:organizations(id, name, slug)")
+    .select("id, full_name, email, status, invite_status, invite_expires_at, organization:organizations!profiles_organization_id_fkey(id, name, slug)")
     .eq("invite_token_hash", tokenHash)
     .maybeSingle();
 
@@ -37,7 +37,11 @@ export default async function InvitePage({
     );
   }
 
-  const org = (member as { organization?: { id: string; name: string; slug: string } | null }).organization;
+  const orgRaw = (member as { organization?: unknown }).organization;
+  const org =
+    Array.isArray(orgRaw)
+      ? (orgRaw[0] as { id: string; name: string; slug: string } | undefined)
+      : (orgRaw as { id: string; name: string; slug: string } | null | undefined);
   if (!org?.slug) notFound();
 
   const cookieStore = await cookies();

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
-import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../../lib/getOrganization";
-import { buildInviteUrl, buildWhatsAppInviteText, generateInviteToken, hashInviteToken, inviteExpiresAt } from "../../../../../lib/memberInvites";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
+import { buildInviteUrl, buildWhatsAppInviteText, generateInviteToken, hashInviteToken, inviteExpiresAt } from "../../../../lib/memberInvites";
 
 function getBaseUrl(): string {
   const fromEnv = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
