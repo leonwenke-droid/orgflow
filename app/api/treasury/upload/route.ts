@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { DEFAULT_CURRENCY, formatCurrency, parseTreasuryAmount } from "../../../../lib/currency";
+import { cookies } from "next/headers";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { canViewFinance } from "../../../../lib/permissions";
 
 export const runtime = "nodejs";
 
@@ -10,8 +12,30 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const mode = (formData.get("mode")?.toString() || "excel").toLowerCase();
 
-    const supabase = createSupabaseServiceRoleClient();
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ message: "Sign in required.", errorKey: "tasks.not_logged_in" }, { status: 401 });
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, organization_id, status")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    if (!profile || profile.status === "disabled" || !canViewFinance((profile as { role?: any }).role)) {
+      return NextResponse.json({ message: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
+    }
+
     const organizationId = formData.get("organization_id")?.toString() || null;
+    if (!organizationId) {
+      return NextResponse.json({ message: "organization_id required." }, { status: 400 });
+    }
+    if ((profile as { organization_id?: string | null }).organization_id !== organizationId && (profile as { role?: string }).role !== "super_admin") {
+      return NextResponse.json({ message: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
+    }
+
     let currencyCode = DEFAULT_CURRENCY;
     if (organizationId) {
       const { data: org } = await supabase
@@ -41,7 +65,7 @@ export async function POST(req: NextRequest) {
       const { error } = await supabase.from("treasury_updates").insert({
         amount,
         source: "Manuelle Eingabe",
-        ...(organizationId ? { organization_id: organizationId } : {})
+        organization_id: organizationId
       });
 
       if (error) {
@@ -93,7 +117,7 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.from("treasury_updates").insert({
       amount,
       source: `Excel Upload (${cellRef})`,
-      ...(organizationId ? { organization_id: organizationId } : {})
+      organization_id: organizationId
     });
 
     if (error) {
