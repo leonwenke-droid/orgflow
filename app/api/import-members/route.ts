@@ -20,6 +20,14 @@ function parseCommitteeList(val: unknown): string[] {
     .filter(Boolean);
 }
 
+function normalizeHeader(val: unknown): string {
+  return String(val ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^\wäöüß]/g, "");
+}
+
 function readRowsFromExcel(buffer: ArrayBuffer): Map<
   string,
   { score: number; primaryCommittee: string | null; allCommittees: string[]; leadsCommittee: boolean }
@@ -97,8 +105,21 @@ export async function POST(req: NextRequest) {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const nameToRow = readRowsFromExcel(arrayBuffer);
-    if (nameToRow.size === 0) {
+    const wb = XLSX.read(arrayBuffer, { type: "array" });
+    const sheet = wb.Sheets["Members"] ?? wb.Sheets["Mitglieder"] ?? wb.Sheets[wb.SheetNames[0]];
+    if (!sheet) throw new Error("Kein Arbeitsblatt gefunden.");
+    const data = XLSX.utils.sheet_to_json(sheet as XLSX.WorkSheet, { header: 1 }) as unknown[][];
+    const headerRow = data[0] ?? [];
+    const headers = headerRow.map((h) => normalizeHeader(h));
+    const genericMode = headers.some((h) => ["first_name", "vorname", "full_name", "name"].includes(h));
+    const nameToRow = genericMode ? null : readRowsFromExcel(arrayBuffer);
+    if (genericMode && data.length <= 1) {
+      return NextResponse.json(
+        { message: "Keine gültigen Zeilen in der Mitglieder-Datei gefunden." },
+        { status: 400 }
+      );
+    }
+    if (!genericMode && (nameToRow?.size ?? 0) === 0) {
       return NextResponse.json(
         { message: "Keine gültigen Zeilen in der Excel-Datei (Sheet 'Engagement Overview' oder erstes Sheet, Spalte A = Name)." },
         { status: 400 }
@@ -108,12 +129,17 @@ export async function POST(req: NextRequest) {
     const service = createSupabaseServiceRoleClient();
     const orgId = (org as { id: string }).id;
 
+    let created = 0;
+
     const { data: existingProfiles } = await service
       .from("profiles")
-      .select("id, full_name")
+      .select("id, full_name, email")
       .eq("organization_id", orgId);
     const existingNames = new Set(
-      (existingProfiles ?? []).map((p: { full_name: string | null }) => (p.full_name ?? "").trim())
+      (existingProfiles ?? []).flatMap((p: { full_name: string | null; email?: string | null }) => [
+        (p.full_name ?? "").trim(),
+        (p.email ?? "").trim().toLowerCase()
+      ]).filter(Boolean)
     );
 
     const { data: committees } = await service
@@ -124,62 +150,127 @@ export async function POST(req: NextRequest) {
       (committees ?? []).map((c: { id: string; name: string }) => [c.name, c.id])
     );
 
-    const committeeNamesFromExcel = new Set<string>();
-    for (const row of nameToRow.values()) {
-      if (row.primaryCommittee) committeeNamesFromExcel.add(row.primaryCommittee);
-      row.allCommittees.forEach((n) => committeeNamesFromExcel.add(n));
-    }
-    for (const name of committeeNamesFromExcel) {
-      if (!nameToCommitteeId.has(name)) {
-        const { data: inserted, error: insErr } = await service
-          .from("committees")
-          .insert({ name, organization_id: orgId })
-          .select("id")
-          .single();
-        if (!insErr && inserted) {
-          nameToCommitteeId.set(name, (inserted as { id: string }).id);
+    if (genericMode) {
+      const nameIdx = headers.findIndex((h) => ["full_name", "name"].includes(h));
+      const firstNameIdx = headers.findIndex((h) => h === "first_name" || h === "vorname");
+      const lastNameIdx = headers.findIndex((h) => h === "last_name" || h === "nachname");
+      const emailIdx = headers.findIndex((h) => h === "email" || h === "e_mail");
+      const phoneIdx = headers.findIndex((h) => h === "phone" || h === "telefon");
+      const roleIdx = headers.findIndex((h) => h === "role" || h === "rolle");
+      const teamIdx = headers.findIndex((h) => ["team", "team_name", "gruppe", "committee"].includes(h));
+
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i] ?? [];
+        const firstName = String((firstNameIdx >= 0 ? row[firstNameIdx] : "") ?? "").trim();
+        const lastName = String((lastNameIdx >= 0 ? row[lastNameIdx] : "") ?? "").trim();
+        const fullName =
+          String((nameIdx >= 0 ? row[nameIdx] : "") ?? "").trim() ||
+          `${firstName} ${lastName}`.trim();
+        const email = String((emailIdx >= 0 ? row[emailIdx] : "") ?? "").trim();
+        const phone = String((phoneIdx >= 0 ? row[phoneIdx] : "") ?? "").trim();
+        const roleRaw = String((roleIdx >= 0 ? row[roleIdx] : "") ?? "").trim().toLowerCase();
+        const role = roleRaw === "admin" || roleRaw === "owner" || roleRaw === "lead" || roleRaw === "viewer"
+          ? roleRaw
+          : "member";
+        const teamName = String((teamIdx >= 0 ? row[teamIdx] : "") ?? "").trim();
+
+        if (!fullName || existingNames.has(fullName.trim()) || (email && existingNames.has(email.toLowerCase()))) continue;
+        const id = randomUUID();
+        let committeeId: string | null = null;
+        if (teamName) {
+          if (!nameToCommitteeId.has(teamName)) {
+            const { data: inserted } = await service
+              .from("committees")
+              .insert({ name: teamName, organization_id: orgId })
+              .select("id")
+              .single();
+            if (inserted) nameToCommitteeId.set(teamName, (inserted as { id: string }).id);
+          }
+          committeeId = nameToCommitteeId.get(teamName) ?? null;
+        }
+
+        const { error: profErr } = await service.from("profiles").insert({
+          id,
+          full_name: fullName,
+          role,
+          committee_id: committeeId,
+          organization_id: orgId,
+          auth_user_id: null,
+          email: email || null,
+          phone: phone || null,
+          status: "invited",
+          invite_status: "pending",
+          invited_at: new Date().toISOString()
+        });
+        if (profErr) continue;
+        if (committeeId) {
+          await service.from("profile_committees").insert([{ user_id: id, committee_id: committeeId }]);
+        }
+        existingNames.add(fullName.trim());
+        if (email) existingNames.add(email.toLowerCase());
+        created++;
+      }
+    } else {
+      const nameToRow = readRowsFromExcel(arrayBuffer);
+      const committeeNamesFromExcel = new Set<string>();
+      for (const row of nameToRow.values()) {
+        if (row.primaryCommittee) committeeNamesFromExcel.add(row.primaryCommittee);
+        row.allCommittees.forEach((n) => committeeNamesFromExcel.add(n));
+      }
+      for (const name of committeeNamesFromExcel) {
+        if (!nameToCommitteeId.has(name)) {
+          const { data: inserted, error: insErr } = await service
+            .from("committees")
+            .insert({ name, organization_id: orgId })
+            .select("id")
+            .single();
+          if (!insErr && inserted) {
+            nameToCommitteeId.set(name, (inserted as { id: string }).id);
+          }
         }
       }
-    }
 
-    let created = 0;
-    for (const [fullName, row] of nameToRow) {
-      if (existingNames.has(fullName)) continue;
-      const id = randomUUID();
-      const role = row.leadsCommittee ? "lead" : "member";
-      const committeeId = row.primaryCommittee
-        ? nameToCommitteeId.get(row.primaryCommittee) ?? null
-        : null;
+      for (const [fullName, row] of nameToRow) {
+        if (existingNames.has(fullName)) continue;
+        const id = randomUUID();
+        const role = row.leadsCommittee ? "lead" : "member";
+        const committeeId = row.primaryCommittee
+          ? nameToCommitteeId.get(row.primaryCommittee) ?? null
+          : null;
 
-      const { error: profErr } = await service.from("profiles").insert({
-        id,
-        full_name: fullName,
-        role,
-        committee_id: committeeId,
-        organization_id: orgId,
-        auth_user_id: null,
-        email: null
-      });
-      if (profErr) continue;
-
-      if (row.score > 0) {
-        await service.from("engagement_events").insert({
-          user_id: id,
-          event_type: "score_import",
-          points: row.score,
-          source_id: null
+        const { error: profErr } = await service.from("profiles").insert({
+          id,
+          full_name: fullName,
+          role,
+          committee_id: committeeId,
+          organization_id: orgId,
+          auth_user_id: null,
+          email: null,
+          status: "invited",
+          invite_status: "pending",
+          invited_at: new Date().toISOString()
         });
-      }
+        if (profErr) continue;
 
-      const committeeIdsToInsert = [...new Set(
-        row.allCommittees.map((n) => nameToCommitteeId.get(n)).filter(Boolean) as string[]
-      )];
-      if (committeeIdsToInsert.length > 0) {
-        await service.from("profile_committees").insert(
-          committeeIdsToInsert.map((cid) => ({ user_id: id, committee_id: cid }))
-        );
+        if (row.score > 0) {
+          await service.from("engagement_events").insert({
+            user_id: id,
+            event_type: "score_import",
+            points: row.score,
+            source_id: null
+          });
+        }
+
+        const committeeIdsToInsert = [...new Set(
+          row.allCommittees.map((n) => nameToCommitteeId.get(n)).filter(Boolean) as string[]
+        )];
+        if (committeeIdsToInsert.length > 0) {
+          await service.from("profile_committees").insert(
+            committeeIdsToInsert.map((cid) => ({ user_id: id, committee_id: cid }))
+          );
+        }
+        created++;
       }
-      created++;
     }
 
     return NextResponse.json({

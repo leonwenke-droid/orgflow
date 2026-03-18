@@ -107,14 +107,15 @@ export async function isOrgAdmin(orgId: string): Promise<boolean> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, organization_id")
+    .select("role, organization_id, status")
     .eq("auth_user_id", user.id)
     .single();
 
   return (
-    profile?.role === "super_admin" ||
-    ((profile?.role === "admin" || profile?.role === "lead") &&
-      profile?.organization_id === orgId)
+    profile?.status !== "disabled" &&
+    (profile?.role === "super_admin" ||
+      ((profile?.role === "admin" || profile?.role === "lead") &&
+        profile?.organization_id === orgId))
   );
 }
 
@@ -135,10 +136,10 @@ export async function getCurrentUserOrganization(): Promise<Organization | null>
   if (rpcError || !orgId) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("organization_id")
+      .select("organization_id, status")
       .eq("auth_user_id", user.id)
       .single();
-    if (!profile?.organization_id) return null;
+    if (!profile?.organization_id || profile.status === "disabled") return null;
     let { data: org } = await supabase
       .from("organizations")
       .select("*")

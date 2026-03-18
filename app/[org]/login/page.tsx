@@ -26,7 +26,7 @@ export default async function OrgLoginPage({
   const q = typeof (searchParams as Promise<{ redirectTo?: string }>).then === "function"
     ? await (searchParams as Promise<{ redirectTo?: string }>)
     : (searchParams as { redirectTo?: string });
-  const redirectTo = q?.redirectTo?.trim() || `/${orgSlug}/admin`;
+  const redirectTo = q?.redirectTo?.trim() || `/${orgSlug}/dashboard`;
 
   return (
     <div className="mx-auto max-w-sm">
@@ -36,7 +36,7 @@ export default async function OrgLoginPage({
             Sign in – {org.name}
           </h2>
           <p className="mt-1 text-xs text-gray-600">
-            Für das Admin-Board dieses Jahrgangs.
+            Sign in to your organisation account.
           </p>
         </div>
         <AuthForm redirectTo={redirectTo} />

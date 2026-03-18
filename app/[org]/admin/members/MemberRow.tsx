@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { updateMemberNameAction, updateMemberCommitteesAction, updateMemberRoleAction, setMemberAsLeadAction, deleteMemberAction, resendLeadInviteAction } from "./actions";
+import { updateMemberNameAction, updateMemberCommitteesAction, updateMemberRoleAction, setMemberAsLeadAction, deleteMemberAction, resendLeadInviteAction, setMemberStatusAction } from "./actions";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
 
@@ -13,6 +13,9 @@ type Member = {
   committee_id?: string | null;
   email?: string | null;
   auth_user_id?: string | null;
+  status?: "invited" | "active" | "disabled" | null;
+  invite_status?: "pending" | "accepted" | "expired" | "revoked" | null;
+  invite_expires_at?: string | null;
   committee?: { name?: string } | null;
   committee_ids?: string[];
 };
@@ -26,20 +29,17 @@ export default function MemberRow({
   orgSlug,
   member,
   committees,
-  currentAuthUserId = null,
-  inviteStatus
+  currentAuthUserId = null
 }: {
   orgSlug: string;
   member: Member;
   committees: Committee[];
   currentAuthUserId?: string | null;
-  inviteStatus?: "pending" | "confirmed";
 }) {
   const { locale } = useLocale();
   const isCurrentUser = !!currentAuthUserId && member.auth_user_id === currentAuthUserId;
   const hasLeadRole = member.role === "lead" || member.role === "admin";
-  const effectiveStatus: "pending" | "confirmed" | null =
-    hasLeadRole && inviteStatus ? inviteStatus : null;
+  const effectiveStatus = member.status ?? null;
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(member.full_name ?? "");
   const [loading, setLoading] = useState(false);
@@ -51,6 +51,7 @@ export default function MemberRow({
   const [isLead, setIsLead] = useState(hasLeadRole);
   const [showLeadEmailForm, setShowLeadEmailForm] = useState(false);
   const [leadEmail, setLeadEmail] = useState(member.email ?? "");
+  const [currentInvite, setCurrentInvite] = useState<{ inviteUrl: string; whatsappText: string } | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -151,16 +152,52 @@ export default function MemberRow({
     window.location.reload();
   }
 
-  async function handleResendInvite() {
+  async function ensureInvite() {
     setLoading(true);
     setError(null);
-    const { error } = await resendLeadInviteAction(orgSlug, member.id);
+    const { error, inviteUrl, whatsappText } = await resendLeadInviteAction(orgSlug, member.id);
+    setLoading(false);
+    if (error || !inviteUrl || !whatsappText) {
+      throw new Error(error || "Invite link could not be generated.");
+    }
+    const invite = { inviteUrl, whatsappText };
+    setCurrentInvite(invite);
+    return invite;
+  }
+
+  async function handleCopyInviteLink() {
+    try {
+      const invite = currentInvite ?? await ensureInvite();
+      if (!invite) return;
+      await navigator.clipboard.writeText(invite.inviteUrl);
+      window.alert("Invite link copied.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invite link could not be generated.");
+    }
+  }
+
+  async function handleCopyWhatsAppText() {
+    try {
+      const invite = currentInvite ?? await ensureInvite();
+      if (!invite) return;
+      await navigator.clipboard.writeText(invite.whatsappText);
+      window.alert("WhatsApp invite copied.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "WhatsApp text could not be generated.");
+    }
+  }
+
+  async function handleToggleDisabled() {
+    setLoading(true);
+    setError(null);
+    const nextStatus = effectiveStatus === "disabled" ? "active" : "disabled";
+    const { error } = await setMemberStatusAction(orgSlug, member.id, nextStatus);
     setLoading(false);
     if (error) {
       setError(error);
       return;
     }
-    window.alert("Einladungs-Link wurde erneut gesendet.");
+    window.location.reload();
   }
 
   const committeeNames = committeeNamesForIds(Array.from(committeeIds), committees);
@@ -228,19 +265,33 @@ export default function MemberRow({
         )}
       </td>
       <td className="py-2 pr-3">
-        {effectiveStatus && (
-            <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${effectiveStatus === "confirmed" ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"}`}>
-            {effectiveStatus === "confirmed" ? t("members.status_confirmed", locale) : t("members.status_pending", locale)}
-          </span>
-        )}
+          {effectiveStatus && (
+            <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+              effectiveStatus === "active"
+                ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                : effectiveStatus === "disabled"
+                  ? "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+            }`}>
+              {effectiveStatus === "active"
+                ? t("members.status_active", locale)
+                : effectiveStatus === "disabled"
+                  ? t("members.status_disabled", locale)
+                  : t("members.status_pending", locale)}
+            </span>
+          )}
       </td>
       <td className="py-2">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1">
             <button type="button" onClick={handleDelete} disabled={loading} className="rounded border border-red-300 px-2 py-0.5 text-[10px] text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30">{t("common.remove", locale)}</button>
-            {hasLeadRole && effectiveStatus === "pending" && (
-              <button type="button" onClick={handleResendInvite} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/30">{t("members.resend_invite", locale)}</button>
+            {(effectiveStatus !== "active") && (
+              <>
+                <button type="button" onClick={handleCopyInviteLink} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/30">{t("members.copy_invite_link", locale)}</button>
+                <button type="button" onClick={handleCopyWhatsAppText} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/30">{t("members.copy_whatsapp_invite", locale)}</button>
+              </>
             )}
+            <button type="button" onClick={handleToggleDisabled} disabled={loading} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">{effectiveStatus === "disabled" ? t("members.reactivate", locale) : t("members.disable", locale)}</button>
           </div>
           {error && <span className="text-[10px] text-red-600 dark:text-red-400">{error}</span>}
         </div>

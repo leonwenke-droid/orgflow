@@ -3,7 +3,6 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createClient } from "@supabase/supabase-js";
 import { removePastShifts } from "../../../lib/cleanupShifts";
 import { getDashboardDisplayNames } from "../../../lib/displayName";
 import { formatWeekRangeLabel, formatDateTimeForDisplay, getTodayDateString } from "../../../lib/dateFormat";
@@ -185,29 +184,32 @@ export default async function OrgDashboardPage({
   const {
     data: { user }
   } = await supabase.auth.getUser();
+  if (!user) {
+    redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/dashboard`);
+  }
 
-  // Access check: dashboard is public, but only org members/super-admin should get full data via service role.
-  const isSuper = user ? await isSuperAdmin() : false;
-  const userOrg = user ? await getCurrentUserOrganization() : null;
-  const canAccessOrgData = !!user && (isSuper || userOrg?.id === org.id);
+  const isSuper = await isSuperAdmin();
+  const userOrg = await getCurrentUserOrganization();
+  const canAccessOrgData = isSuper || userOrg?.id === org.id;
+  if (!canAccessOrgData) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Access denied</h1>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          Please use the account that was invited to this organisation.
+        </p>
+      </div>
+    );
+  }
 
-  // Data client selection:
-  // - Org member / super-admin: use service role (avoids RLS recursion) when available
-  // - Otherwise: use anon client to keep behavior consistent with public dashboard and avoid cross-org redirects
-  const supabaseForData: SupabaseClient | undefined = canAccessOrgData
-    ? (process.env.SUPABASE_SERVICE_ROLE_KEY ? createSupabaseServiceRoleClient() : undefined)
-    : (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
-            auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-          })
-        : undefined);
+  const supabaseForData: SupabaseClient | undefined = process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createSupabaseServiceRoleClient()
+    : undefined;
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   const { treasury, aggregate, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
     await getData(orgIdForData, supabaseForData);
-  const userIsAdmin = canAccessOrgData && (await isOrgAdmin(orgIdForData));
+  const userIsAdmin = await isOrgAdmin(orgIdForData);
 
-  // IMPORTANT: Do not redirect to another organisation's dashboard.
-  // If user is logged in but not a member of this org, keep showing the public dashboard.
   const livechartCommittees = committees.filter(
     (c) => !/Jahrgangssprecher/i.test(c.name)
   );
@@ -222,21 +224,19 @@ export default async function OrgDashboardPage({
           {org.school_short && `${org.school_short} · `}
           Overview of treasury, tasks and shifts
         </p>
-        {!user && (
-          <p className="pt-2">
-            <a
-              href={`/${orgSlug}/login`}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-            >
-              Sign in
-            </a>
-          </p>
-        )}
+        <p className="pt-2">
+          <a
+            href={`/${orgSlug}/login`}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+          >
+            Sign in
+          </a>
+        </p>
       </header>
 
       {user && <OnboardingBanner />}
 
-      {user && canAccessOrgData && (
+      {canAccessOrgData && (
         <OnboardingChecklist
           orgSlug={orgSlug}
           teamsCount={committees.length}

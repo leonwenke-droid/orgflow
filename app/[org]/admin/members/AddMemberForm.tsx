@@ -22,6 +22,8 @@ export default function AddMemberForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [whatsappText, setWhatsappText] = useState<string | null>(null);
 
   const toggleCommittee = (id: string) => {
     setCommitteeIds((prev) => {
@@ -42,6 +44,8 @@ export default function AddMemberForm({
     setLoading(true);
     setError(null);
     setSuccess(false);
+    setInviteUrl(null);
+    setWhatsappText(null);
     const result = await addMemberAction(orgSlug, name, {
       email: email.trim() || undefined,
       committeeIds: Array.from(committeeIds),
@@ -57,12 +61,18 @@ export default function AddMemberForm({
       return;
     }
     setSuccess(true);
+    setInviteUrl(result.inviteUrl ?? null);
+    setWhatsappText(result.whatsappText ?? null);
     setFullName("");
     setEmail("");
     setCommitteeIds(new Set());
     setAsLead(false);
-    window.location.reload();
   };
+
+  async function copyText(text: string | null) {
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+  }
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
@@ -121,6 +131,20 @@ export default function AddMemberForm({
         )}
         {error && <p className="text-xs text-red-600">{error}</p>}
         {success && <p className="text-xs text-green-600">Member added.</p>}
+      {inviteUrl && (
+        <div className="rounded border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-100">
+          <p className="font-semibold">Invite ready</p>
+          <p className="mt-1 break-all font-mono">{inviteUrl}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" onClick={() => copyText(inviteUrl)} className="rounded bg-blue-600 px-2 py-1 text-[10px] text-white hover:bg-blue-700">
+              Copy invite link
+            </button>
+            <button type="button" onClick={() => copyText(whatsappText)} className="rounded border border-blue-300 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-900/40">
+              Copy WhatsApp text
+            </button>
+          </div>
+        </div>
+      )}
         <button
           type="submit"
           disabled={loading}

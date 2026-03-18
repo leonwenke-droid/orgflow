@@ -6,12 +6,15 @@ import { revalidatePath } from "next/cache";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { canAddMember } from "../../../../lib/planLimits";
+import {
+  buildInviteUrl,
+  buildWhatsAppInviteText,
+  generateInviteToken,
+  hashInviteToken,
+  inviteExpiresAt
+} from "../../../../lib/memberInvites";
 
 const LEGACY_DEFAULT_ORG_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
-
-const N8N_WEBHOOK_URL =
-  process.env.N8N_WEBHOOK_URL_SEND_MAGIC_LINK ||
-  "https://n8n.srv881499.hstgr.cloud/webhook/send-magic-link";
 
 function getBaseUrl(): string {
   const fromEnv = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
@@ -20,80 +23,35 @@ function getBaseUrl(): string {
   return "http://localhost:3000";
 }
 
-function formatInviteError(message: string): string {
-  const m = (message || "").toLowerCase();
-  if (m.includes("rate limit") || m.includes("rate_limit") || m.includes("too many")) {
-    return "E-Mail-Limit von Supabase erreicht. Bitte in einigen Minuten erneut versuchen oder später die Einladung erneut senden.";
-  }
-  return message;
-}
-
-/**
- * Erzeugt Einladungslink (generateLink magiclink), sendet ihn per n8n-Webhook und verknüpft ggf. das Profil mit dem Auth-User.
- * Der eingeladene Nutzer setzt sein Passwort anschließend über /auth/lead-setup.
- */
-async function sendInviteViaN8n(
+async function issueMemberInvite(
   service: ReturnType<typeof createSupabaseServiceRoleClient>,
-  email: string,
-  fullName: string,
-  orgSlug: string,
-  profileId: string | null
-): Promise<{ error: string | null }> {
-  const baseUrl = getBaseUrl();
-  const redirectTo = baseUrl
-    ? `${baseUrl}/auth/lead-setup?next=/${encodeURIComponent(orgSlug)}/admin`
-    : undefined;
-
-  const { data: linkData, error } = await service.auth.admin.generateLink({
-    type: "magiclink",
-    email,
-    options: {
-      data: { full_name: fullName },
-      ...(redirectTo && { redirectTo })
-    }
-  });
-
-  if (error) {
-    return { error: formatInviteError(error.message) };
-  }
-
-  const actionLink =
-    (linkData as { properties?: { action_link?: string } })?.properties?.action_link ??
-    (linkData as { action_link?: string })?.action_link;
-  if (!actionLink || typeof actionLink !== "string") {
-    return { error: "Invite link could not be generated." };
-  }
-
-  const subject = "Invitation as team lead – OrgFlow";
-  const body =
-    (fullName ? `Hello ${fullName.trim()},\n\n` : "Hello,\n\n") +
-    "You have been invited as a team lead. Click the link below to activate your account and set a password:\n\n" +
-    actionLink +
-    "\n\nAfter setting your password you will be redirected to the admin dashboard.\n\nBest regards\nOrgFlow Team";
-
-  const webhookRes = await fetch(N8N_WEBHOOK_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email,
-      confirmLink: actionLink,
-      fullName: fullName || undefined,
-      type: "invite",
-      subject,
-      body
+  orgId: string,
+  orgName: string,
+  profile: { id: string; full_name?: string | null; email?: string | null }
+): Promise<{ inviteUrl: string; whatsappText: string; expiresAt: string }> {
+  const token = generateInviteToken();
+  const tokenHash = hashInviteToken(token);
+  const expiresAt = inviteExpiresAt();
+  await service
+    .from("profiles")
+    .update({
+      status: "invited",
+      invite_status: "pending",
+      invite_token_hash: tokenHash,
+      invite_expires_at: expiresAt.toISOString(),
+      invited_at: new Date().toISOString(),
+      activated_at: null
     })
+    .eq("id", profile.id)
+    .eq("organization_id", orgId);
+
+  const inviteUrl = buildInviteUrl(getBaseUrl(), token);
+  const whatsappText = buildWhatsAppInviteText({
+    firstName: profile.full_name?.split(" ")?.[0] ?? null,
+    organizationName: orgName,
+    inviteUrl
   });
-
-  if (!webhookRes.ok) {
-    return { error: "Email could not be sent. Please try again later." };
-  }
-
-  const newUserId = (linkData as { user?: { id?: string }; id?: string })?.user?.id ?? (linkData as { id?: string })?.id;
-  if (profileId && newUserId && typeof newUserId === "string") {
-    await service.from("profiles").update({ auth_user_id: newUserId }).eq("id", profileId);
-  }
-
-  return { error: null };
+  return { inviteUrl, whatsappText, expiresAt: expiresAt.toISOString() };
 }
 
 /**
@@ -255,10 +213,37 @@ export async function deleteMemberAction(
   return { error: null };
 }
 
+export async function setMemberStatusAction(
+  orgSlug: string,
+  profileId: string,
+  status: "invited" | "active" | "disabled"
+): Promise<{ error: string | null; errorKey?: string }> {
+  const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+
+  const service = createSupabaseServiceRoleClient();
+  const { error } = await service
+    .from("profiles")
+    .update({
+      status,
+      invite_status: status === "disabled" ? "revoked" : status === "active" ? "accepted" : "pending",
+      ...(status === "disabled"
+        ? { invite_token_hash: null, invite_expires_at: null }
+        : {})
+    })
+    .eq("id", profileId)
+    .eq("organization_id", orgIdForData);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/${orgSlug}/admin/members`);
+  return { error: null };
+}
+
 export async function resendLeadInviteAction(
   orgSlug: string,
   profileId: string
-): Promise<{ error: string | null; errorKey?: string }> {
+): Promise<{ error: string | null; errorKey?: string; inviteUrl?: string; whatsappText?: string; expiresAt?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
@@ -272,23 +257,19 @@ export async function resendLeadInviteAction(
     .single();
 
   if (fetchErr || !profile) return { error: null, errorKey: "members.error_profile_not_found" };
-  const email = (profile as { email?: string | null }).email ?? null;
-  if (!email) return { error: "Für dieses Mitglied ist keine E-Mail hinterlegt." };
-
-  const inviteResult = await sendInviteViaN8n(
+  const inviteResult = await issueMemberInvite(
     service,
-    email,
-    (profile as { full_name?: string | null }).full_name ?? "",
-    orgSlug,
-    profileId
+    orgIdForData,
+    org.name,
+    {
+      id: profileId,
+      full_name: (profile as { full_name?: string | null }).full_name ?? "",
+      email: (profile as { email?: string | null }).email ?? null
+    }
   );
 
-  if (inviteResult.error) {
-    return { error: `Einladung konnte nicht erneut gesendet werden: ${inviteResult.error}` };
-  }
-
   revalidatePath(`/${orgSlug}/admin/members`);
-  return { error: null };
+  return { error: null, ...inviteResult };
 }
 
 /**
@@ -298,7 +279,7 @@ export async function setMemberAsLeadAction(
   orgSlug: string,
   profileId: string,
   email: string
-): Promise<{ error: string | null; errorKey?: string }> {
+): Promise<{ error: string | null; errorKey?: string; inviteUrl?: string; whatsappText?: string; expiresAt?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
@@ -309,7 +290,7 @@ export async function setMemberAsLeadAction(
   const service = createSupabaseServiceRoleClient();
   const { data: profile } = await service
     .from("profiles")
-    .select("id, full_name, auth_user_id")
+    .select("id, full_name, auth_user_id, status")
     .eq("id", profileId)
     .eq("organization_id", orgIdForData)
     .single();
@@ -318,27 +299,23 @@ export async function setMemberAsLeadAction(
 
   const { error: updateErr } = await service
     .from("profiles")
-    .update({ role: "lead", email: emailTrimmed })
+    .update({ role: "lead", email: emailTrimmed, status: "invited", invite_status: "pending" })
     .eq("id", profileId)
     .eq("organization_id", orgIdForData);
 
   if (updateErr) return { error: updateErr.message };
 
-  if (!profile.auth_user_id) {
-    const inviteResult = await sendInviteViaN8n(
+  revalidatePath(`/${orgSlug}/admin/members`);
+  if (!(profile as { auth_user_id?: string | null }).auth_user_id || (profile as { status?: string | null }).status !== "active") {
+    const inviteResult = await issueMemberInvite(
       service,
-      emailTrimmed,
-      (profile as { full_name?: string }).full_name ?? "",
-      orgSlug,
-      profileId
+      orgIdForData,
+      org.name,
+      { id: profileId, full_name: (profile as { full_name?: string }).full_name ?? "", email: emailTrimmed }
     );
-    if (inviteResult.error) {
-      revalidatePath(`/${orgSlug}/admin/members`);
-      return { error: `Als Lead gesetzt, aber Einladungs-Mail konnte nicht gesendet werden: ${inviteResult.error}` };
-    }
+    return { error: null, ...inviteResult };
   }
 
-  revalidatePath(`/${orgSlug}/admin/members`);
   return { error: null };
 }
 
@@ -350,7 +327,7 @@ export async function addMemberAction(
   orgSlug: string,
   fullName: string,
   options?: { email?: string; committeeIds?: string[]; asLead?: boolean }
-): Promise<{ error: string | null; errorKey?: string }> {
+): Promise<{ error: string | null; errorKey?: string; inviteUrl?: string; whatsappText?: string; expiresAt?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
@@ -384,7 +361,9 @@ export async function addMemberAction(
     organization_id: orgIdForData,
     committee_id: primaryCommitteeId,
     email: emailTrimmed,
-    auth_user_id: null
+    auth_user_id: null,
+    status: "invited",
+    invite_status: "pending"
   });
 
   if (error) return { error: error.message };
@@ -395,21 +374,13 @@ export async function addMemberAction(
     );
   }
 
-  if (options?.asLead && emailTrimmed) {
-    const serviceInvite = createSupabaseServiceRoleClient();
-    const inviteResult = await sendInviteViaN8n(
-      serviceInvite,
-      emailTrimmed,
-      name,
-      orgSlug,
-      id
-    );
-    if (inviteResult.error) {
-      revalidatePath(`/${orgSlug}/admin/members`);
-      return { error: `Member added, but invite email could not be sent: ${inviteResult.error}` };
-    }
-  }
+  const inviteResult = await issueMemberInvite(
+    createSupabaseServiceRoleClient(),
+    orgIdForData,
+    org.name,
+    { id, full_name: name, email: emailTrimmed }
+  );
 
   revalidatePath(`/${orgSlug}/admin/members`);
-  return { error: null };
+  return { error: null, ...inviteResult };
 }

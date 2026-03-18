@@ -1,7 +1,5 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
@@ -9,13 +7,14 @@ import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer"
 import MembersExcelUpload from "./MembersExcelUpload";
 import AddMemberForm from "./AddMemberForm";
 import MemberRow from "./MemberRow";
-import InviteLinkBlock from "./InviteLinkBlock";
 import EmptyState from "../../../../components/EmptyState";
 
 export default async function AdminMembersPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ org: string }> | { org: string };
+  searchParams?: Promise<{ status?: string }> | { status?: string };
 }) {
   const orgSlug = typeof (params as Promise<{ org: string }>).then === "function"
     ? (await (params as Promise<{ org: string }>)).org
@@ -23,6 +22,11 @@ export default async function AdminMembersPage({
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+
+  const statusParams = typeof (searchParams as Promise<{ status?: string }> | undefined)?.then === "function"
+    ? await (searchParams as Promise<{ status?: string }>)
+    : (searchParams as { status?: string } | undefined) ?? {};
+  const statusFilter = (statusParams.status ?? "all").toLowerCase();
 
   const authClient = createServerComponentClient({ cookies });
   const {
@@ -43,7 +47,7 @@ export default async function AdminMembersPage({
   // Alle mit organization_id = orgIdForData; committee = primäres Komitee, role = Lead/Admin/Member, email/auth für Lead-Einladung
   const { data: orgMembers } = await supabase
     .from("profiles")
-    .select("id, full_name, role, committee_id, email, auth_user_id, committee:committees!committee_id(name)")
+    .select("id, full_name, role, committee_id, email, auth_user_id, status, invite_status, invite_expires_at, committee:committees!committee_id(name)")
     .eq("organization_id", orgIdForData)
     .order("full_name");
 
@@ -63,7 +67,7 @@ export default async function AdminMembersPage({
   if (missingIds.length > 0) {
     const { data: extra } = await supabase
       .from("profiles")
-      .select("id, full_name, role, committee_id, email, auth_user_id, committee:committees!committee_id(name)")
+      .select("id, full_name, role, committee_id, email, auth_user_id, status, invite_status, invite_expires_at, committee:committees!committee_id(name)")
       .in("id", missingIds);
     extraMembers = (extra ?? []) as Array<{ id: string; full_name: string | null; role?: string; committee_id?: string | null; email?: string | null; auth_user_id?: string | null; committee: unknown }>;
   }
@@ -91,31 +95,10 @@ export default async function AdminMembersPage({
       ])]
     }))
     .sort((a, b) => ((a as { full_name?: string | null }).full_name ?? "").localeCompare((b as { full_name?: string | null }).full_name ?? ""));
-
-  // Einladungsstatus bestimmen (nur wenn Service-Role verfügbar, damit wir Admin-API nutzen können)
-  const inviteStatusByProfileId: Record<string, "pending" | "confirmed"> = {};
-  if (process.env.SUPABASE_SERVICE_ROLE_KEY && members.length > 0) {
-    const authIds = members
-      .map((m) => (m as { auth_user_id?: string | null }).auth_user_id)
-      .filter((id): id is string => !!id);
-    if (authIds.length > 0) {
-      const adminClient = createSupabaseServiceRoleClient();
-      const { data: listData } = await adminClient.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000
-      });
-      const byId = new Map(
-        (listData?.users ?? [])
-          .filter((u) => u.id && authIds.includes(u.id))
-          .map((u) => [u.id as string, (u as { email_confirmed_at?: string | null }).email_confirmed_at ?? null])
-      );
-      for (const m of members as Array<{ id: string; auth_user_id?: string | null }>) {
-        if (!m.auth_user_id) continue;
-        const confirmedAt = byId.get(m.auth_user_id);
-        inviteStatusByProfileId[m.id] = confirmedAt ? "confirmed" : "pending";
-      }
-    }
-  }
+  const filteredMembers =
+    statusFilter === "all"
+      ? members
+      : members.filter((m) => (m as { status?: string | null }).status === statusFilter);
 
   const committeeList = (committees ?? []).map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }));
 
@@ -126,7 +109,28 @@ export default async function AdminMembersPage({
       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage & import (organisation)</p>
 
       <div className="mt-6">
-        <InviteLinkBlock orgSlug={orgSlug} />
+        <div className="flex flex-wrap gap-2 text-xs">
+          {[
+            ["all", "All"],
+            ["invited", "Invited"],
+            ["active", "Active"],
+            ["disabled", "Disabled"]
+          ].map(([key, label]) => (
+            <a
+              key={key}
+              href={`?status=${encodeURIComponent(key)}`}
+              className={`rounded-full border px-3 py-1 ${statusFilter === key ? "border-blue-600 bg-blue-600 text-white" : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300"}`}
+            >
+              {label}
+            </a>
+          ))}
+          <a
+            href={`/api/member-invites/export?orgSlug=${encodeURIComponent(orgSlug)}`}
+            className="rounded-full border border-gray-300 px-3 py-1 text-gray-700 dark:border-gray-600 dark:text-gray-300"
+          >
+            Download pending invites
+          </a>
+        </div>
       </div>
 
       <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
@@ -162,17 +166,16 @@ export default async function AdminMembersPage({
             </tr>
           </thead>
           <tbody>
-            {(members ?? []).map((m: any) => (
+            {filteredMembers.map((m: any) => (
               <MemberRow
                 key={m.id}
                 orgSlug={orgSlug}
                 member={m}
                 committees={committeeList}
                 currentAuthUserId={currentAuthUserId}
-                inviteStatus={inviteStatusByProfileId[m.id]}
               />
             ))}
-            {(!members || members.length === 0) && (
+            {(!filteredMembers || filteredMembers.length === 0) && (
               <tr>
                 <td colSpan={5} className="p-0">
                   <EmptyState messageKey="empty.members" actionHref={`/${orgSlug}/admin/members`} actionLabelKey="cta.invite_members" className="rounded-none border-0" />

@@ -43,7 +43,7 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
     <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
       <input
         type="file"
-        accept=".xlsx,.xls"
+        accept=".xlsx,.xls,.csv"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         className="text-sm text-gray-600 file:mr-2 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white file:hover:bg-blue-700 dark:text-gray-400"
       />

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { checkRateLimit } from "../../../../lib/rateLimit";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
 
@@ -54,6 +55,24 @@ export async function POST(req: NextRequest) {
           detail: error.message
         },
         { status: 400 }
+      );
+    }
+
+    const service = createSupabaseServiceRoleClient();
+    const { data: profile } = await service
+      .from("profiles")
+      .select("id, status, organization_id, role")
+      .eq("auth_user_id", (await supabase.auth.getUser()).data.user?.id ?? null)
+      .maybeSingle();
+
+    if (profile?.status === "disabled") {
+      await supabase.auth.signOut();
+      return NextResponse.json(
+        {
+          message: "This account has been disabled. Please contact an administrator.",
+          errorKey: "members.status_disabled"
+        },
+        { status: 403 }
       );
     }
 
