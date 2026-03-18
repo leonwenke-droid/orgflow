@@ -7,6 +7,7 @@ import ToastContainer from "../components/Toast";
 import ThemeProvider from "../components/ThemeProvider";
 import { LocaleProvider } from "../components/LocaleProvider";
 import EmailVerificationBanner from "../components/EmailVerificationBanner";
+import CookieNotice from "../components/CookieNotice";
 
 export const metadata = {
   title: "OrgFlow",
@@ -43,6 +44,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   }
 
   const cookieStore = await cookies();
+  const localeCookie = cookieStore.get("orgflow-locale")?.value;
+  const locale = (localeCookie === "de" || localeCookie === "en") ? localeCookie : "en";
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -62,15 +65,29 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <main className="flex-1 pb-10">{children}</main>
             </AppShell>
             <ToastContainer />
+            <CookieNotice />
             <footer className="mt-8 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
-            <a
-              href="https://lyniqmedia.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 transition-colors hover:text-gray-700 dark:hover:text-gray-300"
-            >
-              powered by LYNIQ Media
-            </a>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <a
+                href="https://lyniqmedia.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 transition-colors hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                powered by LYNIQ Media
+              </a>
+              <div className="flex flex-wrap gap-4">
+                <a className="hover:text-gray-700 dark:hover:text-gray-300" href="/privacy">
+                  {locale === "de" ? "Datenschutz" : "Privacy"}
+                </a>
+                <a className="hover:text-gray-700 dark:hover:text-gray-300" href="/terms">
+                  {locale === "de" ? "Nutzungsbedingungen" : "Terms"}
+                </a>
+                <a className="hover:text-gray-700 dark:hover:text-gray-300" href="/imprint">
+                  {locale === "de" ? "Impressum" : "Imprint"}
+                </a>
+              </div>
+            </div>
           </footer>
         </div>
         </LocaleProvider>

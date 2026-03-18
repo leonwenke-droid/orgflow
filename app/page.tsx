@@ -414,12 +414,15 @@ export default async function LandingPage() {
             </span>
           </div>
           <div className="flex gap-6 text-sm text-gray-500">
-            <a href="#" className="hover:text-gray-700">
+            <Link href="/privacy" className="hover:text-gray-700">
               Privacy
-            </a>
-            <a href="#" className="hover:text-gray-700">
+            </Link>
+            <Link href="/terms" className="hover:text-gray-700">
               Terms
-            </a>
+            </Link>
+            <Link href="/imprint" className="hover:text-gray-700">
+              Imprint
+            </Link>
           </div>
         </div>
       </footer>

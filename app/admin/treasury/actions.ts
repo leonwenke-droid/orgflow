@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { getCurrentUserOrganization } from "../../../lib/getOrganization";
+import { parseTreasuryAmount } from "../../../lib/currency";
 
 export async function addTreasuryEntryAction(
   organizationId: string,
@@ -29,9 +30,11 @@ export async function addTreasuryEntryAction(
   const date = formData.get("date")?.toString();
   const type = formData.get("type")?.toString() as "income" | "expense" | null;
   const description = formData.get("description")?.toString()?.trim() ?? "";
-  const amountRaw = formData.get("amount_cents")?.toString();
+  const amountRaw = (formData.get("amount") ?? formData.get("amount_cents"))?.toString();
   if (!date || !type || (type !== "income" && type !== "expense")) return { error: "Date and type required." };
-  const amountCents = Math.round(parseFloat(amountRaw ?? "0") * 100);
+  const amount = parseTreasuryAmount(String(amountRaw ?? "").trim());
+  if (Number.isNaN(amount)) return { error: "Amount must be a valid number." };
+  const amountCents = Math.round(amount * 100);
   const amountCentsSigned = type === "expense" ? -Math.abs(amountCents) : Math.abs(amountCents);
 
   const { error } = await service.from("treasury_entries").insert({

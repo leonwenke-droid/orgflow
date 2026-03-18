@@ -3,7 +3,7 @@ import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer"
 
 export const runtime = "nodejs";
 
-const COHORT_NAMES = [
+const DEMO_MEMBER_NAMES = [
   "Alina Folmer",
   "Amelie Hilbrands",
   "Anja Gröger Valdez",
@@ -109,9 +109,9 @@ export async function GET(req: NextRequest) {
   });
   const existingEmails = new Set((listData?.users ?? []).map((u) => u.email?.toLowerCase()));
 
-  for (const fullName of COHORT_NAMES) {
-    const email = `${slugify(fullName)}@abi-orga.local`;
-    const password = `Abi2026-${slugify(fullName).slice(0, 8)}!`;
+  for (const fullName of DEMO_MEMBER_NAMES) {
+    const email = `${slugify(fullName)}@demo-orgflow.local`;
+    const password = `Demo-${slugify(fullName).slice(0, 10)}!`;
 
     try {
       if (existingEmails.has(email)) {
@@ -160,7 +160,7 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
-    message: "Cohort-Seed abgeschlossen.",
+    message: "Demo seed completed.",
     created: created.length,
     skipped: skipped.length,
     createdNames: created,

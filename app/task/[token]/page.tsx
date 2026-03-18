@@ -4,7 +4,7 @@ import TaskConfirmationForm from "../../../components/TaskConfirmationForm";
 import NameVerificationForm from "../../../components/NameVerificationForm";
 import { verifyTaskOwner } from "./actions";
 
-const COOKIE_NAME = "abi_task_verified";
+const COOKIE_NAME = "orgflow_task_verified";
 
 async function getTaskByToken(token: string) {
   const supabase = createSupabaseServiceRoleClient();

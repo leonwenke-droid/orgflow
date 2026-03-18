@@ -6,10 +6,12 @@ import { t } from "../lib/i18n";
 
 export default function TreasuryUploadForm({
   organizationId,
-  defaultCellRef
+  defaultCellRef,
+  currencyCode
 }: {
   organizationId?: string;
   defaultCellRef: string;
+  currencyCode?: string;
 }) {
   const { locale } = useLocale();
   const [mode, setMode] = useState<"excel" | "manual">("excel");
@@ -109,15 +111,15 @@ export default function TreasuryUploadForm({
       ) : (
         <div>
           <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-            {t("finance.balance_label", locale)}
+            {t("finance.balance_label", locale).replace("{currency}", currencyCode || "—")}
           </label>
           <input
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={manualAmount}
             onChange={(e) => setManualAmount(e.target.value)}
             className="w-40 rounded border border-gray-300 bg-white p-1.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            placeholder="1234.56"
+            placeholder={locale === "de" ? "1234,56" : "1234.56"}
           />
         </div>
       )}

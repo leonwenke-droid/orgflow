@@ -6,9 +6,11 @@ import { t } from "../lib/i18n";
 import { addTreasuryEntryAction } from "../app/admin/treasury/actions";
 
 export default function TreasuryEntryForm({
-  organizationId
+  organizationId,
+  currencyCode
 }: {
   organizationId: string;
+  currencyCode: string;
 }) {
   const { locale } = useLocale();
   const [loading, setLoading] = useState(false);
@@ -53,8 +55,18 @@ export default function TreasuryEntryForm({
           <input type="text" name="description" placeholder="" className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
         </div>
         <div>
-          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">{t("finance.entry_amount", locale)}</label>
-          <input type="number" name="amount_cents" step="0.01" required placeholder="0" className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">
+            {t("finance.entry_amount", locale).replace("{currency}", currencyCode)}
+          </label>
+          <input
+            type="text"
+            name="amount"
+            inputMode="decimal"
+            autoComplete="off"
+            required
+            placeholder={locale === "de" ? "0,00" : "0.00"}
+            className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          />
         </div>
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}

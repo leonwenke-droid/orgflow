@@ -92,7 +92,7 @@ export default function ShiftPlanTableWithEdit({
   );
   const dates = Object.keys(byDate).sort();
 
-  /** Gruppiert Schichten zu einer Veranstaltung (z. B. Karnevalsparty – 14:30–15:30 → Karnevalsparty). */
+  /** Gruppiert Schichten zu einem Event (z. B. Conference setup – 14:30–15:30 → Conference setup). */
   const eventGroupKey = (eventName: string) =>
     String(eventName ?? "")
       .trim()

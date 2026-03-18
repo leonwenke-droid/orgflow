@@ -8,18 +8,31 @@ const ROOT_HOST = process.env.NEXT_PUBLIC_ROOT_HOST; // z. B. "abiorga.app" (nur
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const PUBLIC_PREFIXES = ["/login", "/task", "/api", "/_next", "/create-organisation", "/join"];
+const PUBLIC_PREFIXES = [
+  "/login",
+  "/task",
+  "/invite",
+  "/privacy",
+  "/terms",
+  "/imprint",
+  "/api",
+  "/_next",
+  "/create-organisation",
+  "/join"
+];
 
-// Login nur für Admin (Jahrgang) und Super-Admin. Dashboard (Jahrgang) ist ohne Login erreichbar.
+// Geschützte Bereiche: Admin/Settings/Onboarding/Dashboard erfordern Login.
 function requiresAuth(pathname: string): boolean {
   if (PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/")))
     return false;
   if (pathname.startsWith("/admin")) return true;
+  if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return true;
   if (pathname.startsWith("/super-admin")) return true;
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length >= 2 && segments[1] === "admin") return true;
   if (segments.length >= 2 && segments[1] === "settings") return true;
   if (segments.length >= 2 && segments[1] === "onboarding") return true;
+  if (segments.length >= 2 && segments[1] === "dashboard") return true;
   return false;
 }
 

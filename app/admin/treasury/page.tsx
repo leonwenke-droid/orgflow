@@ -116,7 +116,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
       )}
       <section className="card space-y-2">
         <h2 className="text-sm font-semibold text-gray-700">
-          Treasury balance
+          {t("finance.balance_label", locale).replace("{currency}", currencyCode)}
         </h2>
         <p className="text-xs text-gray-600">
           You can either{" "}
@@ -139,7 +139,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
       </section>
 
       <section className="card">
-        <TreasuryUploadForm organizationId={orgId ?? undefined} defaultCellRef={defaultCellRef} />
+        <TreasuryUploadForm organizationId={orgId ?? undefined} defaultCellRef={defaultCellRef} currencyCode={currencyCode} />
       </section>
 
       {orgId && (
@@ -155,7 +155,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
                     <th className="pb-2 pr-4">{t("finance.entry_date", locale)}</th>
                     <th className="pb-2 pr-4">{t("finance.entry_description", locale)}</th>
                     <th className="pb-2 pr-4">{t("finance.entry_type", locale)}</th>
-                    <th className="pb-2 text-right">Amount</th>
+                    <th className="pb-2 text-right">{t("finance.amount", locale)}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -178,7 +178,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
               </table>
             </div>
           )}
-          {monthKeys.length > 0 && (
+      {monthKeys.length > 0 && (
             <details className="mt-3 rounded border border-gray-200 dark:border-gray-600">
               <summary className="cursor-pointer px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">{t("finance.monthly_summary", locale)}</summary>
               <ul className="list-none border-t border-gray-100 px-2 py-1.5 text-xs dark:border-gray-700">
@@ -196,7 +196,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
               </ul>
             </details>
           )}
-          <TreasuryEntryForm organizationId={orgId} />
+          <TreasuryEntryForm organizationId={orgId} currencyCode={currencyCode} />
         </section>
       )}
     </div>

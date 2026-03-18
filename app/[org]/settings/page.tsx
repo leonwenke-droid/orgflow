@@ -8,6 +8,7 @@ import ThemeToggle from "../../../components/ThemeToggle";
 import LanguageToggle from "../../../components/LanguageToggle";
 import EditOrgForm from "./EditOrgForm";
 import ModuleToggles from "./ModuleToggles";
+import PrivacyActions from "./PrivacyActions";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 
 export default async function OrgSettingsPage({
@@ -110,6 +111,13 @@ export default async function OrgSettingsPage({
           >
             {t("settings.manage_members", locale)}
           </Link>
+        </section>
+
+        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
+            {locale === "de" ? "Datenschutz & Daten" : "Privacy & data"}
+          </h2>
+          <PrivacyActions />
         </section>
 
         <Link

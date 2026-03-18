@@ -17,7 +17,7 @@ export default async function CreateOrganisationPage() {
             Sign in to create your organisation
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            You need to be signed in to create an organisation. Sign in or create an account to continue.
+            You need to be signed in to create an organisation.
           </p>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <Link

@@ -2,6 +2,8 @@
 
 import { useCallback } from "react";
 import { jsPDF } from "jspdf";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 export type ShiftForPdf = {
   id: string;
@@ -26,13 +28,17 @@ function timeStr(t: string | null | undefined): string {
   return s.slice(0, 5) || "–";
 }
 
-function formatDateLabel(d: string): string {
+function formatDateLabel(d: string, locale: "en" | "de"): string {
   const [y, m, day] = d.split("-");
   if (!day || !m || !y) return d;
   const date = new Date(d + "T12:00:00Z");
-  const weekdays = ["So.", "Mo.", "Di.", "Mi.", "Do.", "Fr.", "Sa."];
-  const wd = weekdays[date.getUTCDay()];
-  return `${wd}, ${day}.${m}.${y}`;
+  const localeStr = locale === "de" ? "de-DE" : "en-GB";
+  const weekday = new Intl.DateTimeFormat(localeStr, { weekday: "short" }).format(date);
+  const datePart =
+    locale === "de"
+      ? `${day}.${m}.${y}`
+      : `${y}-${m}-${day}`;
+  return `${weekday}, ${datePart}`;
 }
 
 /** Gruppiert Schichten zu einer Veranstaltung (wie im Dashboard). */
@@ -72,6 +78,7 @@ function newPageIfNeeded(doc: jsPDF, y: number): number {
 }
 
 export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props) {
+  const { locale } = useLocale();
   const exportPdf = useCallback(() => {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     let y = MARGIN;
@@ -79,7 +86,7 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
     doc.setFontSize(12);
     doc.setTextColor(...text);
     doc.setFont("helvetica", "bold");
-    doc.text("Anwesenheits-Auswertung Schichtplan", MARGIN, y);
+    doc.text(t("shifts.attendance_pdf_title", locale), MARGIN, y);
     y += LINE + 2;
 
     const byDate = shifts.reduce((acc: Record<string, ShiftForPdf[]>, s) => {
@@ -113,7 +120,7 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
       doc.setTextColor(...blue);
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
-      doc.text(formatDateLabel(dateStr), MARGIN + CARD_PAD, y + dateCardH / 2 + 1);
+      doc.text(formatDateLabel(dateStr, locale), MARGIN + CARD_PAD, y + dateCardH / 2 + 1);
       y += dateCardH + CARD_PAD;
 
       for (const [eventName, groupShifts] of eventGroups) {

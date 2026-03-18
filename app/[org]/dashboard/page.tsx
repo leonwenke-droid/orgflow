@@ -6,7 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { removePastShifts } from "../../../lib/cleanupShifts";
 import { getDashboardDisplayNames } from "../../../lib/displayName";
 import { formatWeekRangeLabel, formatDateTimeForDisplay, getTodayDateString } from "../../../lib/dateFormat";
-import { formatCurrency } from "../../../lib/currency";
+import { DEFAULT_CURRENCY, formatCurrency } from "../../../lib/currency";
 import ShiftPlanWeekNav from "../../../components/ShiftPlanWeekNav";
 import EmptyState from "../../../components/EmptyState";
 import OnboardingBanner from "../../../components/OnboardingBanner";
@@ -15,6 +15,7 @@ import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -179,6 +180,10 @@ export default async function OrgDashboardPage({
     ? (await (params as Promise<{ org: string }>)).org
     : (params as { org: string }).org;
   const org = await getCurrentOrganization(orgSlug);
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const localeForMoney = locale === "de" ? "de-DE" : "en-GB";
+  const currencyCode = org.settings?.currency ?? DEFAULT_CURRENCY;
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -269,7 +274,7 @@ export default async function OrgDashboardPage({
           {
             icon: Wallet,
             label: "Treasury",
-            value: treasury ? `€${formatCurrency(treasury.amount)}` : "–",
+            value: treasury ? formatCurrency(treasury.amount, localeForMoney, currencyCode) : "–",
             sub: "current balance"
           },
           {

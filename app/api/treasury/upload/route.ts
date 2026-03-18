@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
-import { formatCurrency, parseTreasuryAmount } from "../../../../lib/currency";
+import { DEFAULT_CURRENCY, formatCurrency, parseTreasuryAmount } from "../../../../lib/currency";
 
 export const runtime = "nodejs";
 
@@ -12,6 +12,15 @@ export async function POST(req: NextRequest) {
 
     const supabase = createSupabaseServiceRoleClient();
     const organizationId = formData.get("organization_id")?.toString() || null;
+    let currencyCode = DEFAULT_CURRENCY;
+    if (organizationId) {
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("settings")
+        .eq("id", organizationId)
+        .maybeSingle();
+      currencyCode = ((org?.settings as { currency?: string } | null)?.currency ?? DEFAULT_CURRENCY) as string;
+    }
 
     if (mode === "manual") {
       const rawAmount = formData.get("amount");
@@ -44,7 +53,7 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json({
-        message: `Kassenstand manuell auf ${formatCurrency(amount)} € gesetzt.`
+        message: `Kassenstand manuell auf ${formatCurrency(amount, "de-DE", currencyCode)} gesetzt.`
       });
     }
 
@@ -96,7 +105,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      message: `Kassenstand aus Zelle ${cellRef} auf ${formatCurrency(amount)} € gesetzt.`
+      message: `Kassenstand aus Zelle ${cellRef} auf ${formatCurrency(amount, "de-DE", currencyCode)} gesetzt.`
     });
   } catch (e) {
     console.error(e);
