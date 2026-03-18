@@ -5,7 +5,6 @@ import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
-import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import CreateCommitteeForm from "./CreateCommitteeForm";
 import CommitteeRow from "./CommitteeRow";
 import EmptyState from "../../../../components/EmptyState";
@@ -20,9 +19,7 @@ export default async function AdminCommitteesPage(props: {
   const org = await getCurrentOrganization(orgSlug);
   if (!(await isOrgAdmin(org.id))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
   const { data: committees } = await supabase
     .from("committees")
     .select("id, name")

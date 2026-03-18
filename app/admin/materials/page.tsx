@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import AddMaterialForm from "../../../components/AddMaterialForm";
 import EmptyState from "../../../components/EmptyState";
 import DeleteMaterialButton from "../../../components/DeleteMaterialButton";
+import ResourceCategoriesForm from "./ResourceCategoriesForm";
 
 export const dynamic = "force-dynamic";
 
@@ -71,10 +72,14 @@ async function addMaterialProcurement(
 
   let points = size === "small" ? 5 : size === "medium" ? 10 : 15;
   if (orgId) {
-    const { data: orgRow } = await service.from("organizations").select("settings").eq("id", orgId).single();
-    const settings = orgRow?.settings as { resource_categories?: Array<{ key: string; points: number }> } | null;
-    const cat = settings?.resource_categories?.find((c) => c.key === size);
-    if (cat && Number(cat.points) >= 0) points = Number(cat.points);
+    const { data: cat } = await service
+      .from("resource_categories")
+      .select("points")
+      .eq("organization_id", orgId)
+      .eq("key", size)
+      .eq("enabled", true)
+      .maybeSingle();
+    if (cat && Number((cat as any).points) >= 0) points = Number((cat as any).points);
   }
   const eventType = `material_${size}`;
 
@@ -185,16 +190,19 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
   if (orgId) {
     const userOrg = await getCurrentUserOrganization();
     if (!effectiveOrgSlug && userOrg?.slug) effectiveOrgSlug = userOrg.slug;
-    const { data: orgRow } = await service.from("organizations").select("settings").eq("id", orgId).single();
-    const settings = orgRow?.settings as { resource_categories?: Array<{ key: string; name: string; points: number }> } | null;
-    const cats = settings?.resource_categories;
-    if (Array.isArray(cats) && cats.length >= 3) {
-      const keyOrder = ["small", "medium", "large"] as const;
-      resourceCategories = keyOrder.map((k) => {
-        const c = cats.find((x) => x.key === k);
-        return c ? { value: k, label: c.name, points: Number(c.points) || (k === "small" ? 5 : k === "medium" ? 10 : 15), examples: undefined } : { value: k, label: k, points: k === "small" ? 5 : k === "medium" ? 10 : 15, examples: undefined };
-      });
-    }
+    const { data: cats } = await service
+      .from("resource_categories")
+      .select("key, name, points, examples")
+      .eq("organization_id", orgId)
+      .eq("enabled", true);
+    const keyOrder = ["small", "medium", "large"] as const;
+    const list = Array.isArray(cats) ? cats : [];
+    resourceCategories = keyOrder.map((k) => {
+      const c = list.find((x: any) => x.key === k);
+      return c
+        ? { value: k, label: String(c.name), points: Number(c.points) || (k === "small" ? 5 : k === "medium" ? 10 : 15), examples: c.examples ?? undefined }
+        : { value: k, label: k, points: k === "small" ? 5 : k === "medium" ? 10 : 15 };
+    });
   }
 
   const profilesQuery = service.from("profiles").select("id, full_name").order("full_name");
@@ -244,6 +252,18 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
         <h2 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
           Record new event & resource management
         </h2>
+        {orgId && (
+          <div className="mb-4">
+            <ResourceCategoriesForm
+              orgId={orgId}
+              initial={(resourceCategories ?? [
+                { value: "small", label: "Small", points: 5 },
+                { value: "medium", label: "Medium", points: 10 },
+                { value: "large", label: "Large", points: 15 }
+              ]).map((c: any) => ({ key: c.value, name: c.label, points: c.points }))}
+            />
+          </div>
+        )}
         <AddMaterialForm
           profiles={profiles ?? []}
           addMaterialProcurement={addMaterialProcurement}

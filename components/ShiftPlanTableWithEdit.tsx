@@ -7,6 +7,7 @@ import SubmitButtonWithSpinner from "./SubmitButtonWithSpinner";
 import { formatDateLabel } from "../lib/dateFormat";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
+import { QRCodeCanvas } from "qrcode.react";
 
 type Member = { id: string; full_name: string; load_index?: number; responsibility_malus?: number };
 
@@ -18,6 +19,7 @@ type AssignmentRow = {
 };
 
 type Props = {
+  orgSlug?: string;
   shifts: any[];
   todayStr: string;
   profileNames: Map<string, string>;
@@ -51,6 +53,7 @@ function isShiftStarted(shift: { date?: string; start_time?: string }, todayStr:
 }
 
 export default function ShiftPlanTableWithEdit({
+  orgSlug,
   shifts,
   todayStr,
   profileNames,
@@ -121,30 +124,44 @@ export default function ShiftPlanTableWithEdit({
   const renderEditStatusForm = (a: AssignmentRow) => {
     const name = profileNames.get(a.user_id ?? "") ?? "?";
     const showReplacement = notAttendedAssignmentId === a.id;
+    const checkinUrl = orgSlug ? `/checkin?org=${encodeURIComponent(orgSlug)}&assignmentId=${encodeURIComponent(a.id)}` : null;
     return (
       <li key={a.id} className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-[11px]">
         <div className="mb-1.5 flex items-center justify-between gap-2">
           <span className="truncate font-medium text-gray-900">{name}</span>
-          <button type="button" onClick={() => { setEditingAssignmentId(null); setNotAttendedAssignmentId(null); }} className="shrink-0 text-[10px] text-gray-500 hover:text-gray-700">Close</button>
+          <button type="button" onClick={() => { setEditingAssignmentId(null); setNotAttendedAssignmentId(null); }} className="shrink-0 text-[10px] text-gray-500 hover:text-gray-700">{t("common.close", locale)}</button>
         </div>
+        {checkinUrl && (
+          <div className="mb-2 flex items-center gap-2 rounded border border-gray-200 bg-white p-2">
+            <div className="shrink-0">
+              <QRCodeCanvas value={checkinUrl} size={72} includeMargin />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-gray-700">{t("shifts.checkin_qr", locale)}</p>
+              <a href={checkinUrl} className="mt-0.5 block truncate text-[10px] text-blue-600 underline">
+                {checkinUrl}
+              </a>
+            </div>
+          </div>
+        )}
         <div className="mb-1.5 flex flex-wrap gap-1.5">
           <form action={async () => { await updateAssignmentStatus(a.id, "erledigt", null); setEditingAssignmentId(null); setNotAttendedAssignmentId(null); router.refresh(); }} className="inline">
-            <SubmitButtonWithSpinner className="rounded bg-green-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-green-300 hover:bg-green-500/35 disabled:opacity-70 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center" loadingLabel="…">✓ Antreten</SubmitButtonWithSpinner>
+            <SubmitButtonWithSpinner className="rounded bg-green-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-green-300 hover:bg-green-500/35 disabled:opacity-70 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center" loadingLabel="…">✓ {t("shifts.attended", locale)}</SubmitButtonWithSpinner>
           </form>
-          <button type="button" onClick={() => setNotAttendedAssignmentId(a.id)} className="rounded bg-amber-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-amber-300 hover:bg-amber-500/35 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center">✗ Nicht angetreten</button>
+          <button type="button" onClick={() => setNotAttendedAssignmentId(a.id)} className="rounded bg-amber-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-amber-300 hover:bg-amber-500/35 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center">✗ {t("shifts.not_attended", locale)}</button>
         </div>
         {showReplacement && (
           <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await updateAssignmentStatus(a.id, "abgesagt", uid); setNotAttendedAssignmentId(null); setEditingAssignmentId(null); router.refresh(); }} className="space-y-1.5 border-t border-gray-200 pt-1">
-            <label className="mb-0.5 block text-[10px] text-gray-600">Ersatz</label>
+            <label className="mb-0.5 block text-[10px] text-gray-600">{t("shifts.replacement", locale)}</label>
             <select name="replacement_user_id" className="max-w-full rounded border border-gray-300 bg-white px-1.5 py-1.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:py-0.5" defaultValue={a.replacement_user_id ?? ""}>
-              <option value="">– Kein Ersatz</option>
+              <option value="">{t("shifts.no_replacement", locale)}</option>
               {membersSortedByLoad.filter((m) => m.id !== a.user_id).map((m) => (
                 <option key={m.id} value={m.id}>{m.full_name}</option>
               ))}
             </select>
             <div className="flex gap-1.5">
-              <SubmitButtonWithSpinner className="rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">OK</SubmitButtonWithSpinner>
-              <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-blue-100 sm:px-1.5 sm:py-0.5">Abbr.</button>
+              <SubmitButtonWithSpinner className="rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">{t("common.ok", locale)}</SubmitButtonWithSpinner>
+              <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-blue-100 sm:px-1.5 sm:py-0.5">{t("common.cancel_short", locale)}</button>
             </div>
           </form>
         )}

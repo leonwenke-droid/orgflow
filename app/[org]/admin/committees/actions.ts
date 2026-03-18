@@ -4,7 +4,6 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
-import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { canAddTeam } from "../../../../lib/planLimits";
 
 export async function createCommitteeAction(
@@ -17,9 +16,7 @@ export async function createCommitteeAction(
   const trimmed = (name || "").trim();
   if (!trimmed) return { error: null, errorKey: "members.error_name_required" };
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
   const { count } = await supabase
     .from("committees")
     .select("*", { count: "exact", head: true })
@@ -48,9 +45,7 @@ export async function updateCommitteeNameAction(
   const trimmed = (name || "").trim();
   if (!trimmed) return { error: null, errorKey: "members.error_name_required" };
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
   const { error } = await supabase
     .from("committees")
     .update({ name: trimmed })
@@ -70,9 +65,7 @@ export async function deleteCommitteeAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
   const { error } = await supabase
     .from("committees")
     .delete()

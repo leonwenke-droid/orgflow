@@ -18,12 +18,16 @@ export async function POST(req: Request) {
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
     const fullName = String(body.fullName ?? "").trim();
+    const consentAccepted = Boolean(body.consentAccepted);
 
     if (!token || !email || !password) {
       return NextResponse.json({ message: "token, email and password are required." }, { status: 400 });
     }
     if (password.length < 8) {
       return NextResponse.json({ message: "Password must be at least 8 characters long." }, { status: 400 });
+    }
+    if (!consentAccepted) {
+      return NextResponse.json({ message: "Consent required." }, { status: 400 });
     }
 
     const tokenHash = hashInviteToken(token);
@@ -103,6 +107,18 @@ export async function POST(req: Request) {
 
     if (profileError) {
       return NextResponse.json({ message: profileError.message || "Could not activate invite." }, { status: 500 });
+    }
+
+    // Persist consent decision (GDPR basics)
+    try {
+      await service.from("user_consents").insert({
+        auth_user_id: authUserId,
+        consent_type: "terms_privacy",
+        consent_value: true,
+        metadata: { source: "invite_activation" }
+      });
+    } catch {
+      // non-blocking
     }
 
     const cookieStore = await cookies();

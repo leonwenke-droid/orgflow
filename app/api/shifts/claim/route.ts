@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
+import { writeAuditLog } from "../../../../lib/audit";
 
 export async function POST(req: Request) {
   try {
@@ -50,6 +51,15 @@ export async function POST(req: Request) {
       }
       return NextResponse.json({ message: "Failed to sign up." }, { status: 500 });
     }
+
+    await writeAuditLog({
+      organizationId: orgIdForData,
+      actorProfileId: (profile as { id: string }).id,
+      action: "shift_claimed",
+      targetTable: "shifts",
+      targetId: shiftId,
+      metadata: {}
+    });
 
     return NextResponse.json({ ok: true });
   } catch (e) {

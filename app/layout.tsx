@@ -8,6 +8,7 @@ import ThemeProvider from "../components/ThemeProvider";
 import { LocaleProvider } from "../components/LocaleProvider";
 import EmailVerificationBanner from "../components/EmailVerificationBanner";
 import CookieNotice from "../components/CookieNotice";
+import ConsentSync from "../components/ConsentSync";
 
 export const metadata = {
   title: "OrgFlow",
@@ -66,6 +67,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             </AppShell>
             <ToastContainer />
             <CookieNotice />
+            <ConsentSync />
             <footer className="mt-8 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <a

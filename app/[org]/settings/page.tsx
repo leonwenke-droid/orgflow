@@ -10,6 +10,7 @@ import EditOrgForm from "./EditOrgForm";
 import ModuleToggles from "./ModuleToggles";
 import PrivacyActions from "./PrivacyActions";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+import BillingSection from "./BillingSection";
 
 export default async function OrgSettingsPage({
   params
@@ -67,10 +68,7 @@ export default async function OrgSettingsPage({
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
             {t("settings.plan", locale)}
           </h2>
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            {org.plan === "team" ? t("settings.plan_team", locale) : org.plan === "pro" ? t("settings.plan_pro", locale) : t("settings.plan_free", locale)}
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-muted">{t("settings.plan_contact", locale)}</p>
+          <BillingSection orgSlug={orgSlug} currentPlan={(org as any).plan ?? "free"} />
         </section>
 
         <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">

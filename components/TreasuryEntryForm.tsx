@@ -7,10 +7,12 @@ import { addTreasuryEntryAction } from "../app/admin/treasury/actions";
 
 export default function TreasuryEntryForm({
   organizationId,
-  currencyCode
+  currencyCode,
+  categories
 }: {
   organizationId: string;
   currencyCode: string;
+  categories?: { key: string; name: string }[] | null;
 }) {
   const { locale } = useLocale();
   const [loading, setLoading] = useState(false);
@@ -53,6 +55,17 @@ export default function TreasuryEntryForm({
         <div>
           <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">{t("finance.entry_description", locale)}</label>
           <input type="text" name="description" placeholder="" className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+        </div>
+        <div>
+          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">Category</label>
+          <select name="category" className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+            <option value="">—</option>
+            {(categories ?? []).map((c) => (
+              <option key={c.key} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">

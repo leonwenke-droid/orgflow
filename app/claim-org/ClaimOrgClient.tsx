@@ -4,6 +4,7 @@ import { useState } from "react";
 import AuthForm from "../../components/AuthForm";
 import { useLocale } from "../../components/LocaleProvider";
 import { t } from "../../lib/i18n";
+import { setPendingConsent } from "../../components/ConsentSync";
 
 type Org = { id: string; name: string; slug: string };
 type User = { id: string; email?: string } | null;
@@ -108,14 +109,20 @@ function RegisterForm({ redirectTo, claimToken }: { redirectTo: string; claimTok
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!accepted) {
+      setError(locale === "de" ? "Bitte stimme Datenschutz & Bedingungen zu." : "Please accept Privacy & Terms.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
+      setPendingConsent({ consentType: "terms_privacy", consentValue: true, metadata: { source: "signup" } });
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -181,6 +188,25 @@ function RegisterForm({ redirectTo, claimToken }: { redirectTo: string; claimTok
           className="w-full rounded border border-blue-500/30 bg-card/60 p-2 text-xs text-blue-100"
         />
       </div>
+      <label className="flex items-start gap-2 text-[11px] text-blue-200">
+        <input
+          type="checkbox"
+          checked={accepted}
+          onChange={(e) => setAccepted(e.target.checked)}
+          className="mt-0.5"
+        />
+        <span>
+          {locale === "de" ? "Ich stimme der " : "I agree to the "}
+          <a className="underline" href="/privacy" target="_blank" rel="noreferrer">
+            {locale === "de" ? "Datenschutzerklärung" : "Privacy Policy"}
+          </a>
+          {locale === "de" ? " und den " : " and the "}
+          <a className="underline" href="/terms" target="_blank" rel="noreferrer">
+            {locale === "de" ? "Nutzungsbedingungen" : "Terms"}
+          </a>
+          .
+        </span>
+      </label>
       {error && <p className="text-xs text-red-300">{error}</p>}
       <button type="submit" className="rounded bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700" disabled={loading}>
         {loading ? "Creating…" : "Create account"}

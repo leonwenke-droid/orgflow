@@ -10,6 +10,8 @@ import {
   hashInviteToken,
   inviteExpiresAt
 } from "../../../lib/memberInvites";
+import { sendEmail as sendEmailMessage } from "../../../lib/email";
+import { writeAuditLog } from "../../../lib/audit";
 
 function getBaseUrl(): string {
   const fromEnv = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
@@ -94,8 +96,27 @@ export async function POST(req: Request) {
   });
 
   if (sendEmail && member.email) {
-    // Optional email sending can be wired later; for now keep the copy-ready flow deterministic.
+    const subject = `Invite to ${org.name} on OrgFlow`;
+    const text = [
+      `Hi${member.full_name ? ` ${String(member.full_name).split(" ")[0]}` : ""},`,
+      ``,
+      `you have been invited to OrgFlow for ${org.name}.`,
+      `Set your password here:`,
+      inviteUrl,
+      ``,
+      `OrgFlow`
+    ].join("\n");
+    await sendEmailMessage({ to: member.email, subject, text });
   }
+
+  await writeAuditLog({
+    organizationId: orgIdForData,
+    actorProfileId: invitedBy,
+    action: "member_invite_issued",
+    targetTable: "profiles",
+    targetId: profileId,
+    metadata: { sendEmail, hasEmail: Boolean(member.email) }
+  });
 
   return NextResponse.json({
     inviteUrl,

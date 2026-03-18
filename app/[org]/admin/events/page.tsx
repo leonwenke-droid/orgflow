@@ -4,7 +4,6 @@ import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
-import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../lib/i18n";
 import CreateEventForm from "./CreateEventForm";
 
@@ -24,9 +23,7 @@ export default async function AdminEventsPage(props: {
   const cookieStore = await cookies();
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
   const { data: events } = await supabase
     .from("events")
     .select("id, name, slug, start_date, end_date, created_at")

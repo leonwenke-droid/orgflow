@@ -8,6 +8,7 @@ import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { formatCurrency } from "../../../lib/currency";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 import { canViewFinance } from "../../../lib/permissions";
+import FinanceCategoriesForm from "./FinanceCategoriesForm";
 
 export const dynamic = "force-dynamic";
 
@@ -84,17 +85,29 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   const { data: lastUpdate } = await treasuryQuery.maybeSingle();
 
   let entries: { id: string; date: string; description: string | null; amount_cents: number; type: string }[] = [];
+  let categories: { key: string; name: string }[] = [];
   if (orgId) {
     try {
       const { data: entriesData } = await supabase
         .from("treasury_entries")
-        .select("id, date, description, amount_cents, type")
+        .select("id, date, description, amount_cents, type, category")
         .eq("organization_id", orgId)
         .order("date", { ascending: false })
         .limit(50);
       entries = (entriesData ?? []) as typeof entries;
     } catch {
       // Table may not exist yet
+    }
+    try {
+      const { data: catRows } = await supabase
+        .from("finance_categories")
+        .select("key, name")
+        .eq("organization_id", orgId)
+        .eq("enabled", true)
+        .order("name");
+      categories = (catRows ?? []) as typeof categories;
+    } catch {
+      categories = [];
     }
   }
 
@@ -144,7 +157,21 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
 
       {orgId && (
         <section className="card">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("finance.entries_title", locale)}</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("finance.entries_title", locale)}</h2>
+            <a
+              className="text-xs text-blue-600 underline hover:text-blue-700 dark:text-blue-400"
+              href={`/api/treasury/export?organization_id=${encodeURIComponent(orgId)}`}
+            >
+              Export CSV
+            </a>
+          </div>
+          <div className="mt-3">
+            <FinanceCategoriesForm
+              orgId={orgId}
+              initial={categories}
+            />
+          </div>
           {entries.length === 0 ? (
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t("finance.entries_empty", locale)}</p>
           ) : (
@@ -196,7 +223,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
               </ul>
             </details>
           )}
-          <TreasuryEntryForm organizationId={orgId} currencyCode={currencyCode} />
+          <TreasuryEntryForm organizationId={orgId} currencyCode={currencyCode} categories={categories} />
         </section>
       )}
     </div>

@@ -39,11 +39,24 @@ export default function CookieNotice() {
         <button
           type="button"
           className="shrink-0 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-          onClick={() => {
+          onClick={async () => {
             try {
               localStorage.setItem(STORAGE_KEY, "1");
             } catch {
               // ignore
+            }
+            try {
+              await fetch("/api/consent", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  consentType: "cookies",
+                  consentValue: true,
+                  metadata: { purposes: { essential: true, analytics: false } }
+                })
+              });
+            } catch {
+              // ignore (anonymous or offline)
             }
             setVisible(false);
           }}

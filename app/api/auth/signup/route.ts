@@ -79,12 +79,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const subject = "E-Mail bestätigen – AbiOrga";
+    const subject = "E-Mail bestätigen – OrgFlow";
     const body =
       (fullName ? `Hallo ${fullName},\n\n` : "Hallo,\n\n") +
       "bitte bestätigen Sie Ihre E-Mail-Adresse, indem Sie auf den folgenden Link klicken:\n\n" +
       actionLink +
-      "\n\nDanach werden Sie automatisch weitergeleitet.\n\nMit freundlichen Grüßen\nIhr AbiOrga-Team";
+      "\n\nDanach werden Sie automatisch weitergeleitet.\n\nMit freundlichen Grüßen\nIhr OrgFlow-Team";
 
     const webhookRes = await fetch(N8N_WEBHOOK_URL, {
       method: "POST",

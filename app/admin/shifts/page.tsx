@@ -799,6 +799,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
           <EmptyState messageKey="empty.shifts" actionHref={effectiveOrgSlug ? `/${effectiveOrgSlug}/admin/shifts` : "/admin/shifts"} actionLabelKey="cta.create_shift" />
         ) : (
           <ShiftPlanTableWithEdit
+            orgSlug={effectiveOrgSlug ?? undefined}
             shifts={shifts}
             todayStr={todayStr}
             profileNames={profileNames}

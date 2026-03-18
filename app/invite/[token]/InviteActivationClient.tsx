@@ -24,6 +24,7 @@ export default function InviteActivationClient({
   const [fullName] = useState(memberName);
   const [password, setPassword] = useState("");
   const [passwordRepeat, setPasswordRepeat] = useState("");
+  const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,11 +43,15 @@ export default function InviteActivationClient({
       setError(t("invite.password_mismatch", locale));
       return;
     }
+    if (!accepted) {
+      setError(locale === "de" ? "Bitte stimme Datenschutz & Bedingungen zu." : "Please accept Privacy & Terms.");
+      return;
+    }
     setLoading(true);
     const res = await fetch("/api/member-invites/activate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, email: email.trim(), password, fullName })
+      body: JSON.stringify({ token, email: email.trim(), password, fullName, consentAccepted: true })
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
@@ -111,6 +116,25 @@ export default function InviteActivationClient({
             className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
+        <label className="flex items-start gap-2 text-xs text-gray-700 dark:text-gray-300">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            {locale === "de" ? "Ich stimme der " : "I agree to the "}
+            <a className="underline" href="/privacy" target="_blank" rel="noreferrer">
+              {locale === "de" ? "Datenschutzerklärung" : "Privacy Policy"}
+            </a>
+            {locale === "de" ? " und den " : " and the "}
+            <a className="underline" href="/terms" target="_blank" rel="noreferrer">
+              {locale === "de" ? "Nutzungsbedingungen" : "Terms"}
+            </a>
+            .
+          </span>
+        </label>
         {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
         <button
           type="submit"

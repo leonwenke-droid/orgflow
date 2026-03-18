@@ -4,7 +4,6 @@ import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../../AdminForbidden";
-import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +19,7 @@ export default async function EventDetailPage(props: {
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
 
-  const supabase = createSupabaseServiceRoleClient();
+  const supabase = createServerComponentClient({ cookies });
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select("id, name, slug, start_date, end_date")

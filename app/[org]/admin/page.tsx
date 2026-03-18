@@ -14,7 +14,6 @@ import {
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import AdminForbidden from "./AdminForbidden";
-import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import EngagementScoresBlock from "./EngagementScoresBlock";
 
 export default async function AdminDashboard({
@@ -37,10 +36,6 @@ export default async function AdminDashboard({
     data: { session }
   } = await authClient.auth.getSession();
   const currentAuthUserId = session?.user?.id ?? null;
-
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
 
   const features = (org.settings?.features as Record<string, boolean>) ?? {};
   const modules = {

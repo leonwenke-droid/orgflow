@@ -30,6 +30,20 @@ export default function PrivacyActions() {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
+        <p className="font-semibold text-gray-900 dark:text-gray-100">
+          {locale === "de" ? "Auftragsverarbeitung (AVV)" : "Data processing (DPA)"}
+        </p>
+        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {locale === "de"
+            ? "AVV nach Art. 28 DSGVO auf Anfrage."
+            : "DPA under Art. 28 GDPR available on request."}
+        </p>
+        <a className="mt-2 inline-block text-xs text-blue-600 underline hover:text-blue-700 dark:text-blue-400" href="/avv">
+          {locale === "de" ? "Zur AVV-Seite" : "Open DPA page"}
+        </a>
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
         <a
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"

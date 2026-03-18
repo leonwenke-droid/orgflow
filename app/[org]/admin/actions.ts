@@ -3,7 +3,6 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../lib/getOrganization";
-import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 const TASK_EVENTS = ["task_done", "task_late", "task_missed"];
 const SHIFT_EVENTS = ["shift_done", "shift_missed"];
@@ -26,9 +25,7 @@ export async function getEngagementScoresAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
 
   const { data: scoresByOrg } = await supabase
     .from("engagement_scores")

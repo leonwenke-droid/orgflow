@@ -4,7 +4,6 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
-import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { canAddMember } from "../../../../lib/planLimits";
 import {
   buildInviteUrl,
@@ -24,7 +23,7 @@ function getBaseUrl(): string {
 }
 
 async function issueMemberInvite(
-  service: ReturnType<typeof createSupabaseServiceRoleClient>,
+  supabase: ReturnType<typeof createServerComponentClient>,
   orgId: string,
   orgName: string,
   profile: { id: string; full_name?: string | null; email?: string | null }
@@ -32,7 +31,7 @@ async function issueMemberInvite(
   const token = generateInviteToken();
   const tokenHash = hashInviteToken(token);
   const expiresAt = inviteExpiresAt();
-  await service
+  await supabase
     .from("profiles")
     .update({
       status: "invited",
@@ -68,6 +67,7 @@ export async function syncOrgDataAction(orgSlug: string): Promise<{ error: strin
   const org = await getCurrentOrganization(slug);
   if (!(await isOrgAdmin(org.id))) return { error: null, errorKey: "common.unauthorized" };
 
+  const { createSupabaseServiceRoleClient } = await import("../../../../lib/supabaseServer");
   const service = createSupabaseServiceRoleClient();
   const targetOrgId = LEGACY_DEFAULT_ORG_ID;
 
@@ -111,9 +111,7 @@ export async function updateMemberNameAction(
   const name = (fullName || "").trim();
   if (!name) return { error: null, errorKey: "members.error_name_required" };
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
   const { error } = await supabase
     .from("profiles")
     .update({ full_name: name })
@@ -134,9 +132,7 @@ export async function updateMemberCommitteesAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
 
   const ids = committeeIds.filter(Boolean);
   const primaryId = ids[0] || null;
@@ -175,9 +171,7 @@ export async function updateMemberRoleAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
   const { error } = await supabase
     .from("profiles")
     .update({ role })
@@ -197,9 +191,7 @@ export async function deleteMemberAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
 
   const { error } = await supabase
     .from("profiles")
@@ -222,8 +214,8 @@ export async function setMemberStatusAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const service = createSupabaseServiceRoleClient();
-  const { error } = await service
+  const supabase = createServerComponentClient({ cookies });
+  const { error } = await supabase
     .from("profiles")
     .update({
       status,
@@ -248,8 +240,8 @@ export async function resendLeadInviteAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const service = createSupabaseServiceRoleClient();
-  const { data: profile, error: fetchErr } = await service
+  const supabase = createServerComponentClient({ cookies });
+  const { data: profile, error: fetchErr } = await supabase
     .from("profiles")
     .select("id, full_name, email")
     .eq("id", profileId)
@@ -258,7 +250,7 @@ export async function resendLeadInviteAction(
 
   if (fetchErr || !profile) return { error: null, errorKey: "members.error_profile_not_found" };
   const inviteResult = await issueMemberInvite(
-    service,
+    supabase,
     orgIdForData,
     org.name,
     {
@@ -287,8 +279,8 @@ export async function setMemberAsLeadAction(
   const emailTrimmed = (email || "").trim();
   if (!emailTrimmed) return { error: null, errorKey: "members.error_email_required_lead" };
 
-  const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
+  const supabase = createServerComponentClient({ cookies });
+  const { data: profile } = await supabase
     .from("profiles")
     .select("id, full_name, auth_user_id, status")
     .eq("id", profileId)
@@ -297,7 +289,7 @@ export async function setMemberAsLeadAction(
 
   if (!profile) return { error: null, errorKey: "members.error_profile_not_found" };
 
-  const { error: updateErr } = await service
+  const { error: updateErr } = await supabase
     .from("profiles")
     .update({ role: "lead", email: emailTrimmed, status: "invited", invite_status: "pending" })
     .eq("id", profileId)
@@ -308,7 +300,7 @@ export async function setMemberAsLeadAction(
   revalidatePath(`/${orgSlug}/admin/members`);
   if (!(profile as { auth_user_id?: string | null }).auth_user_id || (profile as { status?: string | null }).status !== "active") {
     const inviteResult = await issueMemberInvite(
-      service,
+      supabase,
       orgIdForData,
       org.name,
       { id: profileId, full_name: (profile as { full_name?: string }).full_name ?? "", email: emailTrimmed }
@@ -335,9 +327,7 @@ export async function addMemberAction(
   const name = (fullName || "").trim();
   if (!name) return { error: null, errorKey: "members.error_name_required" };
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
 
   const { count } = await supabase
     .from("profiles")
@@ -375,7 +365,7 @@ export async function addMemberAction(
   }
 
   const inviteResult = await issueMemberInvite(
-    createSupabaseServiceRoleClient(),
+    supabase,
     orgIdForData,
     org.name,
     { id, full_name: name, email: emailTrimmed }

@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin } from "../../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../../components/AdminBreadcrumb";
-import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
 import AdminForbidden from "../../AdminForbidden";
 import AssignPointsForm from "./AssignPointsForm";
 import ScoreImportLog from "./ScoreImportLog";
@@ -22,9 +21,7 @@ export default async function AssignPointsPage({
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
 
   const { data: members } = await supabase
     .from("profiles")
