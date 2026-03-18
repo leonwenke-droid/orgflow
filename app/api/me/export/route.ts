@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
 
@@ -11,8 +10,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ message: "Sign in required." }, { status: 401 });
 
-  const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
+  const { data: profile } = await supabase
     .from("profiles")
     .select("id, full_name, email, phone, role, status, organization_id, created_at")
     .eq("auth_user_id", user.id)
@@ -24,19 +22,19 @@ export async function GET() {
   const profileId = (profile as { id: string }).id;
 
   const [assignmentsRes, eventsRes, tasksRes] = await Promise.all([
-    service
+    supabase
       .from("shift_assignments")
       .select("id, shift_id, status, replacement_user_id, created_at")
       .eq("user_id", profileId)
       .order("created_at", { ascending: false })
       .limit(500),
-    service
+    supabase
       .from("engagement_events")
       .select("id, event_type, points, created_at, source_id")
       .eq("user_id", profileId)
       .order("created_at", { ascending: false })
       .limit(1000),
-    service
+    supabase
       .from("tasks")
       .select("id, title, status, due_at, owner_id, created_at")
       .eq("organization_id", orgId)

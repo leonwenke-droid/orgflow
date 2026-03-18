@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
-import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import MembersExcelUpload from "./MembersExcelUpload";
 import AddMemberForm from "./AddMemberForm";
 import MemberRow from "./MemberRow";
@@ -34,9 +33,7 @@ export default async function AdminMembersPage({
   } = await authClient.auth.getSession();
   const currentAuthUserId = session?.user?.id ?? null;
 
-  const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies });
 
   const { data: committees } = await supabase
     .from("committees")

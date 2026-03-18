@@ -14,7 +14,6 @@ import OnboardingChecklist from "../../../components/OnboardingChecklist";
 import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin } from "../../../lib/getOrganization";
-import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -207,12 +206,9 @@ export default async function OrgDashboardPage({
     );
   }
 
-  const supabaseForData: SupabaseClient | undefined = process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createSupabaseServiceRoleClient()
-    : undefined;
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   const { treasury, aggregate, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
-    await getData(orgIdForData, supabaseForData);
+    await getData(orgIdForData);
   const userIsAdmin = await isOrgAdmin(orgIdForData);
 
   const livechartCommittees = committees.filter(
