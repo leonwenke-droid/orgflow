@@ -229,14 +229,6 @@ export default async function OrgDashboardPage({
           {org.school_short && `${org.school_short} · `}
           {t("dashboard.overview_subtitle", locale)}
         </p>
-        <p className="pt-2">
-          <a
-            href={`/${orgSlug}/login`}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
-          >
-            {t("common.sign_in", locale)}
-          </a>
-        </p>
       </header>
 
       {user && <OnboardingBanner />}
