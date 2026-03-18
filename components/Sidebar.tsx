@@ -30,6 +30,12 @@ const RESERVED = [
   "auth",
   "create-organisation",
   "join",
+  "imprint",
+  "privacy",
+  "terms",
+  "invite",
+  "onboarding",
+  "avv",
 ];
 
 type NavItem = { href: string; label: string; icon: React.ElementType };

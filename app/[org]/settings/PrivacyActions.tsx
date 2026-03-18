@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useLocale } from "../../../components/LocaleProvider";
 import { t } from "../../../lib/i18n";
 
-export default function PrivacyActions() {
+export default function PrivacyActions({ orgSlug }: { orgSlug: string }) {
   const { locale } = useLocale();
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function PrivacyActions() {
             ? "AVV nach Art. 28 DSGVO auf Anfrage."
             : "DPA under Art. 28 GDPR available on request."}
         </p>
-        <a className="mt-2 inline-block text-xs text-blue-600 underline hover:text-blue-700 dark:text-blue-400" href="/avv">
+        <a className="mt-2 inline-block text-xs text-blue-600 underline hover:text-blue-700 dark:text-blue-400" href={`/${orgSlug}/avv`}>
           {locale === "de" ? "Zur AVV-Seite" : "Open DPA page"}
         </a>
       </div>

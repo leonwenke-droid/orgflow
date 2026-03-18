@@ -12,7 +12,7 @@ import ThemeToggle from "./ThemeToggle";
 const RESERVED = ["admin", "dashboard", "login", "super-admin", "task", "api", "claim-org", "auth", "create-organisation", "join"];
 // Public / non-organisation routes that must not be interpreted as orgSlug.
 // (Otherwise /imprint -> orgSlug="imprint" would lead to links like /imprint/dashboard.)
-const LEGAL_RESERVED = ["imprint", "privacy", "terms", "invite", "onboarding"];
+const LEGAL_RESERVED = ["imprint", "privacy", "terms", "invite", "onboarding", "avv"];
 
 function useOrgSlug(): string | null {
   const pathname = usePathname() ?? "";

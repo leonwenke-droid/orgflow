@@ -115,7 +115,7 @@ export default async function OrgSettingsPage({
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
             {locale === "de" ? "Datenschutz & Daten" : "Privacy & data"}
           </h2>
-          <PrivacyActions />
+          <PrivacyActions orgSlug={orgSlug} />
         </section>
 
         <Link

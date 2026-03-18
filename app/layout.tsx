@@ -9,6 +9,7 @@ import { LocaleProvider } from "../components/LocaleProvider";
 import EmailVerificationBanner from "../components/EmailVerificationBanner";
 import CookieNotice from "../components/CookieNotice";
 import ConsentSync from "../components/ConsentSync";
+import FooterLinks from "../components/FooterLinks";
 
 export const metadata = {
   title: "OrgFlow",
@@ -78,17 +79,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               >
                 powered by LYNIQ Media
               </a>
-              <div className="flex flex-wrap gap-4">
-                <a className="hover:text-gray-700 dark:hover:text-gray-300" href="/privacy">
-                  {locale === "de" ? "Datenschutz" : "Privacy"}
-                </a>
-                <a className="hover:text-gray-700 dark:hover:text-gray-300" href="/terms">
-                  {locale === "de" ? "Nutzungsbedingungen" : "Terms"}
-                </a>
-                <a className="hover:text-gray-700 dark:hover:text-gray-300" href="/imprint">
-                  {locale === "de" ? "Impressum" : "Imprint"}
-                </a>
-              </div>
+              <FooterLinks />
             </div>
           </footer>
         </div>

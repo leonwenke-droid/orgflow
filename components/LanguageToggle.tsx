@@ -1,16 +1,23 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useLocale } from "./LocaleProvider";
 import type { Locale } from "../lib/i18n";
 
 export default function LanguageToggle() {
+  const router = useRouter();
   const { locale, setLocale } = useLocale();
+
+  const switchTo = (newLocale: Locale) => {
+    setLocale(newLocale);
+    router.refresh();
+  };
 
   return (
     <div className="flex items-center gap-2">
       <button
         type="button"
-        onClick={() => setLocale("en")}
+        onClick={() => switchTo("en")}
         className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
           locale === "en"
             ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
@@ -21,7 +28,7 @@ export default function LanguageToggle() {
       </button>
       <button
         type="button"
-        onClick={() => setLocale("de")}
+        onClick={() => switchTo("de")}
         className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
           locale === "de"
             ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
