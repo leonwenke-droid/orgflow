@@ -29,7 +29,11 @@ export default function CookieNotice() {
             {t("cookies.notice_title", locale)}
           </p>
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            {t("cookies.notice_text", locale)}
+            {t("cookies.notice_text", locale)}{" "}
+            <a className="underline" href="/privacy">
+              {t("cookies.learn_more", locale)}
+            </a>
+            .
           </p>
         </div>
         <button
