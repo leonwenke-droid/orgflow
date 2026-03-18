@@ -14,7 +14,24 @@ export default function HeaderNav({ user }: { user: User | null }) {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const segments = pathname.split("/").filter(Boolean);
-  const reserved = ["admin", "dashboard", "login", "super-admin", "task", "api", "claim-org", "auth"];
+  const reserved = [
+    "admin",
+    "dashboard",
+    "login",
+    "super-admin",
+    "task",
+    "api",
+    "claim-org",
+    "auth",
+    "create-organisation",
+    "join",
+    // Public / non-organisation routes
+    "imprint",
+    "privacy",
+    "terms",
+    "invite",
+    "onboarding",
+  ];
   const orgFromPath = segments.length >= 1 && !reserved.includes(segments[0]) ? segments[0] : null;
   const orgFromQuery = searchParams?.get("org")?.trim() || null;
   const orgSlug = orgFromPath || orgFromQuery;

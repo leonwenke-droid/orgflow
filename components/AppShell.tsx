@@ -18,6 +18,12 @@ const RESERVED = [
   "auth",
   "create-organisation",
   "join",
+  // Public / non-organisation routes
+  "imprint",
+  "privacy",
+  "terms",
+  "invite",
+  "onboarding",
 ];
 
 function useOrgSlug(): string | null {
