@@ -12,6 +12,7 @@ import {
   inviteExpiresAt
 } from "../../../lib/memberInvites";
 import { sendEmail as sendEmailMessage } from "../../../lib/email";
+import { getOrgIdForData } from "../../../lib/getOrganization";
 
 export const runtime = "nodejs";
 
@@ -104,7 +105,8 @@ export async function POST(req: NextRequest) {
     const orgName = (org as { id: string; name?: string }).name ?? "Organisation";
 
     const service = createSupabaseServiceRoleClient();
-    const orgId = (org as { id: string }).id;
+    const orgIdRaw = (org as { id: string }).id;
+    const orgId = getOrgIdForData(orgSlug, orgIdRaw);
     const { getPublicBaseUrl } = await import("../../../lib/publicBaseUrl");
     const baseUrl = await getPublicBaseUrl();
     const { data: requesterProfile } = await service
@@ -115,9 +117,7 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
     const invitedBy = (requesterProfile as { id: string } | null)?.id ?? null;
 
-    const { data: isAdmin } = await supabaseAuth.rpc("is_org_admin", {
-      org_id: (org as { id: string }).id
-    });
+    const { data: isAdmin } = await supabaseAuth.rpc("is_org_admin", { org_id: orgId });
     if (!isAdmin) {
       return NextResponse.json(
         { message: "Forbidden", errorKey: "common.unauthorized" },
