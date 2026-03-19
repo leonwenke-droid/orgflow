@@ -16,6 +16,7 @@ import {
   Package,
   Wallet,
   Trophy,
+  BarChart3,
   Settings2,
   ShieldCheck,
   MessageSquare,
@@ -68,12 +69,13 @@ function getNavSections(
     { href: `/${org}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
     ...(m.tasks !== false ? [{ href: tasksHref, labelKey: "dashboard.tasks", icon: CheckSquare }] : []),
     ...(m.shifts !== false ? [{ href: shiftsHref, labelKey: "dashboard.shifts", icon: CalendarDays }] : []),
+    ...(!manage ? [{ href: `/${org}/me`, labelKey: "nav.my_stats", icon: BarChart3 }] : []),
     ...(manage ? [{ href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users }] : []),
     ...(manage ? [{ href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }] : []),
   ];
   const orgItems: NavItem[] = [
     ...(manage && m.resources !== false ? [{ href: `/${org}/admin/materials`, labelKey: "dashboard.resources", icon: Package }] : []),
-    ...(showFinance ? [{ href: `/${org}/admin/treasury`, labelKey: "dashboard.finance", icon: Wallet }] : []),
+    ...(manage && showFinance ? [{ href: `/${org}/admin/treasury`, labelKey: "dashboard.finance", icon: Wallet }] : []),
     ...(manage && m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy }] : []),
     ...(manage && m.events ? [{ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange }] : []),
     ...(manage ? [{ href: `/${org}/admin/feedback`, labelKey: "nav.feedback", icon: MessageSquare }] : []),
