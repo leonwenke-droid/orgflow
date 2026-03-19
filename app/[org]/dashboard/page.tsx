@@ -246,6 +246,17 @@ export default async function OrgDashboardPage({
         .limit(6)
     : { data: [] };
 
+  const { data: myOpenTasks } = myProfileId
+    ? await supabase
+        .from("tasks")
+        .select("id, title, status, due_at, committees(name)")
+        .eq("organization_id", orgIdForData)
+        .eq("owner_id", myProfileId)
+        .neq("status", "erledigt")
+        .order("due_at", { ascending: true })
+        .limit(8)
+    : { data: [] };
+
   const livechartCommittees = committees.filter(
     (c) => !/Jahrgangssprecher/i.test(c.name)
   );
@@ -533,6 +544,32 @@ export default async function OrgDashboardPage({
             })()
           )}
         </div>
+      </section>
+
+      <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          {t("dashboard.my_open_tasks", locale)}
+        </h2>
+        {(myOpenTasks ?? []).length === 0 ? (
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("empty.tasks", locale)}</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+            {(myOpenTasks ?? []).map((task: any) => (
+              <li key={task.id} className="py-2 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                    {(task.committees as any)?.name ?? "–"}
+                    {task.due_at ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}` : ""}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                  {task.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );
