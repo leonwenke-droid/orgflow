@@ -52,10 +52,16 @@ type OrgModules = {
   events?: boolean;
 };
 
-function getNavSections(org: string, modules?: OrgModules, canViewFinance?: boolean, canManageOrgUi?: boolean): { titleKey: string; items: NavItem[] }[] {
+function getNavSections(
+  org: string,
+  modules?: OrgModules,
+  canViewFinance?: boolean | null,
+  canManageOrgUi?: boolean | null
+): { titleKey: string; items: NavItem[] }[] {
   const m = modules ?? {};
   const showFinance = (m.finance !== false) && (canViewFinance !== false);
-  const manage = canManageOrgUi !== false;
+  // If role is still loading / unknown, do NOT show admin-only modules yet.
+  const manage = canManageOrgUi === true;
   const tasksHref = manage ? `/${org}/admin/tasks` : `/${org}/tasks`;
   const shiftsHref = manage ? `/${org}/admin/shifts` : `/${org}/shifts`;
   const core: NavItem[] = [
@@ -98,14 +104,14 @@ export default function Sidebar({
   const searchParams = useSearchParams();
   const [orgName, setOrgName] = useState<string | null>(null);
   const [modules, setModules] = useState<OrgModules | null>(null);
-  const [canViewFinance, setCanViewFinance] = useState<boolean>(true);
-  const [canManageOrgUi, setCanManageOrgUi] = useState<boolean>(true);
+  const [canViewFinance, setCanViewFinance] = useState<boolean | null>(null);
+  const [canManageOrgUi, setCanManageOrgUi] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!orgSlug) {
       setOrgName(null);
       setModules(null);
-      setCanViewFinance(true);
+      setCanViewFinance(null);
       return;
     }
     let cancelled = false;
@@ -116,7 +122,7 @@ export default function Sidebar({
           if (data.name) setOrgName(data.name);
           if (data.modules) setModules(data.modules);
           setCanViewFinance(data.canViewFinance !== false);
-          setCanManageOrgUi(data.canManageOrg !== false);
+          setCanManageOrgUi(data.canManageOrg === true);
         }
       })
       .catch(() => {});
