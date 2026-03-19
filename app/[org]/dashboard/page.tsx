@@ -218,19 +218,33 @@ export default async function OrgDashboardPage({
 
   const { data: myProfilePrimary } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("id, full_name")
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgIdForData)
     .maybeSingle();
   const { data: myProfileFallback } = (!myProfilePrimary && orgIdForData !== org.id)
     ? await supabase
         .from("profiles")
-        .select("full_name")
+        .select("id, full_name")
         .eq("auth_user_id", user.id)
         .eq("organization_id", org.id)
         .maybeSingle()
     : { data: null };
   const myName = ((myProfilePrimary ?? myProfileFallback) as any)?.full_name ?? null;
+  const myProfileId = ((myProfilePrimary ?? myProfileFallback) as any)?.id ?? null;
+
+  const todayStr = getTodayDateString();
+  const { data: myAssignedShifts } = myProfileId
+    ? await supabase
+        .from("shift_assignments")
+        .select("id, status, user_id, replacement_user_id, shifts!inner(id, event_name, date, start_time, end_time, location, organization_id)")
+        .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)
+        .eq("shifts.organization_id", orgIdForData)
+        .gte("shifts.date", todayStr)
+        .order("shifts.date", { ascending: true })
+        .order("shifts.start_time", { ascending: true })
+        .limit(6)
+    : { data: [] };
 
   const livechartCommittees = committees.filter(
     (c) => !/Jahrgangssprecher/i.test(c.name)
@@ -262,6 +276,37 @@ export default async function OrgDashboardPage({
           isAdmin={userIsAdmin}
         />
       )}
+
+      <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+            {t("dashboard.my_assigned_shifts", locale)}
+          </h2>
+          <a className="text-xs text-blue-600 hover:underline dark:text-blue-400" href={`/${orgSlug}/shifts`}>
+            {locale === "de" ? "Ansehen" : "View"}
+          </a>
+        </div>
+        {(myAssignedShifts ?? []).length === 0 ? (
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("empty.shifts", locale)}</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+            {(myAssignedShifts ?? []).map((a: any) => {
+              const s = a.shifts;
+              return (
+                <li key={a.id} className="py-2">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {s?.event_name || t("dashboard.shifts", locale)}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {s?.date ? `${formatDateTimeForDisplay(s.date)} · ${String(s.start_time ?? "")}-${String(s.end_time ?? "")}` : "–"}
+                    {s?.location ? ` · ${s.location}` : ""}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
