@@ -1,11 +1,12 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { getCurrentOrganization, isOrgAdmin } from "../../../../../lib/getOrganization";
+import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../../AdminForbidden";
 import AssignPointsForm from "./AssignPointsForm";
 import ScoreImportLog from "./ScoreImportLog";
+import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
 
 export default async function AssignPointsPage({
   params
@@ -16,24 +17,25 @@ export default async function AssignPointsPage({
     ? (await (params as Promise<{ org: string }>)).org
     : (params as { org: string }).org;
   const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
-  if (!(await isOrgAdmin(org.id))) {
+  if (!(await isOrgAdmin(orgIdForData))) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
 
   const { data: members } = await supabase
     .from("profiles")
     .select("id, full_name")
-    .eq("organization_id", org.id)
+    .eq("organization_id", orgIdForData)
     .order("full_name");
 
   let logEntries: { id: string; user_id: string; recipientName: string; points: number; reason: string; created_at: string; createdBy: string; canRemove: boolean }[] = [];
   const { data: logRows, error: logErr } = await supabase
     .from("score_import_log")
     .select("id, user_id, points, reason, created_at, created_by, engagement_event_id")
-    .eq("organization_id", org.id)
+    .eq("organization_id", orgIdForData)
     .order("created_at", { ascending: false })
     .limit(100);
 

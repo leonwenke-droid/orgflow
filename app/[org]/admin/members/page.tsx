@@ -7,6 +7,7 @@ import MembersExcelUpload from "./MembersExcelUpload";
 import AddMemberForm from "./AddMemberForm";
 import MemberRow from "./MemberRow";
 import EmptyState from "../../../../components/EmptyState";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
 export default async function AdminMembersPage({
   params,
@@ -33,7 +34,7 @@ export default async function AdminMembersPage({
   } = await authClient.auth.getSession();
   const currentAuthUserId = session?.user?.id ?? null;
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
 
   const { data: committees } = await supabase
     .from("committees")
