@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getOrgIdForData } from "../../../lib/getOrganization";
 import { canViewFinance, canManageOrg, isReadOnly } from "../../../lib/permissions";
 import type { DbRole } from "../../../types";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
 
@@ -35,13 +36,25 @@ export async function GET(req: NextRequest) {
 
   let role: DbRole | null = null;
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("auth_user_id", user.id)
-      .eq("organization_id", orgIdForData)
-      .maybeSingle();
-    role = (profile as { role?: DbRole } | null)?.role ?? null;
+    // Use service role for reliable role lookup (prevents UI flipping to admin modules on role=null)
+    try {
+      const service = createSupabaseServiceRoleClient();
+      const { data: profile } = await service
+        .from("profiles")
+        .select("role")
+        .eq("auth_user_id", user.id)
+        .eq("organization_id", orgIdForData)
+        .maybeSingle();
+      role = (profile as { role?: DbRole } | null)?.role ?? null;
+    } catch {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("auth_user_id", user.id)
+        .eq("organization_id", orgIdForData)
+        .maybeSingle();
+      role = (profile as { role?: DbRole } | null)?.role ?? null;
+    }
   }
 
   return NextResponse.json({
@@ -56,11 +69,8 @@ export async function GET(req: NextRequest) {
       events: features.events === true,
     },
     role: role ?? undefined,
-    // Rolle unbekannt (null) → Admin-UI anzeigen (Fail-open), damit Admins nicht ausgesperrt werden.
-    // Zugriff wird weiterhin serverseitig über isOrgAdmin/canManageOrg geprüft.
-    canManageOrg: !user ? false : (role == null || canManageOrg(role)),
+    canManageOrg: role != null ? canManageOrg(role) : false,
     isReadOnly: role != null ? isReadOnly(role) : false,
-    // Rolle unbekannt (null) → Finanzen anzeigen (Fail-open), damit Admins nicht ausgesperrt werden
-    canViewFinance: !user ? false : (role == null || canViewFinance(role)),
+    canViewFinance: role != null ? canViewFinance(role) : false,
   });
 }
