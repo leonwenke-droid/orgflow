@@ -91,6 +91,43 @@ export async function POST(req: Request) {
       authUserId = createdUser.user.id;
     }
 
+    // If this auth user is already linked to a different profile row,
+    // we can't assign it again (profiles.auth_user_id is unique).
+    // This happens when someone invites an already-activated account again.
+    const { data: existingProfile } = await service
+      .from("profiles")
+      .select("id, organization_id, status")
+      .eq("auth_user_id", authUserId)
+      .maybeSingle();
+
+    if (existingProfile && existingProfile.id !== member.id) {
+      // If it's the same organisation, treat as already activated and just revoke this invite token.
+      if ((existingProfile as any).organization_id === (member as any).organization_id) {
+        await service
+          .from("profiles")
+          .update({
+            invite_status: "accepted",
+            invite_token_hash: null,
+            invite_expires_at: null,
+            activated_at: new Date().toISOString()
+          })
+          .eq("id", member.id);
+
+        const cookieStore = await cookies();
+        const routeClient = createRouteHandlerClient({ cookies: () => cookieStore });
+        await routeClient.auth.signInWithPassword({ email: memberEmail, password });
+        return NextResponse.json({ ok: true, alreadyActivated: true });
+      }
+
+      return NextResponse.json(
+        {
+          message:
+            "This account is already linked to another organisation. Please use the originally invited account or ask an admin to remove the duplicate invite.",
+        },
+        { status: 409 }
+      );
+    }
+
     const { error: profileError } = await service
       .from("profiles")
       .update({
