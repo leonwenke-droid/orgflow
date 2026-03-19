@@ -56,7 +56,9 @@ export async function GET(req: NextRequest) {
       events: features.events === true,
     },
     role: role ?? undefined,
-    canManageOrg: role != null ? canManageOrg(role) : false,
+    // Rolle unbekannt (null) → Admin-UI anzeigen (Fail-open), damit Admins nicht ausgesperrt werden.
+    // Zugriff wird weiterhin serverseitig über isOrgAdmin/canManageOrg geprüft.
+    canManageOrg: !user ? false : (role == null || canManageOrg(role)),
     isReadOnly: role != null ? isReadOnly(role) : false,
     // Rolle unbekannt (null) → Finanzen anzeigen (Fail-open), damit Admins nicht ausgesperrt werden
     canViewFinance: !user ? false : (role == null || canViewFinance(role)),
