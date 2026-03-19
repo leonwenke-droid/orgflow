@@ -24,14 +24,25 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/me`);
 
-  const { data: me } = await supabase
+  const { data: mePrimary } = await supabase
     .from("profiles")
     .select("id, full_name")
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgIdForData)
     .maybeSingle();
 
-  const myProfileId = (me as any)?.id as string | undefined;
+  const { data: meFallback } = (!mePrimary && orgIdForData !== org.id)
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("auth_user_id", user.id)
+        .eq("organization_id", org.id)
+        .maybeSingle()
+    : { data: null };
+
+  const me = (mePrimary ?? meFallback) as any;
+  const effectiveOrgIdForData = mePrimary ? orgIdForData : org.id;
+  const myProfileId = me?.id as string | undefined;
   if (!myProfileId) {
     return (
       <div className="mx-auto max-w-3xl p-6">
@@ -68,7 +79,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
     supabase
       .from("tasks")
       .select("id, status, due_at")
-      .eq("organization_id", orgIdForData)
+      .eq("organization_id", effectiveOrgIdForData)
       .eq("owner_id", myProfileId),
     supabase
       .from("shift_assignments")
