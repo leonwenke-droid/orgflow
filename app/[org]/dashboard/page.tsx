@@ -14,7 +14,7 @@ import OnboardingChecklist from "../../../components/OnboardingChecklist";
 import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin, getCurrentUserRoleInOrg } from "../../../lib/getOrganization";
-import { canViewFinance } from "../../../lib/permissions";
+import { ADMIN_ROLES, canViewFinance } from "../../../lib/permissions";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -212,8 +212,25 @@ export default async function OrgDashboardPage({
     await getData(orgIdForData);
   const userIsAdmin = await isOrgAdmin(orgIdForData);
   const userRole = await getCurrentUserRoleInOrg(orgIdForData);
+  const showGettingStarted = userRole != null && ADMIN_ROLES.includes(userRole);
   // Finanzen anzeigen: wenn Rolle berechtigt, oder unbekannt (Fail-open), oder Nutzer ist Org-Admin
   const userCanViewFinance = userRole == null || canViewFinance(userRole) || userIsAdmin;
+
+  const { data: myProfilePrimary } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("auth_user_id", user.id)
+    .eq("organization_id", orgIdForData)
+    .maybeSingle();
+  const { data: myProfileFallback } = (!myProfilePrimary && orgIdForData !== org.id)
+    ? await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("auth_user_id", user.id)
+        .eq("organization_id", org.id)
+        .maybeSingle()
+    : { data: null };
+  const myName = ((myProfilePrimary ?? myProfileFallback) as any)?.full_name ?? null;
 
   const livechartCommittees = committees.filter(
     (c) => !/Jahrgangssprecher/i.test(c.name)
@@ -225,15 +242,18 @@ export default async function OrgDashboardPage({
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
           {t("dashboard.title", locale)}
         </h1>
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+          {locale === "de" ? `Hallo${myName ? ` ${myName}` : ""}!` : `Hello${myName ? ` ${myName}` : ""}!`}
+        </p>
         <p className="text-sm text-gray-600">
           {org.school_short && `${org.school_short} · `}
           {t("dashboard.overview_subtitle", locale)}
         </p>
       </header>
 
-      {user && <OnboardingBanner />}
+      {showGettingStarted && <OnboardingBanner />}
 
-      {canAccessOrgData && (
+      {showGettingStarted && canAccessOrgData && (
         <OnboardingChecklist
           orgSlug={orgSlug}
           teamsCount={committees.length}
