@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getOrgIdForData } from "../../../lib/getOrganization";
-import { canViewFinance } from "../../../lib/permissions";
+import { canViewFinance, canManageOrg, isReadOnly } from "../../../lib/permissions";
 import type { DbRole } from "../../../types";
 
 export const runtime = "nodejs";
@@ -56,6 +56,8 @@ export async function GET(req: NextRequest) {
       events: features.events === true,
     },
     role: role ?? undefined,
+    canManageOrg: role != null ? canManageOrg(role) : false,
+    isReadOnly: role != null ? isReadOnly(role) : false,
     // Rolle unbekannt (null) → Finanzen anzeigen (Fail-open), damit Admins nicht ausgesperrt werden
     canViewFinance: !user ? false : (role == null || canViewFinance(role)),
   });

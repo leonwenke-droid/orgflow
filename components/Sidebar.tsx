@@ -51,26 +51,32 @@ type OrgModules = {
   events?: boolean;
 };
 
-function getNavSections(org: string, modules?: OrgModules, canViewFinance?: boolean): { titleKey: string; items: NavItem[] }[] {
+function getNavSections(org: string, modules?: OrgModules, canViewFinance?: boolean, canManageOrgUi?: boolean): { titleKey: string; items: NavItem[] }[] {
   const m = modules ?? {};
   const showFinance = (m.finance !== false) && (canViewFinance !== false);
+  const manage = canManageOrgUi !== false;
+  const tasksHref = manage ? `/${org}/admin/tasks` : `/${org}/tasks`;
+  const shiftsHref = manage ? `/${org}/admin/shifts` : `/${org}/shifts`;
   const core: NavItem[] = [
     { href: `/${org}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
-    ...(m.tasks !== false ? [{ href: `/${org}/admin/tasks`, labelKey: "dashboard.tasks", icon: CheckSquare }] : []),
-    ...(m.shifts !== false ? [{ href: `/${org}/admin/shifts`, labelKey: "dashboard.shifts", icon: CalendarDays }] : []),
-    { href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users },
-    { href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound },
+    ...(m.tasks !== false ? [{ href: tasksHref, labelKey: "dashboard.tasks", icon: CheckSquare }] : []),
+    ...(m.shifts !== false ? [{ href: shiftsHref, labelKey: "dashboard.shifts", icon: CalendarDays }] : []),
+    ...(manage ? [{ href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users }] : []),
+    ...(manage ? [{ href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }] : []),
   ];
   const orgItems: NavItem[] = [
-    ...(m.resources !== false ? [{ href: `/${org}/admin/materials`, labelKey: "dashboard.resources", icon: Package }] : []),
+    ...(manage && m.resources !== false ? [{ href: `/${org}/admin/materials`, labelKey: "dashboard.resources", icon: Package }] : []),
     ...(showFinance ? [{ href: `/${org}/admin/treasury`, labelKey: "dashboard.finance", icon: Wallet }] : []),
-    ...(m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy }] : []),
-    ...(m.events ? [{ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange }] : []),
+    ...(manage && m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy }] : []),
+    ...(manage && m.events ? [{ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange }] : []),
   ];
   return [
     { titleKey: "nav.core", items: core },
     { titleKey: "nav.organisation", items: orgItems },
-    { titleKey: "nav.administration", items: [{ href: `/${org}/settings`, labelKey: "dashboard.settings", icon: Settings2 }, { href: `/${org}/admin`, labelKey: "dashboard.admin", icon: ShieldCheck }] },
+    { titleKey: "nav.administration", items: [
+      { href: `/${org}/settings`, labelKey: "dashboard.settings", icon: Settings2 },
+      ...(manage ? [{ href: `/${org}/admin`, labelKey: "dashboard.admin", icon: ShieldCheck }] : []),
+    ] },
   ];
 }
 
@@ -91,6 +97,7 @@ export default function Sidebar({
   const [orgName, setOrgName] = useState<string | null>(null);
   const [modules, setModules] = useState<OrgModules | null>(null);
   const [canViewFinance, setCanViewFinance] = useState<boolean>(true);
+  const [canManageOrgUi, setCanManageOrgUi] = useState<boolean>(true);
 
   useEffect(() => {
     if (!orgSlug) {
@@ -107,6 +114,7 @@ export default function Sidebar({
           if (data.name) setOrgName(data.name);
           if (data.modules) setModules(data.modules);
           setCanViewFinance(data.canViewFinance !== false);
+          setCanManageOrgUi(data.canManageOrg !== false);
         }
       })
       .catch(() => {});
@@ -148,7 +156,7 @@ export default function Sidebar({
         </div>
       )}
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
-        {getNavSections(orgSlug, modules ?? undefined, canViewFinance)
+        {getNavSections(orgSlug, modules ?? undefined, canViewFinance, canManageOrgUi)
         .filter((s) => s.items.length > 0)
         .map((section) => (
           <div key={section.titleKey}>
