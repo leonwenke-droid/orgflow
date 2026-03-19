@@ -378,7 +378,7 @@ export default async function LandingPage() {
               {organizations.map((org) => (
                 <Link
                   key={org.id}
-                  href={`/${org.slug}/dashboard`}
+                  href={`/${org.slug}/login`}
                   className="bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-200 hover:shadow-md transition-all flex flex-col gap-2"
                 >
                   <div className="flex items-start justify-between gap-3">
