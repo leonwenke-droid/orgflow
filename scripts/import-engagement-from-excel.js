@@ -3,7 +3,7 @@
  * Nutzt engagement_events mit event_type 'score_import'; der Trigger aktualisiert engagement_scores.
  *
  * Aufruf: node scripts/import-engagement-from-excel.js <Pfad-zur-Excel>
- * Beispiel: node scripts/import-engagement-from-excel.js ~/Downloads/FINAL_Engagement_Abitur_2026_MIT_BEITRAG.xlsx
+ * Beispiel: node scripts/import-engagement-from-excel.js ~/Downloads/engagement_scores.xlsx
  */
 
 const path = require("path");
@@ -21,7 +21,7 @@ for (const envFile of [".env.local", ".env"]) {
 const XLSX = require("xlsx");
 const { createClient } = require("@supabase/supabase-js");
 
-const excelPath = process.argv[2] || path.resolve(process.cwd(), "FINAL_Engagement_Abitur_2026_MIT_BEITRAG.xlsx");
+const excelPath = process.argv[2] || path.resolve(process.cwd(), "engagement_scores.xlsx");
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;

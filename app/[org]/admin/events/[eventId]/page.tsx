@@ -28,12 +28,14 @@ export default async function EventDetailPage(props: {
     .single();
 
   if (eventError || !event) {
+    const cookieStore = await cookies();
+    const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
     return (
       <div className="mx-auto max-w-4xl p-6">
-        <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Events" />
-        <p className="mt-4 text-sm text-red-600 dark:text-red-400">Event not found.</p>
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("events.title", locale)} />
+        <p className="mt-4 text-sm text-red-600 dark:text-red-400">{t("events.not_found", locale)}</p>
         <Link href={`/${orgSlug}/admin/events`} className="mt-2 inline-block text-sm text-blue-600 dark:text-blue-400 hover:underline">
-          Back to events
+          {t("events.back_to_events", locale)}
         </Link>
       </div>
     );
@@ -41,10 +43,12 @@ export default async function EventDetailPage(props: {
 
   const [
     { count: tasksCount },
-    { count: shiftsCount }
+    { count: shiftsCount },
+    { count: resourcesCount }
   ] = await Promise.all([
     supabase.from("tasks").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData).eq("event_id", eventId),
-    supabase.from("shifts").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData).eq("event_id", eventId)
+    supabase.from("shifts").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData).eq("event_id", eventId),
+    supabase.from("material_procurements").select("id", { count: "exact", head: true }).eq("event_id", eventId)
   ]);
 
   const cookieStore = await cookies();
@@ -80,13 +84,21 @@ export default async function EventDetailPage(props: {
           <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">{shiftsCount ?? 0}</p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("events.view_shifts", locale)}</p>
         </Link>
+        <Link
+          href={`/admin/materials?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
+          className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow dark:border-gray-700 dark:bg-card-dark dark:hover:border-blue-600"
+        >
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("events.resources_count", locale)}</h2>
+          <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">{resourcesCount ?? 0}</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("events.view_resources", locale)}</p>
+        </Link>
       </div>
 
       <Link
         href={`/${orgSlug}/admin/events`}
         className="mt-6 inline-block text-sm text-gray-600 hover:underline dark:text-gray-400"
       >
-        ← Back to events
+        ← {t("events.back_to_events", locale)}
       </Link>
     </div>
   );

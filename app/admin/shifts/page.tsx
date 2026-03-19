@@ -10,6 +10,7 @@ import CreateShiftsForm from "../../../components/CreateShiftsForm";
 import ShiftPlanTableWithEdit from "../../../components/ShiftPlanTableWithEdit";
 import ShiftAttendancePdfExport, { type ShiftForPdf } from "../../../components/ShiftAttendancePdfExport";
 import EmptyState from "../../../components/EmptyState";
+import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -156,6 +157,108 @@ async function autoAssignForShifts(
       toAssign.forEach((m) => globallyUsed.add(m.id));
     }
   }
+}
+
+async function runAutoAssignForExistingShifts(formData: FormData) {
+  "use server";
+  const orgId = formData.get("organization_id")?.toString() || null;
+  const orgSlug = formData.get("org_slug")?.toString() || null;
+  if (!orgId) return;
+
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: adminOk } = await supabase.rpc("is_org_admin", { org_id: orgId });
+  if (adminOk !== true) return;
+
+  const service = createSupabaseServiceRoleClient();
+
+  const { data: shifts } = await service
+    .from("shifts")
+    .select("id, required_slots")
+    .eq("organization_id", orgId)
+    .eq("auto_assign", true)
+    .order("date", { ascending: true })
+    .order("start_time", { ascending: true });
+
+  const shiftIds = (shifts ?? []).map((s: any) => s.id as string).filter(Boolean);
+  if (shiftIds.length === 0) {
+    revalidatePath("/admin/shifts");
+    if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
+    return;
+  }
+
+  const { data: assignments } = await service
+    .from("shift_assignments")
+    .select("shift_id, user_id")
+    .in("shift_id", shiftIds);
+
+  const assignedByShift = new Map<string, Set<string>>();
+  for (const a of assignments ?? []) {
+    const sid = (a as any).shift_id as string;
+    const uid = (a as any).user_id as string;
+    if (!assignedByShift.has(sid)) assignedByShift.set(sid, new Set());
+    assignedByShift.get(sid)!.add(uid);
+  }
+
+  const [{ data: profiles }, { data: counters }] = await Promise.all([
+    service.from("profiles").select("id, role, status").eq("organization_id", orgId),
+    service.from("user_counters").select("user_id, load_index, responsibility_malus")
+  ]);
+
+  const loadMap = new Map(
+    (counters ?? []).map((c: any) => [
+      c.user_id as string,
+      { load: Number(c.load_index) ?? 0, malus: Number(c.responsibility_malus) ?? 0 }
+    ])
+  );
+
+  const eligible = (profiles ?? [])
+    .filter((p: any) => p.status !== "disabled" && p.role !== "viewer")
+    .map((p: any) => {
+      const c = loadMap.get(p.id as string) ?? { load: 0, malus: 0 };
+      return { id: p.id as string, load: c.load, malus: c.malus };
+    })
+    .sort((a, b) => (a.load - b.load) || (a.malus - b.malus) || a.id.localeCompare(b.id));
+
+  const usedThisRun = new Set<string>();
+  const toInsert: { shift_id: string; user_id: string; status: string }[] = [];
+  const increments = new Map<string, number>();
+
+  for (const s of shifts ?? []) {
+    const sid = (s as any).id as string;
+    const required = Number((s as any).required_slots ?? 0) || 0;
+    if (!sid || required <= 0) continue;
+    const already = assignedByShift.get(sid) ?? new Set<string>();
+    const missing = Math.max(0, required - already.size);
+    if (missing <= 0) continue;
+
+    let filled = 0;
+    for (const m of eligible) {
+      if (filled >= missing) break;
+      if (already.has(m.id)) continue;
+      if (usedThisRun.has(m.id)) continue;
+      toInsert.push({ shift_id: sid, user_id: m.id, status: "zugewiesen" });
+      usedThisRun.add(m.id);
+      increments.set(m.id, (increments.get(m.id) ?? 0) + 1);
+      filled++;
+    }
+  }
+
+  if (toInsert.length > 0) {
+    await service.from("shift_assignments").insert(toInsert);
+    for (const [uid, inc] of increments.entries()) {
+      const current = loadMap.get(uid)?.load ?? 0;
+      await service
+        .from("user_counters")
+        .update({ load_index: current + inc, updated_at: new Date().toISOString() })
+        .eq("user_id", uid);
+    }
+  }
+
+  revalidatePath("/admin/shifts");
+  if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
 }
 
 async function createShifts(
@@ -770,7 +873,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         </div>
       )}
       <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-        Shifts & auto-assignment
+        {t("shifts.auto_assignment_title", locale)}
       </h2>
       <section className="card space-y-2 text-xs sm:space-y-3">
         <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t("admin.new_shifts", locale)}</h3>
@@ -785,6 +888,18 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("admin.shift_plan", locale)}</h3>
             <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-400">{t("admin.shift_plan_hint", locale)}</p>
           </div>
+          {orgId && (
+            <form action={runAutoAssignForExistingShifts} className="flex items-center gap-2">
+              <input type="hidden" name="organization_id" value={orgId} />
+              <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
+              <SubmitButtonWithSpinner
+                className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+                loadingLabel="…"
+              >
+                {t("shifts.run_auto_assignment", locale)}
+              </SubmitButtonWithSpinner>
+            </form>
+          )}
           {shifts && shifts.length > 0 && (
             <ShiftAttendancePdfExport
               shifts={shifts}

@@ -24,10 +24,10 @@ if (!url || !key) {
   process.exit(1);
 }
 
-const DEFAULT_PASSWORD = "AbiOrga2026!";
+const DEFAULT_PASSWORD = "OrgFlowDev2026!";
 const DOMAIN = (() => {
   const arg = process.argv.find((a) => a.startsWith("--domain="));
-  return arg ? arg.split("=")[1] : "abi-orga.lead";
+  return arg ? arg.split("=")[1] : "orgflow.local";
 })();
 
 function slug(name) {

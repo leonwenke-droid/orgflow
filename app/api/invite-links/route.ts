@@ -4,11 +4,7 @@ import { cookies } from "next/headers";
 import { getCurrentOrganization, isOrgAdmin } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { generateInviteToken } from "../../../services/inviteService";
-
-function getBaseUrl(): string {
-  const fromEnv = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
-  return fromEnv || "http://localhost:3000";
-}
+import { getPublicBaseUrl } from "../../../lib/publicBaseUrl";
 
 export async function POST(req: Request) {
   try {
@@ -59,7 +55,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: error?.message || "Failed to create invite." }, { status: 500 });
     }
 
-    const url = `${getBaseUrl()}/join/${orgSlug}?token=${encodeURIComponent(link.token)}`;
+    const url = `${await getPublicBaseUrl()}/join/${orgSlug}?token=${encodeURIComponent(link.token)}`;
     return NextResponse.json({ url, token: link.token, expiresAt: link.expires_at });
   } catch (e) {
     console.error("invite-links error:", e);

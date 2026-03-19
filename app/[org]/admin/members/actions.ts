@@ -12,15 +12,9 @@ import {
   hashInviteToken,
   inviteExpiresAt
 } from "../../../../lib/memberInvites";
+import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
 
 const LEGACY_DEFAULT_ORG_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
-
-function getBaseUrl(): string {
-  const fromEnv = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
-  // Fallback für lokale Entwicklung: root von localhost
-  return "http://localhost:3000";
-}
 
 async function issueMemberInvite(
   supabase: ReturnType<typeof createServerComponentClient>,
@@ -44,7 +38,7 @@ async function issueMemberInvite(
     .eq("id", profile.id)
     .eq("organization_id", orgId);
 
-  const inviteUrl = buildInviteUrl(getBaseUrl(), token);
+  const inviteUrl = buildInviteUrl(await getPublicBaseUrl(), token);
   const whatsappText = buildWhatsAppInviteText({
     firstName: profile.full_name?.split(" ")?.[0] ?? null,
     organizationName: orgName,

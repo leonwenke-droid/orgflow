@@ -38,15 +38,28 @@ async function addMaterialProcurement(
   }
 
   const userIds = formData.getAll("user_ids").filter((v): v is string => typeof v === "string" && v.trim().length > 0);
-  const eventName = formData.get("event_name")?.toString()?.trim();
+  const eventId = formData.get("event_id")?.toString()?.trim() || null;
+  let eventName = formData.get("event_name")?.toString()?.trim() || null;
   const description = formData.get("description")?.toString()?.trim();
   const size = formData.get("size")?.toString() as "small" | "medium" | "large" | null;
 
-  if (!userIds.length || !eventName || !description || !size || !["small", "medium", "large"].includes(size)) {
+  if (!userIds.length || (!eventId && !eventName) || !description || !size || !["small", "medium", "large"].includes(size)) {
     return { errorKey: "materials.error_required" };
   }
 
   const orgId = (profile as { organization_id?: string | null }).organization_id ?? null;
+
+  if (eventId && orgId) {
+    const { data: ev } = await service
+      .from("events")
+      .select("name")
+      .eq("id", eventId)
+      .eq("organization_id", orgId)
+      .maybeSingle();
+    if (ev && (ev as any).name) {
+      eventName = String((ev as any).name).trim() || eventName;
+    }
+  }
   const profilesQuery = service.from("profiles").select("id");
   if (orgId) profilesQuery.eq("organization_id", orgId);
   const validProfileIds = new Set((await profilesQuery).data?.map((p) => p.id) ?? []);
@@ -59,6 +72,7 @@ async function addMaterialProcurement(
     .from("material_procurements")
     .insert({
       user_id: null,
+      event_id: eventId,
       event_name: eventName,
       item_description: description,
       size
@@ -133,14 +147,15 @@ async function deleteMaterialProcurement(formData: FormData) {
   revalidatePath("/admin/materials");
 }
 
-type MaterialsPageProps = { searchParams?: Promise<{ org?: string }> | { org?: string } };
+type MaterialsPageProps = { searchParams?: Promise<{ org?: string; event?: string }> | { org?: string; event?: string } };
 
 export default async function MaterialsPage(props: MaterialsPageProps) {
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ org?: string }>)
-    : (raw ?? {}) as { org?: string };
+    ? await (raw as Promise<{ org?: string; event?: string }>)
+    : (raw ?? {}) as { org?: string; event?: string };
   const orgSlug = searchParams?.org?.trim() || null;
+  const eventIdFilter = searchParams?.event?.trim() || null;
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -208,14 +223,22 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
   const profilesQuery = service.from("profiles").select("id, full_name").order("full_name");
   if (orgId) profilesQuery.eq("organization_id", orgId);
 
-  const [{ data: profiles }, { data: materials }, { data: participants }] = await Promise.all([
+  const eventsQuery = orgId
+    ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
+    : Promise.resolve({ data: [] as { id: string; name: string }[] });
+  const materialsQuery = service
+    .from("material_procurements")
+      .select("id, user_id, event_id, event_name, item_description, size, created_at")
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (eventIdFilter) materialsQuery.eq("event_id", eventIdFilter);
+
+  const [{ data: profiles }, { data: materials }, { data: participants }, { data: events }] = await Promise.all([
     profilesQuery,
-    service
-      .from("material_procurements")
-      .select("id, user_id, event_name, item_description, size, created_at")
-      .order("created_at", { ascending: false })
-      .limit(200),
+    materialsQuery,
     service.from("material_procurement_participants").select("material_id, user_id")
+    ,
+    eventsQuery
   ]);
 
   const profileNames = new Map(
@@ -243,6 +266,8 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
           return userIds.every((uid) => orgProfileIds.has(uid));
         });
 
+  const eventNameById = new Map((events ?? []).map((e: any) => [e.id as string, e.name as string]));
+
   return (
     <div className="space-y-6">
       {effectiveOrgSlug && (
@@ -268,6 +293,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
           profiles={profiles ?? []}
           addMaterialProcurement={addMaterialProcurement}
           resourceCategories={resourceCategories ?? undefined}
+          events={(events ?? []) as { id: string; name: string }[]}
         />
       </section>
 
@@ -297,6 +323,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                 materialsForOrg.map((m: {
                   id: string;
                   user_id?: string | null;
+                  event_id?: string | null;
                   event_name: string;
                   item_description: string;
                   size: string;
@@ -318,7 +345,9 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                     <td className="p-3 text-gray-600">
                       {names || "—"}
                     </td>
-                    <td className="p-3 text-gray-600">{m.event_name}</td>
+                    <td className="p-3 text-gray-600">
+                      {m.event_id ? (eventNameById.get(m.event_id) ?? m.event_name) : m.event_name}
+                    </td>
                     <td className="p-3 text-gray-600">{m.item_description}</td>
                     <td className="p-3">
                       <span

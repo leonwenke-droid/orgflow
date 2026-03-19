@@ -4,11 +4,7 @@ import { cookies } from "next/headers";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
 import { buildInviteUrl, buildWhatsAppInviteText, generateInviteToken, hashInviteToken, inviteExpiresAt } from "../../../../lib/memberInvites";
-
-function getBaseUrl(): string {
-  const fromEnv = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
-  return fromEnv || "http://localhost:3000";
-}
+import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
 
 function csvEscape(value: string | null | undefined): string {
   const text = String(value ?? "");
@@ -43,6 +39,7 @@ export async function GET(req: Request) {
     .order("full_name");
 
   const expiresAt = inviteExpiresAt();
+  const baseUrl = await getPublicBaseUrl();
   const rows = ["name,email,phone,invite_url,whatsapp_text,expires_at"];
 
   for (const member of members ?? []) {
@@ -58,7 +55,7 @@ export async function GET(req: Request) {
       .eq("id", (member as { id: string }).id)
       .eq("organization_id", orgIdForData);
 
-    const inviteUrl = buildInviteUrl(getBaseUrl(), token);
+    const inviteUrl = buildInviteUrl(baseUrl, token);
     const whatsappText = buildWhatsAppInviteText({
       firstName: (member as { full_name?: string | null }).full_name?.split(" ")?.[0] ?? null,
       organizationName: org.name,

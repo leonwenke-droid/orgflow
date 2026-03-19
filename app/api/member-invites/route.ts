@@ -12,11 +12,7 @@ import {
 } from "../../../lib/memberInvites";
 import { sendEmail as sendEmailMessage } from "../../../lib/email";
 import { writeAuditLog } from "../../../lib/audit";
-
-function getBaseUrl(): string {
-  const fromEnv = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
-  return fromEnv || "http://localhost:3000";
-}
+import { getPublicBaseUrl } from "../../../lib/publicBaseUrl";
 
 async function getRequesterProfileId(orgId: string, authUserId: string) {
   const service = createSupabaseServiceRoleClient();
@@ -88,7 +84,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: updateError.message }, { status: 500 });
   }
 
-  const inviteUrl = buildInviteUrl(getBaseUrl(), token);
+  const inviteUrl = buildInviteUrl(await getPublicBaseUrl(), token);
   const whatsappText = buildWhatsAppInviteText({
     firstName: member.full_name?.split(" ")[0] ?? null,
     organizationName: org.name,

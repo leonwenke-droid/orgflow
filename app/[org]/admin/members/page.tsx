@@ -95,7 +95,9 @@ export default async function AdminMembersPage({
   const filteredMembers =
     statusFilter === "all"
       ? members
-      : members.filter((m) => (m as { status?: string | null }).status === statusFilter);
+      : statusFilter === "invited"
+        ? members.filter((m) => (m as { status?: string | null }).status === "invited" || (m as { invite_status?: string | null }).invite_status === "pending")
+        : members.filter((m) => (m as { status?: string | null }).status === statusFilter);
 
   const committeeList = (committees ?? []).map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }));
 

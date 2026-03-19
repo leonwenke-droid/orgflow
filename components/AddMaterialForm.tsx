@@ -6,6 +6,7 @@ import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
 
 type Profile = { id: string; full_name: string };
+type EventOption = { id: string; name: string };
 
 const SIZE_OPTIONS = [
   { value: "small" as const, points: 5, labelKey: "resources.size_small" as const, examplesKey: "resources.examples_small" as const },
@@ -47,11 +48,13 @@ export type ResourceCategoryOption = { value: "small" | "medium" | "large"; labe
 export default function AddMaterialForm({
   profiles,
   addMaterialProcurement,
-  resourceCategories
+  resourceCategories,
+  events
 }: {
   profiles: Profile[];
   addMaterialProcurement: AddMaterialAction;
   resourceCategories?: ResourceCategoryOption[] | null;
+  events?: EventOption[] | null;
 }) {
   const { locale } = useLocale();
   const options: ResourceCategoryOption[] = resourceCategories?.length
@@ -146,11 +149,25 @@ export default function AddMaterialForm({
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
             {t("resources.event", locale)}
           </label>
+          {events && events.length > 0 ? (
+            <select
+              name="event_id"
+              className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              defaultValue=""
+            >
+              <option value="">{t("shifts.event_none", locale)}</option>
+              {events.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name}
+                </option>
+              ))}
+            </select>
+          ) : null}
           <input
             type="text"
             name="event_name"
             placeholder={t("resources.event_placeholder", locale)}
-            required
+            required={!events || events.length === 0}
             className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400"
           />
         </div>

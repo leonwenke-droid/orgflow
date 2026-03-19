@@ -10,14 +10,95 @@ import CopyTaskLinkButton from "../../../components/CopyTaskLinkButton";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import CommitteeFilter from "../../../components/CommitteeFilter";
 import EmptyState from "../../../components/EmptyState";
+import { localeFromCookie, LOCALE_COOKIE_NAME, t as tr } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 const STATUS_COLUMNS = [
-  { key: "offen", label: "Open" },
-  { key: "in_arbeit", label: "In progress" },
-  { key: "erledigt", label: "Done" }
+  { key: "offen", labelKey: "tasks.status_open" },
+  { key: "in_arbeit", labelKey: "tasks.status_in_progress" },
+  { key: "erledigt", labelKey: "tasks.status_done" }
 ] as const;
+
+async function autoAssignTasks(formData: FormData) {
+  "use server";
+  const orgId = formData.get("organization_id")?.toString() || null;
+  const orgSlug = formData.get("org_slug")?.toString() || null;
+  if (!orgId) return;
+
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: adminOk } = await supabase.rpc("is_org_admin", { org_id: orgId });
+  if (adminOk !== true) return;
+
+  const service = createSupabaseServiceRoleClient();
+
+  const { data: tasks } = await service
+    .from("tasks")
+    .select("id")
+    .eq("organization_id", orgId)
+    .is("owner_id", null)
+    .in("status", ["offen", "in_arbeit"])
+    .order("due_at", { ascending: true });
+
+  const taskIds = (tasks ?? []).map((t: any) => t.id as string).filter(Boolean);
+  if (taskIds.length === 0) {
+    revalidatePath("/admin/tasks");
+    if (orgSlug) revalidatePath(`/admin/tasks?org=${encodeURIComponent(orgSlug)}`);
+    return;
+  }
+
+  const [{ data: profiles }, { data: counters }] = await Promise.all([
+    service.from("profiles").select("id, role, status").eq("organization_id", orgId),
+    service.from("user_counters").select("user_id, load_index, responsibility_malus")
+  ]);
+
+  const loadMap = new Map(
+    (counters ?? []).map((c: any) => [
+      c.user_id as string,
+      { load: Number(c.load_index) ?? 0, malus: Number(c.responsibility_malus) ?? 0 }
+    ])
+  );
+
+  const eligible = (profiles ?? [])
+    .filter((p: any) => p.status !== "disabled" && p.role !== "viewer")
+    .map((p: any) => {
+      const c = loadMap.get(p.id as string) ?? { load: 0, malus: 0 };
+      return { id: p.id as string, load: c.load, malus: c.malus };
+    })
+    .sort((a, b) => (a.load - b.load) || (a.malus - b.malus) || a.id.localeCompare(b.id));
+
+  if (eligible.length === 0) return;
+
+  const updates: { taskId: string; ownerId: string }[] = [];
+  const increments = new Map<string, number>();
+
+  // Round-robin over sorted-by-load list (deterministic per run)
+  let idx = 0;
+  for (const taskId of taskIds) {
+    const member = eligible[idx % eligible.length];
+    updates.push({ taskId, ownerId: member.id });
+    increments.set(member.id, (increments.get(member.id) ?? 0) + 1);
+    idx++;
+  }
+
+  for (const u of updates) {
+    await service.from("tasks").update({ owner_id: u.ownerId }).eq("id", u.taskId).eq("organization_id", orgId);
+  }
+
+  for (const [uid, inc] of increments.entries()) {
+    const current = loadMap.get(uid)?.load ?? 0;
+    await service
+      .from("user_counters")
+      .update({ load_index: current + inc, updated_at: new Date().toISOString() })
+      .eq("user_id", uid);
+  }
+
+  revalidatePath("/admin/tasks");
+  if (orgSlug) revalidatePath(`/admin/tasks?org=${encodeURIComponent(orgSlug)}`);
+}
 
 async function deleteTask(formData: FormData) {
   "use server";
@@ -31,6 +112,8 @@ async function deleteTask(formData: FormData) {
 type PageProps = { searchParams?: Promise<{ committee?: string; org?: string; event?: string }> | { committee?: string; org?: string; event?: string } };
 
 export default async function AdminTasksPage(props: PageProps) {
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
     ? await (raw as Promise<{ committee?: string; org?: string; event?: string }>)
@@ -48,7 +131,8 @@ export default async function AdminTasksPage(props: PageProps) {
     const loginHref = orgSlug ? `/${orgSlug}/login` : "/";
     return (
       <p className="text-sm text-amber-300">
-        Session nicht erkannt. Bitte <a href={loginHref} className="underline">erneut einloggen</a>.
+        {tr("tasks.session_missing", locale)}{" "}
+        <a href={loginHref} className="underline">{tr("common.sign_in", locale)}</a>.
       </p>
     );
   }
@@ -63,7 +147,7 @@ export default async function AdminTasksPage(props: PageProps) {
   if (!profile || !["admin", "lead", "super_admin"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300">
-        Access only for admins & team leads.
+        {tr("tasks.access_admin_only", locale)}
       </p>
     );
   }
@@ -134,12 +218,12 @@ export default async function AdminTasksPage(props: PageProps) {
   return (
     <div className="space-y-4">
       {effectiveOrgSlug && (
-        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Tasks" />
+        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel={tr("dashboard.tasks", locale)} />
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-4">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Tasks & Kanban
+            {tr("tasks.kanban_title", locale)}
           </h2>
           <Suspense fallback={<span className="text-[10px] text-gray-500">Team …</span>}>
             <CommitteeFilter committees={committeesForFilter} />
@@ -150,7 +234,7 @@ export default async function AdminTasksPage(props: PageProps) {
                 href={baseTasksUrl}
                 className={`rounded px-2.5 py-1 ${!eventIdFilter ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"}`}
               >
-                All events
+                {tr("tasks.all_events", locale)}
               </Link>
               {events.map((ev) => (
                 <Link
@@ -164,9 +248,20 @@ export default async function AdminTasksPage(props: PageProps) {
             </div>
           )}
         </div>
-        <Link href={baseTasksNewUrl} className="btn-primary text-xs">
-          New task
-        </Link>
+        <div className="flex items-center gap-2">
+          {orgId && (
+            <form action={autoAssignTasks} className="inline">
+              <input type="hidden" name="organization_id" value={orgId} />
+              <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
+              <SubmitButtonWithSpinner className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70" loadingLabel="…">
+                {tr("tasks.run_auto_assignment", locale)}
+              </SubmitButtonWithSpinner>
+            </form>
+          )}
+          <Link href={baseTasksNewUrl} className="btn-primary text-xs">
+            {tr("cta.create_task", locale)}
+          </Link>
+        </div>
       </div>
 
       {tasksFiltered.length === 0 && (
@@ -182,10 +277,10 @@ export default async function AdminTasksPage(props: PageProps) {
           <div key={col.key} className="card flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600">
-                {col.label}
+                {tr(col.labelKey, locale)}
               </h3>
               <span className="text-[10px] text-gray-500">
-                {tasksFiltered.filter((t) => t.status === col.key).length} tasks
+                {tr("tasks.count_tasks", locale).replace("{count}", String(tasksFiltered.filter((t) => t.status === col.key).length))}
               </span>
             </div>
             <div className="space-y-2 text-xs">
@@ -202,30 +297,30 @@ export default async function AdminTasksPage(props: PageProps) {
                           {t.title}
                         </h4>
                         <p className="text-[10px] text-gray-600">
-                          Team: {(t.committees as { name?: string })?.name ?? "–"}
+                          {tr("tasks.team_label", locale)}: {(t.committees as { name?: string })?.name ?? "–"}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-1 text-[9px]">
                         {t.due_at && (
                           <span className="rounded bg-gray-100 px-1 py-0.5 text-gray-700">
-                            {new Date(t.due_at).toLocaleDateString("de-DE")}
+                            {new Date(t.due_at).toLocaleDateString(locale === "de" ? "de-DE" : "en-GB")}
                           </span>
                         )}
                         <span className="text-gray-500">
                           {t.proof_required
                             ? t.proof_url
-                              ? "Proof uploaded"
-                              : "Proof missing"
-                            : "Proof optional"}
+                              ? tr("tasks.proof_uploaded", locale)
+                              : tr("tasks.proof_missing", locale)
+                            : tr("tasks.proof_optional", locale)}
                         </span>
                       </div>
                     </div>
                     <div className="mt-1.5 space-y-0.5 text-[10px] text-gray-600">
                       <p>
-                        Created by: {t.created_by ? profileNames.get(t.created_by) ?? "–" : "–"}
+                        {tr("tasks.created_by", locale)}: {t.created_by ? profileNames.get(t.created_by) ?? "–" : "–"}
                       </p>
                       <p>
-                        Assigned to: {t.owner_id ? profileNames.get(t.owner_id) ?? "–" : "Unassigned"}
+                        {tr("tasks.assigned_to", locale)}: {t.owner_id ? profileNames.get(t.owner_id) ?? "–" : tr("tasks.unassigned", locale)}
                       </p>
                     </div>
                     {t.description && (
@@ -245,23 +340,23 @@ export default async function AdminTasksPage(props: PageProps) {
                             rel="noopener noreferrer"
                             className="rounded bg-blue-100 px-2 py-0.5 text-blue-700 hover:bg-blue-200"
                           >
-                            Beweis ansehen
+                            {tr("tasks.view_proof", locale)}
                           </a>
                         )}
                       </div>
                     )}
                     <div className="mt-1.5 flex items-center justify-between">
                       <span className="rounded bg-gray-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-700">
-                        {col.label}
+                        {tr(col.labelKey, locale)}
                       </span>
                       <form action={deleteTask} className="inline">
                         <input type="hidden" name="taskId" value={t.id} />
                         <SubmitButtonWithSpinner
                           className="inline-flex items-center gap-1.5 rounded bg-red-100 px-2 py-0.5 text-[9px] text-red-600 hover:bg-red-200 disabled:opacity-70"
-                          title="Remove task"
+                          title={tr("tasks.remove_task_title", locale)}
                           loadingLabel="…"
                         >
-                          Remove
+                          {tr("tasks.remove_task", locale)}
                         </SubmitButtonWithSpinner>
                       </form>
                     </div>
@@ -269,7 +364,7 @@ export default async function AdminTasksPage(props: PageProps) {
                 ))}
               {!tasksFiltered.filter((t) => t.status === col.key).length && (
                 <p className="text-[11px] text-gray-500">
-                  No tasks in this column.
+                  {tr("tasks.no_tasks_in_column", locale)}
                 </p>
               )}
             </div>

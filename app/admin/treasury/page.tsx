@@ -153,6 +153,11 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
 
       <section className="card">
         <TreasuryUploadForm organizationId={orgId ?? undefined} defaultCellRef={defaultCellRef} currencyCode={currencyCode} />
+        <div className="mt-2 text-xs">
+          <a className="text-blue-600 hover:underline dark:text-blue-400" href="/api/treasury/template">
+            {t("finance.download_template", locale)}
+          </a>
+        </div>
       </section>
 
       {orgId && (

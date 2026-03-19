@@ -24,8 +24,8 @@ create table if not exists organizations (
   id uuid primary key default gen_random_uuid(),
   
   -- Identifikation
-  name text not null,                         -- "Abitur 2027 - UEG"
-  slug text unique not null,                  -- "abi-2027-ueg" (für URL)
+  name text not null,                         -- z. B. "OrgFlow Demo Organization"
+  slug text unique not null,                  -- z. B. "demo-org" (für URL)
   
   -- Schul-Info
   school_name text not null,                  -- "Ulrichsgymnasium Norden"
@@ -37,7 +37,7 @@ create table if not exists organizations (
   year int not null,                          -- 2027
   
   -- Subdomain (für subdomain-routing)
-  subdomain text unique,                      -- "ueg-2027" für ueg-2027.abiorga.app
+  subdomain text unique,                      -- z. B. "demo" für demo.<ROOT_HOST>
   
   -- Settings (flexible Konfiguration pro Org)
   settings jsonb default '{
@@ -132,10 +132,10 @@ create index if not exists idx_treasury_org on treasury_updates(organization_id)
 create index if not exists idx_engagement_scores_org on engagement_scores(organization_id);
 
 -- ============================================================================
--- STEP 4: SICHERE DATEN MIGRATION - Bestehende Org erstellen
+-- STEP 4: SICHERE DATEN MIGRATION - Default-Org erstellen (neutral)
 -- ============================================================================
 
--- Feste UUID für die bestehende Organisation (Abi 2026 UEG)
+-- Feste UUID für die bestehende Default-Organisation (Legacy-Daten)
 insert into organizations (
   id,
   name,
@@ -149,13 +149,13 @@ insert into organizations (
 )
 values (
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  'Abitur 2026 - Ulrichsgymnasium Norden',
-  'abi-2026-ueg',
-  'ueg-2026',
-  'Ulrichsgymnasium Norden',
-  'UEG',
-  'Norden',
-  2026,
+  'OrgFlow Demo Organization',
+  'demo-org',
+  'demo',
+  'Example Organization',
+  'DEMO',
+  '—',
+  extract(year from now())::int,
   true
 )
 on conflict (id) do nothing;  -- Verhindert Fehler bei erneutem Run
@@ -199,14 +199,13 @@ where organization_id is null;
 -- ============================================================================
 
 insert into committees (name, is_default) values
-  ('Jahrgangssprecher', true),
-  ('Finanzkomitee', true),
-  ('Veranstaltungskomitee', true),
-  ('Abiball-Komitee', true),
-  ('Mottowoche-Komitee', true),
-  ('Abibuch-Komitee', true),
-  ('Socialmedia-Komitee', true),
-  ('Abistreich-Komitee', true)
+  ('Admin', true),
+  ('Finance', true),
+  ('Events', true),
+  ('Operations', true),
+  ('Communications', true),
+  ('Logistics', true),
+  ('Editorial', true)
 on conflict do nothing;
 
 -- ============================================================================

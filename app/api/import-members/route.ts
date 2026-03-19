@@ -105,7 +105,8 @@ export async function POST(req: NextRequest) {
 
     const service = createSupabaseServiceRoleClient();
     const orgId = (org as { id: string }).id;
-    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").trim().replace(/\/$/, "");
+    const { getPublicBaseUrl } = await import("../../../lib/publicBaseUrl");
+    const baseUrl = await getPublicBaseUrl();
     const { data: requesterProfile } = await service
       .from("profiles")
       .select("id")

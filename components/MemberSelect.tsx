@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState, useId, useEffect } from "react";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 type Option = { id: string; full_name: string };
 
@@ -8,7 +10,7 @@ export default function MemberSelect({
   options,
   name,
   defaultValue,
-  placeholder = "Search or select name…",
+  placeholder,
   className = ""
 }: {
   options: Option[];
@@ -17,11 +19,12 @@ export default function MemberSelect({
   placeholder?: string;
   className?: string;
 }) {
+  const { locale } = useLocale();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Option | null>(() => {
     if (!defaultValue) return null;
     const o = options.find((op) => op.id === defaultValue);
-    return o ? { id: o.id, full_name: String(o.full_name ?? "").trim() || "(no name)" } : null;
+    return o ? { id: o.id, full_name: String(o.full_name ?? "").trim() || t("resources.no_name", locale) } : null;
   });
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,7 +33,7 @@ export default function MemberSelect({
 
   const safeOptions = options.map((o) => ({
     id: o.id,
-    full_name: String(o.full_name ?? "").trim() || "(no name)"
+    full_name: String(o.full_name ?? "").trim() || t("resources.no_name", locale)
   }));
   const filtered =
     query.trim() === ""
@@ -55,7 +58,7 @@ export default function MemberSelect({
     <div ref={containerRef} className={`relative ${className}`}>
       <input type="hidden" name={name} value={selected?.id ?? ""} />
       <label htmlFor={inputId} className="sr-only">
-        Responsible person
+        {t("tasks.owner_label", locale)}
       </label>
       <input
         id={inputId}
@@ -65,7 +68,7 @@ export default function MemberSelect({
         aria-controls={listId}
         aria-autocomplete="list"
         autoComplete="off"
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("members.search_or_select", locale)}
         value={displayValue}
         onChange={(e) => {
           const v = e.target.value;
@@ -85,7 +88,7 @@ export default function MemberSelect({
         >
           {filtered.length === 0 ? (
             <li className="px-3 py-2 text-gray-500">
-              {options.length === 0 ? "No people loaded. Select team first or use \"All members\"." : "No matches"}
+              {options.length === 0 ? t("members.no_people_loaded", locale) : t("common.no_matches", locale)}
             </li>
           ) : (
             filtered.map((opt) => (

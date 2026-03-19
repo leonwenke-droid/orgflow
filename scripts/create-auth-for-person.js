@@ -27,8 +27,8 @@ if (!url || !key) {
   process.exit(1);
 }
 
-const DEFAULT_PASSWORD = "AbiOrga2026!";
-const DEFAULT_DOMAIN = "abi-orga.lead";
+const DEFAULT_PASSWORD = "OrgFlowDev2026!";
+const DEFAULT_DOMAIN = "orgflow.local";
 
 function slug(name) {
   return String(name || "")
