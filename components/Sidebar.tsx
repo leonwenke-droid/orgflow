@@ -183,7 +183,7 @@ export default function Sidebar({
         ))}
       </nav>
       <div className="shrink-0 border-t border-gray-200 px-3 py-3 dark:border-gray-700">
-        <LogoutButton returnTo={`/${orgSlug}/dashboard`} />
+        <LogoutButton returnTo={`/${orgSlug}/login`} />
       </div>
     </>
   );

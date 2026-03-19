@@ -49,7 +49,7 @@ export default function AppHeader({ user, onMenuOpen }: { user: User | null; onM
 
   const logoutReturnTo = pathname.startsWith("/super-admin")
     ? "/login?redirectTo=/super-admin"
-    : orgSlug ? `/${orgSlug}/dashboard` : "/";
+    : orgSlug ? `/${orgSlug}/login` : "/login";
 
   return (
     <header className="mb-6 flex items-center justify-between bg-transparent" role="banner">

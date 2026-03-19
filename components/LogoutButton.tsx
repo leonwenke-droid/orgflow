@@ -5,10 +5,10 @@ import { useState } from "react";
 /**
  * Nach Logout wird zu returnTo weitergeleitet.
  * - Aus Super-Admin: returnTo="/login?redirectTo=/super-admin"
- * - Aus Jahrgang (Admin/Dashboard): returnTo="/{orgSlug}/dashboard"
- * - Sonst: returnTo="/"
+ * - Aus Jahrgang (Admin/Dashboard): returnTo="/{orgSlug}/login"
+ * - Sonst: returnTo="/login"
  */
-export default function LogoutButton({ returnTo = "/" }: { returnTo?: string }) {
+export default function LogoutButton({ returnTo = "/login" }: { returnTo?: string }) {
   const [loading, setLoading] = useState(false);
 
   const handleLogout = async () => {
