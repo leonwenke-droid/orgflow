@@ -201,6 +201,14 @@ export default function MemberRow({
   }
 
   const committeeNames = committeeNamesForIds(Array.from(committeeIds), committees);
+  const inviteStatusLabel =
+    member.invite_status === "accepted"
+      ? t("members.invite_accepted", locale)
+      : member.invite_status === "expired"
+        ? t("members.invite_expired", locale)
+        : member.invite_status === "revoked"
+          ? t("members.invite_revoked", locale)
+          : t("members.invite_pending", locale);
 
   return (
     <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
@@ -277,7 +285,7 @@ export default function MemberRow({
                 ? t("members.status_active", locale)
                 : effectiveStatus === "disabled"
                   ? t("members.status_disabled", locale)
-                  : t("members.status_pending", locale)}
+                  : inviteStatusLabel}
             </span>
           )}
       </td>
