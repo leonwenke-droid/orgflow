@@ -103,6 +103,12 @@ export default function NewTaskForm({
           </label>
         </div>
       </div>
+      <div className="flex items-center">
+        <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+          <input type="checkbox" name="claimable" className="rounded border-gray-400" />
+          {t("tasks.claimable_label", locale)}
+        </label>
+      </div>
       <div className="pt-2">
         <SubmitButtonWithSpinner
           className="btn-primary text-xs inline-flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"

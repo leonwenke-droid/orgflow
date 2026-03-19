@@ -4,8 +4,54 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
+
+async function claimShiftAction(formData: FormData) {
+  "use server";
+  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
+  const shiftId = String(formData.get("shiftId") ?? "").trim();
+  if (!orgSlug || !shiftId) return;
+
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase.rpc("claim_shift_slot", { shift_id: shiftId });
+  revalidatePath(`/${orgSlug}/shifts`);
+  revalidatePath(`/${orgSlug}/dashboard`);
+}
+
+async function offerShiftSwapAction(formData: FormData) {
+  "use server";
+  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
+  const assignmentId = String(formData.get("assignmentId") ?? "").trim();
+  if (!orgSlug || !assignmentId) return;
+
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase.rpc("offer_shift_swap", { assignment_id: assignmentId });
+  revalidatePath(`/${orgSlug}/shifts`);
+  revalidatePath(`/${orgSlug}/dashboard`);
+}
+
+async function claimShiftSwapAction(formData: FormData) {
+  "use server";
+  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
+  const assignmentId = String(formData.get("assignmentId") ?? "").trim();
+  if (!orgSlug || !assignmentId) return;
+
+  const supabase = createServerComponentClient({ cookies });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase.rpc("claim_shift_swap", { assignment_id: assignmentId });
+  revalidatePath(`/${orgSlug}/shifts`);
+  revalidatePath(`/${orgSlug}/dashboard`);
+}
 
 export default async function ShiftsViewerPage(props: {
   params: Promise<{ org: string }> | { org: string };
@@ -28,23 +74,36 @@ export default async function ShiftsViewerPage(props: {
 
   const { data: me } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, role")
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgIdForData)
     .maybeSingle();
   const myProfileId = (me as { id?: string } | null)?.id ?? null;
+  const myRole = (me as { role?: string } | null)?.role ?? null;
+  const canClaim = myRole !== "viewer";
 
-  const { data: shifts } = myProfileId
-    ? await supabase
-        .from("shifts")
-        .select("id, event_name, date, start_time, end_time, location, shift_assignments(id, user_id, replacement_user_id, status)")
-        .eq("organization_id", orgIdForData)
-        .order("date", { ascending: true })
-    : { data: [] };
+  const { data: shifts } = await supabase
+    .from("shifts")
+    .select("id, event_name, date, start_time, end_time, location, required_slots, auto_assign, claimable, shift_assignments(id, user_id, replacement_user_id, status, swap_offered)")
+    .eq("organization_id", orgIdForData)
+    .order("date", { ascending: true })
+    .order("start_time", { ascending: true });
 
   const myShifts = (shifts ?? []).filter((s: any) =>
     (s.shift_assignments ?? []).some((a: any) => a.user_id === myProfileId || a.replacement_user_id === myProfileId)
   );
+  const openClaimable = (shifts ?? []).filter((s: any) => {
+    const required = Number(s.required_slots ?? 1) || 1;
+    const taken = (s.shift_assignments ?? []).length;
+    return (s.auto_assign !== true) && (s.claimable !== false) && taken < required;
+  });
+
+  const openSwapOffers = (shifts ?? []).flatMap((s: any) => {
+    const offers = (s.shift_assignments ?? []).filter((a: any) =>
+      a.swap_offered === true && !a.replacement_user_id && a.user_id !== myProfileId
+    );
+    return offers.map((a: any) => ({ shift: s, assignment: a }));
+  });
 
   return (
     <div className="mx-auto max-w-3xl p-6 space-y-4">
@@ -58,14 +117,95 @@ export default async function ShiftsViewerPage(props: {
         </Link>
       </div>
 
+      {openClaimable.length > 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shifts.open_claimable", locale)}</h2>
+          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+            {openClaimable.map((s: any) => {
+              const required = Number(s.required_slots ?? 1) || 1;
+              const taken = (s.shift_assignments ?? []).length;
+              const free = Math.max(0, required - taken);
+              return (
+                <li key={s.id} className="py-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{s.event_name || t("dashboard.shifts", locale)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {s.date ? new Date(s.date).toLocaleDateString(localeForDate) : "–"} · {s.start_time ?? ""}-{s.end_time ?? ""}
+                      {s.location ? ` · ${s.location}` : ""}
+                      {` · ${free}/${required} free`}
+                    </p>
+                  </div>
+                  {canClaim ? (
+                    <form action={claimShiftAction}>
+                      <input type="hidden" name="orgSlug" value={orgSlug} />
+                      <input type="hidden" name="shiftId" value={s.id} />
+                      <button className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+                        {t("shifts.claim", locale)}
+                      </button>
+                    </form>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {openSwapOffers.length > 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shifts.offer_swap", locale)}</h2>
+          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+            {openSwapOffers.map(({ shift, assignment }: any) => (
+              <li key={assignment.id} className="py-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{shift.event_name || t("dashboard.shifts", locale)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {shift.date ? new Date(shift.date).toLocaleDateString(localeForDate) : "–"} · {shift.start_time ?? ""}-{shift.end_time ?? ""}
+                    {shift.location ? ` · ${shift.location}` : ""}
+                  </p>
+                </div>
+                {canClaim ? (
+                  <form action={claimShiftSwapAction}>
+                    <input type="hidden" name="orgSlug" value={orgSlug} />
+                    <input type="hidden" name="assignmentId" value={assignment.id} />
+                    <button className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+                      {t("shifts.take_over", locale)}
+                    </button>
+                  </form>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shifts.my_shifts", locale)}</h2>
         {myShifts.length === 0 ? (
           <p className="text-sm text-gray-600 dark:text-gray-400">{t("empty.shifts", locale)}</p>
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {myShifts.map((s: any) => (
               <li key={s.id} className="py-3">
-                <p className="font-medium text-gray-900 dark:text-gray-100">{s.event_name || t("dashboard.shifts", locale)}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{s.event_name || t("dashboard.shifts", locale)}</p>
+                  {canClaim && (
+                    <>
+                      {(s.shift_assignments ?? [])
+                        .filter((a: any) => a.user_id === myProfileId && !a.replacement_user_id && a.swap_offered !== true)
+                        .slice(0, 1)
+                        .map((a: any) => (
+                          <form key={a.id} action={offerShiftSwapAction}>
+                            <input type="hidden" name="orgSlug" value={orgSlug} />
+                            <input type="hidden" name="assignmentId" value={a.id} />
+                            <button className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800">
+                              {t("shifts.offer_swap", locale)}
+                            </button>
+                          </form>
+                        ))}
+                    </>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {s.date ? new Date(s.date).toLocaleDateString(localeForDate) : "–"} · {s.start_time ?? ""}-{s.end_time ?? ""}
                   {s.location ? ` · ${s.location}` : ""}

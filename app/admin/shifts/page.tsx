@@ -280,7 +280,9 @@ async function createShifts(
     ) || 0;
     const organizationId = formData.get("organization_id")?.toString() || null;
     const eventId = formData.get("event_id")?.toString().trim() || null;
-    const autoAssign = formData.get("auto_assign") === "on";
+    const assignmentMode = formData.get("assignment_mode")?.toString() || "claim";
+    const autoAssign = assignmentMode === "auto" || formData.get("auto_assign") === "on";
+    const claimable = assignmentMode !== "auto";
 
     if (!date) {
       return { error: "Date required.", errorKey: "shifts.date_required" };
@@ -307,7 +309,7 @@ async function createShifts(
     }
 
     const baseRow = (overrides: Partial<{ event_name: string; date: string; start_time: string; end_time: string; location: string | null; notes: string | null; created_by: string | null; required_slots: number; event_id: string | null }>) =>
-      ({ event_name: "", date, start_time: "", end_time: "", location, notes, created_by: createdBy, required_slots: requiredSlots, auto_assign: autoAssign, ...(eventId ? { event_id: eventId } : {}), ...overrides, ...(organizationId ? { organization_id: organizationId } : {}) });
+      ({ event_name: "", date, start_time: "", end_time: "", location, notes, created_by: createdBy, required_slots: requiredSlots, auto_assign: autoAssign, claimable, ...(eventId ? { event_id: eventId } : {}), ...overrides, ...(organizationId ? { organization_id: organizationId } : {}) });
 
     if (type === "pausenverkauf") {
       const rows = [

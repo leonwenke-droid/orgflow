@@ -64,7 +64,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <div className="mx-auto flex min-h-screen max-w-6xl flex-col bg-background px-4 py-6 dark:bg-background-dark">
             <EmailVerificationBanner />
             <AppShell user={user}>
-              <main className="flex-1 pb-10">{children}</main>
+              <main className="flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">{children}</main>
             </AppShell>
             <ToastContainer />
             <CookieNotice />

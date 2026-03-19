@@ -38,6 +38,7 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
   const dueAt = formData.get("due_at")?.toString() || null;
   const proofRequired = formData.get("proof_required") === "on";
   const eventId = formData.get("event_id")?.toString().trim() || null;
+  const claimable = formData.get("claimable") === "on";
 
   if (!title) {
     return { errorKey: "tasks.title_required" };
@@ -55,6 +56,7 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
     description,
     committee_id: committeeId || null,
     owner_id: ownerId || null,
+    claimable: !ownerId && claimable,
     created_by: profile.id,
     due_at: dueAt ? new Date(dueAt).toISOString() : null,
     proof_required: proofRequired,

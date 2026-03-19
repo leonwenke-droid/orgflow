@@ -18,6 +18,7 @@ import {
   Trophy,
   Settings2,
   ShieldCheck,
+  MessageSquare,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
@@ -69,6 +70,7 @@ function getNavSections(org: string, modules?: OrgModules, canViewFinance?: bool
     ...(showFinance ? [{ href: `/${org}/admin/treasury`, labelKey: "dashboard.finance", icon: Wallet }] : []),
     ...(manage && m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy }] : []),
     ...(manage && m.events ? [{ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange }] : []),
+    ...(manage ? [{ href: `/${org}/admin/feedback`, labelKey: "nav.feedback", icon: MessageSquare }] : []),
   ];
   return [
     { titleKey: "nav.core", items: core },

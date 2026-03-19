@@ -44,6 +44,7 @@ export default function CreateShiftsForm({
   const { locale } = useLocale();
   const [state, formAction] = useFormState(action, null);
   const [type, setType] = useState<"recurring" | "event">("recurring");
+  const [assignmentMode, setAssignmentMode] = useState<"claim" | "auto">("claim");
   const errorMessage = state?.errorKey ? t(state.errorKey, locale) : state?.error;
 
   useEffect(() => {
@@ -209,8 +210,35 @@ export default function CreateShiftsForm({
         />
       </div>
       <div className="space-y-1 md:col-span-2">
+        <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.assignment_mode", locale)}</span>
+        <div className="mt-1 flex flex-col gap-1 text-[11px] text-gray-600 dark:text-gray-400">
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="radio"
+              name="assignment_mode"
+              value="claim"
+              checked={assignmentMode === "claim"}
+              onChange={() => setAssignmentMode("claim")}
+              className="rounded border-gray-400"
+            />
+            {t("shifts.assignment_mode_claim", locale)}
+          </label>
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="radio"
+              name="assignment_mode"
+              value="auto"
+              checked={assignmentMode === "auto"}
+              onChange={() => setAssignmentMode("auto")}
+              className="rounded border-gray-400"
+            />
+            {t("shifts.assignment_mode_auto", locale)}
+          </label>
+        </div>
+      </div>
+      <div className="space-y-1 md:col-span-2">
         <label className="inline-flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" name="auto_assign" value="on" className="rounded border-gray-400" />
+          <input type="checkbox" name="auto_assign" value="on" className="rounded border-gray-400" checked={assignmentMode === "auto"} readOnly />
           <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
             {t("shifts.auto_assign_label", locale)}
           </span>
