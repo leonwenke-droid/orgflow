@@ -104,7 +104,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   const currencyCode = orgSettings.currency ?? "EUR";
   const localeForCurrency = locale === "de" ? "de-DE" : "en-GB";
 
-  let treasuryQuery = supabase
+  let treasuryQuery = service
     .from("treasury_updates")
     .select("amount, created_at")
     .order("created_at", { ascending: false })
@@ -116,7 +116,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   let categories: { key: string; name: string }[] = [];
   if (orgIdForData) {
     try {
-      const { data: entriesData } = await supabase
+      const { data: entriesData } = await service
         .from("treasury_entries")
         .select("id, date, description, amount_cents, type, category")
         .eq("organization_id", orgIdForData)
@@ -127,7 +127,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
       // Table may not exist yet
     }
     try {
-      const { data: catRows } = await supabase
+      const { data: catRows } = await service
         .from("finance_categories")
         .select("key, name")
         .eq("organization_id", orgIdForData)
