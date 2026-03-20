@@ -39,21 +39,46 @@ export async function GET(req: NextRequest) {
     // Use service role for reliable role lookup (prevents UI flipping to admin modules on role=null)
     try {
       const service = createSupabaseServiceRoleClient();
-      const { data: profile } = await service
+
+      const { data: profilePrimary } = await service
         .from("profiles")
         .select("role")
         .eq("auth_user_id", user.id)
         .eq("organization_id", orgIdForData)
         .maybeSingle();
-      role = (profile as { role?: DbRole } | null)?.role ?? null;
+
+      // Legacy/TGG: if the profile is not stored under orgIdForData (mapped),
+      // try again under the raw org.id.
+      const shouldFallbackToRawOrg = !profilePrimary && orgIdForData !== o.id;
+      const { data: profileFallback } = shouldFallbackToRawOrg
+        ? await service
+            .from("profiles")
+            .select("role")
+            .eq("auth_user_id", user.id)
+            .eq("organization_id", o.id)
+            .maybeSingle()
+        : { data: null };
+
+      role = ((profilePrimary ?? profileFallback) as { role?: DbRole } | null)?.role ?? null;
     } catch {
-      const { data: profile } = await supabase
+      const { data: profilePrimary } = await supabase
         .from("profiles")
         .select("role")
         .eq("auth_user_id", user.id)
         .eq("organization_id", orgIdForData)
         .maybeSingle();
-      role = (profile as { role?: DbRole } | null)?.role ?? null;
+
+      const shouldFallbackToRawOrg = !profilePrimary && orgIdForData !== o.id;
+      const { data: profileFallback } = shouldFallbackToRawOrg
+        ? await supabase
+            .from("profiles")
+            .select("role")
+            .eq("auth_user_id", user.id)
+            .eq("organization_id", o.id)
+            .maybeSingle()
+        : { data: null };
+
+      role = ((profilePrimary ?? profileFallback) as { role?: DbRole } | null)?.role ?? null;
     }
   }
 

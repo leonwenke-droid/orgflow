@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { revalidatePath } from "next/cache";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
@@ -68,20 +69,21 @@ export default async function ShiftsViewerPage(props: {
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
   const localeForDate = locale === "de" ? "de-DE" : "en-GB";
 
-  const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
+  const authSupabase = createServerComponentClient({ cookies });
+  const { data: { user } } = await authSupabase.auth.getUser();
   if (!user) redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/shifts`);
 
-  const { data: me } = await supabase
+  const service = createSupabaseServiceRoleClient();
+  const { data: mePrimary } = await service
     .from("profiles")
     .select("id, role")
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgIdForData)
     .maybeSingle();
 
-  // Legacy/TGG fallback: profiles (und ggf. shifts) können unter der "rohen" org.id liegen.
-  const { data: meFallback } = (!me && orgIdForData !== org.id)
-    ? await supabase
+  // Legacy/TGG fallback: profiles können unter der "rohen" org.id liegen.
+  const { data: meFallback } = (!mePrimary && orgIdForData !== org.id)
+    ? await service
         .from("profiles")
         .select("id, role")
         .eq("auth_user_id", user.id)
@@ -89,14 +91,25 @@ export default async function ShiftsViewerPage(props: {
         .maybeSingle()
     : { data: null };
 
-  const myProfile = (me ?? meFallback) as { id?: string; role?: string } | null;
+  const myProfile = (mePrimary ?? meFallback) as { id?: string; role?: string } | null;
   const myProfileId = myProfile?.id ?? null;
   const myRole = myProfile?.role ?? null;
+
+  if (!myProfileId) {
+    return (
+      <div className="mx-auto max-w-3xl p-6 space-y-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("common.access_denied", locale)}</h1>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("dashboard.use_invited_account", locale)}</p>
+        </div>
+      </div>
+    );
+  }
+
   const canClaim = myRole !== "viewer";
+  const effectiveOrgIdForData = mePrimary ? orgIdForData : org.id;
 
-  const effectiveOrgIdForData = me ? orgIdForData : org.id;
-
-  const { data: shifts } = await supabase
+  const { data: shifts } = await service
     .from("shifts")
     .select("id, event_name, date, start_time, end_time, location, required_slots, auto_assign, claimable, shift_assignments(id, user_id, replacement_user_id, status, swap_offered)")
     .eq("organization_id", effectiveOrgIdForData)

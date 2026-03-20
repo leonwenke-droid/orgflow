@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,11 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/me`);
 
-  const { data: mePrimary } = await supabase
+  // Use service-role for the profile lookup and stats reads:
+  // RLS org-mapping for legacy orgs can otherwise cause "my profile not found".
+  const service = createSupabaseServiceRoleClient();
+
+  const { data: mePrimary } = await service
     .from("profiles")
     .select("id, full_name")
     .eq("auth_user_id", user.id)
@@ -32,7 +37,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
     .maybeSingle();
 
   const { data: meFallback } = (!mePrimary && orgIdForData !== org.id)
-    ? await supabase
+    ? await service
         .from("profiles")
         .select("id, full_name")
         .eq("auth_user_id", user.id)
@@ -64,24 +69,24 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
     { data: myTasks },
     { data: myAssignments },
   ] = await Promise.all([
-    supabase
+    service
       .from("engagement_scores")
       .select("score, updated_at")
       .eq("user_id", myProfileId)
       .maybeSingle(),
-    supabase
+    service
       .from("engagement_events")
       .select("event_type, created_at, points")
       .eq("user_id", myProfileId)
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(200),
-    supabase
+    service
       .from("tasks")
       .select("id, status, due_at")
       .eq("organization_id", effectiveOrgIdForData)
       .eq("owner_id", myProfileId),
-    supabase
+    service
       .from("shift_assignments")
       .select("id, status, shift_id, replacement_user_id, shifts(date, start_time, end_time, event_name)")
       .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)

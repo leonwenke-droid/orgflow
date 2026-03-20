@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { revalidatePath } from "next/cache";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
@@ -52,20 +53,21 @@ export default async function TasksViewerPage(props: {
   const cookieStore = await cookies();
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
 
-  const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
+  const authSupabase = createServerComponentClient({ cookies });
+  const { data: { user } } = await authSupabase.auth.getUser();
   if (!user) redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/tasks`);
 
-  const { data: me } = await supabase
+  const service = createSupabaseServiceRoleClient();
+  const { data: mePrimary } = await service
     .from("profiles")
     .select("id, role")
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgIdForData)
     .maybeSingle();
 
-  // Legacy/TGG fallback: profiles (und ggf. tasks) können unter der "rohen" org.id liegen.
-  const { data: meFallback } = (!me && orgIdForData !== org.id)
-    ? await supabase
+  // Legacy/TGG fallback: profiles können unter der "rohen" org.id liegen.
+  const { data: meFallback } = (!mePrimary && orgIdForData !== org.id)
+    ? await service
         .from("profiles")
         .select("id, role")
         .eq("auth_user_id", user.id)
@@ -73,21 +75,32 @@ export default async function TasksViewerPage(props: {
         .maybeSingle()
     : { data: null };
 
-  const myProfile = (me ?? meFallback) as { id?: string; role?: string } | null;
+  const myProfile = (mePrimary ?? meFallback) as { id?: string; role?: string } | null;
   const myProfileId = myProfile?.id ?? null;
   const myRole = myProfile?.role ?? null;
+
+  if (!myProfileId) {
+    return (
+      <div className="mx-auto max-w-3xl p-6 space-y-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("common.access_denied", locale)}</h1>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("dashboard.use_invited_account", locale)}</p>
+        </div>
+      </div>
+    );
+  }
+
   const canClaim = myRole !== "viewer";
+  const effectiveOrgIdForData = mePrimary ? orgIdForData : org.id;
 
-  const effectiveOrgIdForData = me ? orgIdForData : org.id;
-
-  const { data: tasksAll } = await supabase
+  const { data: tasksAll } = await service
     .from("tasks")
     .select("id, title, status, due_at, owner_id, claimable, proof_url, committees(name)")
     .eq("organization_id", effectiveOrgIdForData)
     .neq("status", "erledigt")
     .order("due_at", { ascending: true });
 
-  const { data: profiles } = await supabase
+  const { data: profiles } = await service
     .from("profiles")
     .select("id, full_name")
     .eq("organization_id", effectiveOrgIdForData);

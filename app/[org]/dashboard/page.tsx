@@ -208,10 +208,15 @@ export default async function OrgDashboardPage({
   }
 
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const { treasury, aggregate, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
+  let { treasury, aggregate, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
     await getData(orgIdForData);
-  const userIsAdmin = await isOrgAdmin(orgIdForData);
-  const userRole = await getCurrentUserRoleInOrg(orgIdForData);
+
+  // Legacy/TGG fallback: Rolle/Admin-Rights können unter der "rohen" org.id liegen.
+  const userIsAdminPrimary = await isOrgAdmin(orgIdForData);
+  const userIsAdmin = userIsAdminPrimary || (orgIdForData !== org.id ? await isOrgAdmin(org.id) : false);
+
+  const userRolePrimary = await getCurrentUserRoleInOrg(orgIdForData);
+  const userRole = userRolePrimary ?? (orgIdForData !== org.id ? await getCurrentUserRoleInOrg(org.id) : null);
   const showGettingStarted = userRole != null && ADMIN_ROLES.includes(userRole);
   // Finanzen anzeigen: wenn Rolle berechtigt, oder unbekannt (Fail-open), oder Nutzer ist Org-Admin
   const userCanViewFinance = userRole == null || canViewFinance(userRole) || userIsAdmin;
@@ -233,13 +238,27 @@ export default async function OrgDashboardPage({
   const myName = ((myProfilePrimary ?? myProfileFallback) as any)?.full_name ?? null;
   const myProfileId = ((myProfilePrimary ?? myProfileFallback) as any)?.id ?? null;
 
+  const effectiveOrgIdForData = myProfilePrimary ? orgIdForData : org.id;
+  if (effectiveOrgIdForData !== orgIdForData) {
+    // Re-fetch dashboard data under the effective org id mapping.
+    const effectiveData = await getData(effectiveOrgIdForData);
+    treasury = effectiveData.treasury;
+    aggregate = effectiveData.aggregate;
+    activity = effectiveData.activity;
+    shifts = effectiveData.shifts;
+    profileNames = effectiveData.profileNames;
+    committees = effectiveData.committees;
+    tasksCount = effectiveData.tasksCount;
+    shiftsCount = effectiveData.shiftsCount;
+  }
+
   const todayStr = getTodayDateString();
   const { data: myAssignedShifts } = myProfileId
     ? await supabase
         .from("shift_assignments")
         .select("id, status, user_id, replacement_user_id, shifts!inner(id, event_name, date, start_time, end_time, location, organization_id)")
         .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)
-        .eq("shifts.organization_id", orgIdForData)
+        .eq("shifts.organization_id", effectiveOrgIdForData)
         .gte("shifts.date", todayStr)
         .order("shifts.date", { ascending: true })
         .order("shifts.start_time", { ascending: true })
@@ -250,7 +269,7 @@ export default async function OrgDashboardPage({
     ? await supabase
         .from("tasks")
         .select("id, title, status, due_at, committees(name)")
-        .eq("organization_id", orgIdForData)
+        .eq("organization_id", effectiveOrgIdForData)
         .eq("owner_id", myProfileId)
         .neq("status", "erledigt")
         .order("due_at", { ascending: true })
