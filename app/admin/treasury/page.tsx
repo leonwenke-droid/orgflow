@@ -37,8 +37,8 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
     );
   }
 
-  let orgId: string | null = null;
-  let orgIdForData: string | null = null;
+  let orgId: string | null = null; // real organizations.id row
+  let orgIdForData: string | null = null; // mapped data org id (legacy-safe)
   if (orgSlug) {
     try {
       const org = await getCurrentOrganization(orgSlug);
@@ -88,7 +88,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   }
 
   const profileOrgId = (profile as { organization_id?: string | null } | null)?.organization_id ?? null;
-  if (!orgId && profileOrgId) orgId = profileOrgId;
+  if (!orgIdForData && profileOrgId) orgIdForData = profileOrgId;
 
   let effectiveOrgSlug = orgSlug;
   let orgSettings: { currency?: string } = {};
@@ -109,17 +109,17 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
     .select("amount, created_at")
     .order("created_at", { ascending: false })
     .limit(1);
-  if (orgId) treasuryQuery = treasuryQuery.eq("organization_id", orgId);
+  if (orgIdForData) treasuryQuery = treasuryQuery.eq("organization_id", orgIdForData);
   const { data: lastUpdate } = await treasuryQuery.maybeSingle();
 
   let entries: { id: string; date: string; description: string | null; amount_cents: number; type: string }[] = [];
   let categories: { key: string; name: string }[] = [];
-  if (orgId) {
+  if (orgIdForData) {
     try {
       const { data: entriesData } = await supabase
         .from("treasury_entries")
         .select("id, date, description, amount_cents, type, category")
-        .eq("organization_id", orgId)
+        .eq("organization_id", orgIdForData)
         .order("date", { ascending: false })
         .limit(50);
       entries = (entriesData ?? []) as typeof entries;
@@ -130,7 +130,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
       const { data: catRows } = await supabase
         .from("finance_categories")
         .select("key, name")
-        .eq("organization_id", orgId)
+        .eq("organization_id", orgIdForData)
         .eq("enabled", true)
         .order("name");
       categories = (catRows ?? []) as typeof categories;
@@ -180,7 +180,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
       </section>
 
       <section className="card">
-        <TreasuryUploadForm organizationId={orgId ?? undefined} defaultCellRef={defaultCellRef} currencyCode={currencyCode} />
+        <TreasuryUploadForm organizationId={orgIdForData ?? undefined} defaultCellRef={defaultCellRef} currencyCode={currencyCode} />
         <div className="mt-2 text-xs">
           <a className="text-blue-600 hover:underline dark:text-blue-400" href="/api/treasury/template">
             {t("finance.download_template", locale)}
@@ -188,20 +188,20 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
         </div>
       </section>
 
-      {orgId && (
+      {orgIdForData && (
         <section className="card">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("finance.entries_title", locale)}</h2>
             <a
               className="text-xs text-blue-600 underline hover:text-blue-700 dark:text-blue-400"
-              href={`/api/treasury/export?organization_id=${encodeURIComponent(orgId)}`}
+              href={`/api/treasury/export?organization_id=${encodeURIComponent(orgIdForData)}`}
             >
               Export CSV
             </a>
           </div>
           <div className="mt-3">
             <FinanceCategoriesForm
-              orgId={orgId}
+              orgId={orgIdForData}
               initial={categories}
             />
           </div>
@@ -256,7 +256,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
               </ul>
             </details>
           )}
-          <TreasuryEntryForm organizationId={orgId} currencyCode={currencyCode} categories={categories} />
+          <TreasuryEntryForm organizationId={orgIdForData} currencyCode={currencyCode} categories={categories} />
         </section>
       )}
     </div>
