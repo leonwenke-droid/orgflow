@@ -27,7 +27,14 @@ export default function FinanceCategoriesForm({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMessage(data.message || "Save failed.");
+        const raw = String(data.message || "Save failed.");
+        if (raw.toLowerCase().includes("finance categories are not initialized")) {
+          setMessage(
+            "Finance categories table is missing in this environment. Please run the latest Supabase migrations and reload."
+          );
+        } else {
+          setMessage(raw);
+        }
         setLoading(false);
         return;
       }

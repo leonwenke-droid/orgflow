@@ -6,6 +6,16 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
 
+function isMissingFinanceCategoriesTable(message: string): boolean {
+  const m = String(message || "").toLowerCase();
+  return (
+    m.includes("finance_categories") &&
+    (m.includes("does not exist") ||
+      m.includes("could not find the table") ||
+      m.includes("schema cache"))
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const cookieStore = await cookies();
@@ -43,7 +53,19 @@ export async function POST(req: Request) {
     const { error } = await service
       .from("finance_categories")
       .upsert(rows, { onConflict: "organization_id,key" });
-    if (error) return NextResponse.json({ message: error.message || "Save failed." }, { status: 400 });
+    if (error) {
+      const message = error.message || "Save failed.";
+      if (isMissingFinanceCategoriesTable(message)) {
+        return NextResponse.json(
+          {
+            message:
+              "Finance categories are not initialized in this database yet. Apply migrations (including 20260322004000_finance_categories.sql) and try again."
+          },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json({ message }, { status: 400 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (e) {

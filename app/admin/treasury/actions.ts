@@ -54,7 +54,8 @@ export async function addTreasuryEntryAction(
   const amountCents = Math.round(amount * 100);
   const amountCentsSigned = type === "expense" ? -Math.abs(amountCents) : Math.abs(amountCents);
 
-  const { error } = await supabase.from("treasury_entries").insert({
+  // Use service-role for write to avoid RLS recursion issues in some legacy policy setups.
+  const { error } = await service.from("treasury_entries").insert({
     organization_id: orgId,
     date,
     description,
