@@ -6,6 +6,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { canViewFinance } from "../../../lib/permissions";
 import { parseTreasuryAmount } from "../../../lib/currency";
 import { writeAuditLog } from "../../../lib/audit";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export async function addTreasuryEntryAction(
   organizationId: string,
@@ -15,16 +16,32 @@ export async function addTreasuryEntryAction(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id) return { error: "Not signed in." };
 
-  const { data: profile } = await supabase
+  const orgId = organizationId || null;
+  if (!orgId) return { error: "Organization required." };
+
+  const service = createSupabaseServiceRoleClient();
+  const { data: profileInOrg } = await service
     .from("profiles")
     .select("id, role, organization_id")
     .eq("auth_user_id", user.id)
-    .single();
+    .eq("organization_id", orgId)
+    .maybeSingle();
+
+  const { data: superRows } = !profileInOrg
+    ? await service
+        .from("profiles")
+        .select("id, role, organization_id")
+        .eq("auth_user_id", user.id)
+        .eq("role", "super_admin")
+        .limit(1)
+    : { data: null };
+
+  const profile = (profileInOrg ?? (superRows?.[0] ?? null)) as
+    | { id: string; role?: string; organization_id?: string | null }
+    | null;
+
   if (!profile || !canViewFinance((profile as { role?: any }).role))
     return { error: "Access only for authorised roles." };
-
-  const orgId = organizationId || (profile as { organization_id?: string }).organization_id;
-  if (!orgId) return { error: "Organization required." };
 
   const date = formData.get("date")?.toString();
   const type = formData.get("type")?.toString() as "income" | "expense" | null;

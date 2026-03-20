@@ -4,6 +4,7 @@ import { DEFAULT_CURRENCY, formatCurrency, parseTreasuryAmount } from "../../../
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { canViewFinance } from "../../../../lib/permissions";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
 
@@ -19,19 +20,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Sign in required.", errorKey: "tasks.not_logged_in" }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, organization_id, status")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
-    if (!profile || profile.status === "disabled" || !canViewFinance((profile as { role?: any }).role)) {
-      return NextResponse.json({ message: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
-    }
-
     const organizationId = formData.get("organization_id")?.toString() || null;
     if (!organizationId) {
       return NextResponse.json({ message: "organization_id required." }, { status: 400 });
     }
+
+    const service = createSupabaseServiceRoleClient();
+    const { data: profileInOrg } = await service
+      .from("profiles")
+      .select("role, organization_id, status")
+      .eq("auth_user_id", user.id)
+      .eq("organization_id", organizationId)
+      .maybeSingle();
+    const { data: superRows } = !profileInOrg
+      ? await service
+          .from("profiles")
+          .select("role, organization_id, status")
+          .eq("auth_user_id", user.id)
+          .eq("role", "super_admin")
+          .limit(1)
+      : { data: null };
+    const profile = (profileInOrg ?? (superRows?.[0] ?? null)) as
+      | { role?: string; organization_id?: string | null; status?: string | null }
+      | null;
+
+    if (!profile || profile.status === "disabled" || !canViewFinance((profile as { role?: any }).role)) {
+      return NextResponse.json({ message: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
+    }
+
     if ((profile as { organization_id?: string | null }).organization_id !== organizationId && (profile as { role?: string }).role !== "super_admin") {
       return NextResponse.json({ message: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
     }

@@ -3,12 +3,13 @@ import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import TreasuryUploadForm from "../../../components/TreasuryUploadForm";
 import TreasuryEntryForm from "../../../components/TreasuryEntryForm";
-import { getCurrentOrganization, getCurrentUserOrganization } from "../../../lib/getOrganization";
+import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { formatCurrency } from "../../../lib/currency";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 import { canViewFinance } from "../../../lib/permissions";
 import FinanceCategoriesForm from "./FinanceCategoriesForm";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
@@ -36,11 +37,47 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
     );
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, role, organization_id")
-    .eq("auth_user_id", userId)
-    .single();
+  let orgId: string | null = null;
+  let orgIdForData: string | null = null;
+  if (orgSlug) {
+    try {
+      const org = await getCurrentOrganization(orgSlug);
+      orgId = org.id;
+      orgIdForData = getOrgIdForData(orgSlug, org.id);
+    } catch {
+      orgId = null;
+      orgIdForData = null;
+    }
+  }
+  if (!orgId) {
+    const userOrg = await getCurrentUserOrganization();
+    if (userOrg) {
+      orgId = userOrg.id;
+      orgIdForData = getOrgIdForData(userOrg.slug, userOrg.id);
+    }
+  }
+
+  const service = createSupabaseServiceRoleClient();
+  let profile: { id: string; role: string; organization_id: string | null } | null = null;
+  if (orgIdForData) {
+    const { data: profilePrimary } = await service
+      .from("profiles")
+      .select("id, role, organization_id")
+      .eq("auth_user_id", userId)
+      .eq("organization_id", orgIdForData)
+      .maybeSingle();
+
+    const { data: profileFallback } = (!profilePrimary && orgIdForData !== orgId)
+      ? await service
+          .from("profiles")
+          .select("id, role, organization_id")
+          .eq("auth_user_id", userId)
+          .eq("organization_id", orgId)
+          .maybeSingle()
+      : { data: null };
+
+    profile = (profilePrimary ?? profileFallback) as typeof profile;
+  }
 
   if (!profile || !canViewFinance((profile as { role?: any }).role)) {
     return (
@@ -50,17 +87,8 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
     );
   }
 
-  let orgId: string | null = null;
-  if (orgSlug) {
-    try {
-      const org = await getCurrentOrganization(orgSlug);
-      // Finance access is enforced by RLS on treasury tables; here we only resolve orgId.
-      orgId = org.id;
-    } catch {
-      orgId = null;
-    }
-  }
-  if (!orgId && profile.organization_id) orgId = profile.organization_id;
+  const profileOrgId = (profile as { organization_id?: string | null } | null)?.organization_id ?? null;
+  if (!orgId && profileOrgId) orgId = profileOrgId;
 
   let effectiveOrgSlug = orgSlug;
   let orgSettings: { currency?: string } = {};

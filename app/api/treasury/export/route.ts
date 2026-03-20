@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { canViewFinance } from "../../../../lib/permissions";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
 
@@ -21,11 +22,25 @@ export async function GET(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ message: "Sign in required." }, { status: 401 });
 
-  const { data: profile } = await supabase
+  const service = createSupabaseServiceRoleClient();
+  const { data: profileInOrg } = await service
     .from("profiles")
     .select("role, organization_id, status")
     .eq("auth_user_id", user.id)
+    .eq("organization_id", organizationId)
     .maybeSingle();
+  const { data: superRows } = !profileInOrg
+    ? await service
+        .from("profiles")
+        .select("role, organization_id, status")
+        .eq("auth_user_id", user.id)
+        .eq("role", "super_admin")
+        .limit(1)
+    : { data: null };
+  const profile = (profileInOrg ?? (superRows?.[0] ?? null)) as
+    | { role?: string; organization_id?: string | null; status?: string | null }
+    | null;
+
   if (!profile || profile.status === "disabled" || !canViewFinance((profile as any).role)) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
