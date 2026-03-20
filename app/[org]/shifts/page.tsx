@@ -78,24 +78,38 @@ export default async function ShiftsViewerPage(props: {
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgIdForData)
     .maybeSingle();
-  const myProfileId = (me as { id?: string } | null)?.id ?? null;
-  const myRole = (me as { role?: string } | null)?.role ?? null;
+
+  // Legacy/TGG fallback: profiles (und ggf. shifts) können unter der "rohen" org.id liegen.
+  const { data: meFallback } = (!me && orgIdForData !== org.id)
+    ? await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("auth_user_id", user.id)
+        .eq("organization_id", org.id)
+        .maybeSingle()
+    : { data: null };
+
+  const myProfile = (me ?? meFallback) as { id?: string; role?: string } | null;
+  const myProfileId = myProfile?.id ?? null;
+  const myRole = myProfile?.role ?? null;
   const canClaim = myRole !== "viewer";
+
+  const effectiveOrgIdForData = me ? orgIdForData : org.id;
 
   const { data: shifts } = await supabase
     .from("shifts")
     .select("id, event_name, date, start_time, end_time, location, required_slots, auto_assign, claimable, shift_assignments(id, user_id, replacement_user_id, status, swap_offered)")
-    .eq("organization_id", orgIdForData)
+    .eq("organization_id", effectiveOrgIdForData)
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
 
   const myShifts = (shifts ?? []).filter((s: any) =>
     (s.shift_assignments ?? []).some((a: any) => a.user_id === myProfileId || a.replacement_user_id === myProfileId)
   );
-  const openClaimable = (shifts ?? []).filter((s: any) => {
-    const required = Number(s.required_slots ?? 1) || 1;
-    const taken = (s.shift_assignments ?? []).length;
-    return (s.auto_assign !== true) && (s.claimable !== false) && taken < required;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcomingShifts = (shifts ?? []).filter((s: any) => {
+    // If date is present, hide past shifts. If date is missing (event-type), keep them visible.
+    return !s.date || String(s.date).slice(0, 10) >= todayStr;
   });
 
   const openSwapOffers = (shifts ?? []).flatMap((s: any) => {
@@ -117,11 +131,11 @@ export default async function ShiftsViewerPage(props: {
         </Link>
       </div>
 
-      {openClaimable.length > 0 && (
+      {upcomingShifts.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shifts.open_claimable", locale)}</h2>
+          <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("dashboard.upcoming_shifts", locale)}</h2>
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-            {openClaimable.map((s: any) => {
+            {upcomingShifts.map((s: any) => {
               const required = Number(s.required_slots ?? 1) || 1;
               const taken = (s.shift_assignments ?? []).length;
               const free = Math.max(0, required - taken);
@@ -135,7 +149,7 @@ export default async function ShiftsViewerPage(props: {
                       {` · ${free}/${required} free`}
                     </p>
                   </div>
-                  {canClaim ? (
+                  {canClaim && (s.auto_assign !== true) && (s.claimable !== false) && free > 0 ? (
                     <form action={claimShiftAction}>
                       <input type="hidden" name="orgSlug" value={orgSlug} />
                       <input type="hidden" name="shiftId" value={s.id} />

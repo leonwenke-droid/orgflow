@@ -178,7 +178,7 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
     .from("shifts")
     .select("id, required_slots")
     .eq("organization_id", orgId)
-    .eq("auto_assign", true)
+    .or("auto_assign.eq.true,claimable.eq.true")
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
 

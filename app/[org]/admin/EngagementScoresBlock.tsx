@@ -12,6 +12,7 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
   const [loading, setLoading] = useState(false);
   const [scores, setScores] = useState<ScoreRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [detailsFor, setDetailsFor] = useState<ScoreRow | null>(null);
 
   async function loadScores() {
     if (scores !== null) {
@@ -38,7 +39,7 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-card-dark">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 px-6 py-5 dark:border-gray-700">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Engagement Scores</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t("dashboard.engagement", locale)}</h2>
           <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400">
             {!expanded && t("engagement.points_title", locale)}
             {expanded && scores !== null && `${scores.length} ${t("engagement.members_count", locale)}`}
@@ -75,13 +76,9 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Rang</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Team</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Aufgaben</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Shifts</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Material</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Gesamt</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t("engagement.export_rank", locale)}</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t("engagement.export_name", locale)}</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{t("engagement.export_total", locale)}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -92,24 +89,77 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {currentAuthUserId && score.profile?.auth_user_id === currentAuthUserId ? "Du" : (score.profile?.full_name ?? "–")}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {score.profile?.committee?.name ?? "–"}
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        <span className="font-bold tabular-nums text-gray-900">{score.total_score ?? 0}</span>
+                        <button
+                          type="button"
+                          className="rounded border border-gray-300 px-2 py-1 text-[11px] text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                          onClick={() => setDetailsFor(score)}
+                        >
+                          {t("events.details", locale)}
+                        </button>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-right text-sm tabular-nums text-gray-600">{score.task_points ?? 0}</td>
-                    <td className="px-6 py-4 text-right text-sm tabular-nums text-gray-600">{score.shift_points ?? 0}</td>
-                    <td className="px-6 py-4 text-right text-sm tabular-nums text-gray-600">{score.material_points ?? 0}</td>
-                    <td className="px-6 py-4 text-right font-bold tabular-nums text-gray-900">{score.total_score ?? 0}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
+                  <td colSpan={3} className="px-6 py-10 text-center text-gray-500">
                     No engagement data available yet.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {detailsFor && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4"
+          onClick={() => setDetailsFor(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="w-full max-w-lg rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 pb-[env(safe-area-inset-bottom)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 px-3 py-2.5 dark:border-gray-700 dark:bg-gray-800">
+              <h3 className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+                {detailsFor.profile?.full_name ?? "–"} {t("engagement.export_total", locale)}: {detailsFor.total_score ?? 0}
+              </h3>
+              <button
+                type="button"
+                className="-m-2 flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-2 text-gray-600 hover:bg-blue-100 focus:outline-none dark:text-gray-300 dark:hover:bg-blue-900/30"
+                onClick={() => setDetailsFor(null)}
+                aria-label={t("common.close", locale)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto space-y-3">
+              <div className="rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-gray-700 dark:text-gray-200">{t("engagement.export_task_points", locale)}</span>
+                  <span className="font-medium tabular-nums text-gray-900 dark:text-gray-100">{detailsFor.task_points ?? 0}</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-3 text-sm">
+                  <span className="text-gray-700 dark:text-gray-200">{t("engagement.export_shift_points", locale)}</span>
+                  <span className="font-medium tabular-nums text-gray-900 dark:text-gray-100">{detailsFor.shift_points ?? 0}</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-3 text-sm">
+                  <span className="text-gray-700 dark:text-gray-200">{t("engagement.export_material_points", locale)}</span>
+                  <span className="font-medium tabular-nums text-gray-900 dark:text-gray-100">{detailsFor.material_points ?? 0}</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {t("engagement.log_title", locale)}
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>

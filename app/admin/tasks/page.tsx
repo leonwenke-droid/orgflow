@@ -40,6 +40,7 @@ async function autoAssignTasks(formData: FormData) {
     .select("id")
     .eq("organization_id", orgId)
     .is("owner_id", null)
+    .eq("claimable", true)
     .in("status", ["offen", "in_arbeit"])
     .order("due_at", { ascending: true });
 

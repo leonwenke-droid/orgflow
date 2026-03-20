@@ -56,7 +56,9 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
     description,
     committee_id: committeeId || null,
     owner_id: ownerId || null,
-    claimable: !ownerId && claimable,
+    // Unverteilte Tasks (owner_id null) sind immer claimable – unabhängig von der Checkbox.
+    // Wenn ownerId gesetzt ist, darf claimable gemäß Checkbox/Default folgen.
+    claimable: !ownerId ? true : claimable,
     created_by: profile.id,
     due_at: dueAt ? new Date(dueAt).toISOString() : null,
     proof_required: proofRequired,

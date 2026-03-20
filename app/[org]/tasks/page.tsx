@@ -63,25 +63,41 @@ export default async function TasksViewerPage(props: {
     .eq("organization_id", orgIdForData)
     .maybeSingle();
 
-  const myProfileId = (me as { id?: string } | null)?.id ?? null;
-  const myRole = (me as { role?: string } | null)?.role ?? null;
+  // Legacy/TGG fallback: profiles (und ggf. tasks) können unter der "rohen" org.id liegen.
+  const { data: meFallback } = (!me && orgIdForData !== org.id)
+    ? await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("auth_user_id", user.id)
+        .eq("organization_id", org.id)
+        .maybeSingle()
+    : { data: null };
+
+  const myProfile = (me ?? meFallback) as { id?: string; role?: string } | null;
+  const myProfileId = myProfile?.id ?? null;
+  const myRole = myProfile?.role ?? null;
   const canClaim = myRole !== "viewer";
+
+  const effectiveOrgIdForData = me ? orgIdForData : org.id;
 
   const { data: tasksAll } = await supabase
     .from("tasks")
     .select("id, title, status, due_at, owner_id, claimable, proof_url, committees(name)")
-    .eq("organization_id", orgIdForData)
+    .eq("organization_id", effectiveOrgIdForData)
+    .neq("status", "erledigt")
     .order("due_at", { ascending: true });
 
   const { data: profiles } = await supabase
     .from("profiles")
     .select("id, full_name")
-    .eq("organization_id", orgIdForData);
+    .eq("organization_id", effectiveOrgIdForData);
   const nameById = new Map((profiles ?? []).map((p: any) => [p.id as string, p.full_name ?? "–"]));
 
-  const myTasks = (tasksAll ?? []).filter((t: any) => myProfileId && t.owner_id === myProfileId);
-  const openClaimable = (tasksAll ?? []).filter((t: any) =>
-    t.owner_id == null && t.claimable === true && (t.status === "offen" || t.status === "in_arbeit")
+  const openClaimable = (tasksAll ?? []).filter(
+    (t: any) =>
+      t.owner_id == null &&
+      t.claimable === true &&
+      (t.status === "offen" || t.status === "in_arbeit")
   );
 
   return (
@@ -98,7 +114,9 @@ export default async function TasksViewerPage(props: {
 
       {openClaimable.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("tasks.open_claimable", locale)}</h2>
+          <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {t("tasks.open_claimable", locale)}
+          </h2>
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {openClaimable.map((task: any) => (
               <li key={task.id} className="py-3 flex items-center justify-between gap-3">
@@ -127,44 +145,70 @@ export default async function TasksViewerPage(props: {
       )}
 
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("tasks.my_tasks", locale)}</h2>
-        {myTasks.length === 0 ? (
+        <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+          {t("dashboard.tasks", locale)}
+        </h2>
+        {(tasksAll ?? []).length === 0 ? (
           <p className="text-sm text-gray-600 dark:text-gray-400">{t("empty.tasks", locale)}</p>
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-            {myTasks.map((task: any) => (
-              <li key={task.id} className="py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {(task.committees as any)?.name ?? "–"}
-                      {task.due_at ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}` : ""}
-                      {task.owner_id ? ` · ${t("tasks.claimed_by", locale)}: ${nameById.get(task.owner_id) ?? "–"}` : ""}
-                    </p>
+            {(tasksAll ?? []).map((task: any) => {
+              const ownedByMe = !!myProfileId && task.owner_id === myProfileId;
+              const claimableHere =
+                task.owner_id == null &&
+                task.claimable === true &&
+                (task.status === "offen" || task.status === "in_arbeit");
+              return (
+                <li key={task.id} className="py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{task.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {(task.committees as any)?.name ?? "–"}
+                        {task.due_at ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}` : ""}
+                        {task.owner_id ? ` · ${t("tasks.claimed_by", locale)}: ${nameById.get(task.owner_id) ?? "–"}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {claimableHere && canClaim ? (
+                        <form action={claimTaskAction}>
+                          <input type="hidden" name="orgSlug" value={orgSlug} />
+                          <input type="hidden" name="taskId" value={task.id} />
+                          <button className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+                            {t("tasks.claim", locale)}
+                          </button>
+                        </form>
+                      ) : null}
+
+                      {ownedByMe && canClaim ? (
+                        <form action={offerTaskAction}>
+                          <input type="hidden" name="orgSlug" value={orgSlug} />
+                          <input type="hidden" name="taskId" value={task.id} />
+                          <button className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800">
+                            {t("tasks.offer", locale)}
+                          </button>
+                        </form>
+                      ) : null}
+
+                      {task.proof_url && (
+                        <a
+                          className="text-xs text-blue-600 hover:underline dark:text-blue-400 shrink-0"
+                          href={task.proof_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {t("tasks.view_proof", locale)}
+                        </a>
+                      )}
+
+                      <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200 shrink-0">
+                        {task.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {canClaim && (
-                      <form action={offerTaskAction}>
-                        <input type="hidden" name="orgSlug" value={orgSlug} />
-                        <input type="hidden" name="taskId" value={task.id} />
-                        <button className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800">
-                          {t("tasks.offer", locale)}
-                        </button>
-                      </form>
-                    )}
-                    {task.proof_url && (
-                      <a className="text-xs text-blue-600 hover:underline dark:text-blue-400" href={task.proof_url} target="_blank" rel="noreferrer">
-                        {t("tasks.view_proof", locale)}
-                      </a>
-                    )}
-                    <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                      {task.status}
-                    </span>
-                  </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

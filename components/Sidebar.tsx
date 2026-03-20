@@ -69,7 +69,7 @@ function getNavSections(
     { href: `/${org}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
     ...(m.tasks !== false ? [{ href: tasksHref, labelKey: "dashboard.tasks", icon: CheckSquare }] : []),
     ...(m.shifts !== false ? [{ href: shiftsHref, labelKey: "dashboard.shifts", icon: CalendarDays }] : []),
-    ...(!manage ? [{ href: `/${org}/me`, labelKey: "nav.my_stats", icon: BarChart3 }] : []),
+    { href: `/${org}/me`, labelKey: "nav.my_stats", icon: BarChart3 },
     ...(manage ? [{ href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users }] : []),
     ...(manage ? [{ href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }] : []),
   ];
