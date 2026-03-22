@@ -191,6 +191,36 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
         </div>
       </div>
 
+      {(() => {
+        const bars = [
+          { label: t("dashboard.shifts", locale), value: counts.shift_done_30d, color: "bg-blue-500" },
+          { label: t("dashboard.tasks", locale), value: counts.task_done_30d, color: "bg-emerald-500" },
+          { label: t("dashboard.resources", locale), value: counts.materials_30d, color: "bg-amber-500" }
+        ];
+        const max = Math.max(1, ...bars.map((b) => b.value));
+        return (
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("me.stats_activity_chart", locale)}</h2>
+            <ul className="mt-4 space-y-3">
+              {bars.map((b) => (
+                <li key={b.label}>
+                  <div className="mb-0.5 flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                    <span>{b.label}</span>
+                    <span className="tabular-nums font-medium text-gray-900 dark:text-gray-100">{b.value}</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                    <div
+                      className={`h-full rounded-full ${b.color}`}
+                      style={{ width: `${Math.round((b.value / max) * 100)}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })()}
+
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
         <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("tasks.my_tasks", locale)}</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-4">

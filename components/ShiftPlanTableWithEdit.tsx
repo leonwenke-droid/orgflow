@@ -84,6 +84,28 @@ export default function ShiftPlanTableWithEdit({
   const [notAttendedAssignmentId, setNotAttendedAssignmentId] = useState<string | null>(null);
   const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
 
+  /** Full origin for QR / print; falls back to NEXT_PUBLIC_SITE_URL until hydrated. */
+  const [absOrigin, setAbsOrigin] = useState(
+    () =>
+      (typeof window !== "undefined" ? window.location.origin : "") ||
+      (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_SITE_URL || "" : "")
+  );
+  useEffect(() => {
+    if (typeof window !== "undefined") setAbsOrigin(window.location.origin);
+  }, []);
+
+  const checkinBasePrefix = absOrigin || "";
+
+  const assignmentCheckinUrl = (assignmentId: string) =>
+    orgSlug
+      ? `${checkinBasePrefix}/checkin?org=${encodeURIComponent(orgSlug)}&assignmentId=${encodeURIComponent(assignmentId)}&auto=1`
+      : null;
+
+  const shiftCheckinUrl = (shiftId: string) =>
+    orgSlug
+      ? `${checkinBasePrefix}/checkin?org=${encodeURIComponent(orgSlug)}&shiftId=${encodeURIComponent(shiftId)}&auto=1`
+      : null;
+
   const byDate = (shifts as any[]).reduce(
     (acc: Record<string, any[]>, s: any) => {
       const d = s.date;
@@ -124,7 +146,7 @@ export default function ShiftPlanTableWithEdit({
   const renderEditStatusForm = (a: AssignmentRow) => {
     const name = profileNames.get(a.user_id ?? "") ?? "?";
     const showReplacement = notAttendedAssignmentId === a.id;
-    const checkinUrl = orgSlug ? `/checkin?org=${encodeURIComponent(orgSlug)}&assignmentId=${encodeURIComponent(a.id)}` : null;
+    const checkinUrl = assignmentCheckinUrl(a.id);
     return (
       <li key={a.id} className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-[11px]">
         <div className="mb-1.5 flex items-center justify-between gap-2">
@@ -326,12 +348,19 @@ export default function ShiftPlanTableWithEdit({
                                 {names.length > 0 ? names.map((name, i) => <span key={i} className="truncate" title={name}>{name}</span>) : "–"}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 shrink-0 touch-manipulation">
+                            <div className="flex flex-col items-end gap-1 shrink-0 touch-manipulation">
+                            {shiftCheckinUrl(s.id) && (
+                              <div className="flex items-center gap-1 rounded border border-gray-200 bg-white p-1" title={t("shifts.checkin_qr_shift", locale)}>
+                                <QRCodeCanvas value={shiftCheckinUrl(s.id)!} size={48} includeMargin />
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1">
                               <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded bg-blue-100 text-sm text-blue-700 hover:bg-blue-200" title="Personen" aria-label="Personen">✎</button>
                               <form action={deleteShift} className="inline">
                                 <input type="hidden" name="shiftId" value={s.id} />
                                 <SubmitButtonWithSpinner className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 disabled:opacity-70 text-sm dark:bg-red-900/30 dark:text-red-400" title={t("common.remove", locale)} loadingLabel="…" aria-label={t("common.remove", locale)}>✕</SubmitButtonWithSpinner>
                               </form>
+                            </div>
                             </div>
                           </div>
                           <div className="border-t border-gray-200 pt-1.5 text-[11px] text-gray-600">
@@ -390,12 +419,22 @@ export default function ShiftPlanTableWithEdit({
                           {renderStatusBlock(s, assignments, isPast, statusText)}
                         </td>
                         <td className="py-2 px-2 text-right">
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:justify-end">
+                            {shiftCheckinUrl(s.id) && (
+                              <div className="flex items-center gap-1 rounded border border-gray-200 bg-white p-1" title={t("shifts.checkin_qr_shift", locale)}>
+                                <QRCodeCanvas value={shiftCheckinUrl(s.id)!} size={56} includeMargin />
+                                <span className="hidden lg:inline max-w-[100px] text-[9px] text-gray-500 leading-tight">
+                                  {t("shifts.checkin_qr_shift", locale)}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-end gap-1">
                             <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="rounded bg-blue-100 px-2 py-1 text-[11px] text-blue-700 hover:bg-blue-200" title="Personen">✎</button>
                             <form action={deleteShift} className="inline">
                               <input type="hidden" name="shiftId" value={s.id} />
                               <SubmitButtonWithSpinner className="rounded bg-red-500/20 px-2 py-1 text-[11px] text-red-300 hover:bg-red-500/30 disabled:opacity-70 dark:bg-red-900/30 dark:text-red-400" title={t("common.remove", locale)} loadingLabel="…">✕</SubmitButtonWithSpinner>
                             </form>
+                            </div>
                           </div>
                         </td>
                       </tr>

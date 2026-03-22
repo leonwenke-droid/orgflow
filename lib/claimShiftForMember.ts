@@ -15,7 +15,8 @@ export type ClaimShiftErrorCode =
   | "viewer"
   | "insert_failed";
 
-function pickProfileForShiftClaim(
+/** Exported for check-in and other server routes that resolve a member profile in org context (e.g. TGG). */
+export function pickProfileForShiftClaim(
   profiles: { id: string; organization_id: string; role: string | null; status: string | null }[],
   shiftOrgId: string,
   allowedOrgIds: string[]

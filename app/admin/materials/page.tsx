@@ -5,10 +5,10 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData, getCurrentUserOrganization } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { revalidatePath } from "next/cache";
-import AddMaterialForm from "../../../components/AddMaterialForm";
 import EmptyState from "../../../components/EmptyState";
 import DeleteMaterialButton from "../../../components/DeleteMaterialButton";
-import ResourceCategoriesForm from "./ResourceCategoriesForm";
+import MaterialsWizard from "./MaterialsWizard";
+import { LOCALE_COOKIE_NAME, localeFromCookie, t } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -65,7 +65,7 @@ async function addMaterialProcurement(
   const validProfileIds = new Set((await profilesQuery).data?.map((p) => p.id) ?? []);
   const validUserIds = userIds.filter((id) => validProfileIds.has(id));
   if (validUserIds.length === 0) {
-    return { error: "No valid persons selected." };
+    return { errorKey: "materials.error_no_valid_persons" };
   }
 
   const { data: material, error: matError } = await service
@@ -150,6 +150,9 @@ async function deleteMaterialProcurement(formData: FormData) {
 type MaterialsPageProps = { searchParams?: Promise<{ org?: string; event?: string }> | { org?: string; event?: string } };
 
 export default async function MaterialsPage(props: MaterialsPageProps) {
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
     ? await (raw as Promise<{ org?: string; event?: string }>)
@@ -167,8 +170,10 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
     const loginHref = orgSlug ? `/${orgSlug}/login` : "/";
     return (
       <p className="text-sm text-amber-300">
-        Session nicht erkannt. Bitte{" "}
-        <a href={loginHref} className="underline">erneut einloggen</a>.
+        {t("materials.session_relogin", locale)}{" "}
+        <a href={loginHref} className="underline">
+          {t("common.sign_in", locale)}
+        </a>
       </p>
     );
   }
@@ -183,7 +188,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
   if (!profile || !["admin", "lead", "super_admin"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300">
-        Access only for admins & team leads.
+        {t("materials.access_admins_leads", locale)}
       </p>
     );
   }
@@ -244,7 +249,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
   const profileNames = new Map(
     (profiles ?? []).map((p: { id: string; full_name: string }) => [
       p.id,
-      p.full_name ?? "(ohne Namen)"
+      p.full_name ?? t("resources.no_name", locale)
     ])
   );
 
@@ -268,47 +273,47 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
 
   const eventNameById = new Map((events ?? []).map((e: any) => [e.id as string, e.name as string]));
 
+  const dateLocale = locale === "de" ? "de-DE" : "en-GB";
+
   return (
     <div className="space-y-6">
       {effectiveOrgSlug && (
-        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Material" />
+        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel={t("materials.breadcrumb", locale)} />
       )}
-      <section id="record-material" className="card">
-        <h2 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Record new event & resource management
-        </h2>
-        {orgId && (
-          <div className="mb-4">
-            <ResourceCategoriesForm
-              orgId={orgId}
-              initial={(resourceCategories ?? [
-                { value: "small", label: "Small", points: 5 },
-                { value: "medium", label: "Medium", points: 10 },
-                { value: "large", label: "Large", points: 15 }
-              ]).map((c: any) => ({ key: c.value, name: c.label, points: c.points }))}
-            />
-          </div>
-        )}
-        <AddMaterialForm
-          profiles={profiles ?? []}
-          addMaterialProcurement={addMaterialProcurement}
-          resourceCategories={resourceCategories ?? undefined}
-          events={(events ?? []) as { id: string; name: string }[]}
-        />
-      </section>
+      <MaterialsWizard
+        orgId={orgId}
+        resourceCategoriesInitial={resourceCategories}
+        profiles={(profiles ?? []) as { id: string; full_name: string }[]}
+        addMaterialProcurement={addMaterialProcurement}
+        events={(events ?? []) as { id: string; name: string }[]}
+      />
 
-      <section className="card overflow-hidden">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">History</h2>
+      <section id="materials-history" className="card overflow-hidden">
+        <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+          {t("materials.history_title", locale)}
+        </h2>
         <div className="-mx-4 overflow-x-auto sm:mx-0">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Date</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Persons</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Event</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Procured</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Size</th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Points</th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  {t("materials.col_date", locale)}
+                </th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  {t("materials.col_persons", locale)}
+                </th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  {t("materials.col_event", locale)}
+                </th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  {t("materials.col_procured", locale)}
+                </th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  {t("materials.col_size", locale)}
+                </th>
+                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  {t("materials.col_points", locale)}
+                </th>
                 <th className="w-20 p-3 text-left text-xs font-semibold text-gray-500"></th>
               </tr>
             </thead>
@@ -340,7 +345,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                     className="border-b border-gray-100 transition hover:bg-gray-50"
                   >
                     <td className="p-3 text-gray-600">
-                      {new Date(m.created_at).toLocaleDateString("de-DE")}
+                      {new Date(m.created_at).toLocaleDateString(dateLocale)}
                     </td>
                     <td className="p-3 text-gray-600">
                       {names || "—"}
@@ -359,7 +364,11 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                             : "bg-blue-100 text-blue-700"
                         }`}
                       >
-                        {m.size === "small" ? "Small" : m.size === "medium" ? "Medium" : "Large"}
+                        {m.size === "small"
+                          ? t("resources.size_small", locale)
+                          : m.size === "medium"
+                            ? t("resources.size_medium", locale)
+                            : t("resources.size_large", locale)}
                       </span>
                     </td>
                     <td className="p-3 font-semibold text-gray-700">

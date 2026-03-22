@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { updateCommitteeNameAction, deleteCommitteeAction } from "./actions";
+import { updateCommitteeAction, deleteCommitteeAction } from "./actions";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
 
-type Committee = { id: string; name: string };
+type Committee = {
+  id: string;
+  name: string;
+  description?: string | null;
+  is_active?: boolean | null;
+  memberCount?: number;
+};
 
 export default function CommitteeRow({
   orgSlug,
@@ -17,17 +23,27 @@ export default function CommitteeRow({
   const { locale } = useLocale();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(committee.name);
+  const [description, setDescription] = useState(committee.description ?? "");
+  const [isActive, setIsActive] = useState(committee.is_active !== false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSave() {
-    if (name.trim() === committee.name) {
+    if (
+      name.trim() === committee.name &&
+      (description.trim() || "") === (committee.description ?? "").trim() &&
+      isActive === (committee.is_active !== false)
+    ) {
       setEditing(false);
       return;
     }
     setLoading(true);
     setError(null);
-    const result = await updateCommitteeNameAction(orgSlug, committee.id, name.trim());
+    const result = await updateCommitteeAction(orgSlug, committee.id, {
+      name: name.trim(),
+      description: description.trim() || null,
+      is_active: isActive
+    });
     setLoading(false);
     if (result.errorKey) {
       setError(t(result.errorKey, locale));
@@ -58,20 +74,57 @@ export default function CommitteeRow({
     window.location.reload();
   }
 
+  const showInactive = committee.is_active === false;
+
   return (
-    <li className="flex flex-wrap items-center justify-between gap-2 text-sm">
+    <li className="flex flex-col gap-2 border-b border-gray-100 pb-3 text-sm last:border-0 dark:border-gray-800">
       {editing ? (
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded border border-gray-300 bg-white px-2 py-1 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-          autoFocus
-        />
+        <div className="flex flex-col gap-2">
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            autoFocus
+          />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            placeholder={t("teams.description_placeholder", locale)}
+            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          />
+          <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            {t("teams.active", locale)}
+          </label>
+        </div>
       ) : (
-        <span className="text-gray-900 dark:text-gray-100">{committee.name}</span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="text-gray-900 dark:text-gray-100">{committee.name}</span>
+            {showInactive && (
+              <span className="rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                {t("teams.inactive_badge", locale)}
+              </span>
+            )}
+            {typeof committee.memberCount === "number" ? (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t("teams.member_count", locale).replace("{count}", String(committee.memberCount))}
+              </span>
+            ) : null}
+          </div>
+          {committee.description ? (
+            <p className="text-xs text-gray-600 dark:text-gray-400">{committee.description}</p>
+          ) : null}
+        </div>
       )}
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         {editing ? (
           <>
             <button
@@ -84,7 +137,13 @@ export default function CommitteeRow({
             </button>
             <button
               type="button"
-              onClick={() => { setEditing(false); setName(committee.name); setError(null); }}
+              onClick={() => {
+                setEditing(false);
+                setName(committee.name);
+                setDescription(committee.description ?? "");
+                setIsActive(committee.is_active !== false);
+                setError(null);
+              }}
               className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               {t("common.cancel", locale)}
@@ -110,7 +169,7 @@ export default function CommitteeRow({
           </>
         )}
       </div>
-      {error && <p className="w-full text-xs text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
     </li>
   );
 }

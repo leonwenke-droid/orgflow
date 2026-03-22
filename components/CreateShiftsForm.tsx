@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import CalendarPicker from "./CalendarPicker";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
@@ -42,18 +43,25 @@ export default function CreateShiftsForm({
   events?: { id: string; name: string }[];
 }) {
   const { locale } = useLocale();
+  const router = useRouter();
   const [state, formAction] = useFormState(action, null);
   const [type, setType] = useState<"recurring" | "event">("recurring");
   const [assignmentMode, setAssignmentMode] = useState<"claim" | "auto">("claim");
   const errorMessage = state?.errorKey ? t(state.errorKey, locale) : state?.error;
 
   useEffect(() => {
-    if (state?.success) {
-      const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
-      const org = params.get("org");
-      window.location.href = org ? `/admin/shifts?org=${encodeURIComponent(org)}` : "/admin/shifts";
-    }
-  }, [state?.success]);
+    if (!state?.success || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const org = params.get("org");
+    const event = params.get("event");
+    const next = new URLSearchParams();
+    if (org) next.set("org", org);
+    if (event) next.set("event", event);
+    next.set("success", "1");
+    const qs = next.toString();
+    router.replace(qs ? `/admin/shifts?${qs}` : "/admin/shifts?success=1");
+    router.refresh();
+  }, [state?.success, router]);
 
   return (
     <form action={formAction} className="grid gap-3 sm:gap-2 md:grid-cols-2">

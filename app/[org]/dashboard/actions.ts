@@ -6,8 +6,8 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { redirect } from "next/navigation";
 import { writeAuditLog } from "../../../lib/audit";
 import { claimShiftForAuthenticatedMember } from "../../../lib/claimShiftForMember";
-import { createUserNotification } from "../../../lib/notifications";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { notifyAfterShiftSelfClaim } from "../../../lib/shiftClaimNotifications";
 
 export async function claimShiftFromDashboard(formData: FormData) {
   const orgSlug = String(formData.get("orgSlug") ?? "").trim();
@@ -43,13 +43,12 @@ export async function claimShiftFromDashboard(formData: FormData) {
   });
 
   const service = createSupabaseServiceRoleClient();
-  await createUserNotification(service, {
-    profileId: result.profileId,
+  await notifyAfterShiftSelfClaim({
+    service,
     organizationId: result.organizationId,
-    type: "shift_self_claimed",
-    title: "Schicht übernommen",
-    body: "Du hast dich für eine Schicht eingetragen.",
-    link: `/${orgSlug}/shifts`
+    claimerProfileId: result.profileId,
+    orgSlug,
+    shiftId
   });
 
   revalidatePath(`/${orgSlug}/shifts`);

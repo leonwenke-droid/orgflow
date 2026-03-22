@@ -26,7 +26,13 @@ export default function CreateCommitteeForm({
     setOtherError(null);
     const name = formData.get("name")?.toString()?.trim();
     if (!name) return;
-    const result = await createCommitteeAction(orgSlug, name);
+    const description = formData.get("description")?.toString()?.trim() || null;
+    const isActive = formData.get("is_active") === "on";
+    const result = await createCommitteeAction(orgSlug, {
+      name,
+      description,
+      is_active: isActive
+    });
     if (result.errorKey) {
       setOtherError(t(result.errorKey, locale));
       return;
@@ -43,7 +49,7 @@ export default function CreateCommitteeForm({
   }
 
   return (
-    <form action={handleSubmit} className="mt-6 flex flex-col gap-2">
+    <form action={handleSubmit} className="mt-6 flex flex-col gap-3">
       {otherError && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200">
           <p className="font-medium">{otherError}</p>
@@ -57,21 +63,36 @@ export default function CreateCommitteeForm({
           </Link>
         </div>
       )}
-      <div className="flex gap-2">
-      <input
-        type="text"
-        name="name"
-        placeholder="New team (e.g. Decoration)"
-        className="flex-1 rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400"
-        required
-      />
-      <button
-        type="submit"
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-      >
-        Create
-      </button>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+        <input
+          type="text"
+          name="name"
+          placeholder={t("teams.name_placeholder", locale)}
+          className="flex-1 rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400"
+          required
+        />
+        <button
+          type="submit"
+          className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 sm:shrink-0"
+        >
+          {t("teams.create", locale)}
+        </button>
       </div>
+      <div>
+        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+          {t("teams.description", locale)}
+        </label>
+        <textarea
+          name="description"
+          rows={2}
+          placeholder={t("teams.description_placeholder", locale)}
+          className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        />
+      </div>
+      <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <input type="checkbox" name="is_active" defaultChecked className="rounded border-gray-300" />
+        {t("teams.active", locale)}
+      </label>
     </form>
   );
 }

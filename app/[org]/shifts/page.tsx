@@ -3,112 +3,19 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
-import { revalidatePath } from "next/cache";
+import {
+  localeFromCookie,
+  LOCALE_COOKIE_NAME,
+  t,
+  formatShiftSlotsLabel,
+  shiftSlotTrafficClass
+} from "../../../lib/i18n";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
-import { claimShiftForAuthenticatedMember } from "../../../lib/claimShiftForMember";
-import { createUserNotification } from "../../../lib/notifications";
+import ClaimShiftRefreshForm from "../../../components/ClaimShiftRefreshForm";
+import { claimShiftAction, claimShiftSwapAction, offerShiftSwapAction } from "./actions";
 
 export const dynamic = "force-dynamic";
-
-async function claimShiftAction(formData: FormData) {
-  "use server";
-  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
-  const shiftId = String(formData.get("shiftId") ?? "").trim();
-  const organizationId = String(formData.get("organization_id") ?? "").trim();
-  if (!orgSlug || !shiftId || !organizationId) return;
-
-  const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const result = await claimShiftForAuthenticatedMember({
-    authUserId: user.id,
-    orgSlug,
-    shiftId,
-    organizationIdFromForm: organizationId
-  });
-  if (!result.ok) {
-    console.error("[claimShiftAction]", result.code);
-    redirect(`/${orgSlug}/shifts?claimShift=error`);
-  }
-
-  const service = createSupabaseServiceRoleClient();
-  await createUserNotification(service, {
-    profileId: result.profileId,
-    organizationId: result.organizationId,
-    type: "shift_self_claimed",
-    title: "Schicht übernommen",
-    body: "Du hast dich für eine Schicht eingetragen.",
-    link: `/${orgSlug}/shifts`
-  });
-
-  revalidatePath(`/${orgSlug}/shifts`);
-  revalidatePath(`/${orgSlug}/dashboard`);
-}
-
-async function offerShiftSwapAction(formData: FormData) {
-  "use server";
-  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
-  const assignmentId = String(formData.get("assignmentId") ?? "").trim();
-  if (!orgSlug || !assignmentId) return;
-
-  const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  await supabase.rpc("offer_shift_swap", { assignment_id: assignmentId });
-  revalidatePath(`/${orgSlug}/shifts`);
-  revalidatePath(`/${orgSlug}/dashboard`);
-}
-
-async function claimShiftSwapAction(formData: FormData) {
-  "use server";
-  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
-  const assignmentId = String(formData.get("assignmentId") ?? "").trim();
-  const organizationId = String(formData.get("organization_id") ?? "").trim();
-  if (!orgSlug || !assignmentId || !organizationId) return;
-
-  const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const service = createSupabaseServiceRoleClient();
-  const { data: before } = await service
-    .from("shift_assignments")
-    .select("user_id, shift_id, shifts(event_name)")
-    .eq("id", assignmentId)
-    .maybeSingle();
-  const originalOwnerId = (before as { user_id?: string } | null)?.user_id ?? null;
-
-  const { error: rpcErr } = await supabase.rpc("claim_shift_swap", { assignment_id: assignmentId });
-  if (rpcErr) return;
-
-  const { data: claimerProf } = await service
-    .from("profiles")
-    .select("id, full_name")
-    .eq("auth_user_id", user.id)
-    .eq("organization_id", organizationId)
-    .maybeSingle();
-
-  if (originalOwnerId) {
-    const evName =
-      (before as { shifts?: { event_name?: string } | null } | null)?.shifts?.event_name ?? "Schicht";
-    const claimerName = (claimerProf as { full_name?: string } | null)?.full_name ?? "Jemand";
-    await createUserNotification(service, {
-      profileId: originalOwnerId,
-      organizationId,
-      type: "shift_swap_taken",
-      title: "Schicht-Tausch übernommen",
-      body: `${claimerName} hat dein Angebot für „${evName}“ übernommen.`,
-      link: `/${orgSlug}/shifts`
-    });
-  }
-
-  revalidatePath(`/${orgSlug}/shifts`);
-  revalidatePath(`/${orgSlug}/dashboard`);
-}
 
 export default async function ShiftsViewerPage(props: {
   params: Promise<{ org: string }> | { org: string };
@@ -123,6 +30,7 @@ export default async function ShiftsViewerPage(props: {
       ? await (props.searchParams as Promise<Record<string, string | string[] | undefined>>)
       : ((props.searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
   const claimShiftError = sp.claimShift === "error" || sp.claimShift === "1";
+  const shiftsFreeOnly = sp.free === "1" || sp.free === "true";
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
@@ -190,7 +98,7 @@ export default async function ShiftsViewerPage(props: {
     return !s.date || String(s.date).slice(0, 10) >= todayStr;
   });
 
-  const upcomingShifts = [...upcomingShiftsRaw].sort((a: any, b: any) => {
+  const upcomingShiftsSorted = [...upcomingShiftsRaw].sort((a: any, b: any) => {
     const ma = isAssignedToMe(a) ? 0 : 1;
     const mb = isAssignedToMe(b) ? 0 : 1;
     if (ma !== mb) return ma - mb;
@@ -200,6 +108,14 @@ export default async function ShiftsViewerPage(props: {
     if (c !== 0) return c;
     return String(a.start_time ?? "").localeCompare(String(b.start_time ?? ""));
   });
+
+  const upcomingShifts = shiftsFreeOnly
+    ? upcomingShiftsSorted.filter((s: any) => {
+        const required = Number(s.required_slots ?? 1) || 1;
+        const taken = (s.shift_assignments ?? []).length;
+        return Math.max(0, required - taken) > 0;
+      })
+    : upcomingShiftsSorted;
 
   const myPastShifts = myShifts.filter((s: any) => s.date && String(s.date).slice(0, 10) < todayStr);
 
@@ -228,6 +144,29 @@ export default async function ShiftsViewerPage(props: {
         </p>
       )}
 
+      <div className="flex flex-wrap gap-2 text-xs">
+        <a
+          href={`/${orgSlug}/shifts`}
+          className={`rounded-full border px-3 py-1 ${
+            !shiftsFreeOnly
+              ? "border-blue-600 bg-blue-600 text-white"
+              : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300"
+          }`}
+        >
+          {t("dashboard.filter_all_shifts", locale)}
+        </a>
+        <a
+          href={`/${orgSlug}/shifts?free=1`}
+          className={`rounded-full border px-3 py-1 ${
+            shiftsFreeOnly
+              ? "border-blue-600 bg-blue-600 text-white"
+              : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300"
+          }`}
+        >
+          {t("dashboard.filter_free_shifts", locale)}
+        </a>
+      </div>
+
       {upcomingShifts.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
           <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("dashboard.upcoming_shifts", locale)}</h2>
@@ -255,24 +194,31 @@ export default async function ShiftsViewerPage(props: {
                         </span>
                       ) : null}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {s.date ? new Date(s.date).toLocaleDateString(localeForDate) : "–"} · {s.start_time ?? ""}-{s.end_time ?? ""}
-                      {s.location ? ` · ${s.location}` : ""}
-                      {` · ${free}/${required} ${t("dashboard.slots_free", locale)}`}
+                    <p className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <span
+                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${shiftSlotTrafficClass(free, required)}`}
+                        title={formatShiftSlotsLabel(locale, free, required)}
+                        aria-hidden
+                      />
+                      <span>
+                        {s.date ? new Date(s.date).toLocaleDateString(localeForDate) : "–"} · {s.start_time ?? ""}-{s.end_time ?? ""}
+                        {s.location ? ` · ${s.location}` : ""}
+                        {` · ${formatShiftSlotsLabel(locale, free, required)}`}
+                      </span>
                     </p>
                   </div>
                   {showClaim ? (
-                    <form action={claimShiftAction}>
+                    <ClaimShiftRefreshForm action={claimShiftAction} className="inline">
                       <input type="hidden" name="orgSlug" value={orgSlug} />
                       <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
                       <input type="hidden" name="shiftId" value={s.id} />
                       <SubmitButtonWithSpinner
-                        className="inline-flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+                        className="inline-flex min-w-[7rem] items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
                         loadingLabel={t("common.loading", locale)}
                       >
                         {t("shifts.claim", locale)}
                       </SubmitButtonWithSpinner>
-                    </form>
+                    </ClaimShiftRefreshForm>
                   ) : null}
                 </li>
               );

@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { isSuperAdmin } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { canViewFinance } from "../../../lib/permissions";
+import type { DbRole } from "../../../types";
 
 export const runtime = "nodejs";
 
@@ -32,13 +34,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "organizationId and categories required." }, { status: 400 });
     }
 
+    const service = createSupabaseServiceRoleClient();
     const superAdmin = await isSuperAdmin();
     if (!superAdmin) {
-      const { data: ok } = await supabase.rpc("is_org_admin", { org_id: organizationId });
-      if (ok !== true) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+      const { data: prof } = await service
+        .from("profiles")
+        .select("role")
+        .eq("auth_user_id", user.id)
+        .eq("organization_id", organizationId)
+        .maybeSingle();
+      const role = (prof as { role?: string | null } | null)?.role ?? null;
+      const { data: isAdmin } = await supabase.rpc("is_org_admin", { org_id: organizationId });
+      if (isAdmin !== true && !canViewFinance(role as DbRole)) {
+        return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+      }
     }
-
-    const service = createSupabaseServiceRoleClient();
     const rows = categories
       .map((c: any) => ({
         organization_id: organizationId,

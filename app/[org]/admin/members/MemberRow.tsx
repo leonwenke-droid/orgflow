@@ -140,7 +140,7 @@ export default function MemberRow({
   }
 
   async function handleDelete() {
-    if (!window.confirm("Really delete member completely?")) return;
+    if (!window.confirm(t("members.confirm_delete", locale))) return;
     setLoading(true);
     setError(null);
     const { error } = await deleteMemberAction(orgSlug, member.id);
@@ -170,7 +170,7 @@ export default function MemberRow({
       const invite = currentInvite ?? await ensureInvite();
       if (!invite) return;
       await navigator.clipboard.writeText(invite.inviteUrl);
-      window.alert("Invite link copied.");
+      window.alert(t("members.invite_link_copied", locale));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invite link could not be generated.");
     }
@@ -181,7 +181,7 @@ export default function MemberRow({
       const invite = currentInvite ?? await ensureInvite();
       if (!invite) return;
       await navigator.clipboard.writeText(invite.whatsappText);
-      window.alert("WhatsApp invite copied.");
+      window.alert(t("members.whatsapp_copied", locale));
     } catch (err) {
       setError(err instanceof Error ? err.message : "WhatsApp text could not be generated.");
     }

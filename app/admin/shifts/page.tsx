@@ -700,7 +700,9 @@ async function deleteEventShifts(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
-type ShiftsPageProps = { searchParams?: Promise<{ org?: string; event?: string }> | { org?: string; event?: string } };
+type ShiftsPageProps = {
+  searchParams?: Promise<{ org?: string; event?: string; success?: string }> | { org?: string; event?: string; success?: string };
+};
 
 export default async function ShiftsPage(props: ShiftsPageProps) {
   unstable_noStore();
@@ -708,10 +710,11 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ org?: string; event?: string }>)
-    : (raw ?? {}) as { org?: string; event?: string };
+    ? await (raw as Promise<{ org?: string; event?: string; success?: string }>)
+    : (raw ?? {}) as { org?: string; event?: string; success?: string };
   const orgSlug = searchParams?.org?.trim() || null;
   const eventIdFilter = searchParams?.event?.trim() || null;
+  const shiftsCreatedSuccess = searchParams?.success === "1";
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -860,6 +863,11 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     <div className="space-y-4">
       {effectiveOrgSlug && (
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel={t("dashboard.shifts", locale)} />
+      )}
+      {shiftsCreatedSuccess && (
+        <p className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900 dark:border-green-800 dark:bg-green-900/20 dark:text-green-100">
+          {t("shifts.created_success", locale)}
+        </p>
       )}
       {events.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-sm">

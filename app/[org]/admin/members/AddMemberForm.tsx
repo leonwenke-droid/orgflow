@@ -76,13 +76,11 @@ export default function AddMemberForm({
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-      <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Add member manually</h2>
-      <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-        Name required, optional team. Email only for team lead. Member appears in the list immediately.
-      </p>
+      <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("members.add_manual_title", locale)}</h2>
+      <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{t("members.add_manual_hint", locale)}</p>
       <form onSubmit={handleSubmit} className="mt-3 space-y-3 text-sm">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">Name</label>
+          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">{t("engagement.export_name", locale)}</label>
           <input
             type="text"
             required
@@ -99,11 +97,11 @@ export default function AddMemberForm({
             onChange={(e) => setAsLead(e.target.checked)}
             className="rounded border-gray-400"
           />
-          Add as team lead
+          {t("members.add_as_lead", locale)}
         </label>
         {asLead && (
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">Email (for team lead)</label>
+            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">{t("members.lead_email_label", locale)}</label>
             <input
               type="email"
               required
@@ -117,7 +115,7 @@ export default function AddMemberForm({
         {committees.length > 0 && (
           <details className="group">
             <summary className="cursor-pointer text-xs font-semibold text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100">
-              Teams ({committeeIds.size} selected) ▾
+              {t("members.teams_selected", locale).replace("{count}", String(committeeIds.size))}
             </summary>
             <div className="mt-1 flex flex-wrap gap-2 rounded border border-gray-200 bg-gray-50 p-2 dark:border-gray-600 dark:bg-gray-800">
               {committees.map((c) => (
@@ -130,17 +128,17 @@ export default function AddMemberForm({
           </details>
         )}
         {error && <p className="text-xs text-red-600">{error}</p>}
-        {success && <p className="text-xs text-green-600">Member added.</p>}
+        {success && <p className="text-xs text-green-600">{t("members.add_success", locale)}</p>}
       {inviteUrl && (
         <div className="rounded border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-100">
-          <p className="font-semibold">Invite ready</p>
+          <p className="font-semibold">{t("members.invite_ready", locale)}</p>
           <p className="mt-1 break-all font-mono">{inviteUrl}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button type="button" onClick={() => copyText(inviteUrl)} className="rounded bg-blue-600 px-2 py-1 text-[10px] text-white hover:bg-blue-700">
-              Copy invite link
+              {t("members.copy_invite_link", locale)}
             </button>
             <button type="button" onClick={() => copyText(whatsappText)} className="rounded border border-blue-300 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-900/40">
-              Copy WhatsApp text
+              {t("members.copy_whatsapp_invite", locale)}
             </button>
           </div>
         </div>
@@ -150,7 +148,7 @@ export default function AddMemberForm({
           disabled={loading}
           className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? "Adding…" : "Add member"}
+          {loading ? t("members.adding", locale) : t("members.add_member_btn", locale)}
         </button>
       </form>
     </div>

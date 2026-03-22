@@ -87,7 +87,9 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
                   <tr key={score.id} className="transition hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
                     <td className="px-6 py-4 font-medium text-gray-900">
-                      {currentAuthUserId && score.profile?.auth_user_id === currentAuthUserId ? "Du" : (score.profile?.full_name ?? "–")}
+                      {currentAuthUserId && score.profile?.auth_user_id === currentAuthUserId
+                        ? t("engagement.you_row", locale)
+                        : (score.profile?.full_name ?? "–")}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
@@ -106,7 +108,7 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
               ) : (
                 <tr>
                   <td colSpan={3} className="px-6 py-10 text-center text-gray-500">
-                    No engagement data available yet.
+                    {t("engagement.empty_scores", locale)}
                   </td>
                 </tr>
               )}

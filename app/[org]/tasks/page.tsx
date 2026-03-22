@@ -146,7 +146,7 @@ export default async function TasksViewerPage(props: {
       task.claimable === true &&
       (task.status === "offen" || task.status === "in_arbeit");
     return (
-      <li key={task.id} className="py-3">
+      <li id={`task-${task.id}`} key={task.id} className="scroll-mt-24 py-3">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{task.title}</p>
@@ -253,7 +253,7 @@ export default async function TasksViewerPage(props: {
           </h2>
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {openClaimable.map((task: any) => (
-              <li key={task.id} className="py-3 flex items-center justify-between gap-3">
+              <li id={`task-${task.id}`} key={task.id} className="scroll-mt-24 py-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">

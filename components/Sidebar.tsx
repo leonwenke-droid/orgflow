@@ -2,7 +2,7 @@
 
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import FullPageLink from "./FullPageLink";
+import Link from "next/link";
 import LogoutButton from "./LogoutButton";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
@@ -153,10 +153,10 @@ export default function Sidebar({
   };
 
   const linkClassName = (href: string) =>
-    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+    `flex items-center gap-3 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
       isActive(href)
-        ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+        ? "border-blue-600 bg-blue-50 text-blue-600 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-400"
+        : "border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
     }`;
 
   const sidebarContent = (
@@ -179,10 +179,10 @@ export default function Sidebar({
             </p>
             <div className="space-y-0.5">
               {section.items.map(({ href, labelKey, icon: Icon }) => (
-                <FullPageLink key={href} href={href} className={linkClassName(href)}>
+                <Link key={href} href={href} prefetch className={linkClassName(href)}>
                   <Icon className="h-4 w-4 shrink-0" />
                   {t(labelKey, locale)}
-                </FullPageLink>
+                </Link>
               ))}
             </div>
           </div>

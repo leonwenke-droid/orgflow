@@ -15,12 +15,19 @@ import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin, getCurrentUserRoleInOrg } from "../../../lib/getOrganization";
 import { ADMIN_ROLES, canViewFinance } from "../../../lib/permissions";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import {
+  localeFromCookie,
+  LOCALE_COOKIE_NAME,
+  t,
+  formatShiftSlotsLabel,
+  shiftSlotTrafficClass
+} from "../../../lib/i18n";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { claimShiftFromDashboard } from "./actions";
 import { ArrowLeftRight } from "lucide-react";
 import TaskCompleteModalButton from "../../../components/TaskCompleteModal";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
+import ClaimShiftRefreshForm from "../../../components/ClaimShiftRefreshForm";
 
 export const dynamic = "force-dynamic";
 
@@ -191,6 +198,7 @@ export default async function OrgDashboardPage({
       ? await (searchParams as Promise<Record<string, string | string[] | undefined>>)
       : ((searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
   const claimShiftError = sp.claimShift === "error" || sp.claimShift === "1";
+  const shiftsFreeOnly = sp.free === "1" || sp.free === "true";
   const org = await getCurrentOrganization(orgSlug);
   const cookieStore = await cookies();
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
@@ -383,6 +391,16 @@ export default async function OrgDashboardPage({
     return d > in7Str;
   });
 
+  const shiftHasFreeSlot = (s: (typeof shiftRows)[number]) => {
+    const required = Number(s.required_slots ?? 1) || 1;
+    const taken = (s.shift_assignments ?? []).length;
+    return Math.max(0, required - taken) > 0;
+  };
+
+  const upcomingShiftsNext7DaysDisplay = shiftsFreeOnly
+    ? upcomingShiftsNext7Days.filter(shiftHasFreeSlot)
+    : upcomingShiftsNext7Days;
+
   const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
   const engagementEnabled = orgFeatures.engagement_tracking !== false;
 
@@ -418,6 +436,29 @@ export default async function OrgDashboardPage({
           {t("dashboard.engagement_disabled_note", locale)}
         </p>
       )}
+
+      <div className="flex flex-wrap gap-2 text-xs">
+        <a
+          href={`/${orgSlug}/dashboard`}
+          className={`rounded-full border px-3 py-1 ${
+            !shiftsFreeOnly
+              ? "border-blue-600 bg-blue-600 text-white"
+              : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300"
+          }`}
+        >
+          {t("dashboard.filter_all_shifts", locale)}
+        </a>
+        <a
+          href={`/${orgSlug}/dashboard?free=1`}
+          className={`rounded-full border px-3 py-1 ${
+            shiftsFreeOnly
+              ? "border-blue-600 bg-blue-600 text-white"
+              : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300"
+          }`}
+        >
+          {t("dashboard.filter_free_shifts", locale)}
+        </a>
+      </div>
 
       {showGettingStarted && <OnboardingBanner />}
 
@@ -479,11 +520,11 @@ export default async function OrgDashboardPage({
             {t("common.view", locale)}
           </a>
         </div>
-        {upcomingShiftsNext7Days.length === 0 ? (
+        {upcomingShiftsNext7DaysDisplay.length === 0 ? (
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("empty.shifts", locale)}</p>
         ) : (
           <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-            {upcomingShiftsNext7Days.map((s) => {
+            {upcomingShiftsNext7DaysDisplay.map((s) => {
               const required = Number(s.required_slots ?? 1) || 1;
               const taken = (s.shift_assignments ?? []).length;
               const free = Math.max(0, required - taken);
@@ -513,24 +554,30 @@ export default async function OrgDashboardPage({
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {s.event_name || t("dashboard.shifts", locale)}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {d ? formatDateTimeForDisplay(d) : "–"} · {free}/{required}{" "}
-                      {t("dashboard.slots_free", locale)}
-                      {statusHint ? ` · ${statusHint}` : ""}
+                    <p className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <span
+                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${shiftSlotTrafficClass(free, required)}`}
+                        title={formatShiftSlotsLabel(locale, free, required)}
+                        aria-hidden
+                      />
+                      <span>
+                        {d ? formatDateTimeForDisplay(d) : "–"} · {formatShiftSlotsLabel(locale, free, required)}
+                        {statusHint ? ` · ${statusHint}` : ""}
+                      </span>
                     </p>
                   </div>
                   {canShowClaim ? (
-                    <form action={claimShiftFromDashboard}>
+                    <ClaimShiftRefreshForm action={claimShiftFromDashboard} className="inline">
                       <input type="hidden" name="orgSlug" value={orgSlug} />
                       <input type="hidden" name="shiftId" value={s.id} />
                       <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
                       <SubmitButtonWithSpinner
-                        className="inline-flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+                        className="inline-flex min-w-[7rem] items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
                         loadingLabel={t("common.loading", locale)}
                       >
                         {t("shifts.claim", locale)}
                       </SubmitButtonWithSpinner>
-                    </form>
+                    </ClaimShiftRefreshForm>
                   ) : null}
                 </li>
               );
@@ -561,22 +608,28 @@ export default async function OrgDashboardPage({
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {s.event_name || t("dashboard.shifts", locale)}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {d ? formatDateTimeForDisplay(d) : "–"} · {free}/{required}{" "}
-                      {t("dashboard.slots_free", locale)}
+                    <p className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      <span
+                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${shiftSlotTrafficClass(free, required)}`}
+                        title={formatShiftSlotsLabel(locale, free, required)}
+                        aria-hidden
+                      />
+                      <span>
+                        {d ? formatDateTimeForDisplay(d) : "–"} · {formatShiftSlotsLabel(locale, free, required)}
+                      </span>
                     </p>
                   </div>
-                  <form action={claimShiftFromDashboard}>
+                  <ClaimShiftRefreshForm action={claimShiftFromDashboard} className="inline">
                     <input type="hidden" name="orgSlug" value={orgSlug} />
                     <input type="hidden" name="shiftId" value={s.id} />
                     <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
                     <SubmitButtonWithSpinner
-                      className="inline-flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+                      className="inline-flex min-w-[7rem] items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
                       loadingLabel={t("common.loading", locale)}
                     >
                       {t("shifts.claim", locale)}
                     </SubmitButtonWithSpinner>
-                  </form>
+                  </ClaimShiftRefreshForm>
                 </li>
               );
             })}

@@ -1,6 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import {
   Users,
   UsersRound,
@@ -31,6 +32,9 @@ export default async function AdminDashboard({
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
 
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+
   const authClient = createServerComponentClient({ cookies });
   const {
     data: { session }
@@ -48,14 +52,14 @@ export default async function AdminDashboard({
   };
 
   const allCards = [
-    { href: `/${orgSlug}/admin/members`, icon: Users, title: "Members", description: "Invite and manage organisation members", show: true },
-    { href: `/${orgSlug}/admin/committees`, icon: UsersRound, title: "Teams", description: "Create teams and assign team leads", show: true },
-    { href: `/${orgSlug}/admin/tasks`, icon: CheckSquare, title: "Tasks", description: "Manage tasks across teams", show: modules.tasks },
-    { href: `/${orgSlug}/admin/shifts`, icon: CalendarDays, title: "Shifts", description: "Plan shifts and auto-assign members", show: modules.shifts },
-    { href: `/${orgSlug}/admin/materials`, icon: Package, title: "Resources", description: "Track materials and procurement", show: modules.resources },
-    { href: `/${orgSlug}/admin/treasury`, icon: Wallet, title: "Finance", description: "Manage treasury and transactions", show: modules.finance },
-    { href: `/${orgSlug}/admin/scores/assign`, icon: Trophy, title: "Engagement", description: "Assign points and view leaderboard", show: modules.engagement },
-    { href: `/${orgSlug}/admin/events`, icon: CalendarRange, title: "Events", description: "Create and manage events", show: modules.events },
+    { href: `/${orgSlug}/admin/members`, icon: Users, titleKey: "admin.card.members_title", descKey: "admin.card.members_desc", show: true },
+    { href: `/${orgSlug}/admin/committees`, icon: UsersRound, titleKey: "admin.card.teams_title", descKey: "admin.card.teams_desc", show: true },
+    { href: `/${orgSlug}/admin/tasks`, icon: CheckSquare, titleKey: "admin.card.tasks_title", descKey: "admin.card.tasks_desc", show: modules.tasks },
+    { href: `/${orgSlug}/admin/shifts`, icon: CalendarDays, titleKey: "admin.card.shifts_title", descKey: "admin.card.shifts_desc", show: modules.shifts },
+    { href: `/${orgSlug}/admin/materials`, icon: Package, titleKey: "admin.card.resources_title", descKey: "admin.card.resources_desc", show: modules.resources },
+    { href: `/${orgSlug}/admin/treasury`, icon: Wallet, titleKey: "admin.card.finance_title", descKey: "admin.card.finance_desc", show: modules.finance },
+    { href: `/${orgSlug}/admin/scores/assign`, icon: Trophy, titleKey: "admin.card.engagement_title", descKey: "admin.card.engagement_desc", show: modules.engagement },
+    { href: `/${orgSlug}/admin/events`, icon: CalendarRange, titleKey: "admin.card.events_title", descKey: "admin.card.events_desc", show: modules.events },
   ].filter((c) => c.show);
 
   return (
@@ -65,29 +69,30 @@ export default async function AdminDashboard({
         <header className="mb-10">
           <AdminBreadcrumb orgSlug={orgSlug} />
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-foreground-dark sm:text-4xl">
-            Admin
+            {t("admin.page_title", locale)}
           </h1>
           <p className="mt-2 text-lg text-gray-600 dark:text-muted">
-            {org.name}
+            {t("admin.org_subtitle", locale).replace("{name}", org.name)}
           </p>
         </header>
 
         {/* Module cards */}
         <section className="mb-10">
-          <h2 className="sr-only">Modules</h2>
+          <h2 className="sr-only">{t("admin.modules_sr", locale)}</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {allCards.map(({ href, icon: Icon, title, description }) => (
+            {allCards.map(({ href, icon: Icon, titleKey, descKey }) => (
               <Link
                 key={href}
                 href={href}
+                prefetch
                 className="group flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-blue-200 hover:shadow-md dark:border-gray-700 dark:bg-card-dark dark:hover:border-blue-700"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-gray-800">
                   <Icon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 dark:text-foreground-dark">{title}</p>
-                  <p className="mt-0.5 text-sm text-gray-500 dark:text-muted">{description}</p>
+                  <p className="font-semibold text-gray-900 dark:text-foreground-dark">{t(titleKey, locale)}</p>
+                  <p className="mt-0.5 text-sm text-gray-500 dark:text-muted">{t(descKey, locale)}</p>
                 </div>
               </Link>
             ))}

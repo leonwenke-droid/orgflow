@@ -79,6 +79,12 @@ Open [http://localhost:3000](http://localhost:3000).
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vercel (Production branch, env vars) and Supabase migrations (`claim_shift_slot`, RLS) required for tasks/shifts and self sign-up.
 
+### Manual QA (Admin + Member, two browsers)
+
+- Step-by-step checklist and **TGG test accounts**: [docs/MANUAL_QA_TGG.md](docs/MANUAL_QA_TGG.md)  
+- Broader product/code review & backlog: [docs/PRODUCT_REVIEW_AND_TODOS.md](docs/PRODUCT_REVIEW_AND_TODOS.md)  
+- Optional: copy [docs/credentials-tgg.local.example.md](docs/credentials-tgg.local.example.md) to `docs/credentials-tgg.local.md` (gitignored) to store credentials **without** committing them.
+
 ## Build
 
 ```bash

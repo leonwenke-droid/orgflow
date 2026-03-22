@@ -126,10 +126,39 @@ export async function POST(req: NextRequest) {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const wb = XLSX.read(arrayBuffer, { type: "array" });
-    const sheet = wb.Sheets["Members"] ?? wb.Sheets["Mitglieder"] ?? wb.Sheets[wb.SheetNames[0]];
-    if (!sheet) throw new Error("Kein Arbeitsblatt gefunden.");
-    const data = XLSX.utils.sheet_to_json(sheet as XLSX.WorkSheet, { header: 1 }) as unknown[][];
+    const fileName = (file.name ?? "").toLowerCase();
+    const isCsv = fileName.endsWith(".csv") || String(file.type ?? "").includes("csv");
+
+    let data: unknown[][];
+    if (isCsv) {
+      const text = new TextDecoder("utf-8").decode(arrayBuffer);
+      const lines = text.trim().split(/\r?\n/).filter((l) => l.trim() !== "");
+      data = lines.map((line) => {
+        const cells: string[] = [];
+        let cur = "";
+        let inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            inQ = !inQ;
+            continue;
+          }
+          if (!inQ && ch === ",") {
+            cells.push(cur.trim());
+            cur = "";
+            continue;
+          }
+          cur += ch;
+        }
+        cells.push(cur.trim());
+        return cells;
+      });
+    } else {
+      const wb = XLSX.read(arrayBuffer, { type: "array" });
+      const sheet = wb.Sheets["Members"] ?? wb.Sheets["Mitglieder"] ?? wb.Sheets[wb.SheetNames[0]];
+      if (!sheet) throw new Error("Kein Arbeitsblatt gefunden.");
+      data = XLSX.utils.sheet_to_json(sheet as XLSX.WorkSheet, { header: 1 }) as unknown[][];
+    }
     const headerRow = data[0] ?? [];
     const headers = headerRow.map((h) => normalizeHeader(h));
     const genericMode = headers.some((h) => ["first_name", "vorname", "full_name", "name"].includes(h));

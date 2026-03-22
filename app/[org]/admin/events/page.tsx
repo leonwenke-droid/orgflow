@@ -38,7 +38,7 @@ export default async function AdminEventsPage(props: {
         {t("events.description", locale)}
       </p>
 
-      <CreateEventForm orgSlug={orgSlug} orgId={org.id} />
+      <CreateEventForm orgId={org.id} />
 
       <ul className="mt-6 space-y-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
         {(events ?? []).map((e: { id: string; name: string; slug: string; start_date: string | null; end_date: string | null }) => (
@@ -65,6 +65,12 @@ export default async function AdminEventsPage(props: {
                 className="text-xs text-blue-600 hover:underline dark:text-blue-400"
               >
                 {t("events.view_shifts", locale)}
+              </Link>
+              <Link
+                href={`/admin/tasks?org=${encodeURIComponent(orgSlug)}&event=${e.id}`}
+                className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+              >
+                {t("events.view_tasks", locale)}
               </Link>
             </div>
           </li>

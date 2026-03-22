@@ -98,6 +98,15 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
           {t("account.password_reset", locale)}
         </Link>
       </section>
+
+      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
+          {t("account.security_heading", locale)}
+        </h2>
+        <p className="text-sm text-gray-700 dark:text-gray-300">{t("security.2fa_hint", locale)}</p>
+        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t("security.privacy_note", locale)}</p>
+        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t("realtime.optional_note", locale)}</p>
+      </section>
     </div>
   );
 }

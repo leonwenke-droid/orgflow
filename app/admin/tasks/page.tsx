@@ -7,19 +7,13 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { createUserNotification } from "../../../lib/notifications";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData, getCurrentUserOrganization } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
-import CopyTaskLinkButton from "../../../components/CopyTaskLinkButton";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import CommitteeFilter from "../../../components/CommitteeFilter";
 import EmptyState from "../../../components/EmptyState";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t as tr } from "../../../lib/i18n";
+import AdminTasksKanban from "./AdminTasksKanban";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_COLUMNS = [
-  { key: "offen", labelKey: "tasks.status_open" },
-  { key: "in_arbeit", labelKey: "tasks.status_in_progress" },
-  { key: "erledigt", labelKey: "tasks.status_done" }
-] as const;
 
 async function autoAssignTasks(formData: FormData) {
   "use server";
@@ -125,27 +119,24 @@ async function autoAssignTasks(formData: FormData) {
   if (orgSlug) revalidatePath(`/admin/tasks?org=${encodeURIComponent(orgSlug)}`);
 }
 
-async function deleteTask(formData: FormData) {
-  "use server";
-  const taskId = formData.get("taskId")?.toString();
-  if (!taskId) return;
-  const service = createSupabaseServiceRoleClient();
-  await service.from("tasks").delete().eq("id", taskId);
-  revalidatePath("/admin/tasks");
-}
-
-type PageProps = { searchParams?: Promise<{ committee?: string; org?: string; event?: string }> | { committee?: string; org?: string; event?: string } };
+type PageProps = {
+  searchParams?:
+    | Promise<{ committee?: string; org?: string; event?: string; q?: string }>
+    | { committee?: string; org?: string; event?: string; q?: string };
+};
 
 export default async function AdminTasksPage(props: PageProps) {
   const cookieStore = await cookies();
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ committee?: string; org?: string; event?: string }>)
-    : (raw ?? {}) as { committee?: string; org?: string; event?: string };
+    ? await (raw as Promise<{ committee?: string; org?: string; event?: string; q?: string }>)
+    : (raw ?? {}) as { committee?: string; org?: string; event?: string; q?: string };
   const committeeId = searchParams?.committee?.trim() || null;
   const orgSlug = searchParams?.org?.trim() || null;
   const eventIdFilter = searchParams?.event?.trim() || null;
+  const qInput = (searchParams?.q ?? "").trim();
+  const qRaw = qInput.toLowerCase();
   const supabase = createServerComponentClient({ cookies });
   const {
     data: { user }
@@ -233,12 +224,22 @@ export default async function AdminTasksPage(props: PageProps) {
     (c: { name?: string | null }) => !/Jahrgangssprecher/i.test(String(c.name ?? ""))
   );
 
-  const tasksFiltered = committeeId
+  const tasksByCommittee = committeeId
     ? (tasks ?? []).filter((t: { committee_id?: string | null }) => t.committee_id === committeeId)
     : (tasks ?? []);
 
+  const tasksFiltered = qRaw
+    ? tasksByCommittee.filter((t: { title?: string | null }) =>
+        String(t.title ?? "")
+          .toLowerCase()
+          .includes(qRaw)
+      )
+    : tasksByCommittee;
+
   const baseTasksUrl = effectiveOrgSlug ? `/admin/tasks?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks";
   const baseTasksNewUrl = effectiveOrgSlug ? `/admin/tasks/new?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks/new";
+
+  const profileNamesObj = Object.fromEntries(profileNames) as Record<string, string>;
 
   return (
     <div className="space-y-4">
@@ -273,6 +274,27 @@ export default async function AdminTasksPage(props: PageProps) {
             </div>
           )}
         </div>
+        <form method="get" className="flex flex-wrap items-center gap-2 text-xs">
+          {effectiveOrgSlug && <input type="hidden" name="org" value={effectiveOrgSlug} />}
+          {committeeId && <input type="hidden" name="committee" value={committeeId} />}
+          {eventIdFilter && <input type="hidden" name="event" value={eventIdFilter} />}
+          <label className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+            <span>{tr("tasks.filter_search", locale)}</span>
+            <input
+              type="search"
+              name="q"
+              defaultValue={qInput}
+              placeholder={tr("tasks.filter_search_placeholder", locale)}
+              className="min-w-[140px] rounded border border-gray-300 bg-white px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
+          </label>
+          <button
+            type="submit"
+            className="rounded border border-gray-300 px-2 py-1 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
+            {tr("common.ok", locale)}
+          </button>
+        </form>
         <div className="flex items-center gap-2">
           {orgId && (
             <form action={autoAssignTasks} className="inline">
@@ -297,105 +319,7 @@ export default async function AdminTasksPage(props: PageProps) {
         />
       )}
       {tasksFiltered.length > 0 && (
-      <div className="grid gap-4 md:grid-cols-3">
-        {STATUS_COLUMNS.map((col) => (
-          <div key={col.key} className="card flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600">
-                {tr(col.labelKey, locale)}
-              </h3>
-              <span className="text-[10px] text-gray-500">
-                {tr("tasks.count_tasks", locale).replace("{count}", String(tasksFiltered.filter((t) => t.status === col.key).length))}
-              </span>
-            </div>
-            <div className="space-y-2 text-xs">
-              {tasksFiltered
-                .filter((t) => t.status === col.key)
-                .map((t) => (
-                  <article
-                    key={t.id}
-                    className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm dark:border-gray-700 dark:bg-card-dark"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <h4 className="text-[11px] font-semibold">
-                          {t.title}
-                        </h4>
-                        <p className="text-[10px] text-gray-600">
-                          {tr("tasks.team_label", locale)}: {(t.committees as { name?: string })?.name ?? "–"}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 text-[9px]">
-                        {t.due_at && (
-                          <span className="rounded bg-gray-100 px-1 py-0.5 text-gray-700">
-                            {new Date(t.due_at).toLocaleDateString(locale === "de" ? "de-DE" : "en-GB")}
-                          </span>
-                        )}
-                        <span className="text-gray-500">
-                          {t.proof_required
-                            ? t.proof_url
-                              ? tr("tasks.proof_uploaded", locale)
-                              : tr("tasks.proof_missing", locale)
-                            : tr("tasks.proof_optional", locale)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-1.5 space-y-0.5 text-[10px] text-gray-600">
-                      <p>
-                        {tr("tasks.created_by", locale)}: {t.created_by ? profileNames.get(t.created_by) ?? "–" : "–"}
-                      </p>
-                      <p>
-                        {tr("tasks.assigned_to", locale)}: {t.owner_id ? profileNames.get(t.owner_id) ?? "–" : tr("tasks.unassigned", locale)}
-                      </p>
-                    </div>
-                    {t.description && (
-                      <p className="mt-1 line-clamp-2 text-[10px] text-gray-500">
-                        {t.description}
-                      </p>
-                    )}
-                    {(t.proof_url || (t as { access_token?: string }).access_token) && (
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[9px]">
-                        {(t as { access_token?: string }).access_token && (
-                          <CopyTaskLinkButton token={(t as { access_token: string }).access_token} />
-                        )}
-                        {t.proof_url && (
-                          <a
-                            href={t.proof_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded bg-blue-100 px-2 py-0.5 text-blue-700 hover:bg-blue-200"
-                          >
-                            {tr("tasks.view_proof", locale)}
-                          </a>
-                        )}
-                      </div>
-                    )}
-                    <div className="mt-1.5 flex items-center justify-between">
-                      <span className="rounded bg-gray-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-700">
-                        {tr(col.labelKey, locale)}
-                      </span>
-                      <form action={deleteTask} className="inline">
-                        <input type="hidden" name="taskId" value={t.id} />
-                        <SubmitButtonWithSpinner
-                          className="inline-flex items-center gap-1.5 rounded bg-red-100 px-2 py-0.5 text-[9px] text-red-600 hover:bg-red-200 disabled:opacity-70"
-                          title={tr("tasks.remove_task_title", locale)}
-                          loadingLabel="…"
-                        >
-                          {tr("tasks.remove_task", locale)}
-                        </SubmitButtonWithSpinner>
-                      </form>
-                    </div>
-                  </article>
-                ))}
-              {!tasksFiltered.filter((t) => t.status === col.key).length && (
-                <p className="text-[11px] text-gray-500">
-                  {tr("tasks.no_tasks_in_column", locale)}
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+        <AdminTasksKanban tasks={tasksFiltered} orgId={orgId} orgSlug={effectiveOrgSlug} profileNames={profileNamesObj} />
       )}
     </div>
   );

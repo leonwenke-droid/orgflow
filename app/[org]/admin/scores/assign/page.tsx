@@ -1,7 +1,6 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../../lib/getOrganization";
+import { LOCALE_COOKIE_NAME, localeFromCookie, t } from "../../../../../lib/i18n";
 import AdminBreadcrumb from "../../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../../AdminForbidden";
 import AssignPointsForm from "./AssignPointsForm";
@@ -16,6 +15,8 @@ export default async function AssignPointsPage({
   const orgSlug = typeof (params as Promise<{ org: string }>).then === "function"
     ? (await (params as Promise<{ org: string }>)).org
     : (params as { org: string }).org;
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
@@ -65,13 +66,13 @@ export default async function AssignPointsPage({
   return (
     <div className="mx-auto max-w-2xl p-6">
       <div className="mb-6">
-        <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Assign points" />
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("engagement.assign_breadcrumb", locale)} />
       </div>
       <h1 className="text-2xl font-bold text-gray-900">
-        Assign points individually
+        {t("engagement.assign_title", locale)}
       </h1>
       <p className="mt-1 text-sm text-gray-600">
-        Enter event or resource points for organisation members (e.g. event, material).
+        {t("engagement.assign_intro", locale)}
       </p>
       <AssignPointsForm
         orgSlug={orgSlug}

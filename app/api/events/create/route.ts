@@ -24,6 +24,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Organization and name required." }, { status: 400 });
     }
 
+    if (start_date && end_date && end_date < start_date) {
+      return NextResponse.json(
+        { message: "End date must be on or after the start date." },
+        { status: 400 }
+      );
+    }
+
     if (!(await isOrgAdmin(organizationId))) {
       return NextResponse.json({ message: "Not allowed to create events for this organisation." }, { status: 403 });
     }

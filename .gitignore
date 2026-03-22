@@ -8,6 +8,7 @@ node_modules
 out
 build
 dist
+*.tsbuildinfo
 
 # Environment
 .env
@@ -31,3 +32,6 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Lokale QA-Zugänge (nie committen)
+docs/credentials-tgg.local.md

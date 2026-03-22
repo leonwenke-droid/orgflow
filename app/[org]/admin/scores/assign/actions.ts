@@ -3,8 +3,28 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { getCurrentOrganization, isOrgAdmin } from "../../../../../lib/getOrganization";
+import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
+
+export async function getAssignPointsPreview(orgSlug: string, profileId: string) {
+  const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  if (!(await isOrgAdmin(orgIdForData))) {
+    return { errorKey: "engagement.unauthorized" as const };
+  }
+  if (!profileId) {
+    return { errorKey: "engagement.assign_validation" as const };
+  }
+  const supabase = createSupabaseServiceRoleClient();
+  const { data: row } = await supabase
+    .from("engagement_scores")
+    .select("score")
+    .eq("user_id", profileId)
+    .eq("organization_id", orgIdForData)
+    .maybeSingle();
+  const currentScore = typeof row?.score === "number" ? row.score : 0;
+  return { currentScore };
+}
 
 export async function assignPoints(
   orgSlug: string,
@@ -13,7 +33,8 @@ export async function assignPoints(
   reason: string
 ) {
   const org = await getCurrentOrganization(orgSlug);
-  if (!(await isOrgAdmin(org.id))) {
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  if (!(await isOrgAdmin(orgIdForData))) {
     return { errorKey: "engagement.unauthorized" };
   }
   if (!profileId || typeof points !== "number") {
@@ -22,6 +43,14 @@ export async function assignPoints(
   const trimmedReason = String(reason ?? "").trim();
   if (!trimmedReason) {
     return { errorKey: "engagement.reason_required" };
+  }
+  const minNeg = 20;
+  const minPos = 5;
+  if (points < 0 && trimmedReason.length < minNeg) {
+    return { errorKey: "engagement.reason_negative_min" };
+  }
+  if (points >= 0 && trimmedReason.length < minPos) {
+    return { errorKey: "engagement.reason_positive_min" };
   }
 
   const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -53,7 +82,7 @@ export async function assignPoints(
   if (eventErr || !eventRow) return { error: eventErr?.message ?? "Engagement-Event konnte nicht angelegt werden." };
 
   const { error: logErr } = await supabase.from("score_import_log").insert({
-    organization_id: org.id,
+    organization_id: orgIdForData,
     user_id: profileId,
     points,
     reason: trimmedReason,
@@ -69,7 +98,8 @@ export async function assignPoints(
 
 export async function removeScoreImport(orgSlug: string, logId: string) {
   const org = await getCurrentOrganization(orgSlug);
-  if (!(await isOrgAdmin(org.id))) {
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  if (!(await isOrgAdmin(orgIdForData))) {
     return { errorKey: "engagement.unauthorized" };
   }
   if (!logId) return { errorKey: "engagement.entry_not_found" };
@@ -83,7 +113,7 @@ export async function removeScoreImport(orgSlug: string, logId: string) {
     .from("score_import_log")
     .select("id, user_id, points, created_at, engagement_event_id, organization_id")
     .eq("id", logId)
-    .eq("organization_id", org.id)
+    .eq("organization_id", orgIdForData)
     .single();
   if (fetchErr || !logRow) return { errorKey: "engagement.entry_not_found" };
 

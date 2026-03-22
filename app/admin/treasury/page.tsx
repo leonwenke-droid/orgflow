@@ -112,7 +112,14 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   if (orgIdForData) treasuryQuery = treasuryQuery.eq("organization_id", orgIdForData);
   const { data: lastUpdate } = await treasuryQuery.maybeSingle();
 
-  let entries: { id: string; date: string; description: string | null; amount_cents: number; type: string }[] = [];
+  let entries: {
+    id: string;
+    date: string;
+    description: string | null;
+    amount_cents: number;
+    type: string;
+    category: string | null;
+  }[] = [];
   let categories: { key: string; name: string }[] = [];
   if (orgIdForData) {
     try {
@@ -140,6 +147,15 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   }
 
   const entriesSumCents = entries.reduce((sum, e) => sum + (e.type === "income" ? Number(e.amount_cents) : -Number(e.amount_cents)), 0);
+  const catNameByKey = new Map(categories.map((c) => [c.key, c.name]));
+  const byCategory: Record<string, number> = {};
+  for (const e of entries) {
+    const ck = (e.category ?? "").trim() || "—";
+    const label = catNameByKey.get(ck) ?? ck;
+    if (!byCategory[label]) byCategory[label] = 0;
+    byCategory[label] += e.type === "income" ? Number(e.amount_cents) : -Number(e.amount_cents);
+  }
+  const categoryKeys = Object.keys(byCategory).sort((a, b) => a.localeCompare(b));
   const byMonth: Record<string, { income: number; expense: number }> = {};
   for (const e of entries) {
     const monthKey = e.date.slice(0, 7);
@@ -215,6 +231,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
                     <th className="pb-2 pr-4">{t("finance.entry_date", locale)}</th>
                     <th className="pb-2 pr-4">{t("finance.entry_description", locale)}</th>
                     <th className="pb-2 pr-4">{t("finance.entry_type", locale)}</th>
+                    <th className="pb-2 pr-4">{t("finance.entry_category", locale)}</th>
                     <th className="pb-2 text-right">{t("finance.amount", locale)}</th>
                   </tr>
                 </thead>
@@ -224,6 +241,9 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
                       <td className="py-1.5 pr-4">{e.date}</td>
                       <td className="py-1.5 pr-4">{e.description ?? "—"}</td>
                       <td className="py-1.5 pr-4">{e.type === "income" ? t("finance.entry_type_income", locale) : t("finance.entry_type_expense", locale)}</td>
+                      <td className="py-1.5 pr-4">
+                        {(e.category && (catNameByKey.get(e.category) ?? e.category)) || "—"}
+                      </td>
                       <td className="py-1.5 text-right font-medium">{formatCurrency(Number(e.amount_cents) / 100, localeForCurrency, currencyCode)}</td>
                     </tr>
                   ))}
@@ -231,12 +251,26 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
                     <tr className="border-t-2 border-gray-200 font-semibold dark:border-gray-600">
                       <td className="py-2 pr-4" colSpan={2}>{t("finance.entries_sum", locale)}</td>
                       <td className="py-2 pr-4">—</td>
+                      <td className="py-2 pr-4">—</td>
                       <td className="py-2 text-right">{formatCurrency(entriesSumCents / 100, localeForCurrency, currencyCode)}</td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+          )}
+      {categoryKeys.length > 0 && (
+            <details className="mt-3 rounded border border-gray-200 dark:border-gray-600">
+              <summary className="cursor-pointer px-2 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">{t("finance.by_category", locale)}</summary>
+              <ul className="list-none border-t border-gray-100 px-2 py-1.5 text-xs dark:border-gray-700">
+                {categoryKeys.map((key) => (
+                  <li key={key} className="flex justify-between gap-2 py-0.5 text-gray-600 dark:text-gray-400">
+                    <span>{key}</span>
+                    <span className="font-medium">{formatCurrency(byCategory[key] / 100, localeForCurrency, currencyCode)}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
           )}
       {monthKeys.length > 0 && (
             <details className="mt-3 rounded border border-gray-200 dark:border-gray-600">
