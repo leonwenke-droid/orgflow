@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { redirect } from "next/navigation";
 import { createUserNotification } from "../../../lib/notifications";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
@@ -19,7 +20,10 @@ export async function claimShiftFromDashboard(formData: FormData) {
   if (!user) return;
 
   const { error: rpcErr } = await supabase.rpc("claim_shift_slot", { shift_id: shiftId });
-  if (rpcErr) return;
+  if (rpcErr) {
+    console.error("[claimShiftFromDashboard]", rpcErr);
+    redirect(`/${orgSlug}/dashboard?claimShift=error`);
+  }
 
   const service = createSupabaseServiceRoleClient();
   const { data: prof } = await service

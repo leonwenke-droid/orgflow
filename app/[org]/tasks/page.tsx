@@ -109,12 +109,112 @@ export default async function TasksViewerPage(props: {
     .eq("organization_id", effectiveOrgIdForData);
   const nameById = new Map((profiles ?? []).map((p: any) => [p.id as string, p.full_name ?? "–"]));
 
-  const openClaimable = (tasksAll ?? []).filter(
+  const tasks = tasksAll ?? [];
+
+  const openClaimable = tasks.filter(
     (t: any) =>
       t.owner_id == null &&
       t.claimable === true &&
       (t.status === "offen" || t.status === "in_arbeit")
   );
+
+  const claimableIds = new Set(openClaimable.map((t: any) => t.id as string));
+
+  const mineSorted = tasks
+    .filter((t: any) => t.owner_id === myProfileId)
+    .slice()
+    .sort((a: any, b: any) => {
+      const da = a.due_at ? new Date(a.due_at).getTime() : 0;
+      const db = b.due_at ? new Date(b.due_at).getTime() : 0;
+      return da - db;
+    });
+
+  const otherTasksSorted = tasks
+    .filter((t: any) => t.owner_id !== myProfileId && !claimableIds.has(t.id as string))
+    .slice()
+    .sort((a: any, b: any) => {
+      const da = a.due_at ? new Date(a.due_at).getTime() : 0;
+      const db = b.due_at ? new Date(b.due_at).getTime() : 0;
+      return da - db;
+    });
+
+  const renderTaskRow = (task: any) => {
+    const ownedByMe = !!myProfileId && task.owner_id === myProfileId;
+    const claimableHere =
+      task.owner_id == null &&
+      task.claimable === true &&
+      (task.status === "offen" || task.status === "in_arbeit");
+    return (
+      <li key={task.id} className="py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{task.title}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {(task.committees as any)?.name ?? "–"}
+              {task.due_at
+                ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}`
+                : ""}
+              {task.owner_id
+                ? ` · ${t("tasks.claimed_by", locale)}: ${nameById.get(task.owner_id) ?? "–"}`
+                : ""}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {claimableHere && canClaim ? (
+              <form action={claimTaskAction}>
+                <input type="hidden" name="orgSlug" value={orgSlug} />
+                <input type="hidden" name="taskId" value={task.id} />
+                <button className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+                  {t("tasks.claim", locale)}
+                </button>
+              </form>
+            ) : null}
+
+            {ownedByMe ? (
+              <TaskCompleteModalButton
+                orgSlug={orgSlug}
+                task={{
+                  id: task.id,
+                  title: task.title,
+                  description: task.description ?? null,
+                  due_at: task.due_at ?? null,
+                  status: task.status,
+                  proof_required: !!task.proof_required,
+                  proof_url: task.proof_url ?? null
+                }}
+                className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 shrink-0"
+              />
+            ) : null}
+
+            {ownedByMe && canClaim ? (
+              <form action={offerTaskAction}>
+                <input type="hidden" name="orgSlug" value={orgSlug} />
+                <input type="hidden" name="taskId" value={task.id} />
+                <button className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800">
+                  {t("tasks.offer", locale)}
+                </button>
+              </form>
+            ) : null}
+
+            {task.proof_url && (
+              <a
+                className="text-xs text-blue-600 hover:underline dark:text-blue-400 shrink-0"
+                href={task.proof_url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t("tasks.view_proof", locale)}
+              </a>
+            )}
+
+            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200 shrink-0">
+              {task.status}
+            </span>
+          </div>
+        </div>
+      </li>
+    );
+  };
 
   return (
     <div className="mx-auto max-w-3xl p-6 space-y-4">
@@ -127,6 +227,17 @@ export default async function TasksViewerPage(props: {
           {t("common.back", locale)}
         </Link>
       </div>
+
+      {mineSorted.length > 0 && (
+        <div className="rounded-xl border-2 border-blue-300 bg-blue-50/80 p-4 shadow-sm dark:border-blue-700 dark:bg-blue-950/30">
+          <h2 className="mb-2 text-sm font-semibold text-blue-900 dark:text-blue-100">
+            {t("tasks.my_tasks_section_title", locale)}
+          </h2>
+          <ul className="divide-y divide-blue-100 dark:divide-blue-900/40">
+            {mineSorted.map((task: any) => renderTaskRow(task))}
+          </ul>
+        </div>
+      )}
 
       {openClaimable.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
@@ -162,85 +273,17 @@ export default async function TasksViewerPage(props: {
 
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
         <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-          {t("dashboard.tasks", locale)}
+          {otherTasksSorted.length > 0
+            ? t("tasks.other_tasks_section", locale)
+            : t("dashboard.tasks", locale)}
         </h2>
-        {(tasksAll ?? []).length === 0 ? (
+        {tasks.length === 0 ? (
           <p className="text-sm text-gray-600 dark:text-gray-400">{t("empty.tasks", locale)}</p>
+        ) : otherTasksSorted.length === 0 ? (
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("tasks.no_other_tasks", locale)}</p>
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-            {(tasksAll ?? []).map((task: any) => {
-              const ownedByMe = !!myProfileId && task.owner_id === myProfileId;
-              const claimableHere =
-                task.owner_id == null &&
-                task.claimable === true &&
-                (task.status === "offen" || task.status === "in_arbeit");
-              return (
-                <li key={task.id} className="py-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{task.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {(task.committees as any)?.name ?? "–"}
-                        {task.due_at ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}` : ""}
-                        {task.owner_id ? ` · ${t("tasks.claimed_by", locale)}: ${nameById.get(task.owner_id) ?? "–"}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {claimableHere && canClaim ? (
-                        <form action={claimTaskAction}>
-                          <input type="hidden" name="orgSlug" value={orgSlug} />
-                          <input type="hidden" name="taskId" value={task.id} />
-                          <button className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
-                            {t("tasks.claim", locale)}
-                          </button>
-                        </form>
-                      ) : null}
-
-                      {ownedByMe ? (
-                        <TaskCompleteModalButton
-                          orgSlug={orgSlug}
-                          task={{
-                            id: task.id,
-                            title: task.title,
-                            description: task.description ?? null,
-                            due_at: task.due_at ?? null,
-                            status: task.status,
-                            proof_required: !!task.proof_required,
-                            proof_url: task.proof_url ?? null
-                          }}
-                          className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 shrink-0"
-                        />
-                      ) : null}
-
-                      {ownedByMe && canClaim ? (
-                        <form action={offerTaskAction}>
-                          <input type="hidden" name="orgSlug" value={orgSlug} />
-                          <input type="hidden" name="taskId" value={task.id} />
-                          <button className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800">
-                            {t("tasks.offer", locale)}
-                          </button>
-                        </form>
-                      ) : null}
-
-                      {task.proof_url && (
-                        <a
-                          className="text-xs text-blue-600 hover:underline dark:text-blue-400 shrink-0"
-                          href={task.proof_url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {t("tasks.view_proof", locale)}
-                        </a>
-                      )}
-
-                      <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200 shrink-0">
-                        {task.status}
-                      </span>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
+            {otherTasksSorted.map((task: any) => renderTaskRow(task))}
           </ul>
         )}
       </div>

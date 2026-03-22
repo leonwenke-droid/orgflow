@@ -20,7 +20,11 @@ async function claimShiftAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase.rpc("claim_shift_slot", { shift_id: shiftId });
+  const { error: rpcErr } = await supabase.rpc("claim_shift_slot", { shift_id: shiftId });
+  if (rpcErr) {
+    console.error("[claimShiftAction]", rpcErr);
+    redirect(`/${orgSlug}/shifts?claimShift=error`);
+  }
   revalidatePath(`/${orgSlug}/shifts`);
   revalidatePath(`/${orgSlug}/dashboard`);
 }
@@ -89,11 +93,17 @@ async function claimShiftSwapAction(formData: FormData) {
 
 export default async function ShiftsViewerPage(props: {
   params: Promise<{ org: string }> | { org: string };
+  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 }) {
   const params = typeof (props.params as Promise<{ org: string }>).then === "function"
     ? await (props.params as Promise<{ org: string }>)
     : (props.params as { org: string });
   const orgSlug = params.org;
+  const sp =
+    props.searchParams && typeof (props.searchParams as Promise<unknown>).then === "function"
+      ? await (props.searchParams as Promise<Record<string, string | string[] | undefined>>)
+      : ((props.searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
+  const claimShiftError = sp.claimShift === "error" || sp.claimShift === "1";
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
@@ -149,14 +159,30 @@ export default async function ShiftsViewerPage(props: {
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
 
-  const myShifts = (shifts ?? []).filter((s: any) =>
-    (s.shift_assignments ?? []).some((a: any) => a.user_id === myProfileId || a.replacement_user_id === myProfileId)
-  );
+  const isAssignedToMe = (s: any) =>
+    (s.shift_assignments ?? []).some(
+      (a: any) => a.user_id === myProfileId || a.replacement_user_id === myProfileId
+    );
+
+  const myShifts = (shifts ?? []).filter((s: any) => isAssignedToMe(s));
   const todayStr = new Date().toISOString().slice(0, 10);
-  const upcomingShifts = (shifts ?? []).filter((s: any) => {
+  const upcomingShiftsRaw = (shifts ?? []).filter((s: any) => {
     // If date is present, hide past shifts. If date is missing (event-type), keep them visible.
     return !s.date || String(s.date).slice(0, 10) >= todayStr;
   });
+
+  const upcomingShifts = [...upcomingShiftsRaw].sort((a: any, b: any) => {
+    const ma = isAssignedToMe(a) ? 0 : 1;
+    const mb = isAssignedToMe(b) ? 0 : 1;
+    if (ma !== mb) return ma - mb;
+    const da = String(a.date ?? "").slice(0, 10);
+    const db = String(b.date ?? "").slice(0, 10);
+    const c = da.localeCompare(db);
+    if (c !== 0) return c;
+    return String(a.start_time ?? "").localeCompare(String(b.start_time ?? ""));
+  });
+
+  const myPastShifts = myShifts.filter((s: any) => s.date && String(s.date).slice(0, 10) < todayStr);
 
   const openSwapOffers = (shifts ?? []).flatMap((s: any) => {
     const offers = (s.shift_assignments ?? []).filter((a: any) =>
@@ -177,25 +203,46 @@ export default async function ShiftsViewerPage(props: {
         </Link>
       </div>
 
+      {claimShiftError && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-800 dark:bg-red-900/20 dark:text-red-100">
+          {t("dashboard.claim_shift_failed", locale)}
+        </p>
+      )}
+
       {upcomingShifts.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
           <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("dashboard.upcoming_shifts", locale)}</h2>
+          <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">{t("shifts.upcoming_sort_hint", locale)}</p>
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {upcomingShifts.map((s: any) => {
               const required = Number(s.required_slots ?? 1) || 1;
               const taken = (s.shift_assignments ?? []).length;
               const free = Math.max(0, required - taken);
+              const imAssigned = isAssignedToMe(s);
+              const showClaim =
+                canClaim &&
+                s.auto_assign !== true &&
+                s.claimable !== false &&
+                free > 0 &&
+                !imAssigned;
               return (
-                <li key={s.id} className="py-3 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{s.event_name || t("dashboard.shifts", locale)}</p>
+                <li key={s.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 font-medium text-gray-900 dark:text-gray-100">
+                      <span>{s.event_name || t("dashboard.shifts", locale)}</span>
+                      {imAssigned ? (
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-800 dark:bg-blue-900/40 dark:text-blue-100">
+                          {t("shifts.you_are_signed_up", locale)}
+                        </span>
+                      ) : null}
+                    </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {s.date ? new Date(s.date).toLocaleDateString(localeForDate) : "–"} · {s.start_time ?? ""}-{s.end_time ?? ""}
                       {s.location ? ` · ${s.location}` : ""}
-                      {` · ${free}/${required} free`}
+                      {` · ${free}/${required} ${t("dashboard.slots_free", locale)}`}
                     </p>
                   </div>
-                  {canClaim && (s.auto_assign !== true) && (s.claimable !== false) && free > 0 ? (
+                  {showClaim ? (
                     <form action={claimShiftAction}>
                       <input type="hidden" name="orgSlug" value={orgSlug} />
                       <input type="hidden" name="shiftId" value={s.id} />
@@ -241,12 +288,12 @@ export default async function ShiftsViewerPage(props: {
       )}
 
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shifts.my_shifts", locale)}</h2>
-        {myShifts.length === 0 ? (
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t("empty.shifts", locale)}</p>
+        <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shifts.my_past_shifts", locale)}</h2>
+        {myPastShifts.length === 0 ? (
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("shifts.no_past_shifts", locale)}</p>
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-            {myShifts.map((s: any) => (
+            {myPastShifts.map((s: any) => (
               <li key={s.id} className="py-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-medium text-gray-900 dark:text-gray-100">{s.event_name || t("dashboard.shifts", locale)}</p>

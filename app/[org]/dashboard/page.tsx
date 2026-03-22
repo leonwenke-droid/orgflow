@@ -176,13 +176,20 @@ async function getData(organizationId: string, supabaseOverride?: SupabaseClient
 }
 
 export default async function OrgDashboardPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ org: string }> | { org: string };
+  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 }) {
   const orgSlug = typeof (params as Promise<{ org: string }>).then === "function"
     ? (await (params as Promise<{ org: string }>)).org
     : (params as { org: string }).org;
+  const sp =
+    searchParams && typeof (searchParams as Promise<unknown>).then === "function"
+      ? await (searchParams as Promise<Record<string, string | string[] | undefined>>)
+      : ((searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
+  const claimShiftError = sp.claimShift === "error" || sp.claimShift === "1";
   const org = await getCurrentOrganization(orgSlug);
   const cookieStore = await cookies();
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
@@ -398,6 +405,12 @@ export default async function OrgDashboardPage({
           {t("dashboard.overview_subtitle", locale)}
         </p>
       </header>
+
+      {claimShiftError && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-800 dark:bg-red-900/20 dark:text-red-100">
+          {t("dashboard.claim_shift_failed", locale)}
+        </p>
+      )}
 
       {!engagementEnabled && (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-100">
