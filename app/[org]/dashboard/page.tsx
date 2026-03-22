@@ -11,7 +11,7 @@ import ShiftPlanWeekNav from "../../../components/ShiftPlanWeekNav";
 import EmptyState from "../../../components/EmptyState";
 import OnboardingBanner from "../../../components/OnboardingBanner";
 import OnboardingChecklist from "../../../components/OnboardingChecklist";
-import { CheckSquare, CalendarDays, Wallet, Users } from "lucide-react";
+import { ArrowLeftRight, CheckSquare, Users, Wallet } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin, getCurrentUserRoleInOrg } from "../../../lib/getOrganization";
 import { ADMIN_ROLES, canViewFinance } from "../../../lib/permissions";
@@ -24,7 +24,6 @@ import {
 } from "../../../lib/i18n";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { claimShiftFromDashboard } from "./actions";
-import { ArrowLeftRight } from "lucide-react";
 import TaskCompleteModalButton from "../../../components/TaskCompleteModal";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import ClaimShiftRefreshForm from "../../../components/ClaimShiftRefreshForm";
@@ -322,16 +321,6 @@ export default async function OrgDashboardPage({
     shift_assignments?: { id: string; user_id?: string | null; replacement_user_id?: string | null }[];
   }[];
 
-  const myUpcomingShiftCount = myProfileId
-    ? shiftRows.filter((s) => {
-        const d = String(s.date ?? "").slice(0, 10);
-        if (!d || d < todayStr || d > in7Str) return false;
-        return (s.shift_assignments ?? []).some(
-          (a) => a.user_id === myProfileId || a.replacement_user_id === myProfileId
-        );
-      }).length
-    : 0;
-
   const claimableForDashboard = canClaimShifts
     ? shiftRows.filter((s) => {
         const d = String(s.date ?? "").slice(0, 10);
@@ -386,20 +375,60 @@ export default async function OrgDashboardPage({
     (c) => !/Jahrgangssprecher/i.test(c.name)
   );
 
+  const orgHeaderLabel = (org.school_short && String(org.school_short).trim()) || org.name;
+
   return (
     <div className="space-y-6">
       <header className="border-b border-gray-200 pb-3 dark:border-gray-700">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-          {t("dashboard.title", locale)}
+        <h1 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+          <span>
+            {myName
+              ? t("dashboard.greeting_named", locale).replace("{name}", myName)
+              : t("dashboard.greeting", locale)}
+          </span>
+          <span className="ml-1 font-normal" aria-hidden>
+            👋
+          </span>
         </h1>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
-          {myName ? (
-            <span>{t("dashboard.greeting_named", locale).replace("{name}", myName)}</span>
-          ) : (
-            <span>{t("dashboard.greeting", locale)}</span>
-          )}
-          {org.school_short ? <span className="text-gray-400">· {org.school_short}</span> : null}
-        </div>
+        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+          {orgHeaderLabel} – {t("dashboard.overview_short", locale)}
+        </p>
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500/90 dark:text-gray-400/90">
+          <span className="inline-flex items-center gap-1">
+            <Users className="h-3.5 w-3.5 shrink-0 opacity-45" aria-hidden />
+            <span>
+              {t("dashboard.header_stat_members", locale).replace(
+                "{count}",
+                String(activity.total_members)
+              )}
+            </span>
+          </span>
+          <span className="select-none text-gray-300 dark:text-gray-600" aria-hidden>
+            |
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <CheckSquare className="h-3.5 w-3.5 shrink-0 opacity-45" aria-hidden />
+            <span>
+              {t("dashboard.header_stat_open_tasks", locale).replace(
+                "{count}",
+                String(myOpenTaskCount)
+              )}
+            </span>
+          </span>
+          {userCanViewFinance ? (
+            <>
+              <span className="select-none text-gray-300 dark:text-gray-600" aria-hidden>
+                |
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Wallet className="h-3.5 w-3.5 shrink-0 opacity-45" aria-hidden />
+                <span>
+                  {treasury ? formatCurrency(treasury.amount, localeForMoney, currencyCode) : "–"}
+                </span>
+              </span>
+            </>
+          ) : null}
+        </p>
       </header>
 
       {claimShiftError && (
@@ -927,60 +956,6 @@ export default async function OrgDashboardPage({
           isAdmin={userIsAdmin}
         />
       )}
-
-      <section className="rounded-lg border border-dashed border-gray-200 bg-gray-50/60 p-4 dark:border-gray-700 dark:bg-gray-900/30">
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-          {t("dashboard.overview_subtitle", locale)}
-        </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            {
-              icon: CheckSquare,
-              label: t("dashboard.my_open_tasks_card", locale),
-              value: myOpenTaskCount,
-              sub: t("dashboard.my_tasks_sub", locale)
-            },
-            {
-              icon: CalendarDays,
-              label: t("dashboard.my_upcoming_shifts_card", locale),
-              value: myUpcomingShiftCount,
-              sub: t("dashboard.in_next_7_days", locale)
-            },
-            ...(userCanViewFinance
-              ? [
-                  {
-                    icon: Wallet,
-                    label: t("dashboard.finance", locale),
-                    value: treasury ? formatCurrency(treasury.amount, localeForMoney, currencyCode) : "–",
-                    sub: t("dashboard.current_balance", locale)
-                  }
-                ]
-              : []),
-            {
-              icon: Users,
-              label: t("dashboard.members", locale),
-              value: activity.total_members,
-              sub: t("dashboard.in_this_org", locale)
-            }
-          ].map(({ icon: Icon, label, value, sub }) => (
-            <div
-              key={label}
-              className="flex items-start gap-2 rounded-md border border-gray-200/80 bg-white/90 px-3 py-2 dark:border-gray-600 dark:bg-gray-950/40"
-            >
-              <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded bg-blue-50 dark:bg-gray-800">
-                <Icon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                  {label}
-                </p>
-                <p className="text-lg font-bold leading-tight text-gray-900 dark:text-gray-100">{value}</p>
-                <p className="text-[10px] text-gray-400 dark:text-gray-500">{sub}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }
