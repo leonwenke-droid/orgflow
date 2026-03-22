@@ -26,6 +26,7 @@ Apply migrations to the **same** Supabase project referenced by production env v
 | Shift claim (self sign-up) | `20260321001000_shift_assignments_member_claim_rls.sql`, `20260321002000_claim_shift_rpc.sql` (`claim_shift_slot`) |
 | Claimable tasks/shifts + RPC updates | `20260324003000_tasks_shifts_claimable_and_claim_task_rpc.sql` |
 | Legacy org / TGG data id | `20260231100000_ensure_tgg_org_id_slug.sql`, `20260324002000_current_user_org_legacy_mapping.sql` |
+| Member feedback + in-app notifications | `20260325006000_feature_requests_member_access.sql`, `20260325007000_user_notifications.sql` |
 
 **How to verify**
 

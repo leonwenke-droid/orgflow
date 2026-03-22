@@ -59,6 +59,9 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
     );
   }
 
+  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const engagementEnabled = orgFeatures.engagement_tracking !== false;
+
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const since = thirtyDaysAgo.toISOString();
@@ -68,11 +71,13 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
     { data: myEvents },
     { data: myTasks },
     { data: myAssignments },
+    { data: allOrgScores },
   ] = await Promise.all([
     service
       .from("engagement_scores")
       .select("score, updated_at")
       .eq("user_id", myProfileId)
+      .eq("organization_id", effectiveOrgIdForData)
       .maybeSingle(),
     service
       .from("engagement_events")
@@ -92,10 +97,21 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
       .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)
       .order("created_at", { ascending: false })
       .limit(200),
+    engagementEnabled
+      ? service.from("engagement_scores").select("user_id, score").eq("organization_id", effectiveOrgIdForData)
+      : Promise.resolve({ data: [] as { user_id: string; score: number }[] }),
   ]);
 
   const score = (scoreRow as any)?.score ?? 0;
   const updatedAt = (scoreRow as any)?.updated_at ? new Date((scoreRow as any).updated_at).toLocaleString(localeForDate) : null;
+
+  const rankRows = (allOrgScores ?? []) as { user_id: string; score: number }[];
+  const totalRanked = rankRows.length;
+  const myNumeric = Number(score);
+  const rank =
+    engagementEnabled && totalRanked > 0
+      ? rankRows.filter((r) => Number(r.score) > myNumeric).length + 1
+      : null;
 
   const events = (myEvents ?? []) as any[];
   const counts = {
@@ -130,18 +146,32 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
         </Link>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <p className="text-sm text-gray-600 dark:text-gray-400">{displayName}</p>
-        <div className="mt-2 flex items-baseline gap-3">
-          <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{score}</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">{t("dashboard.engagement", locale)}</div>
+      {engagementEnabled ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <p className="text-sm text-gray-600 dark:text-gray-400">{displayName}</p>
+          <div className="mt-2 flex items-baseline gap-3">
+            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{score}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">{t("dashboard.engagement", locale)}</div>
+          </div>
+          {rank != null && totalRanked > 0 ? (
+            <p className="mt-2 text-sm font-medium text-gray-800 dark:text-gray-200">
+              {t("me.rank_label", locale)}: {rank}{" "}
+              <span className="font-normal text-gray-500 dark:text-gray-400">
+                ({t("me.rank_of", locale).replace("{total}", String(totalRanked))})
+              </span>
+            </p>
+          ) : null}
+          {updatedAt ? (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {(locale === "de" ? "Aktualisiert" : "Updated")}: {updatedAt}
+            </p>
+          ) : null}
         </div>
-        {updatedAt ? (
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {(locale === "de" ? "Aktualisiert" : "Updated")}: {updatedAt}
-          </p>
-        ) : null}
-      </div>
+      ) : (
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("me.engagement_disabled", locale)}</p>
+        </div>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">

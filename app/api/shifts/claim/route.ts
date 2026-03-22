@@ -3,6 +3,8 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
 import { writeAuditLog } from "../../../../lib/audit";
+import { createUserNotification } from "../../../../lib/notifications";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
 export async function POST(req: Request) {
   try {
@@ -16,6 +18,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const orgSlug = (body.orgSlug as string)?.trim();
     const shiftId = (body.shiftId as string)?.trim();
+    const organizationIdBody = (body.organizationId as string)?.trim() || null;
     if (!orgSlug || !shiftId) {
       return NextResponse.json({ message: "orgSlug and shiftId required." }, { status: 400 });
     }
@@ -23,12 +26,21 @@ export async function POST(req: Request) {
     const org = await getCurrentOrganization(orgSlug);
     const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
-    const { data: profile } = await supabase
+    let { data: profile } = await supabase
       .from("profiles")
       .select("id")
       .eq("auth_user_id", user.id)
       .eq("organization_id", orgIdForData)
-      .single();
+      .maybeSingle();
+    if (!profile && orgIdForData !== org.id) {
+      const { data: p2 } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .eq("organization_id", org.id)
+        .maybeSingle();
+      profile = p2;
+    }
     if (!profile) {
       return NextResponse.json({ message: "You are not a member of this organisation." }, { status: 403 });
     }
@@ -59,6 +71,17 @@ export async function POST(req: Request) {
       targetTable: "shifts",
       targetId: shiftId,
       metadata: {}
+    });
+
+    const notifOrgId = organizationIdBody || orgIdForData;
+    const svc = createSupabaseServiceRoleClient();
+    await createUserNotification(svc, {
+      profileId: (profile as { id: string }).id,
+      organizationId: notifOrgId,
+      type: "shift_self_claimed",
+      title: "Schicht übernommen",
+      body: "Du hast dich für eine Schicht eingetragen.",
+      link: `/${orgSlug}/shifts`
     });
 
     return NextResponse.json({ ok: true });

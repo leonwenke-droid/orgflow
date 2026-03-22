@@ -8,6 +8,7 @@ export type ShiftAssignment = {
   status: string;
   user_id: string | null;
   replacement_user_id: string | null;
+  swap_offered?: boolean;
 };
 
 export type ShiftSlot = {
@@ -16,6 +17,8 @@ export type ShiftSlot = {
   start_time: string;
   end_time: string;
   required_slots?: number;
+  claimable?: boolean;
+  auto_assign?: boolean;
   assignments: ShiftAssignment[];
 };
 

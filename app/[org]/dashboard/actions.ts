@@ -1,58 +1,44 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { getCurrentOrganization } from "../../../lib/getOrganization";
-import { getOrgIdForData } from "../../../lib/getOrganization";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createUserNotification } from "../../../lib/notifications";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
-export async function claimShift(orgSlug: string, shiftId: string): Promise<{ error?: string }> {
-  try {
-    const cookieStore = await cookies();
-    const supabase = createServerComponentClient({ cookies: () => cookieStore });
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: "Sign in required." };
+export async function claimShiftFromDashboard(formData: FormData) {
+  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
+  const shiftId = String(formData.get("shiftId") ?? "").trim();
+  const organizationId = String(formData.get("organization_id") ?? "").trim();
+  if (!orgSlug || !shiftId || !organizationId) return;
 
-    const org = await getCurrentOrganization(orgSlug);
-    const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (!user) return;
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .eq("organization_id", orgIdForData)
-      .single();
-    if (!profile) return { error: "You are not a member of this organisation." };
+  const { error: rpcErr } = await supabase.rpc("claim_shift_slot", { shift_id: shiftId });
+  if (rpcErr) return;
 
-    const { data: shift } = await supabase
-      .from("shifts")
-      .select("id, organization_id, required_slots")
-      .eq("id", shiftId)
-      .eq("organization_id", orgIdForData)
-      .single();
-    if (!shift) return { error: "Shift not found." };
-
-    const { count } = await supabase
-      .from("shift_assignments")
-      .select("id", { count: "exact", head: true })
-      .eq("shift_id", shiftId);
-    const required = Number(shift.required_slots ?? 0) || 1;
-    if ((count ?? 0) >= required) return { error: "No free slots." };
-
-    const { error: insertErr } = await supabase.from("shift_assignments").insert({
-      shift_id: shiftId,
-      user_id: profile.id,
-      status: "zugewiesen",
+  const service = createSupabaseServiceRoleClient();
+  const { data: prof } = await service
+    .from("profiles")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  if (prof?.id) {
+    await createUserNotification(service, {
+      profileId: prof.id as string,
+      organizationId,
+      type: "shift_self_claimed",
+      title: "Schicht übernommen",
+      body: "Du hast dich für eine Schicht eingetragen.",
+      link: `/${orgSlug}/shifts`
     });
-    if (insertErr) {
-      if (insertErr.code === "23505") return { error: "You are already assigned." };
-      return { error: insertErr.message || "Failed to sign up." };
-    }
-
-    revalidatePath(`/${orgSlug}/dashboard`);
-    return {};
-  } catch (e) {
-    console.error("[claimShift]", e);
-    return { error: "An error occurred." };
   }
+
+  revalidatePath(`/${orgSlug}/shifts`);
+  revalidatePath(`/${orgSlug}/dashboard`);
 }

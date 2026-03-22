@@ -54,18 +54,23 @@ export default function ModuleToggles({
       {message && <p className="text-xs text-red-600 dark:text-red-400">{message}</p>}
       <ul className="space-y-2">
         {MODULE_KEYS.map(({ key, labelKey }) => (
-          <li key={key} className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              id={`module-${key}`}
-              checked={features[key] !== false}
-              disabled={loading}
-              onChange={(e) => handleToggle(key, e.target.checked)}
-              className="rounded border-gray-400"
-            />
-            <label htmlFor={`module-${key}`} className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-              {t(labelKey, locale)}
-            </label>
+          <li key={key} className="space-y-1">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id={`module-${key}`}
+                checked={features[key] !== false}
+                disabled={loading}
+                onChange={(e) => handleToggle(key, e.target.checked)}
+                className="rounded border-gray-400"
+              />
+              <label htmlFor={`module-${key}`} className="cursor-pointer text-sm text-gray-700 dark:text-gray-300">
+                {t(labelKey, locale)}
+              </label>
+            </div>
+            {key === "engagement_tracking" && (
+              <p className="ml-7 text-xs text-gray-500 dark:text-gray-400">{t("settings.engagement_tracking_help", locale)}</p>
+            )}
           </li>
         ))}
       </ul>

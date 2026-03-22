@@ -8,6 +8,7 @@ import { Menu } from "lucide-react";
 import FullPageLink from "./FullPageLink";
 import LogoutButton from "./LogoutButton";
 import ThemeToggle from "./ThemeToggle";
+import NotificationBell from "./NotificationBell";
 
 const RESERVED = ["admin", "dashboard", "login", "super-admin", "task", "api", "claim-org", "auth", "create-organisation", "join"];
 // Public / non-organisation routes that must not be interpreted as orgSlug.
@@ -70,6 +71,7 @@ export default function AppHeader({ user, onMenuOpen }: { user: User | null; onM
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />
+        {user && !pathname.startsWith("/auth") && !pathname.startsWith("/claim-org") && <NotificationBell />}
         {!user && orgSlug && (
           <FullPageLink
             href={`/${orgSlug}/login`}

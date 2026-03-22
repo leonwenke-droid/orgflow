@@ -20,6 +20,7 @@ import {
   Settings2,
   ShieldCheck,
   MessageSquare,
+  UserCircle,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
@@ -70,6 +71,8 @@ function getNavSections(
     ...(m.tasks !== false ? [{ href: tasksHref, labelKey: "dashboard.tasks", icon: CheckSquare }] : []),
     ...(m.shifts !== false ? [{ href: shiftsHref, labelKey: "dashboard.shifts", icon: CalendarDays }] : []),
     { href: `/${org}/me`, labelKey: "nav.my_stats", icon: BarChart3 },
+    { href: `/${org}/account`, labelKey: "nav.my_account", icon: UserCircle },
+    { href: `/${org}/feedback`, labelKey: "nav.feedback", icon: MessageSquare },
     ...(manage ? [{ href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users }] : []),
     ...(manage ? [{ href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }] : []),
   ];
@@ -78,7 +81,6 @@ function getNavSections(
     ...(manage && showFinance ? [{ href: `/${org}/admin/treasury`, labelKey: "dashboard.finance", icon: Wallet }] : []),
     ...(manage && m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy }] : []),
     ...(manage && m.events ? [{ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange }] : []),
-    ...(manage ? [{ href: `/${org}/admin/feedback`, labelKey: "nav.feedback", icon: MessageSquare }] : []),
   ];
   return [
     { titleKey: "nav.core", items: core },
@@ -145,6 +147,8 @@ export default function Sidebar({
       return (pathname === "/admin/tasks" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/tasks`);
     if (href.includes("/admin/shifts"))
       return (pathname === "/admin/shifts" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/shifts`);
+    if (href.includes("/feedback")) return pathname === `/${orgSlug}/feedback` || pathname.startsWith(`/${orgSlug}/feedback`);
+    if (href.includes("/account")) return pathname === `/${orgSlug}/account` || pathname.startsWith(`/${orgSlug}/account`);
     return pathname === href || (href !== `/${orgSlug}/dashboard` && pathname.startsWith(href));
   };
 

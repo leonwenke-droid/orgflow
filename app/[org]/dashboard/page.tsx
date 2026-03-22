@@ -16,6 +16,9 @@ import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin, getCurrentUserRoleInOrg } from "../../../lib/getOrganization";
 import { ADMIN_ROLES, canViewFinance } from "../../../lib/permissions";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { claimShiftFromDashboard } from "./actions";
+import { ArrowLeftRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +71,7 @@ async function getData(organizationId: string, supabaseOverride?: SupabaseClient
     supabase
       .from("shifts")
       .select(
-        "id, event_name, date, start_time, end_time, location, notes, required_slots, shift_assignments ( id, status, user_id, replacement_user_id )"
+        "id, event_name, date, start_time, end_time, location, notes, required_slots, auto_assign, claimable, shift_assignments ( id, status, user_id, replacement_user_id, swap_offered )"
       )
       .eq("organization_id", organizationId)
       .order("date", { ascending: true }),
@@ -193,10 +196,33 @@ export default async function OrgDashboardPage({
     redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/dashboard`);
   }
 
+  const service = createSupabaseServiceRoleClient();
   const isSuper = await isSuperAdmin();
-  const userOrg = await getCurrentUserOrganization();
-  const canAccessOrgData = isSuper || userOrg?.id === org.id;
-  if (!canAccessOrgData) {
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+
+  const { data: myProfilePrimary } = await service
+    .from("profiles")
+    .select("id, full_name, role")
+    .eq("auth_user_id", user.id)
+    .eq("organization_id", orgIdForData)
+    .maybeSingle();
+  const { data: myProfileFallback } =
+    !myProfilePrimary && orgIdForData !== org.id
+      ? await service
+          .from("profiles")
+          .select("id, full_name, role")
+          .eq("auth_user_id", user.id)
+          .eq("organization_id", org.id)
+          .maybeSingle()
+      : { data: null };
+
+  const memberRow = (myProfilePrimary ?? myProfileFallback) as {
+    id: string;
+    full_name: string | null;
+    role: string | null;
+  } | null;
+
+  if (!isSuper && !memberRow) {
     return (
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t("common.access_denied", locale)}</h1>
@@ -207,56 +233,50 @@ export default async function OrgDashboardPage({
     );
   }
 
-  const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  let { treasury, aggregate, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
-    await getData(orgIdForData);
-
-  // Legacy/TGG fallback: Rolle/Admin-Rights können unter der "rohen" org.id liegen.
-  const userIsAdminPrimary = await isOrgAdmin(orgIdForData);
-  const userIsAdmin = userIsAdminPrimary || (orgIdForData !== org.id ? await isOrgAdmin(org.id) : false);
-
-  const userRolePrimary = await getCurrentUserRoleInOrg(orgIdForData);
-  const userRole = userRolePrimary ?? (orgIdForData !== org.id ? await getCurrentUserRoleInOrg(org.id) : null);
-  const showGettingStarted = userRole != null && ADMIN_ROLES.includes(userRole);
-  // Finanzen anzeigen: wenn Rolle berechtigt, oder unbekannt (Fail-open), oder Nutzer ist Org-Admin
-  const userCanViewFinance = userRole == null || canViewFinance(userRole) || userIsAdmin;
-
-  const { data: myProfilePrimary } = await supabase
-    .from("profiles")
-    .select("id, full_name")
-    .eq("auth_user_id", user.id)
-    .eq("organization_id", orgIdForData)
-    .maybeSingle();
-  const { data: myProfileFallback } = (!myProfilePrimary && orgIdForData !== org.id)
-    ? await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .eq("auth_user_id", user.id)
-        .eq("organization_id", org.id)
-        .maybeSingle()
-    : { data: null };
-  const myName = ((myProfilePrimary ?? myProfileFallback) as any)?.full_name ?? null;
-  const myProfileId = ((myProfilePrimary ?? myProfileFallback) as any)?.id ?? null;
+  const userOrg = await getCurrentUserOrganization();
+  const canAccessOrgData = isSuper || userOrg?.id === org.id || !!memberRow;
 
   const effectiveOrgIdForData = myProfilePrimary ? orgIdForData : org.id;
-  if (effectiveOrgIdForData !== orgIdForData) {
-    // Re-fetch dashboard data under the effective org id mapping.
-    const effectiveData = await getData(effectiveOrgIdForData);
-    treasury = effectiveData.treasury;
-    aggregate = effectiveData.aggregate;
-    activity = effectiveData.activity;
-    shifts = effectiveData.shifts;
-    profileNames = effectiveData.profileNames;
-    committees = effectiveData.committees;
-    tasksCount = effectiveData.tasksCount;
-    shiftsCount = effectiveData.shiftsCount;
-  }
+
+  let { treasury, aggregate, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
+    await getData(effectiveOrgIdForData, service);
+
+  const userIsAdminPrimary = await isOrgAdmin(orgIdForData);
+  const userIsAdmin =
+    userIsAdminPrimary || (orgIdForData !== org.id ? await isOrgAdmin(org.id) : false);
+
+  const userRolePrimary = await getCurrentUserRoleInOrg(orgIdForData);
+  const userRole =
+    userRolePrimary ?? (orgIdForData !== org.id ? await getCurrentUserRoleInOrg(org.id) : null);
+  const showGettingStarted = userRole != null && ADMIN_ROLES.includes(userRole);
+  const userCanViewFinance = userRole == null || canViewFinance(userRole) || userIsAdmin;
+
+  const meta = user.user_metadata as Record<string, unknown> | undefined;
+  const metaName =
+    (typeof meta?.full_name === "string" && meta.full_name.trim()) ||
+    (typeof meta?.name === "string" && meta.name.trim()) ||
+    null;
+  const emailLocal = user.email?.split("@")[0]?.trim() || null;
+  const myName =
+    (memberRow?.full_name && String(memberRow.full_name).trim()) ||
+    metaName ||
+    emailLocal ||
+    null;
+  const myProfileId = memberRow?.id ?? null;
+  const myRole = memberRow?.role ?? null;
+  const canClaimShifts = myRole !== "viewer" && !!myProfileId;
 
   const todayStr = getTodayDateString();
+  const in7 = new Date();
+  in7.setDate(in7.getDate() + 7);
+  const in7Str = in7.toISOString().slice(0, 10);
+
   const { data: myAssignedShifts } = myProfileId
-    ? await supabase
+    ? await service
         .from("shift_assignments")
-        .select("id, status, user_id, replacement_user_id, shifts!inner(id, event_name, date, start_time, end_time, location, organization_id)")
+        .select(
+          "id, status, user_id, replacement_user_id, swap_offered, shifts!inner(id, event_name, date, start_time, end_time, location, organization_id)"
+        )
         .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)
         .eq("shifts.organization_id", effectiveOrgIdForData)
         .gte("shifts.date", todayStr)
@@ -266,15 +286,74 @@ export default async function OrgDashboardPage({
     : { data: [] };
 
   const { data: myOpenTasks } = myProfileId
-    ? await supabase
+    ? await service
         .from("tasks")
-        .select("id, title, status, due_at, committees(name)")
+        .select("id, title, status, due_at, claimable, committees(name)")
         .eq("organization_id", effectiveOrgIdForData)
         .eq("owner_id", myProfileId)
         .neq("status", "erledigt")
         .order("due_at", { ascending: true })
         .limit(8)
     : { data: [] };
+
+  let myOpenTaskCount = 0;
+  if (myProfileId) {
+    const { count } = await service
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", effectiveOrgIdForData)
+      .eq("owner_id", myProfileId)
+      .neq("status", "erledigt");
+    myOpenTaskCount = count ?? 0;
+  }
+
+  const { data: poolClaimableTasks } =
+    myProfileId && canClaimShifts
+      ? await service
+          .from("tasks")
+          .select("id, title, due_at, claimable, committees(name)")
+          .eq("organization_id", effectiveOrgIdForData)
+          .is("owner_id", null)
+          .eq("claimable", true)
+          .in("status", ["offen", "in_arbeit"])
+          .order("due_at", { ascending: true })
+          .limit(6)
+      : { data: [] };
+
+  const shiftRows = (shifts ?? []) as {
+    date: string;
+    id: string;
+    event_name?: string | null;
+    required_slots?: number | null;
+    auto_assign?: boolean | null;
+    claimable?: boolean | null;
+    shift_assignments?: { id: string; user_id?: string | null; replacement_user_id?: string | null }[];
+  }[];
+
+  const myUpcomingShiftCount = myProfileId
+    ? shiftRows.filter((s) => {
+        const d = String(s.date ?? "").slice(0, 10);
+        if (!d || d < todayStr || d > in7Str) return false;
+        return (s.shift_assignments ?? []).some(
+          (a) => a.user_id === myProfileId || a.replacement_user_id === myProfileId
+        );
+      }).length
+    : 0;
+
+  const claimableForDashboard = canClaimShifts
+    ? shiftRows.filter((s) => {
+        const d = String(s.date ?? "").slice(0, 10);
+        if (!d || d < todayStr) return false;
+        if (s.auto_assign === true) return false;
+        if (s.claimable === false) return false;
+        const required = Number(s.required_slots ?? 1) || 1;
+        const taken = (s.shift_assignments ?? []).length;
+        return taken < required;
+      })
+    : [];
+
+  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const engagementEnabled = orgFeatures.engagement_tracking !== false;
 
   const livechartCommittees = committees.filter(
     (c) => !/Jahrgangssprecher/i.test(c.name)
@@ -283,17 +362,25 @@ export default async function OrgDashboardPage({
   return (
     <div className="space-y-8">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight dark:text-gray-100">
           {t("dashboard.title", locale)}
         </h1>
         <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-          {locale === "de" ? `Hallo${myName ? ` ${myName}` : ""}!` : `Hello${myName ? ` ${myName}` : ""}!`}
+          {myName
+            ? t("dashboard.greeting_named", locale).replace("{name}", myName)
+            : t("dashboard.greeting", locale)}
         </p>
         <p className="text-sm text-gray-600">
           {org.school_short && `${org.school_short} · `}
           {t("dashboard.overview_subtitle", locale)}
         </p>
       </header>
+
+      {!engagementEnabled && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-100">
+          {t("dashboard.engagement_disabled_note", locale)}
+        </p>
+      )}
 
       {showGettingStarted && <OnboardingBanner />}
 
@@ -313,7 +400,7 @@ export default async function OrgDashboardPage({
             {t("dashboard.my_assigned_shifts", locale)}
           </h2>
           <a className="text-xs text-blue-600 hover:underline dark:text-blue-400" href={`/${orgSlug}/shifts`}>
-            {locale === "de" ? "Ansehen" : "View"}
+            {t("common.view", locale)}
           </a>
         </div>
         {(myAssignedShifts ?? []).length === 0 ? (
@@ -324,8 +411,16 @@ export default async function OrgDashboardPage({
               const s = a.shifts;
               return (
                 <li key={a.id} className="py-2">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {s?.event_name || t("dashboard.shifts", locale)}
+                  <p className="flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {a.swap_offered ? (
+                      <span title={t("dashboard.swap_offered_hint", locale)}>
+                        <ArrowLeftRight
+                          className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+                          aria-hidden
+                        />
+                      </span>
+                    ) : null}
+                    <span>{s?.event_name || t("dashboard.shifts", locale)}</span>
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {s?.date ? `${formatDateTimeForDisplay(s.date)} · ${String(s.start_time ?? "")}-${String(s.end_time ?? "")}` : "–"}
@@ -338,33 +433,120 @@ export default async function OrgDashboardPage({
         )}
       </section>
 
+      {claimableForDashboard.length > 0 && (
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              {t("dashboard.claimable_shifts_title", locale)}
+            </h2>
+            <a className="text-xs text-blue-600 hover:underline dark:text-blue-400" href={`/${orgSlug}/shifts`}>
+              {t("common.view", locale)}
+            </a>
+          </div>
+          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+            {claimableForDashboard.map((s) => {
+              const required = Number(s.required_slots ?? 1) || 1;
+              const taken = (s.shift_assignments ?? []).length;
+              const free = Math.max(0, required - taken);
+              const d = String(s.date ?? "").slice(0, 10);
+              return (
+                <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {s.event_name || t("dashboard.shifts", locale)}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {d ? formatDateTimeForDisplay(d) : "–"} · {free}/{required}{" "}
+                      {t("dashboard.slots_free", locale)}
+                    </p>
+                  </div>
+                  <form action={claimShiftFromDashboard}>
+                    <input type="hidden" name="orgSlug" value={orgSlug} />
+                    <input type="hidden" name="shiftId" value={s.id} />
+                    <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
+                    <button
+                      type="submit"
+                      className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                    >
+                      {t("shifts.claim", locale)}
+                    </button>
+                  </form>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {(poolClaimableTasks ?? []).length > 0 && (
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            {t("dashboard.pool_tasks_title", locale)}
+          </h2>
+          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+            {(poolClaimableTasks ?? []).map((task: any) => (
+              <li key={task.id} className="flex items-start gap-2 py-2">
+                <span title={t("dashboard.task_claimable_hint", locale)}>
+                  <ArrowLeftRight
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400"
+                    aria-hidden
+                  />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {(task.committees as { name?: string } | null)?.name ?? "–"}
+                    {task.due_at
+                      ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}`
+                      : ""}
+                  </p>
+                </div>
+                <a
+                  href={`/${orgSlug}/tasks`}
+                  className="shrink-0 text-xs text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  {t("tasks.claim", locale)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
           {
             icon: CheckSquare,
-            label: t("dashboard.open_tasks", locale),
-            value: aggregate.total_open,
-            sub: t("dashboard.tasks_need_attention", locale)
+            label: userIsAdmin
+              ? t("dashboard.open_tasks", locale)
+              : t("dashboard.my_open_tasks_card", locale),
+            value: userIsAdmin ? aggregate.total_open : myOpenTaskCount,
+            sub: userIsAdmin
+              ? t("dashboard.tasks_need_attention", locale)
+              : t("dashboard.my_tasks_sub", locale)
           },
           {
             icon: CalendarDays,
-            label: t("dashboard.upcoming_shifts", locale),
-            value: (shifts as { date: string }[]).filter((s) => {
-              const d = new Date(s.date);
-              const now = new Date();
-              const in7 = new Date(now);
-              in7.setDate(in7.getDate() + 7);
-              return d >= now && d <= in7;
-            }).length,
+            label: userIsAdmin
+              ? t("dashboard.upcoming_shifts", locale)
+              : t("dashboard.my_upcoming_shifts_card", locale),
+            value: userIsAdmin
+              ? shiftRows.filter((s) => {
+                  const d = String(s.date ?? "").slice(0, 10);
+                  return d >= todayStr && d <= in7Str;
+                }).length
+              : myUpcomingShiftCount,
             sub: t("dashboard.in_next_7_days", locale)
           },
           ...(userCanViewFinance
-            ? [{
-                icon: Wallet,
-                label: t("dashboard.finance", locale),
-                value: treasury ? formatCurrency(treasury.amount, localeForMoney, currencyCode) : "–",
-                sub: t("dashboard.current_balance", locale)
-              }]
+            ? [
+                {
+                  icon: Wallet,
+                  label: t("dashboard.finance", locale),
+                  value: treasury ? formatCurrency(treasury.amount, localeForMoney, currencyCode) : "–",
+                  sub: t("dashboard.current_balance", locale)
+                }
+              ]
             : []),
           {
             icon: Users,
@@ -429,7 +611,11 @@ export default async function OrgDashboardPage({
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
           {!shifts || shifts.length === 0 ? (
-            <EmptyState messageKey="empty.shifts" actionHref={`/${orgSlug}/admin/shifts`} actionLabelKey="cta.create_shift" />
+            <EmptyState
+              messageKey="empty.shifts"
+              actionHref={userIsAdmin ? `/${orgSlug}/admin/shifts` : `/${orgSlug}/shifts`}
+              actionLabelKey="cta.create_shift"
+            />
           ) : (
             (() => {
               const toDateKey = (d: unknown) => {
@@ -497,11 +683,14 @@ export default async function OrgDashboardPage({
                         location: string | null;
                         notes: string | null;
                         required_slots?: number | null;
+                        claimable?: boolean | null;
+                        auto_assign?: boolean | null;
                         shift_assignments?: {
                           id: string;
                           status: string;
                           user_id?: string | null;
                           replacement_user_id?: string | null;
+                          swap_offered?: boolean | null;
                         }[];
                       }[];
                       const sorted = [...dayShifts].sort((a, b) =>
@@ -526,6 +715,8 @@ export default async function OrgDashboardPage({
                           start_time: String(s.start_time ?? ""),
                           end_time: String(s.end_time ?? ""),
                           required_slots: s.required_slots ?? 1,
+                          claimable: s.claimable !== false,
+                          auto_assign: s.auto_assign === true,
                           assignments: (
                             (s.shift_assignments ?? []) as {
                               id: string;
@@ -537,7 +728,8 @@ export default async function OrgDashboardPage({
                             id: a.id,
                             status: a.status ?? "zugewiesen",
                             user_id: a.user_id ?? null,
-                            replacement_user_id: a.replacement_user_id ?? null
+                            replacement_user_id: a.replacement_user_id ?? null,
+                            swap_offered: !!(a as { swap_offered?: boolean }).swap_offered
                           }))
                         }))
                       };
@@ -557,7 +749,8 @@ export default async function OrgDashboardPage({
                   currentWeekIndex={currentWeekIndex >= 0 ? currentWeekIndex : 0}
                   profileNames={profileNamesObj}
                   orgSlug={orgSlug}
-                  showClaimButton={canAccessOrgData}
+                  showClaimButton={canClaimShifts}
+                  organizationId={effectiveOrgIdForData}
                 />
               );
             })()

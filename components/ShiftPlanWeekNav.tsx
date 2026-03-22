@@ -3,14 +3,22 @@
 import { useRef, useState, useEffect } from "react";
 import html2canvas from "html2canvas";
 
-function ClaimSlotButton({ orgSlug, shiftId }: { orgSlug: string; shiftId: string }) {
+function ClaimSlotButton({
+  orgSlug,
+  shiftId,
+  organizationId
+}: {
+  orgSlug: string;
+  shiftId: string;
+  organizationId?: string;
+}) {
   const [loading, setLoading] = useState(false);
   const handleClick = async () => {
     setLoading(true);
     const res = await fetch("/api/shifts/claim", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orgSlug, shiftId }),
+      body: JSON.stringify({ orgSlug, shiftId, organizationId }),
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
@@ -108,6 +116,7 @@ type Props = {
   profileNames: Record<string, string>;
   orgSlug?: string;
   showClaimButton?: boolean;
+  organizationId?: string;
 };
 
 export default function ShiftPlanWeekNav({
@@ -115,7 +124,8 @@ export default function ShiftPlanWeekNav({
   currentWeekIndex,
   profileNames,
   orgSlug,
-  showClaimButton = false
+  showClaimButton = false,
+  organizationId
 }: Props) {
   const safeIndex = Math.max(0, Math.min(currentWeekIndex, weeks.length - 1));
   const [weekIndex, setWeekIndex] = useState(safeIndex);
@@ -225,7 +235,9 @@ export default function ShiftPlanWeekNav({
               {day.shifts.map((s) => {
                 const required = s.required_slots ?? 1;
                 const count = s.assignments?.length ?? 0;
-                const hasFreeSlot = showClaimButton && orgSlug && count < required;
+                const claimOk = s.claimable !== false && s.auto_assign !== true;
+                const hasFreeSlot =
+                  showClaimButton && orgSlug && count < required && claimOk;
                 return (
                 <div key={s.id} className="rounded bg-gray-50 px-1.5 py-1 text-[10px] dark:bg-gray-800">
                   <span className="text-gray-700 dark:text-gray-300">{slotLabel(s)}</span>
@@ -235,7 +247,7 @@ export default function ShiftPlanWeekNav({
                       : "–"}
                   </div>
                   {hasFreeSlot && (
-                    <ClaimSlotButton orgSlug={orgSlug} shiftId={s.id} />
+                    <ClaimSlotButton orgSlug={orgSlug} shiftId={s.id} organizationId={organizationId} />
                   )}
                 </div>
               );})}
@@ -376,7 +388,9 @@ export default function ShiftPlanWeekNav({
                     {currentDay.shifts.map((s) => {
                       const required = s.required_slots ?? 1;
                       const count = s.assignments?.length ?? 0;
-                      const hasFreeSlot = showClaimButton && orgSlug && count < required;
+                      const claimOk = s.claimable !== false && s.auto_assign !== true;
+                      const hasFreeSlot =
+                        showClaimButton && orgSlug && count < required && claimOk;
                       return (
                       <li
                         key={s.id}
@@ -390,7 +404,9 @@ export default function ShiftPlanWeekNav({
                             ? formatAssignments(s.assignments, profileNames)
                             : "–"}
                         </div>
-                        {hasFreeSlot && <ClaimSlotButton orgSlug={orgSlug} shiftId={s.id} />}
+                        {hasFreeSlot && (
+                          <ClaimSlotButton orgSlug={orgSlug} shiftId={s.id} organizationId={organizationId} />
+                        )}
                       </li>
                     );})}
                   </ul>

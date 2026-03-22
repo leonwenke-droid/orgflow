@@ -6,6 +6,7 @@ import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganiz
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { createUserNotification } from "../../../lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -43,13 +44,45 @@ async function claimShiftSwapAction(formData: FormData) {
   "use server";
   const orgSlug = String(formData.get("orgSlug") ?? "").trim();
   const assignmentId = String(formData.get("assignmentId") ?? "").trim();
-  if (!orgSlug || !assignmentId) return;
+  const organizationId = String(formData.get("organization_id") ?? "").trim();
+  if (!orgSlug || !assignmentId || !organizationId) return;
 
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase.rpc("claim_shift_swap", { assignment_id: assignmentId });
+  const service = createSupabaseServiceRoleClient();
+  const { data: before } = await service
+    .from("shift_assignments")
+    .select("user_id, shift_id, shifts(event_name)")
+    .eq("id", assignmentId)
+    .maybeSingle();
+  const originalOwnerId = (before as { user_id?: string } | null)?.user_id ?? null;
+
+  const { error: rpcErr } = await supabase.rpc("claim_shift_swap", { assignment_id: assignmentId });
+  if (rpcErr) return;
+
+  const { data: claimerProf } = await service
+    .from("profiles")
+    .select("id, full_name")
+    .eq("auth_user_id", user.id)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+
+  if (originalOwnerId) {
+    const evName =
+      (before as { shifts?: { event_name?: string } | null } | null)?.shifts?.event_name ?? "Schicht";
+    const claimerName = (claimerProf as { full_name?: string } | null)?.full_name ?? "Jemand";
+    await createUserNotification(service, {
+      profileId: originalOwnerId,
+      organizationId,
+      type: "shift_swap_taken",
+      title: "Schicht-Tausch übernommen",
+      body: `${claimerName} hat dein Angebot für „${evName}“ übernommen.`,
+      link: `/${orgSlug}/shifts`
+    });
+  }
+
   revalidatePath(`/${orgSlug}/shifts`);
   revalidatePath(`/${orgSlug}/dashboard`);
 }
@@ -194,6 +227,7 @@ export default async function ShiftsViewerPage(props: {
                 {canClaim ? (
                   <form action={claimShiftSwapAction}>
                     <input type="hidden" name="orgSlug" value={orgSlug} />
+                    <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
                     <input type="hidden" name="assignmentId" value={assignment.id} />
                     <button className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
                       {t("shifts.take_over", locale)}

@@ -7,6 +7,7 @@ import { canViewFinance } from "../../../lib/permissions";
 import { parseTreasuryAmount } from "../../../lib/currency";
 import { writeAuditLog } from "../../../lib/audit";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { notifyFinanceAudience } from "../../../lib/notifications";
 
 export async function addTreasuryEntryAction(
   organizationId: string,
@@ -74,6 +75,13 @@ export async function addTreasuryEntryAction(
     targetId: null,
     metadata: { type, category, amount_cents: amountCentsSigned, date }
   });
+  await notifyFinanceAudience(
+    service,
+    orgId,
+    "Kasse / Finanzen",
+    `${type === "income" ? "Einnahme" : "Ausgabe"}: ${description || "Neue Buchung"}`,
+    ""
+  );
   revalidatePath("/admin/treasury");
   return {};
 }

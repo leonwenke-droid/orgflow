@@ -4,6 +4,7 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { Suspense } from "react";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { createUserNotification } from "../../../lib/notifications";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData, getCurrentUserOrganization } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import CopyTaskLinkButton from "../../../components/CopyTaskLinkButton";
@@ -85,8 +86,31 @@ async function autoAssignTasks(formData: FormData) {
     idx++;
   }
 
+  const taskTitles = new Map<string, string>();
+  if (updates.length > 0) {
+    const { data: titleRows } = await service
+      .from("tasks")
+      .select("id, title")
+      .in(
+        "id",
+        updates.map((x) => x.taskId)
+      )
+      .eq("organization_id", orgId);
+    for (const row of titleRows ?? []) {
+      taskTitles.set((row as { id: string }).id, String((row as { title?: string }).title ?? ""));
+    }
+  }
+
   for (const u of updates) {
     await service.from("tasks").update({ owner_id: u.ownerId }).eq("id", u.taskId).eq("organization_id", orgId);
+    await createUserNotification(service, {
+      profileId: u.ownerId,
+      organizationId: orgId,
+      type: "task_assigned",
+      title: "Neue Aufgabe zugewiesen",
+      body: taskTitles.get(u.taskId) || "Du hast eine neue Aufgabe erhalten.",
+      link: orgSlug ? `/${orgSlug}/tasks` : null
+    });
   }
 
   for (const [uid, inc] of increments.entries()) {
