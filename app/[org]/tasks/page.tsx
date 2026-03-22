@@ -6,6 +6,7 @@ import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganiz
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import TaskCompleteModalButton from "../../../components/TaskCompleteModal";
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +96,9 @@ export default async function TasksViewerPage(props: {
 
   const { data: tasksAll } = await service
     .from("tasks")
-    .select("id, title, status, due_at, owner_id, claimable, proof_url, committees(name)")
+    .select(
+      "id, title, description, status, due_at, owner_id, claimable, proof_required, proof_url, committees(name)"
+    )
     .eq("organization_id", effectiveOrgIdForData)
     .neq("status", "erledigt")
     .order("due_at", { ascending: true });
@@ -191,6 +194,22 @@ export default async function TasksViewerPage(props: {
                             {t("tasks.claim", locale)}
                           </button>
                         </form>
+                      ) : null}
+
+                      {ownedByMe ? (
+                        <TaskCompleteModalButton
+                          orgSlug={orgSlug}
+                          task={{
+                            id: task.id,
+                            title: task.title,
+                            description: task.description ?? null,
+                            due_at: task.due_at ?? null,
+                            status: task.status,
+                            proof_required: !!task.proof_required,
+                            proof_url: task.proof_url ?? null
+                          }}
+                          className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 shrink-0"
+                        />
                       ) : null}
 
                       {ownedByMe && canClaim ? (

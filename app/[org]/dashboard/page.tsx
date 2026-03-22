@@ -19,6 +19,7 @@ import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { claimShiftFromDashboard } from "./actions";
 import { ArrowLeftRight } from "lucide-react";
+import TaskCompleteModalButton from "../../../components/TaskCompleteModal";
 
 export const dynamic = "force-dynamic";
 
@@ -288,7 +289,9 @@ export default async function OrgDashboardPage({
   const { data: myOpenTasks } = myProfileId
     ? await service
         .from("tasks")
-        .select("id, title, status, due_at, claimable, committees(name)")
+        .select(
+          "id, title, description, status, due_at, claimable, proof_required, proof_url, committees(name)"
+        )
         .eq("organization_id", effectiveOrgIdForData)
         .eq("owner_id", myProfileId)
         .neq("status", "erledigt")
@@ -323,6 +326,8 @@ export default async function OrgDashboardPage({
   const shiftRows = (shifts ?? []) as {
     date: string;
     id: string;
+    start_time?: string | null;
+    end_time?: string | null;
     event_name?: string | null;
     required_slots?: number | null;
     auto_assign?: boolean | null;
@@ -351,6 +356,24 @@ export default async function OrgDashboardPage({
         return taken < required;
       })
     : [];
+
+  const upcomingShiftsNext7Days = [...shiftRows]
+    .filter((s) => {
+      const d = String(s.date ?? "").slice(0, 10);
+      return d && d >= todayStr && d <= in7Str;
+    })
+    .sort((a, b) => {
+      const da = String(a.date ?? "").slice(0, 10);
+      const db = String(b.date ?? "").slice(0, 10);
+      const cmp = da.localeCompare(db);
+      if (cmp !== 0) return cmp;
+      return String(a.start_time ?? "").localeCompare(String(b.start_time ?? ""));
+    });
+
+  const claimableShiftsAfter7Days = claimableForDashboard.filter((s) => {
+    const d = String(s.date ?? "").slice(0, 10);
+    return d > in7Str;
+  });
 
   const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
   const engagementEnabled = orgFeatures.engagement_tracking !== false;
@@ -433,18 +456,87 @@ export default async function OrgDashboardPage({
         )}
       </section>
 
-      {claimableForDashboard.length > 0 && (
+      <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            {t("dashboard.upcoming_shifts_7d_title", locale)}
+          </h2>
+          <a className="text-xs text-blue-600 hover:underline dark:text-blue-400" href={`/${orgSlug}/shifts`}>
+            {t("common.view", locale)}
+          </a>
+        </div>
+        {upcomingShiftsNext7Days.length === 0 ? (
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("empty.shifts", locale)}</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+            {upcomingShiftsNext7Days.map((s) => {
+              const required = Number(s.required_slots ?? 1) || 1;
+              const taken = (s.shift_assignments ?? []).length;
+              const free = Math.max(0, required - taken);
+              const d = String(s.date ?? "").slice(0, 10);
+              const imAssigned =
+                !!myProfileId &&
+                (s.shift_assignments ?? []).some(
+                  (a) =>
+                    a.user_id === myProfileId || a.replacement_user_id === myProfileId
+                );
+              const canShowClaim =
+                canClaimShifts &&
+                s.auto_assign !== true &&
+                s.claimable !== false &&
+                free > 0 &&
+                !imAssigned;
+              let statusHint: string | null = null;
+              if (imAssigned) statusHint = t("dashboard.shift_you_signed_up", locale);
+              else if (s.auto_assign === true)
+                statusHint = t("dashboard.shift_auto_assign_hint", locale);
+              else if (s.claimable === false)
+                statusHint = t("dashboard.shift_not_self_signup", locale);
+              else if (free === 0) statusHint = t("dashboard.shift_slots_full", locale);
+              return (
+                <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {s.event_name || t("dashboard.shifts", locale)}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {d ? formatDateTimeForDisplay(d) : "–"} · {free}/{required}{" "}
+                      {t("dashboard.slots_free", locale)}
+                      {statusHint ? ` · ${statusHint}` : ""}
+                    </p>
+                  </div>
+                  {canShowClaim ? (
+                    <form action={claimShiftFromDashboard}>
+                      <input type="hidden" name="orgSlug" value={orgSlug} />
+                      <input type="hidden" name="shiftId" value={s.id} />
+                      <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
+                      <button
+                        type="submit"
+                        className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                      >
+                        {t("shifts.claim", locale)}
+                      </button>
+                    </form>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {claimableShiftsAfter7Days.length > 0 && (
         <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              {t("dashboard.claimable_shifts_title", locale)}
+              {t("dashboard.more_claimable_shifts_title", locale)}
             </h2>
             <a className="text-xs text-blue-600 hover:underline dark:text-blue-400" href={`/${orgSlug}/shifts`}>
               {t("common.view", locale)}
             </a>
           </div>
           <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-            {claimableForDashboard.map((s) => {
+            {claimableShiftsAfter7Days.map((s) => {
               const required = Number(s.required_slots ?? 1) || 1;
               const taken = (s.shift_assignments ?? []).length;
               const free = Math.max(0, required - taken);
@@ -767,7 +859,7 @@ export default async function OrgDashboardPage({
         ) : (
           <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
             {(myOpenTasks ?? []).map((task: any) => (
-              <li key={task.id} className="py-2 flex items-center justify-between gap-3">
+              <li key={task.id} className="py-2 flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
@@ -775,9 +867,24 @@ export default async function OrgDashboardPage({
                     {task.due_at ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}` : ""}
                   </p>
                 </div>
-                <span className="shrink-0 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                  {task.status}
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <TaskCompleteModalButton
+                    orgSlug={orgSlug}
+                    task={{
+                      id: task.id,
+                      title: task.title,
+                      description: task.description ?? null,
+                      due_at: task.due_at ?? null,
+                      status: task.status,
+                      proof_required: !!task.proof_required,
+                      proof_url: task.proof_url ?? null
+                    }}
+                    className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
+                  />
+                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                    {task.status}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>
