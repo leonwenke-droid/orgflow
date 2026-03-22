@@ -6,6 +6,7 @@ import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganiz
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import { claimShiftForAuthenticatedMember } from "../../../lib/claimShiftForMember";
 import { createUserNotification } from "../../../lib/notifications";
 
@@ -265,9 +266,12 @@ export default async function ShiftsViewerPage(props: {
                       <input type="hidden" name="orgSlug" value={orgSlug} />
                       <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
                       <input type="hidden" name="shiftId" value={s.id} />
-                      <button className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+                      <SubmitButtonWithSpinner
+                        className="inline-flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+                        loadingLabel={t("common.loading", locale)}
+                      >
                         {t("shifts.claim", locale)}
-                      </button>
+                      </SubmitButtonWithSpinner>
                     </form>
                   ) : null}
                 </li>
@@ -295,9 +299,12 @@ export default async function ShiftsViewerPage(props: {
                     <input type="hidden" name="orgSlug" value={orgSlug} />
                     <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
                     <input type="hidden" name="assignmentId" value={assignment.id} />
-                    <button className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+                    <SubmitButtonWithSpinner
+                      className="inline-flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+                      loadingLabel={t("common.loading", locale)}
+                    >
                       {t("shifts.take_over", locale)}
-                    </button>
+                    </SubmitButtonWithSpinner>
                   </form>
                 ) : null}
               </li>
@@ -325,9 +332,12 @@ export default async function ShiftsViewerPage(props: {
                           <form key={a.id} action={offerShiftSwapAction}>
                             <input type="hidden" name="orgSlug" value={orgSlug} />
                             <input type="hidden" name="assignmentId" value={a.id} />
-                            <button className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800">
+                            <SubmitButtonWithSpinner
+                              className="inline-flex items-center justify-center gap-1.5 rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-70 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                              loadingLabel={t("common.loading", locale)}
+                            >
                               {t("shifts.offer_swap", locale)}
-                            </button>
+                            </SubmitButtonWithSpinner>
                           </form>
                         ))}
                     </>

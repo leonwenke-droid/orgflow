@@ -63,11 +63,12 @@ function TaskCompleteDialog({
   const router = useRouter();
   const [status, setStatus] = useState<TaskCompletePayload["status"]>(task.status);
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<null | "in_arbeit" | "erledigt">(null);
   const [message, setMessage] = useState<string | null>(null);
+  const busy = loadingAction !== null;
 
   const submit = async (nextStatus: "in_arbeit" | "erledigt") => {
-    setLoading(true);
+    setLoadingAction(nextStatus);
     setMessage(null);
 
     const formData = new FormData();
@@ -81,7 +82,7 @@ function TaskCompleteDialog({
       body: formData
     });
     const data = (await res.json()) as { message?: string; detail?: string };
-    setLoading(false);
+    setLoadingAction(null);
 
     if (!res.ok) {
       setMessage(
@@ -178,19 +179,41 @@ function TaskCompleteDialog({
             <div className="flex flex-wrap gap-2 text-xs">
               <button
                 type="button"
-                className="btn-secondary flex-1 min-w-[8rem]"
-                disabled={loading || status === "in_arbeit"}
+                className="btn-secondary inline-flex min-h-[2.25rem] flex-1 min-w-[8rem] items-center justify-center gap-1.5"
+                disabled={busy || status === "in_arbeit"}
+                aria-busy={loadingAction === "in_arbeit"}
                 onClick={() => submit("in_arbeit")}
               >
-                {t("tasks.set_in_progress", locale)}
+                {loadingAction === "in_arbeit" ? (
+                  <>
+                    <span
+                      className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+                      aria-hidden
+                    />
+                    {t("common.loading", locale)}
+                  </>
+                ) : (
+                  t("tasks.set_in_progress", locale)
+                )}
               </button>
               <button
                 type="button"
-                className="btn-primary flex-1 min-w-[8rem]"
-                disabled={loading || disabledErledigt}
+                className="btn-primary inline-flex min-h-[2.25rem] flex-1 min-w-[8rem] items-center justify-center gap-1.5"
+                disabled={busy || disabledErledigt}
+                aria-busy={loadingAction === "erledigt"}
                 onClick={() => submit("erledigt")}
               >
-                {t("tasks.mark_done", locale)}
+                {loadingAction === "erledigt" ? (
+                  <>
+                    <span
+                      className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+                      aria-hidden
+                    />
+                    {t("common.loading", locale)}
+                  </>
+                ) : (
+                  t("tasks.mark_done", locale)
+                )}
               </button>
             </div>
             {disabledErledigt ? (

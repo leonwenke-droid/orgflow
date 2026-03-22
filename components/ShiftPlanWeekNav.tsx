@@ -2,6 +2,10 @@
 
 import { useRef, useState, useEffect } from "react";
 import html2canvas from "html2canvas";
+import type { WeekData, DayData, ShiftSlot, ShiftAssignment } from "./ShiftPlanWeekView";
+import { formatDateLabel, getTodayDateString } from "../lib/dateFormat";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 function ClaimSlotButton({
   orgSlug,
@@ -12,6 +16,7 @@ function ClaimSlotButton({
   shiftId: string;
   organizationId?: string;
 }) {
+  const { locale } = useLocale();
   const [loading, setLoading] = useState(false);
   const handleClick = async () => {
     setLoading(true);
@@ -23,21 +28,30 @@ function ClaimSlotButton({
     const data = await res.json().catch(() => ({}));
     setLoading(false);
     if (res.ok) window.location.reload();
-    else window.alert(data.message || "Failed to sign up.");
+    else window.alert((data as { message?: string }).message || t("dashboard.claim_shift_failed", locale));
   };
   return (
     <button
       type="button"
       onClick={handleClick}
       disabled={loading}
-      className="mt-1 inline-block rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      aria-busy={loading}
+      className="mt-1 inline-flex items-center gap-1 rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-medium text-white hover:bg-blue-700 disabled:opacity-50"
     >
-      {loading ? "…" : "Sign up"}
+      {loading ? (
+        <>
+          <span
+            className="inline-block h-2.5 w-2.5 shrink-0 animate-spin rounded-full border border-current border-t-transparent"
+            aria-hidden
+          />
+          {t("common.loading", locale)}
+        </>
+      ) : (
+        t("shifts.claim", locale)
+      )}
     </button>
   );
 }
-import type { WeekData, DayData, ShiftSlot, ShiftAssignment } from "./ShiftPlanWeekView";
-import { formatDateLabel, getTodayDateString } from "../lib/dateFormat";
 
 function formatAssignments(
   assignments: ShiftAssignment[] | undefined,

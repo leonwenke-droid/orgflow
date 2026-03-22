@@ -20,6 +20,7 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { claimShiftFromDashboard } from "./actions";
 import { ArrowLeftRight } from "lucide-react";
 import TaskCompleteModalButton from "../../../components/TaskCompleteModal";
+import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 
 export const dynamic = "force-dynamic";
 
@@ -523,12 +524,12 @@ export default async function OrgDashboardPage({
                       <input type="hidden" name="orgSlug" value={orgSlug} />
                       <input type="hidden" name="shiftId" value={s.id} />
                       <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
-                      <button
-                        type="submit"
-                        className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                      <SubmitButtonWithSpinner
+                        className="inline-flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+                        loadingLabel={t("common.loading", locale)}
                       >
                         {t("shifts.claim", locale)}
-                      </button>
+                      </SubmitButtonWithSpinner>
                     </form>
                   ) : null}
                 </li>
@@ -569,12 +570,12 @@ export default async function OrgDashboardPage({
                     <input type="hidden" name="orgSlug" value={orgSlug} />
                     <input type="hidden" name="shiftId" value={s.id} />
                     <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
-                    <button
-                      type="submit"
-                      className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                    <SubmitButtonWithSpinner
+                      className="inline-flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+                      loadingLabel={t("common.loading", locale)}
                     >
                       {t("shifts.claim", locale)}
-                    </button>
+                    </SubmitButtonWithSpinner>
                   </form>
                 </li>
               );
