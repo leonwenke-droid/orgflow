@@ -10,7 +10,7 @@ Stand: Code-Review im Repo. Manuell in **zwei Browsern/Profilen** testen.
 | Schichten | `/{org}/shifts` | `/{org}/admin/shifts` → `/admin/shifts?org=…` |
 
 - Sidebar **Core**: „Aufgaben“ / „Schichten“ zeigen **immer** die Mitglieder-Routen (auch für Admin/Lead).
-- Sidebar **Organisation**: zusätzliche Einträge **„Aufgaben verwalten (Org)“** / **„Schichtplanung (Org)“** (`nav.admin_*` in `lib/i18n.ts`).
+- Sidebar **Organisation**: zusätzliche Einträge **„Aufgaben verwalten“** / **„Schichtplanung“** (`nav.admin_*` in `lib/i18n.ts`).
 - Dashboard-Kacheln „Offene Aufgaben“ / „Kommende Schichten“: **persönliche** Zahlen für alle Rollen.
 - Leerer Schichtplan auf dem Dashboard: Admin sieht **Schicht anlegen** + **Schichten (meine Ansicht)**; Mitglied nur die Mitglieder-Seite.
 
@@ -31,7 +31,7 @@ ESLint: Projekt nutzt `.eslintrc.json` mit `next/core-web-vitals` (kein interakt
 
 ## Bekannte bewusste Ausnahmen
 
-- **Admin-Übersicht** (`/{org}/admin`): Kacheln verlinken weiterhin direkt auf Admin-Tasks / Admin-Schichten (sinnvoll).
+- **Admin-Übersicht** (`/{org}/admin`): Drei Blöcke wie die Sidebar (**Bereich** = Mitglieder/Teams, **Organisation** = Verwaltungs-Module in derselben Reihenfolge inkl. Finanz nur bei `canViewFinance`, **Verwaltung** = Einstellungen + Feature-Anfragen). Titel nutzen dieselben i18n-Keys wie die Navigation (`nav.*`, `dashboard.*`).
 - **Events-Admin**: Links zu `/admin/tasks?org=…` / `/admin/shifts?org=…` mit Event-Filter (Verwaltung).
 - **Onboarding-Checkliste**: Schritt „Aufgaben/Schichten anlegen“ verweist Admins auf **Admin-Tasks** (Ersteinrichtung).
 - **`app/admin/shifts` EmptyState**: Button „Schicht anlegen“ zeigt ggf. erneut dieselbe URL (Seite ist leer bis erste Schicht im Formular oben angelegt wird).
