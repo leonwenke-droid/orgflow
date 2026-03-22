@@ -89,7 +89,7 @@ export default function OwnerSelectWithScope({
           </div>
         )}
         <p className="mb-1.5 text-[10px] text-gray-500">
-          With "Selected team only", only members assigned to that team are shown (primary or additional).
+          With &quot;Selected team only&quot;, only members assigned to that team are shown (primary or additional).
         </p>
         <MemberSelect
           name="owner_id"

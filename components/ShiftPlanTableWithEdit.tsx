@@ -7,7 +7,7 @@ import SubmitButtonWithSpinner from "./SubmitButtonWithSpinner";
 import { formatDateLabel } from "../lib/dateFormat";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
-import { QRCodeCanvas } from "qrcode.react";
+import DownloadQrPngButton from "./DownloadQrPngButton";
 
 type Member = { id: string; full_name: string; load_index?: number; responsibility_malus?: number };
 
@@ -79,6 +79,8 @@ export default function ShiftPlanTableWithEdit({
     const ids = editingShifts.map((s: any) => s.id);
     const updated = ids.map((id) => shifts.find((s: any) => s.id === id)).filter(Boolean);
     if (updated.length === ids.length) setEditingShifts(updated);
+    // Re-sync open modal only when server `shifts` refresh; omit `editingShifts` from deps to avoid loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shifts]);
   const [editingPersonsOnly, setEditingPersonsOnly] = useState(false);
   const [notAttendedAssignmentId, setNotAttendedAssignmentId] = useState<string | null>(null);
@@ -154,16 +156,17 @@ export default function ShiftPlanTableWithEdit({
           <button type="button" onClick={() => { setEditingAssignmentId(null); setNotAttendedAssignmentId(null); }} className="shrink-0 text-[10px] text-gray-500 hover:text-gray-700">{t("common.close", locale)}</button>
         </div>
         {checkinUrl && (
-          <div className="mb-2 flex items-center gap-2 rounded border border-gray-200 bg-white p-2">
-            <div className="shrink-0">
-              <QRCodeCanvas value={checkinUrl} size={72} includeMargin />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold text-gray-700">{t("shifts.checkin_qr", locale)}</p>
-              <a href={checkinUrl} className="mt-0.5 block truncate text-[10px] text-blue-600 underline">
-                {checkinUrl}
-              </a>
-            </div>
+          <div className="mb-2 rounded border border-gray-200 bg-white p-2">
+            <p className="text-[10px] font-semibold text-gray-700">{t("shifts.checkin_qr", locale)}</p>
+            <a href={checkinUrl} className="mt-0.5 block truncate text-[10px] text-blue-600 underline" title={checkinUrl}>
+              {checkinUrl}
+            </a>
+            <DownloadQrPngButton
+              value={checkinUrl}
+              filename={`checkin-assignment-${a.id.slice(0, 8)}`}
+              label={t("shifts.checkin_qr_download_assignment", locale)}
+              className="mt-1.5 w-full rounded border border-gray-300 bg-gray-50 px-2 py-1.5 text-[10px] font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 sm:w-auto"
+            />
           </div>
         )}
         <div className="mb-1.5 flex flex-wrap gap-1.5">
@@ -350,9 +353,12 @@ export default function ShiftPlanTableWithEdit({
                             </div>
                             <div className="flex flex-col items-end gap-1 shrink-0 touch-manipulation">
                             {shiftCheckinUrl(s.id) && (
-                              <div className="flex items-center gap-1 rounded border border-gray-200 bg-white p-1" title={t("shifts.checkin_qr_shift", locale)}>
-                                <QRCodeCanvas value={shiftCheckinUrl(s.id)!} size={48} includeMargin />
-                              </div>
+                              <DownloadQrPngButton
+                                value={shiftCheckinUrl(s.id)!}
+                                filename={`checkin-shift-${s.id.slice(0, 8)}`}
+                                label={t("shifts.checkin_qr_download_shift", locale)}
+                                className="max-w-[140px] rounded border border-gray-200 bg-white px-2 py-1.5 text-[10px] font-medium text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                              />
                             )}
                             <div className="flex items-center gap-1">
                               <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded bg-blue-100 text-sm text-blue-700 hover:bg-blue-200" title="Personen" aria-label="Personen">✎</button>
@@ -421,12 +427,12 @@ export default function ShiftPlanTableWithEdit({
                         <td className="py-2 px-2 text-right">
                           <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:justify-end">
                             {shiftCheckinUrl(s.id) && (
-                              <div className="flex items-center gap-1 rounded border border-gray-200 bg-white p-1" title={t("shifts.checkin_qr_shift", locale)}>
-                                <QRCodeCanvas value={shiftCheckinUrl(s.id)!} size={56} includeMargin />
-                                <span className="hidden lg:inline max-w-[100px] text-[9px] text-gray-500 leading-tight">
-                                  {t("shifts.checkin_qr_shift", locale)}
-                                </span>
-                              </div>
+                              <DownloadQrPngButton
+                                value={shiftCheckinUrl(s.id)!}
+                                filename={`checkin-shift-${s.id.slice(0, 8)}`}
+                                label={t("shifts.checkin_qr_download_shift", locale)}
+                                className="whitespace-nowrap rounded border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                              />
                             )}
                             <div className="flex items-center justify-end gap-1">
                             <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="rounded bg-blue-100 px-2 py-1 text-[11px] text-blue-700 hover:bg-blue-200" title="Personen">✎</button>

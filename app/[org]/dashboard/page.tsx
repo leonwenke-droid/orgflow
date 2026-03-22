@@ -31,13 +31,6 @@ import ClaimShiftRefreshForm from "../../../components/ClaimShiftRefreshForm";
 
 export const dynamic = "force-dynamic";
 
-type DashboardStats = {
-  total_open: number;
-  total_in_progress: number;
-  total_completed: number;
-  total_overdue: number;
-};
-
 type ActivityStats = {
   shifts_done_30d: number;
   tasks_done_30d: number;
@@ -59,7 +52,7 @@ async function getData(organizationId: string, supabaseOverride?: SupabaseClient
 
   const [
     treasuryRes,
-    tasksRes,
+    tasksCountRes,
     shiftsRes,
     { data: profiles },
     { data: committees },
@@ -75,7 +68,7 @@ async function getData(organizationId: string, supabaseOverride?: SupabaseClient
       .maybeSingle(),
     supabase
       .from("tasks")
-      .select("id, status, due_at")
+      .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId),
     supabase
       .from("shifts")
@@ -104,7 +97,6 @@ async function getData(organizationId: string, supabaseOverride?: SupabaseClient
   ]);
 
   const treasury = treasuryRes.data ?? null;
-  const tasks = tasksRes.data ?? [];
   const shifts = shiftsRes.data ?? [];
 
   const profileIds = (orgProfileIds ?? []).map((p: { id: string }) => p.id);
@@ -119,26 +111,6 @@ async function getData(organizationId: string, supabaseOverride?: SupabaseClient
   } catch (e) {
     console.error("[dashboard getData] cleanup/penalties:", e);
   }
-
-  const aggregate: DashboardStats = (tasks ?? []).reduce(
-    (acc: DashboardStats, t: { status: string | null; due_at: string | null }) => {
-      const status = t.status as string | null;
-      const dueAt = t.due_at ? new Date(t.due_at) : null;
-      if (status === "offen") acc.total_open += 1;
-      else if (status === "in_arbeit") acc.total_in_progress += 1;
-      else if (status === "erledigt") acc.total_completed += 1;
-      if (status !== "erledigt" && dueAt && dueAt < new Date()) {
-        acc.total_overdue += 1;
-      }
-      return acc;
-    },
-    {
-      total_open: 0,
-      total_in_progress: 0,
-      total_completed: 0,
-      total_overdue: 0
-    }
-  );
 
   const profileNames = getDashboardDisplayNames(
     (profiles ?? []) as { id: string; full_name: string | null }[]
@@ -173,12 +145,11 @@ async function getData(organizationId: string, supabaseOverride?: SupabaseClient
 
   return {
     treasury: (treasury ?? null) as { amount: number; created_at: string } | null,
-    aggregate,
     activity,
     shifts: shifts ?? [],
     profileNames,
     committees: (committees ?? []) as { id: string; name: string }[],
-    tasksCount: (tasks ?? []).length,
+    tasksCount: tasksCountRes.count ?? 0,
     shiftsCount: (shifts ?? []).length
   };
 }
@@ -255,7 +226,7 @@ export default async function OrgDashboardPage({
 
   const effectiveOrgIdForData = myProfilePrimary ? orgIdForData : org.id;
 
-  let { treasury, aggregate, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
+  let { treasury, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
     await getData(effectiveOrgIdForData, service);
 
   const userIsAdminPrimary = await isOrgAdmin(orgIdForData);
@@ -676,25 +647,14 @@ export default async function OrgDashboardPage({
         {[
           {
             icon: CheckSquare,
-            label: userIsAdmin
-              ? t("dashboard.open_tasks", locale)
-              : t("dashboard.my_open_tasks_card", locale),
-            value: userIsAdmin ? aggregate.total_open : myOpenTaskCount,
-            sub: userIsAdmin
-              ? t("dashboard.tasks_need_attention", locale)
-              : t("dashboard.my_tasks_sub", locale)
+            label: t("dashboard.my_open_tasks_card", locale),
+            value: myOpenTaskCount,
+            sub: t("dashboard.my_tasks_sub", locale)
           },
           {
             icon: CalendarDays,
-            label: userIsAdmin
-              ? t("dashboard.upcoming_shifts", locale)
-              : t("dashboard.my_upcoming_shifts_card", locale),
-            value: userIsAdmin
-              ? shiftRows.filter((s) => {
-                  const d = String(s.date ?? "").slice(0, 10);
-                  return d >= todayStr && d <= in7Str;
-                }).length
-              : myUpcomingShiftCount,
+            label: t("dashboard.my_upcoming_shifts_card", locale),
+            value: myUpcomingShiftCount,
             sub: t("dashboard.in_next_7_days", locale)
           },
           ...(userCanViewFinance
@@ -773,7 +733,13 @@ export default async function OrgDashboardPage({
             <EmptyState
               messageKey="empty.shifts"
               actionHref={userIsAdmin ? `/${orgSlug}/admin/shifts` : `/${orgSlug}/shifts`}
-              actionLabelKey="cta.create_shift"
+              actionLabelKey={userIsAdmin ? "cta.create_shift" : "cta.member_shifts_page"}
+              {...(userIsAdmin
+                ? {
+                    secondaryActionHref: `/${orgSlug}/shifts`,
+                    secondaryActionLabelKey: "cta.member_shifts_page"
+                  }
+                : {})}
             />
           ) : (
             (() => {

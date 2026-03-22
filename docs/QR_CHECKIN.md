@@ -16,3 +16,7 @@ QR codes on posters should use a **full HTTPS URL** (e.g. `https://your-domain.c
 
 - Set **`NEXT_PUBLIC_SITE_URL`** in production (e.g. `https://your-domain.com`) so generated QR values resolve correctly before the browser has a known origin.
 - In the admin shift plan, QR values prefer `window.location.origin` when you are already on the site, and fall back to `NEXT_PUBLIC_SITE_URL`.
+
+## Admin UI: download instead of inline QR
+
+In the shift plan editor, check-in codes are **not** shown as on-screen QR images. Admins get a **“Download QR (… PNG)”** button that saves a high-resolution PNG for printing or messaging. The raw URL remains visible as a link for copying.

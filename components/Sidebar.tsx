@@ -10,6 +10,8 @@ import {
   LayoutDashboard,
   CheckSquare,
   CalendarDays,
+  CalendarClock,
+  ClipboardList,
   CalendarRange,
   Users,
   UsersRound,
@@ -64,8 +66,9 @@ function getNavSections(
   const showFinance = (m.finance !== false) && (canViewFinance !== false);
   // If role is still loading / unknown, do NOT show admin-only modules yet.
   const manage = canManageOrgUi === true;
-  const tasksHref = manage ? `/${org}/admin/tasks` : `/${org}/tasks`;
-  const shiftsHref = manage ? `/${org}/admin/shifts` : `/${org}/shifts`;
+  /** Core = immer Mitglieder-Ansicht (eigene Aufgaben / Schichten); Admin/Lead sieht Verwaltung zusätzlich unter „Organisation“. */
+  const tasksHref = `/${org}/tasks`;
+  const shiftsHref = `/${org}/shifts`;
   const core: NavItem[] = [
     { href: `/${org}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
     ...(m.tasks !== false ? [{ href: tasksHref, labelKey: "dashboard.tasks", icon: CheckSquare }] : []),
@@ -77,6 +80,12 @@ function getNavSections(
     ...(manage ? [{ href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }] : []),
   ];
   const orgItems: NavItem[] = [
+    ...(manage && m.tasks !== false
+      ? [{ href: `/${org}/admin/tasks`, labelKey: "nav.admin_tasks", icon: ClipboardList }]
+      : []),
+    ...(manage && m.shifts !== false
+      ? [{ href: `/${org}/admin/shifts`, labelKey: "nav.admin_shifts", icon: CalendarClock }]
+      : []),
     ...(manage && m.resources !== false ? [{ href: `/${org}/admin/materials`, labelKey: "dashboard.resources", icon: Package }] : []),
     ...(manage && showFinance ? [{ href: `/${org}/admin/treasury`, labelKey: "dashboard.finance", icon: Wallet }] : []),
     ...(manage && m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy }] : []),
