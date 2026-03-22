@@ -145,7 +145,7 @@ export default async function AdminTasksPage(props: PageProps) {
     .eq("auth_user_id", userId)
     .single();
 
-  if (!profile || !["admin", "lead", "super_admin"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "super_admin", "owner"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300">
         {tr("tasks.access_admin_only", locale)}

@@ -697,6 +697,8 @@ type ShiftsPageProps = { searchParams?: Promise<{ org?: string; event?: string }
 
 export default async function ShiftsPage(props: ShiftsPageProps) {
   unstable_noStore();
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
     ? await (raw as Promise<{ org?: string; event?: string }>)
@@ -713,8 +715,9 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   if (!userId) {
     const loginHref = orgSlug ? `/${orgSlug}/login` : "/";
     return (
-      <p className="text-sm text-amber-300">
-        Session nicht erkannt. Bitte <a href={loginHref} className="underline">erneut einloggen</a>.
+      <p className="text-sm text-amber-300 dark:text-amber-200">
+        {t("tasks.session_missing", locale)}{" "}
+        <a href={loginHref} className="underline">{t("common.sign_in", locale)}</a>.
       </p>
     );
   }
@@ -726,10 +729,10 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     .eq("auth_user_id", userId)
     .single();
 
-  if (!profile || !["admin", "lead", "super_admin"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "super_admin", "owner"].includes(profile.role)) {
     return (
-      <p className="text-sm text-red-300">
-        Access only for admins & team leads.
+      <p className="text-sm text-red-300 dark:text-red-200">
+        {t("tasks.access_admin_only", locale)}
       </p>
     );
   }
@@ -754,9 +757,6 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   }
 
   await removePastShifts(service);
-
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
 
   const todayStr = new Date().toLocaleDateString("en-CA", {
     timeZone: "Europe/Berlin"
@@ -852,7 +852,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   return (
     <div className="space-y-4">
       {effectiveOrgSlug && (
-        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Shifts" />
+        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel={t("dashboard.shifts", locale)} />
       )}
       {events.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-sm">

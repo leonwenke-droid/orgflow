@@ -16,11 +16,15 @@ type Event = { id: string; name: string };
 
 export default function NewTaskForm({
   action,
+  organizationId,
+  orgSlug,
   committeeList,
   members,
   eventsList
 }: {
   action: CreateTaskAction;
+  organizationId?: string;
+  orgSlug?: string;
   committeeList: Committee[];
   members: Member[];
   eventsList: Event[];
@@ -31,6 +35,8 @@ export default function NewTaskForm({
 
   return (
     <form action={formAction} className="space-y-3 text-sm">
+      {organizationId ? <input type="hidden" name="organization_id" value={organizationId} /> : null}
+      {orgSlug ? <input type="hidden" name="org_slug" value={orgSlug} /> : null}
       {errorMessage && (
         <p className="rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-400">
           {errorMessage}

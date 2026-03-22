@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
-import { getCurrentUserOrganization } from "../../../../lib/getOrganization";
+import { getCurrentUserOrganization, isOrgAdmin } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import NewTaskForm from "./NewTaskForm";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../lib/i18n";
@@ -27,7 +27,7 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
     .eq("auth_user_id", user.id)
     .single();
 
-  if (!profile || !["admin", "lead"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "super_admin", "owner"].includes(profile.role)) {
     return { errorKey: "tasks.not_authorized" };
   }
 
@@ -49,7 +49,24 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
   }
 
   const token = crypto.randomUUID().replace(/-/g, "");
-  const orgId = (profile as { organization_id?: string | null }).organization_id ?? null;
+  const formOrgId = formData.get("organization_id")?.toString().trim() || null;
+  const formOrgSlug = formData.get("org_slug")?.toString().trim() || null;
+
+  let orgIdForInsert: string | null = null;
+  if (formOrgId) {
+    if (!(await isOrgAdmin(formOrgId))) {
+      return { errorKey: "tasks.not_authorized" };
+    }
+    orgIdForInsert = formOrgId;
+  } else {
+    const fromProfile = (profile as { organization_id?: string | null }).organization_id ?? null;
+    if (fromProfile && (await isOrgAdmin(fromProfile))) {
+      orgIdForInsert = fromProfile;
+    }
+  }
+  if (!orgIdForInsert) {
+    return { errorKey: "tasks.no_organization" };
+  }
 
   const { error } = await service.from("tasks").insert({
     title,
@@ -64,7 +81,7 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
     proof_required: proofRequired,
     access_token: token,
     ...(eventId ? { event_id: eventId } : {}),
-    ...(orgId ? { organization_id: orgId } : {})
+    organization_id: orgIdForInsert
   });
 
   if (error) {
@@ -72,6 +89,9 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
     return { errorKey: "tasks.create_error" };
   }
 
+  if (formOrgSlug) {
+    redirect(`/admin/tasks?org=${encodeURIComponent(formOrgSlug)}`);
+  }
   const org = await getCurrentUserOrganization();
   redirect(org?.slug ? `/admin/tasks?org=${encodeURIComponent(org.slug)}` : "/admin/tasks");
 }
@@ -155,7 +175,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
     userIdToCommitteeIds.get(uid)!.push(cid);
   }
 
-  if (!profile || !["admin", "lead"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "super_admin", "owner"].includes(profile.role)) {
     const cookieStore = await cookies();
     const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
     return (
@@ -187,6 +207,8 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
         </h2>
         <NewTaskForm
           action={createTask}
+          organizationId={orgId ?? undefined}
+          orgSlug={orgSlug ?? undefined}
           committeeList={committeeList}
           members={(members ?? []).map((m) => ({
             id: String(m.id),

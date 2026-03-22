@@ -75,6 +75,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Production checklist
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vercel (Production branch, env vars) and Supabase migrations (`claim_shift_slot`, RLS) required for tasks/shifts and self sign-up.
+
 ## Build
 
 ```bash
