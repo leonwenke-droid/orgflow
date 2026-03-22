@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { redirect } from "next/navigation";
+import { writeAuditLog } from "../../../lib/audit";
+import { claimShiftForAuthenticatedMember } from "../../../lib/claimShiftForMember";
 import { createUserNotification } from "../../../lib/notifications";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
@@ -19,29 +21,36 @@ export async function claimShiftFromDashboard(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  const { error: rpcErr } = await supabase.rpc("claim_shift_slot", { shift_id: shiftId });
-  if (rpcErr) {
-    console.error("[claimShiftFromDashboard]", rpcErr);
+  const result = await claimShiftForAuthenticatedMember({
+    authUserId: user.id,
+    orgSlug,
+    shiftId,
+    organizationIdFromForm: organizationId
+  });
+
+  if (!result.ok) {
+    console.error("[claimShiftFromDashboard]", result.code);
     redirect(`/${orgSlug}/dashboard?claimShift=error`);
   }
 
+  await writeAuditLog({
+    organizationId: result.organizationId,
+    actorProfileId: result.profileId,
+    action: "shift_claimed",
+    targetTable: "shifts",
+    targetId: shiftId,
+    metadata: {}
+  });
+
   const service = createSupabaseServiceRoleClient();
-  const { data: prof } = await service
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .eq("organization_id", organizationId)
-    .maybeSingle();
-  if (prof?.id) {
-    await createUserNotification(service, {
-      profileId: prof.id as string,
-      organizationId,
-      type: "shift_self_claimed",
-      title: "Schicht übernommen",
-      body: "Du hast dich für eine Schicht eingetragen.",
-      link: `/${orgSlug}/shifts`
-    });
-  }
+  await createUserNotification(service, {
+    profileId: result.profileId,
+    organizationId: result.organizationId,
+    type: "shift_self_claimed",
+    title: "Schicht übernommen",
+    body: "Du hast dich für eine Schicht eingetragen.",
+    link: `/${orgSlug}/shifts`
+  });
 
   revalidatePath(`/${orgSlug}/shifts`);
   revalidatePath(`/${orgSlug}/dashboard`);

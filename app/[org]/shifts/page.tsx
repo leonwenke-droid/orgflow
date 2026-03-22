@@ -6,6 +6,7 @@ import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganiz
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { claimShiftForAuthenticatedMember } from "../../../lib/claimShiftForMember";
 import { createUserNotification } from "../../../lib/notifications";
 
 export const dynamic = "force-dynamic";
@@ -14,17 +15,34 @@ async function claimShiftAction(formData: FormData) {
   "use server";
   const orgSlug = String(formData.get("orgSlug") ?? "").trim();
   const shiftId = String(formData.get("shiftId") ?? "").trim();
-  if (!orgSlug || !shiftId) return;
+  const organizationId = String(formData.get("organization_id") ?? "").trim();
+  if (!orgSlug || !shiftId || !organizationId) return;
 
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  const { error: rpcErr } = await supabase.rpc("claim_shift_slot", { shift_id: shiftId });
-  if (rpcErr) {
-    console.error("[claimShiftAction]", rpcErr);
+  const result = await claimShiftForAuthenticatedMember({
+    authUserId: user.id,
+    orgSlug,
+    shiftId,
+    organizationIdFromForm: organizationId
+  });
+  if (!result.ok) {
+    console.error("[claimShiftAction]", result.code);
     redirect(`/${orgSlug}/shifts?claimShift=error`);
   }
+
+  const service = createSupabaseServiceRoleClient();
+  await createUserNotification(service, {
+    profileId: result.profileId,
+    organizationId: result.organizationId,
+    type: "shift_self_claimed",
+    title: "Schicht übernommen",
+    body: "Du hast dich für eine Schicht eingetragen.",
+    link: `/${orgSlug}/shifts`
+  });
+
   revalidatePath(`/${orgSlug}/shifts`);
   revalidatePath(`/${orgSlug}/dashboard`);
 }
@@ -245,6 +263,7 @@ export default async function ShiftsViewerPage(props: {
                   {showClaim ? (
                     <form action={claimShiftAction}>
                       <input type="hidden" name="orgSlug" value={orgSlug} />
+                      <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
                       <input type="hidden" name="shiftId" value={s.id} />
                       <button className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
                         {t("shifts.claim", locale)}

@@ -3,6 +3,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
 import { writeAuditLog } from "../../../../lib/audit";
+import { claimShiftForAuthenticatedMember } from "../../../../lib/claimShiftForMember";
 import { createUserNotification } from "../../../../lib/notifications";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
@@ -25,59 +26,47 @@ export async function POST(req: Request) {
 
     const org = await getCurrentOrganization(orgSlug);
     const orgIdForData = getOrgIdForData(orgSlug, org.id);
+    const allowed = new Set([org.id, orgIdForData]);
+    const organizationIdFromForm =
+      organizationIdBody && allowed.has(organizationIdBody) ? organizationIdBody : orgIdForData;
 
-    let { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .eq("organization_id", orgIdForData)
-      .maybeSingle();
-    if (!profile && orgIdForData !== org.id) {
-      const { data: p2 } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("auth_user_id", user.id)
-        .eq("organization_id", org.id)
-        .maybeSingle();
-      profile = p2;
-    }
-    if (!profile) {
-      return NextResponse.json({ message: "You are not a member of this organisation." }, { status: 403 });
-    }
+    const result = await claimShiftForAuthenticatedMember({
+      authUserId: user.id,
+      orgSlug,
+      shiftId,
+      organizationIdFromForm
+    });
 
-    // Capacity + insert is handled atomically inside RPC (security definer).
-    const { error: rpcErr } = await supabase.rpc("claim_shift_slot", { shift_id: shiftId });
-    if (rpcErr) {
-      const msg = (rpcErr as { message?: string }).message ?? "";
-      if (/already_assigned/i.test(msg) || (rpcErr as { code?: string }).code === "23505") {
-        return NextResponse.json({ message: "You are already assigned." }, { status: 400 });
-      }
-      if (/no_free_slots/i.test(msg)) {
+    if (!result.ok) {
+      const code = result.code;
+      if (code === "full") {
         return NextResponse.json({ message: "No free slots." }, { status: 400 });
       }
-      if (/shift_not_found/i.test(msg)) {
+      if (code === "shift_not_found" || code === "wrong_org") {
         return NextResponse.json({ message: "Shift not found." }, { status: 404 });
       }
-      if (/not_member/i.test(msg)) {
+      if (code === "not_claimable") {
+        return NextResponse.json({ message: "This shift cannot be self-assigned." }, { status: 400 });
+      }
+      if (code === "not_member" || code === "viewer") {
         return NextResponse.json({ message: "You are not a member of this organisation." }, { status: 403 });
       }
       return NextResponse.json({ message: "Failed to sign up." }, { status: 500 });
     }
 
     await writeAuditLog({
-      organizationId: orgIdForData,
-      actorProfileId: (profile as { id: string }).id,
+      organizationId: result.organizationId,
+      actorProfileId: result.profileId,
       action: "shift_claimed",
       targetTable: "shifts",
       targetId: shiftId,
       metadata: {}
     });
 
-    const notifOrgId = organizationIdBody || orgIdForData;
     const svc = createSupabaseServiceRoleClient();
     await createUserNotification(svc, {
-      profileId: (profile as { id: string }).id,
-      organizationId: notifOrgId,
+      profileId: result.profileId,
+      organizationId: result.organizationId,
       type: "shift_self_claimed",
       title: "Schicht übernommen",
       body: "Du hast dich für eine Schicht eingetragen.",
