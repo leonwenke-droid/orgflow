@@ -174,11 +174,12 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
 
   const service = createSupabaseServiceRoleClient();
 
+  // Nur Schichten mit Auto-Zuteilung — reine Selbsteintragungs-Schichten (claimable) nicht per Knopf füllen.
   const { data: shifts } = await service
     .from("shifts")
     .select("id, required_slots")
     .eq("organization_id", orgId)
-    .or("auto_assign.eq.true,claimable.eq.true")
+    .eq("auto_assign", true)
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
 
@@ -327,7 +328,10 @@ async function createShifts(
           errorKey: "shifts.error_create",
         };
       }
-      await autoAssignForShifts(service, created as SimpleShift[], organizationId);
+      // Nur bei Modus „Auto-Zuteilung“ sofort Personen eintragen — nicht bei Selbsteintragung (claim).
+      if (autoAssign) {
+        await autoAssignForShifts(service, created as SimpleShift[], organizationId);
+      }
     } else {
       if (!startTime || !endTime) {
         return { errorKey: "shifts.error_timeframe" };
@@ -388,6 +392,7 @@ async function createShifts(
           has_aufbau: hasAufbau,
           has_abbau: hasAbbau,
           auto_assign: autoAssign,
+          claimable,
           ...(eventId ? { event_id: eventId } : {}),
           ...(organizationId ? { organization_id: organizationId } : {})
         });
@@ -404,7 +409,9 @@ async function createShifts(
           errorKey: "shifts.error_create",
         };
       }
-      await autoAssignForShifts(service, created as SimpleShift[], organizationId);
+      if (autoAssign) {
+        await autoAssignForShifts(service, created as SimpleShift[], organizationId);
+      }
     }
 
     revalidatePath("/admin/shifts");
