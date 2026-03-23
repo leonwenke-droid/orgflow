@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { getCurrentOrganization } from "../../../lib/getOrganization";
+import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../lib/getOrganization";
 import AuthForm from "../../../components/AuthForm";
 
 /**
@@ -18,10 +18,14 @@ export default async function OrgLoginPage({
     ? (await (params as Promise<{ org: string }>)).org
     : (params as { org: string }).org;
   const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();
-  if (user) redirect(`/${orgSlug}/admin`);
+  if (user) {
+    const canManage = await isOrgAdmin(orgIdForData);
+    redirect(`/${orgSlug}/${canManage ? "admin" : "dashboard"}`);
+  }
 
   const q = typeof (searchParams as Promise<{ redirectTo?: string }>).then === "function"
     ? await (searchParams as Promise<{ redirectTo?: string }>)
