@@ -106,14 +106,7 @@ export default async function AdminDashboard({
   const showFinanceCard = canViewFinance(userRole);
 
   const features = (org.settings?.features as Record<string, boolean>) ?? {};
-  const modules = {
-    tasks: features.tasks !== false,
-    shifts: features.shifts !== false,
-    finance: features.treasury !== false,
-    resources: (features.resources ?? features.materials ?? true) !== false,
-    engagement: features.engagement_tracking !== false,
-    events: features.events === true
-  };
+  const engagementEnabled = features.engagement_tracking !== false;
 
   /** Same order and labels as Sidebar: Core (admin subset) → Organisation → Verwaltung */
   const coreCards: AdminCard[] = [
@@ -139,42 +132,42 @@ export default async function AdminDashboard({
       icon: ClipboardList,
       titleKey: "nav.admin_tasks",
       descKey: "admin.card.tasks_desc",
-      show: modules.tasks
+      show: true
     },
     {
       href: `/${orgSlug}/admin/shifts`,
       icon: CalendarClock,
       titleKey: "nav.admin_shifts",
       descKey: "admin.card.shifts_desc",
-      show: modules.shifts
+      show: true
     },
     {
       href: `/${orgSlug}/admin/materials`,
       icon: Package,
       titleKey: "dashboard.resources",
       descKey: "admin.card.resources_desc",
-      show: modules.resources
+      show: true
     },
     {
       href: `/${orgSlug}/admin/treasury`,
       icon: Wallet,
       titleKey: "dashboard.finance",
       descKey: "admin.card.finance_desc",
-      show: modules.finance && showFinanceCard
+      show: showFinanceCard
     },
     {
       href: `/${orgSlug}/admin/scores/assign`,
       icon: Trophy,
       titleKey: "dashboard.engagement",
       descKey: "admin.card.engagement_desc",
-      show: modules.engagement
+      show: true
     },
     {
       href: `/${orgSlug}/admin/events`,
       icon: CalendarRange,
       titleKey: "events.title",
       descKey: "admin.card.events_desc",
-      show: modules.events
+      show: true
     }
   ];
 
@@ -222,7 +215,7 @@ export default async function AdminDashboard({
           cards={administrationCards}
         />
 
-        {modules.engagement && (
+        {engagementEnabled && (
           <section>
             <EngagementScoresBlock orgSlug={orgSlug} currentAuthUserId={currentAuthUserId} />
           </section>
