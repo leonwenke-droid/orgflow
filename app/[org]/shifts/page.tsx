@@ -31,6 +31,7 @@ export default async function ShiftsViewerPage(props: {
       : ((props.searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
   const claimShiftError = sp.claimShift === "error" || sp.claimShift === "1";
   const shiftsFreeOnly = sp.free === "1" || sp.free === "true";
+  const swapStatus = String(sp.swap ?? "").trim();
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
@@ -139,6 +140,21 @@ export default async function ShiftsViewerPage(props: {
       </div>
 
       {claimShiftError && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-800 dark:bg-red-900/20 dark:text-red-100">
+          {t("dashboard.claim_shift_failed", locale)}
+        </p>
+      )}
+      {swapStatus === "offered" && (
+        <p className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900 dark:border-green-800 dark:bg-green-900/20 dark:text-green-100">
+          {t("shifts.swap_offer_success", locale)}
+        </p>
+      )}
+      {swapStatus === "taken" && (
+        <p className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900 dark:border-green-800 dark:bg-green-900/20 dark:text-green-100">
+          {t("shifts.swap_take_success", locale)}
+        </p>
+      )}
+      {swapStatus === "error" && (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-800 dark:bg-red-900/20 dark:text-red-100">
           {t("dashboard.claim_shift_failed", locale)}
         </p>

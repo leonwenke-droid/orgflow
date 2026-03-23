@@ -1,6 +1,8 @@
  "use client";
 
 import { useState } from "react";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 type Task = {
   id: string;
@@ -19,6 +21,7 @@ export default function TaskConfirmationForm({
   token: string;
   task: Task;
 }) {
+  const { locale } = useLocale();
   const [status, setStatus] = useState<Task["status"]>(task.status);
   const [file, setFile] = useState<File | null>(null);
   const [comment, setComment] = useState("");
@@ -47,14 +50,14 @@ export default function TaskConfirmationForm({
       const detail = (data as { detail?: string }).detail;
       setMessage(
         detail
-          ? `${data.message || "Aktualisierung fehlgeschlagen."} (${detail})`
-          : data.message || "Aktualisierung fehlgeschlagen."
+          ? `${data.message || t("tasks.complete_error", locale)} (${detail})`
+          : data.message || t("tasks.complete_error", locale)
       );
       return;
     }
 
     setStatus(nextStatus);
-    setMessage(data.message || "Status aktualisiert.");
+    setMessage(data.message || t("tasks.complete_success", locale));
   };
 
   const disabledErledigt =
@@ -69,8 +72,8 @@ export default function TaskConfirmationForm({
         )}
         {task.due_at && (
           <p className="mt-2 text-[11px] text-gray-600">
-            Deadline:{" "}
-            {new Date(task.due_at).toLocaleString("de-DE", {
+            {t("tasks.deadline", locale)}:{" "}
+            {new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB", {
               dateStyle: "short",
               timeStyle: "short"
             })}
@@ -80,8 +83,14 @@ export default function TaskConfirmationForm({
 
       <div className="space-y-2">
         <p className="text-xs text-gray-600">
-          Current status:{" "}
-          <span className="font-semibold">{status.toUpperCase()}</span>
+          {t("tasks.current_status", locale)}:{" "}
+          <span className="font-semibold">
+            {status === "offen"
+              ? t("tasks.status_open", locale)
+              : status === "in_arbeit"
+                ? t("tasks.status_in_progress", locale)
+                : t("tasks.status_done", locale)}
+          </span>
         </p>
         <div className="flex gap-2 text-xs">
           <button
@@ -90,7 +99,7 @@ export default function TaskConfirmationForm({
             disabled={loading || status === "in_arbeit"}
             onClick={() => onUpdate("in_arbeit")}
           >
-            Set in progress
+            {t("tasks.set_in_progress", locale)}
           </button>
           <button
             type="button"
@@ -98,12 +107,12 @@ export default function TaskConfirmationForm({
             disabled={loading || disabledErledigt}
             onClick={() => onUpdate("erledigt")}
           >
-            Mark as done
+            {t("tasks.mark_done", locale)}
           </button>
         </div>
         {disabledErledigt && (
           <p className="text-[11px] text-red-600">
-            Proof is required for this task. Please upload a file first.
+            {t("tasks.proof_required_before_done", locale)}
           </p>
         )}
       </div>
@@ -111,7 +120,7 @@ export default function TaskConfirmationForm({
       <div className="space-y-2">
         <div>
           <label className="mb-1 block text-xs font-semibold text-gray-700">
-            Upload proof (PNG / JPG / PDF)
+            {t("tasks.proof_upload_hint", locale)}
           </label>
           <input
             type="file"
@@ -122,7 +131,7 @@ export default function TaskConfirmationForm({
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold text-gray-700">
-            Comment (optional, internal only)
+            {t("tasks.comment_optional", locale)}
           </label>
           <textarea
             rows={3}

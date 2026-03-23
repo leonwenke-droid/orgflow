@@ -3,6 +3,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { ADMIN_ROLES } from "../../../../lib/permissions";
 
 export const runtime = "nodejs";
 
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     let { data: profilePrimary } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, role")
       .eq("auth_user_id", user.id)
       .eq("organization_id", orgIdForData)
       .maybeSingle();
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (!profile && orgIdForData !== org.id) {
       const { data: p2 } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, role")
         .eq("auth_user_id", user.id)
         .eq("organization_id", org.id)
         .maybeSingle();
@@ -59,6 +60,8 @@ export async function POST(req: NextRequest) {
 
     const effectiveOrgId = profilePrimary ? orgIdForData : org.id;
     const profileId = profile.id as string;
+    const profileRole = String((profile as { role?: string }).role ?? "");
+    const isAdminLike = ADMIN_ROLES.includes(profileRole as (typeof ADMIN_ROLES)[number]);
 
     const service = createSupabaseServiceRoleClient();
     const { data: task, error: taskError } = await service
@@ -75,7 +78,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Task not found." }, { status: 404 });
     }
 
-    if (task.owner_id !== profileId) {
+    if (!isAdminLike && task.owner_id !== profileId) {
       return NextResponse.json(
         { message: "You can only update tasks assigned to you." },
         { status: 403 }

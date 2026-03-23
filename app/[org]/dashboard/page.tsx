@@ -328,6 +328,17 @@ export default async function OrgDashboardPage({
           .limit(6)
       : { data: [] };
 
+  const { data: orgOpenTasksForAdmin } =
+    userRole != null && ADMIN_ROLES.includes(userRole)
+      ? await service
+          .from("tasks")
+          .select("id, title, status, due_at, owner_id, claimable, committees(name)")
+          .eq("organization_id", effectiveOrgIdForData)
+          .neq("status", "erledigt")
+          .order("due_at", { ascending: true })
+          .limit(8)
+      : { data: [] };
+
   const shiftRows = (shifts ?? []) as {
     date: string;
     id: string;
@@ -518,6 +529,33 @@ export default async function OrgDashboardPage({
         </section>
       )}
 
+      {(orgOpenTasksForAdmin ?? []).length > 0 && (
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            {t("dashboard.tasks_need_attention", locale)}
+          </h2>
+          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
+            {(orgOpenTasksForAdmin ?? []).map((task: any) => (
+              <li key={task.id} className="flex items-center justify-between gap-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {(task.committees as any)?.name ?? "–"}
+                    {task.due_at
+                      ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}`
+                      : ""}
+                    {task.owner_id ? ` · ${t("tasks.claimed_by", locale)}` : ""}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                  {task.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section
         id="dashboard-upcoming-shifts"
         className="rounded-xl border-2 border-blue-100 bg-white p-5 shadow-md dark:border-blue-900/40 dark:bg-card-dark"
@@ -604,6 +642,15 @@ export default async function OrgDashboardPage({
                         {statusHint ? ` · ${statusHint}` : ""}
                       </span>
                     </p>
+                    {(s.shift_assignments ?? []).length > 0 ? (
+                      <p className="mt-1 truncate text-[11px] text-gray-500 dark:text-gray-400">
+                        {(s.shift_assignments ?? [])
+                          .map((a) => profileNames.get(a.user_id ?? a.replacement_user_id ?? "") ?? null)
+                          .filter(Boolean)
+                          .slice(0, 3)
+                          .join(" · ")}
+                      </p>
+                    ) : null}
                   </div>
                   {canShowClaim ? (
                     <ClaimShiftRefreshForm action={claimShiftFromDashboard} className="inline">

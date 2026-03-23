@@ -56,9 +56,13 @@ export async function offerShiftSwapAction(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase.rpc("offer_shift_swap", { assignment_id: assignmentId });
+  const { error } = await supabase.rpc("offer_shift_swap", { assignment_id: assignmentId });
+  if (error) {
+    redirect(`/${orgSlug}/shifts?swap=error`);
+  }
   revalidatePath(`/${orgSlug}/shifts`);
   revalidatePath(`/${orgSlug}/dashboard`);
+  redirect(`/${orgSlug}/shifts?swap=offered`);
 }
 
 export async function claimShiftSwapAction(formData: FormData) {
@@ -82,7 +86,9 @@ export async function claimShiftSwapAction(formData: FormData) {
   const originalOwnerId = (before as { user_id?: string } | null)?.user_id ?? null;
 
   const { error: rpcErr } = await supabase.rpc("claim_shift_swap", { assignment_id: assignmentId });
-  if (rpcErr) return;
+  if (rpcErr) {
+    redirect(`/${orgSlug}/shifts?swap=error`);
+  }
 
   const { data: claimerProf } = await service
     .from("profiles")
@@ -107,4 +113,5 @@ export async function claimShiftSwapAction(formData: FormData) {
 
   revalidatePath(`/${orgSlug}/shifts`);
   revalidatePath(`/${orgSlug}/dashboard`);
+  redirect(`/${orgSlug}/shifts?swap=taken`);
 }

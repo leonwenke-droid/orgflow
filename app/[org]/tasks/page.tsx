@@ -1,7 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { redirect, redirect as serverRedirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { revalidatePath } from "next/cache";
@@ -21,9 +21,13 @@ async function claimTaskAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase.rpc("claim_task", { task_id: taskId });
+  const { error } = await supabase.rpc("claim_task", { task_id: taskId });
+  if (error) {
+    serverRedirect(`/${orgSlug}/tasks?taskAction=error`);
+  }
   revalidatePath(`/${orgSlug}/tasks`);
   revalidatePath(`/${orgSlug}/dashboard`);
+  serverRedirect(`/${orgSlug}/tasks?taskAction=claimed`);
 }
 
 async function offerTaskAction(formData: FormData) {
@@ -36,18 +40,28 @@ async function offerTaskAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
-  await supabase.rpc("offer_task", { task_id: taskId });
+  const { error } = await supabase.rpc("offer_task", { task_id: taskId });
+  if (error) {
+    serverRedirect(`/${orgSlug}/tasks?taskAction=error`);
+  }
   revalidatePath(`/${orgSlug}/tasks`);
   revalidatePath(`/${orgSlug}/dashboard`);
+  serverRedirect(`/${orgSlug}/tasks?taskAction=offered`);
 }
 
 export default async function TasksViewerPage(props: {
   params: Promise<{ org: string }> | { org: string };
+  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 }) {
   const params = typeof (props.params as Promise<{ org: string }>).then === "function"
     ? await (props.params as Promise<{ org: string }>)
     : (props.params as { org: string });
   const orgSlug = params.org;
+  const sp =
+    props.searchParams && typeof (props.searchParams as Promise<unknown>).then === "function"
+      ? await (props.searchParams as Promise<Record<string, string | string[] | undefined>>)
+      : ((props.searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
+  const taskActionStatus = String(sp.taskAction ?? "").trim();
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
@@ -234,6 +248,21 @@ export default async function TasksViewerPage(props: {
           {t("common.back", locale)}
         </Link>
       </div>
+      {taskActionStatus === "claimed" && (
+        <p className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900 dark:border-green-800 dark:bg-green-900/20 dark:text-green-100">
+          {t("tasks.claim_success", locale)}
+        </p>
+      )}
+      {taskActionStatus === "offered" && (
+        <p className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900 dark:border-green-800 dark:bg-green-900/20 dark:text-green-100">
+          {t("tasks.offer_success", locale)}
+        </p>
+      )}
+      {taskActionStatus === "error" && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-800 dark:bg-red-900/20 dark:text-red-100">
+          {t("tasks.complete_error", locale)}
+        </p>
+      )}
 
       {mineSorted.length > 0 && (
         <div className="rounded-xl border-2 border-blue-300 bg-blue-50/80 p-4 shadow-sm dark:border-blue-700 dark:bg-blue-950/30">

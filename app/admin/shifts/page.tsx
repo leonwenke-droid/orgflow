@@ -276,9 +276,8 @@ async function createShifts(
     const endTime = formData.get("end_time")?.toString() || "";
     const location = formData.get("location")?.toString().trim() || null;
     const notes = formData.get("notes")?.toString().trim() || null;
-    const requiredSlots = Number(
-      formData.get("required_slots")?.toString() || "0"
-    ) || 0;
+    const requiredSlotsRaw = Number(formData.get("required_slots")?.toString() || "0");
+    const requiredSlots = Number.isFinite(requiredSlotsRaw) ? Math.max(1, Math.floor(requiredSlotsRaw)) : 1;
     const organizationId = formData.get("organization_id")?.toString() || null;
     const eventId = formData.get("event_id")?.toString().trim() || null;
     const assignmentMode = formData.get("assignment_mode")?.toString() || "claim";
@@ -335,6 +334,10 @@ async function createShifts(
     } else {
       if (!startTime || !endTime) {
         return { errorKey: "shifts.error_timeframe" };
+      }
+      const hhmmPattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+      if (!hhmmPattern.test(startTime) || !hhmmPattern.test(endTime)) {
+        return { error: "Ungueltiges Zeitformat." };
       }
       const intervalMinutes = Math.max(1, Number(formData.get("interval_minutes")?.toString() || "120") || 120);
       const addSetupTeardown = formData.get("add_setup_teardown") === "1";
