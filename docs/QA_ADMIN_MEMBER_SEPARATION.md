@@ -44,3 +44,10 @@ ESLint: Projekt nutzt `.eslintrc.json` mit `next/core-web-vitals` (kein interakt
 
 - `canManageOrg` nutzt `canManageOrg(role)` aus `lib/permissions.ts` (`admin`, `owner`, `lead`, `super_admin`).
 - Sidebar blendet Organisation-Module erst ein, wenn `canManageOrg === true` geladen ist (kein Flackern bei `null`).
+
+## Punkt C Acceptance (UX/Design)
+
+- Admin-Startseite priorisiert primäre Aktionen (Tasks/Schichten/Overview) sichtbar über sekundären Modulen.
+- Sidebar trennt Mitglieder- und Verwaltungsnavigation klar; Admin-Module sind logisch gruppiert.
+- Task-Update-Modal trennt Status, Nachweis und Ergebnis klar und zeigt verständliche Fehlermeldungen.
+- Admin-Gesamtübersicht unter `/{org}/admin/overview` bietet Wochen-/Monatsblick auf Tasks, Schichten und Events.

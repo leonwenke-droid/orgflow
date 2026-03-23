@@ -65,6 +65,7 @@ function TaskCompleteDialog({
   const [file, setFile] = useState<File | null>(null);
   const [loadingAction, setLoadingAction] = useState<null | "in_arbeit" | "erledigt">(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageTone, setMessageTone] = useState<"success" | "error" | null>(null);
   const busy = loadingAction !== null;
 
   const submit = async (nextStatus: "in_arbeit" | "erledigt") => {
@@ -85,6 +86,7 @@ function TaskCompleteDialog({
     setLoadingAction(null);
 
     if (!res.ok) {
+      setMessageTone("error");
       setMessage(
         data.detail
           ? `${data.message ?? t("tasks.complete_error", locale)} (${data.detail})`
@@ -94,6 +96,7 @@ function TaskCompleteDialog({
     }
 
     setStatus(nextStatus);
+    setMessageTone("success");
     setMessage(data.message ?? t("tasks.complete_success", locale));
     router.refresh();
     if (nextStatus === "erledigt") {
@@ -135,7 +138,7 @@ function TaskCompleteDialog({
         </div>
 
         <div className="space-y-4 text-sm">
-          <div>
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
               {task.title}
             </h3>
@@ -165,7 +168,10 @@ function TaskCompleteDialog({
             ) : null}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/40">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              {t("tasks.current_status", locale)}
+            </p>
             <p className="text-xs text-gray-600 dark:text-gray-400">
               {t("tasks.current_status", locale)}:{" "}
               <span className="font-semibold text-gray-900 dark:text-gray-100">
@@ -223,11 +229,11 @@ function TaskCompleteDialog({
             ) : null}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/40">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              {t("tasks.proof_upload_hint", locale)}
+            </p>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-                {t("tasks.proof_upload_hint", locale)}
-              </label>
               <input
                 type="file"
                 accept="image/png,image/jpeg,application/pdf"
@@ -238,7 +244,15 @@ function TaskCompleteDialog({
           </div>
 
           {message ? (
-            <p className="text-xs text-gray-600 dark:text-gray-400">{message}</p>
+            <p
+              className={`rounded px-2 py-1.5 text-xs ${
+                messageTone === "error"
+                  ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300"
+                  : "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+              }`}
+            >
+              {message}
+            </p>
           ) : null}
         </div>
       </div>

@@ -75,7 +75,7 @@ export default function AdminTasksKanban({
       {STATUS_COLUMNS.map((col) => (
         <div
           key={col.key}
-          className={`card flex flex-col gap-2 transition-colors ${
+          className={`flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors dark:border-gray-700 dark:bg-card-dark ${
             dropTarget === col.key ? "ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-gray-900" : ""
           }`}
           onDragOver={(e) => {
@@ -120,7 +120,7 @@ export default function AdminTasksKanban({
                       setDraggingId(task.id);
                     }}
                     onDragEnd={() => setDraggingId(null)}
-                    className={`cursor-grab rounded-lg border bg-white p-2 shadow-sm active:cursor-grabbing dark:bg-card-dark ${
+                    className={`cursor-grab rounded-lg border bg-gray-50 p-2 shadow-sm active:cursor-grabbing dark:bg-gray-900/40 ${
                       overdue ? "border-red-300 dark:border-red-700" : "border-gray-200 dark:border-gray-700"
                     } ${draggingId === task.id ? "opacity-60" : ""}`}
                   >

@@ -76,10 +76,11 @@ function getNavSections(
     { href: `/${org}/me`, labelKey: "nav.my_stats", icon: BarChart3 },
     { href: `/${org}/account`, labelKey: "nav.my_account", icon: UserCircle },
     { href: `/${org}/feedback`, labelKey: "nav.feedback", icon: MessageSquare },
-    ...(manage ? [{ href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users }] : []),
-    ...(manage ? [{ href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }] : []),
   ];
   const orgItems: NavItem[] = [
+    ...(manage ? [{ href: `/${org}/admin/overview`, labelKey: "admin.card.overview_title", icon: CalendarRange }] : []),
+    ...(manage ? [{ href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users }] : []),
+    ...(manage ? [{ href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }] : []),
     ...(manage && m.tasks !== false
       ? [{ href: `/${org}/admin/tasks`, labelKey: "nav.admin_tasks", icon: ClipboardList }]
       : []),
@@ -89,7 +90,7 @@ function getNavSections(
     ...(manage && m.resources !== false ? [{ href: `/${org}/admin/materials`, labelKey: "dashboard.resources", icon: Package }] : []),
     ...(manage && showFinance ? [{ href: `/${org}/admin/treasury`, labelKey: "dashboard.finance", icon: Wallet }] : []),
     ...(manage && m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy }] : []),
-    ...(manage && m.events ? [{ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange }] : []),
+    ...(manage && m.events ? [{ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarClock }] : []),
   ];
   return [
     { titleKey: "nav.core", items: core },
