@@ -11,7 +11,7 @@ import ShiftPlanWeekNav from "../../../components/ShiftPlanWeekNav";
 import EmptyState from "../../../components/EmptyState";
 import OnboardingBanner from "../../../components/OnboardingBanner";
 import OnboardingChecklist from "../../../components/OnboardingChecklist";
-import { ArrowLeftRight, CheckSquare, Users, Wallet } from "lucide-react";
+import { ArrowLeftRight, CheckSquare, Trophy, Users, Wallet } from "lucide-react";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin, getCurrentUserRoleInOrg } from "../../../lib/getOrganization";
 import { ADMIN_ROLES, canViewFinance } from "../../../lib/permissions";
@@ -257,6 +257,8 @@ export default async function OrgDashboardPage({
   const in7 = new Date();
   in7.setDate(in7.getDate() + 7);
   const in7Str = in7.toISOString().slice(0, 10);
+  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const engagementEnabled = orgFeatures.engagement_tracking !== false;
 
   const { data: myAssignedShifts } = myProfileId
     ? await service
@@ -295,6 +297,23 @@ export default async function OrgDashboardPage({
       .neq("status", "erledigt");
     myOpenTaskCount = count ?? 0;
   }
+
+  const { data: engagementRows } =
+    engagementEnabled && myProfileId
+      ? await service
+          .from("engagement_scores")
+          .select("user_id, score")
+          .eq("organization_id", effectiveOrgIdForData)
+          .order("score", { ascending: false })
+      : { data: [] };
+
+  const myEngagementScoreRow = (engagementRows ?? []).find((row) => row.user_id === myProfileId);
+  const myEngagementScore = typeof myEngagementScoreRow?.score === "number" ? myEngagementScoreRow.score : 0;
+  const myEngagementRank =
+    myEngagementScoreRow && engagementRows
+      ? 1 + (engagementRows ?? []).filter((row) => (row.score ?? 0) > myEngagementScore).length
+      : null;
+  const engagementRankingTotal = (engagementRows ?? []).length;
 
   const { data: poolClaimableTasks } =
     myProfileId && canClaimShifts
@@ -360,9 +379,6 @@ export default async function OrgDashboardPage({
   const upcomingShiftsNext7DaysDisplay = shiftsFreeOnly
     ? upcomingShiftsNext7Days.filter(shiftHasFreeSlot)
     : upcomingShiftsNext7Days;
-
-  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = orgFeatures.engagement_tracking !== false;
 
   const freeSlotsInSevenDayHero = upcomingShiftsNext7DaysDisplay.filter(shiftHasFreeSlot).length;
   const poolTaskCount = (poolClaimableTasks ?? []).length;
@@ -472,6 +488,34 @@ export default async function OrgDashboardPage({
             ) : null}
           </ul>
         </div>
+      )}
+
+      {engagementEnabled && myProfileId && (
+        <section className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <Trophy className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" aria-hidden />
+            <span>{t("dashboard.my_engagement", locale)}</span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+            <span>
+              <span className="text-gray-500 dark:text-gray-400">{t("dashboard.my_engagement_score", locale)}:</span>{" "}
+              <span className="font-semibold tabular-nums text-gray-900 dark:text-gray-100">{myEngagementScore}</span>
+            </span>
+            <span className="select-none text-gray-300 dark:text-gray-600" aria-hidden>
+              |
+            </span>
+            <span>
+              <span className="text-gray-500 dark:text-gray-400">{t("dashboard.my_engagement_rank", locale)}:</span>{" "}
+              <span className="font-semibold tabular-nums text-gray-900 dark:text-gray-100">
+                {myEngagementRank != null
+                  ? t("dashboard.my_engagement_rank_of", locale)
+                      .replace("{rank}", String(myEngagementRank))
+                      .replace("{total}", String(engagementRankingTotal))
+                  : t("dashboard.my_engagement_rank_unranked", locale)}
+              </span>
+            </span>
+          </div>
+        </section>
       )}
 
       <section
