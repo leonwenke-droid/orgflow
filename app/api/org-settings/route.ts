@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         .eq("organization_id", orgIdForData)
         .maybeSingle();
 
-      // Legacy/TGG: if the profile is not stored under orgIdForData (mapped),
+      // Legacy: if the profile is not stored under orgIdForData (mapped),
       // try again under the raw org.id.
       const shouldFallbackToRawOrg = !profilePrimary && orgIdForData !== o.id;
       const { data: profileFallback } = shouldFallbackToRawOrg

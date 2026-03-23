@@ -1,4 +1,5 @@
 import "./globals.css";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -11,10 +12,20 @@ import CookieNotice from "../components/CookieNotice";
 import ConsentSync from "../components/ConsentSync";
 import FooterLinks from "../components/FooterLinks";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "OrgFlow",
   description:
-    "OrgFlow helps teams and organisations coordinate tasks, shifts and finances in one place — without spreadsheet chaos."
+    "OrgFlow helps teams and organisations coordinate tasks, shifts and finances in one place — without spreadsheet chaos.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "OrgFlow"
+  }
+};
+
+export const viewport = {
+  themeColor: "#2563eb"
 };
 
 function EnvErrorPage() {

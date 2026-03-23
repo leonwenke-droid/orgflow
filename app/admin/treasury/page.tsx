@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import TreasuryUploadForm from "../../../components/TreasuryUploadForm";
 import TreasuryEntryForm from "../../../components/TreasuryEntryForm";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { formatCurrency } from "../../../lib/currency";
+import { formatTreasuryBalanceDate } from "../../../lib/formatDate";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 import { canViewFinance } from "../../../lib/permissions";
 import FinanceCategoriesForm from "./FinanceCategoriesForm";
@@ -28,11 +28,18 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   } = await supabase.auth.getUser();
   const userId = user?.id;
 
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+
   if (!userId) {
     const loginHref = orgSlug ? `/${orgSlug}/login` : "/";
     return (
       <p className="text-sm text-amber-300">
-        Session not recognised. Please <a href={loginHref} className="underline">sign in again</a>.
+        {t("finance.session_not_recognised", locale)}{" "}
+        <a href={loginHref} className="underline">
+          {t("finance.sign_in_again", locale)}
+        </a>
+        .
       </p>
     );
   }
@@ -82,7 +89,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   if (!profile || !canViewFinance((profile as { role?: any }).role)) {
     return (
       <p className="text-sm text-red-300">
-        Access only for authorised roles.
+        {t("finance.access_denied", locale)}
       </p>
     );
   }
@@ -99,8 +106,6 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
     orgSettings = (orgRow?.settings as { currency?: string }) ?? {};
   }
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
   const currencyCode = orgSettings.currency ?? "EUR";
   const localeForCurrency = locale === "de" ? "de-DE" : "en-GB";
 
@@ -164,35 +169,33 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
     else byMonth[monthKey].expense += Number(e.amount_cents);
   }
   const monthKeys = Object.keys(byMonth).sort().reverse().slice(0, 6);
-  const defaultCellRef = process.env.TREASURY_EXCEL_CELL ?? "M9";
+  const defaultCellRef = process.env.TREASURY_EXCEL_CELL ?? "";
 
   return (
     <div className="space-y-4">
       {effectiveOrgSlug && (
-        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel="Treasury" />
+        <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel={t("dashboard.finance", locale)} />
       )}
-      <section className="card space-y-2">
-        <h2 className="text-sm font-semibold text-gray-700">
+      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900/40">
+        <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
           {t("finance.balance_label", locale).replace("{currency}", currencyCode)}
-        </h2>
-        <p className="text-xs text-gray-600">
-          You can either{" "}
-          <span className="font-semibold">enter the balance manually</span> or update via{" "}
-          <span className="font-semibold">Excel (.xlsx)</span>. By default, Excel uses cell{" "}
-          <code className="rounded bg-gray-100 px-1">
-            {defaultCellRef}
-          </code>{" "}
-          as the balance – you can change this in the form.
         </p>
-        {lastUpdate && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Last balance:{" "}
-            <span className="font-semibold">
+        {lastUpdate ? (
+          <>
+            <p className="mt-2 text-4xl font-bold tabular-nums tracking-tight text-gray-900 dark:text-gray-100">
               {formatCurrency(Number(lastUpdate.amount), localeForCurrency, currencyCode)}
-            </span>{" "}
-            ({new Date(lastUpdate.created_at).toLocaleString(localeForCurrency)})
-          </p>
+            </p>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              {t("finance.metric_last_balance_label", locale)}{" "}
+              {formatTreasuryBalanceDate(lastUpdate.created_at, locale)}
+            </p>
+          </>
+        ) : (
+          <p className="mt-2 text-3xl font-semibold text-gray-400 dark:text-gray-500">—</p>
         )}
+        <p className="mt-4 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+          {t("finance.balance_intro", locale)}
+        </p>
       </section>
 
       <section className="card">
@@ -212,7 +215,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
               className="text-xs text-blue-600 underline hover:text-blue-700 dark:text-blue-400"
               href={`/api/treasury/export?organization_id=${encodeURIComponent(orgIdForData)}`}
             >
-              Export CSV
+              {t("common.export_csv", locale)}
             </a>
           </div>
           <div className="mt-3">

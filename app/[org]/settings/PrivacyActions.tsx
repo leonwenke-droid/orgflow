@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "../../../components/LocaleProvider";
 import { t } from "../../../lib/i18n";
+import { Button } from "../../../components/ui/Button";
 
 export default function PrivacyActions({ orgSlug }: { orgSlug: string }) {
   const { locale } = useLocale();
@@ -75,14 +76,9 @@ export default function PrivacyActions({ orgSlug }: { orgSlug: string }) {
           placeholder={locale === "de" ? "Optionaler Grund…" : "Optional reason…"}
         />
         <div className="mt-3 flex items-center gap-3">
-          <button
-            type="button"
-            disabled={loading}
-            onClick={submitDeletionRequest}
-            className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20"
-          >
-            {loading ? t("common.loading", locale) : (locale === "de" ? "Anfrage senden" : "Submit request")}
-          </button>
+          <Button type="button" variant="destructive" disabled={loading} onClick={submitDeletionRequest} className="text-sm font-semibold">
+            {loading ? t("common.loading", locale) : locale === "de" ? "Anfrage senden" : "Submit request"}
+          </Button>
           {message && <span className="text-xs text-gray-600 dark:text-gray-400">{message}</span>}
         </div>
       </div>

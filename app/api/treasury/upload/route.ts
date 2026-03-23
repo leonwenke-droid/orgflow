@@ -112,7 +112,10 @@ export async function POST(req: NextRequest) {
     const sheet = workbook.Sheets[sheetName];
 
     const cellRefRaw = formData.get("cell_ref")?.toString().trim().toUpperCase();
-    const cellRef = cellRefRaw || (process.env.TREASURY_EXCEL_CELL ?? "M9");
+    const cellRef = cellRefRaw || process.env.TREASURY_EXCEL_CELL?.trim().toUpperCase() || "";
+    if (!cellRef) {
+      return NextResponse.json({ errorKey: "finance.cell_required" }, { status: 400 });
+    }
     const cell = sheet[cellRef];
 
     if (!cell || typeof cell.v === "undefined") {

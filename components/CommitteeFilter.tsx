@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLocale } from "./LocaleProvider";
+import { t } from "../lib/i18n";
 
 type Committee = { id: string; name: string };
 
@@ -13,6 +15,7 @@ export default function CommitteeFilter({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { locale } = useLocale();
   const current = searchParams.get("committee") ?? "";
 
   function handleChange(value: string) {
@@ -33,7 +36,7 @@ export default function CommitteeFilter({
         onChange={(e) => handleChange(e.target.value)}
         className="min-w-[160px] rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
       >
-        <option value="">All teams</option>
+        <option value="">{t("teams.all_teams", locale)}</option>
         {committees.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}

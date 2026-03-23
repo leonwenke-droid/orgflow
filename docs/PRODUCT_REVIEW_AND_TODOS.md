@@ -7,7 +7,7 @@ Stand: Analyse auf Basis des Repos (Next.js App Router, Supabase). Kein Live-Aud
 | Bereich        | Implementierung |
 |----------------|-----------------|
 | Multi-Tenant   | `organization_id` auf Entitäten; Slug/Subdomain über `getCurrentOrganization` |
-| TGG-Sonderfall | `getOrgIdForData` mappt Slugs `abi-2026-tgg` / `abi2026-tgg` auf feste UUID (`TGG_ORG_ID`) |
+| Slug-Aliasse   | `organizations.slug_aliases` (z. B. `abi2026-tgg` → gleiche Zeile wie `abi-2026-tgg`); `getOrgIdForData` gibt nur noch die kanonische `organizations.id` zurück |
 | Auth           | Supabase Auth, Cookies; **eine Session pro Browser** |
 | Admin-UI       | Kanonisch `/admin/...?org=…`, Org-Admin-Routen oft Redirect |
 | Schicht-Claim  | Server: `lib/claimShiftForMember.ts` (Service-Role + Prüfungen), nicht nur RPC |

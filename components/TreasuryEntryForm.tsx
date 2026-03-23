@@ -57,7 +57,9 @@ export default function TreasuryEntryForm({
           <input type="text" name="description" placeholder="" className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
         </div>
         <div>
-          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">Category</label>
+          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">
+            {t("finance.entry_category", locale)}
+          </label>
           <select name="category" className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
             <option value="">—</option>
             {(categories ?? []).map((c) => (
@@ -83,7 +85,7 @@ export default function TreasuryEntryForm({
         </div>
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-      {success && <p className="text-xs text-green-600 dark:text-green-400">Saved.</p>}
+      {success && <p className="text-xs text-green-600 dark:text-green-400">{t("finance.entry_saved", locale)}</p>}
       <button type="submit" disabled={loading} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600">
         {loading ? t("finance.saving", locale) : t("common.save", locale)}
       </button>

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { removeScoreImport } from "./actions";
 import { useLocale } from "../../../../../components/LocaleProvider";
 import { t } from "../../../../../lib/i18n";
+import { formatLocaleDateTime } from "../../../../../lib/formatDate";
+import { Button } from "../../../../../components/ui/Button";
 
 type LogEntry = {
   id: string;
@@ -41,21 +43,6 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
 
   if (entries.length === 0) return null;
 
-  function formatDate(iso: string) {
-    try {
-      const d = new Date(iso);
-      return d.toLocaleString("de-DE", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    } catch {
-      return "–";
-    }
-  }
-
   return (
     <section className="mt-10 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
       <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -85,7 +72,7 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
             {entries.map((e) => (
               <tr key={e.id} className="border-b border-gray-100 text-gray-700">
                 <td className="whitespace-nowrap py-2.5 pr-4 text-gray-600">
-                  {formatDate(e.created_at)}
+                  {formatLocaleDateTime(e.created_at, locale)}
                 </td>
                 <td className="py-2.5 pr-4">{e.recipientName}</td>
                 <td className="py-2.5 pr-4 text-right tabular-nums font-medium">
@@ -99,14 +86,16 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
                   {e.canRemove ? (
                     <form action={handleRemove} className="inline">
                       <input type="hidden" name="logId" value={e.id} />
-                      <button
+                      <Button
                         type="submit"
+                        variant="destructive"
+                        size="sm"
                         disabled={removingId === e.id}
-                        className="rounded px-2 py-1 text-[10px] text-red-600 hover:bg-red-100 disabled:opacity-50"
+                        className="px-2 py-1 text-[10px] font-normal"
                         title={t("engagement.remove_points", locale)}
                       >
                         {removingId === e.id ? "…" : t("common.remove", locale)}
-                      </button>
+                      </Button>
                     </form>
                   ) : null}
                 </td>

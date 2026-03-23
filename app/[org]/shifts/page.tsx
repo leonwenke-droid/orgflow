@@ -3,13 +3,9 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
-import {
-  localeFromCookie,
-  LOCALE_COOKIE_NAME,
-  t,
-  formatShiftSlotsLabel,
-  shiftSlotTrafficClass
-} from "../../../lib/i18n";
+import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { formatShiftSlot, type AppLocale } from "../../../lib/formatDate";
+import { ShiftAvailability } from "../../../components/ui/ShiftAvailability";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import ClaimShiftRefreshForm from "../../../components/ClaimShiftRefreshForm";
@@ -39,7 +35,6 @@ export default async function ShiftsViewerPage(props: {
 
   const cookieStore = await cookies();
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
-  const localeForDate = locale === "de" ? "de-DE" : "en-GB";
 
   const authSupabase = createServerComponentClient({ cookies });
   const { data: { user } } = await authSupabase.auth.getUser();
@@ -53,7 +48,7 @@ export default async function ShiftsViewerPage(props: {
     .eq("organization_id", orgIdForData)
     .maybeSingle();
 
-  // Legacy/TGG fallback: profiles können unter der "rohen" org.id liegen.
+  // Legacy-Mapping: Profile können unter der kanonischen org.id liegen.
   const { data: meFallback } = (!mePrimary && orgIdForData !== org.id)
     ? await service
         .from("profiles")
@@ -212,15 +207,17 @@ export default async function ShiftsViewerPage(props: {
                       ) : null}
                     </p>
                     <p className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                      <span
-                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${shiftSlotTrafficClass(free, required)}`}
-                        title={formatShiftSlotsLabel(locale, free, required)}
-                        aria-hidden
+                      <ShiftAvailability
+                        free={free}
+                        required={required}
+                        locale={locale}
+                        textClassName="text-xs text-gray-500 dark:text-gray-400"
                       />
                       <span>
-                        {s.date ? new Date(s.date).toLocaleDateString(localeForDate) : "–"} · {s.start_time ?? ""}-{s.end_time ?? ""}
+                        {s.date
+                          ? formatShiftSlot(String(s.date), s.start_time, s.end_time, locale as AppLocale)
+                          : "–"}
                         {s.location ? ` · ${s.location}` : ""}
-                        {` · ${formatShiftSlotsLabel(locale, free, required)}`}
                       </span>
                     </p>
                   </div>
@@ -253,7 +250,9 @@ export default async function ShiftsViewerPage(props: {
                 <div>
                   <p className="font-medium text-gray-900 dark:text-gray-100">{shift.event_name || t("dashboard.shifts", locale)}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {shift.date ? new Date(shift.date).toLocaleDateString(localeForDate) : "–"} · {shift.start_time ?? ""}-{shift.end_time ?? ""}
+                    {shift.date
+                      ? formatShiftSlot(String(shift.date), shift.start_time, shift.end_time, locale as AppLocale)
+                      : "–"}
                     {shift.location ? ` · ${shift.location}` : ""}
                   </p>
                 </div>
@@ -311,7 +310,9 @@ export default async function ShiftsViewerPage(props: {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {s.date ? new Date(s.date).toLocaleDateString(localeForDate) : "–"} · {s.start_time ?? ""}-{s.end_time ?? ""}
+                  {s.date
+                    ? formatShiftSlot(String(s.date), s.start_time, s.end_time, locale as AppLocale)
+                    : "–"}
                   {s.location ? ` · ${s.location}` : ""}
                 </p>
               </li>

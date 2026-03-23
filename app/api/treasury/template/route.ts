@@ -6,14 +6,14 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
-    ["OrgFlow Treasury Template"],
+    ["OrgFlow Finanzen-Vorlage"],
     [],
-    ["Put your treasury balance into cell M9 (or change the cell in the upload form)."],
+    ["Trage deinen Kontostand in Zelle M9 ein (oder ändere die Zelle im Upload-Formular)."],
     [],
-    ["Example:"],
+    ["Beispiel:"],
     ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
   ]);
-  XLSX.utils.book_append_sheet(wb, ws, "Treasury");
+  XLSX.utils.book_append_sheet(wb, ws, "Finanzen");
 
   // Ensure M9 exists (row 9, col 13)
   const addr = XLSX.utils.encode_cell({ r: 8, c: 12 });
@@ -23,7 +23,7 @@ export async function GET() {
   return new NextResponse(buf, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": 'attachment; filename="orgflow_treasury_template.xlsx"',
+      "Content-Disposition": 'attachment; filename="orgflow_finanzen_vorlage.xlsx"',
     },
   });
 }

@@ -3,7 +3,7 @@ import { getCurrentUserOrganization } from "../../lib/getOrganization";
 
 /**
  * Leitet auf das Admin-Board der Organisation des eingeloggten Users weiter.
- * Multi-Tenant: /admin → /[slug]/admin (z. B. /abi-2026-tgg/admin).
+ * Multi-Tenant: /admin → /[slug]/admin (z. B. /mein-verein/admin).
  */
 export default async function AdminRedirect() {
   const org = await getCurrentUserOrganization();

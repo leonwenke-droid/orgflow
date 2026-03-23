@@ -3,18 +3,12 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { DbRole } from "../types";
 
-/** Feste Org-ID für den Jahrgang TGG (alle Profile/Scores haben organization_id = diese ID). */
-export const TGG_ORG_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
-
-const TGG_SLUGS = ["abi-2026-tgg", "abi2026-tgg"];
-
 /**
- * Für Slug abi-2026-tgg/abi2026-tgg wird immer TGG_ORG_ID verwendet (Profile haben bereits diese organization_id).
- * Sonst die übergebene orgId (aus getCurrentOrganization).
+ * Canonical organization id for data keyed to the resolved org row (from URL slug or subdomain,
+ * including matches via `organizations.slug_aliases`).
  */
-export function getOrgIdForData(orgSlug: string, orgId: string): string {
-  const slug = String(orgSlug || "").trim();
-  return TGG_SLUGS.includes(slug) ? TGG_ORG_ID : orgId;
+export function getOrgIdForData(_orgSlug: string, orgId: string): string {
+  return String(orgId ?? "").trim();
 }
 
 export interface Organization {
@@ -27,6 +21,7 @@ export interface Organization {
   school_short: string | null;
   school_city: string | null;
   year: number;
+  slug_aliases?: string[];
   settings: {
     currency?: string;
     timezone?: string;
@@ -34,6 +29,8 @@ export interface Organization {
     engagement_weights?: Record<string, number>;
     contact_email?: string;
     contact_phone?: string;
+    /** DB opt-in for legacy admin bulk repair (dangerous). */
+    legacy_bulk_sync?: boolean;
   };
   is_active: boolean;
   created_at: string;
@@ -53,15 +50,31 @@ export async function getCurrentOrganization(
   const value = String(slugOrSubdomain).trim();
   const quoted = `"${value.replace(/"/g, '""')}"`;
 
-  const { data: org, error } = await supabase
+  let { data: org, error } = await supabase
     .from("organizations")
     .select("*")
     .or(`slug.eq.${quoted},subdomain.eq.${quoted}`)
     .eq("is_active", true)
-    .single();
+    .maybeSingle();
 
-  if (error || !org) {
+  if (error) {
     notFound();
+  }
+
+  if (!org) {
+    const { data: aliasRows, error: aliasError } = await supabase
+      .from("organizations")
+      .select("*")
+      .eq("is_active", true)
+      .contains("slug_aliases", [value]);
+
+    if (aliasError || !aliasRows?.length) {
+      notFound();
+    }
+    if (aliasRows.length !== 1) {
+      notFound();
+    }
+    org = aliasRows[0];
   }
 
   const o = org as Organization;
@@ -157,42 +170,21 @@ export async function getCurrentUserOrganization(): Promise<Organization | null>
       .eq("auth_user_id", user.id)
       .single();
     if (!profile?.organization_id || profile.status === "disabled") return null;
-    let { data: org } = await supabase
+    const { data: org } = await supabase
       .from("organizations")
       .select("*")
       .eq("id", profile.organization_id)
       .eq("is_active", true)
-      .single();
-    // TGG legacy: profile.organization_id may be TGG_ORG_ID while org row has another id; resolve by slug
-    if (!org && profile.organization_id === TGG_ORG_ID) {
-      const { data: bySlug } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("slug", "abi-2026-tgg")
-        .eq("is_active", true)
-        .maybeSingle();
-      org = bySlug;
-    }
+      .maybeSingle();
     return (org as Organization) ?? null;
   }
 
-  let { data: org } = await supabase
+  const { data: org } = await supabase
     .from("organizations")
     .select("*")
     .eq("id", orgId)
     .eq("is_active", true)
-    .single();
-
-  // TGG legacy: RPC may return TGG_ORG_ID but org row might use different id; resolve by slug
-  if (!org && orgId === TGG_ORG_ID) {
-    const { data: bySlug } = await supabase
-      .from("organizations")
-      .select("*")
-      .eq("slug", "abi-2026-tgg")
-      .eq("is_active", true)
-      .maybeSingle();
-    org = bySlug;
-  }
+    .maybeSingle();
 
   return (org as Organization) ?? null;
 }

@@ -15,7 +15,7 @@ export type ClaimShiftErrorCode =
   | "viewer"
   | "insert_failed";
 
-/** Exported for check-in and other server routes that resolve a member profile in org context (e.g. TGG). */
+/** Exported for check-in and other server routes that resolve a member profile in org context. */
 export function pickProfileForShiftClaim(
   profiles: { id: string; organization_id: string; role: string | null; status: string | null }[],
   shiftOrgId: string,
@@ -33,7 +33,7 @@ export function pickProfileForShiftClaim(
 /**
  * Schicht-Selbsteintragung mit Service-Role (umgeht RLS/RPC-Probleme), aber streng geprüft:
  * Schicht muss zu organizationIdFromForm passen; Nutzer muss Profil in derselben „Org-Kontext“-Menge haben
- * (org.id + getOrgIdForData, z. B. TGG-Fallback).
+ * (org.id + getOrgIdForData, inkl. Slug-/Alias-Mapping).
  */
 export async function claimShiftForAuthenticatedMember(opts: {
   authUserId: string;

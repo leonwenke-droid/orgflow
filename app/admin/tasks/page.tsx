@@ -11,6 +11,7 @@ import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner
 import CommitteeFilter from "../../../components/CommitteeFilter";
 import EmptyState from "../../../components/EmptyState";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t as tr } from "../../../lib/i18n";
+import { formatLocaleDateTime } from "../../../lib/formatDate";
 import AdminTasksKanban from "./AdminTasksKanban";
 import { restoreTask } from "./kanban-actions";
 import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
@@ -343,7 +344,9 @@ export default async function AdminTasksPage(props: PageProps) {
               <form key={task.id} action={restoreTask} className="flex items-center justify-between gap-2 rounded border border-gray-200 px-3 py-2 text-xs dark:border-gray-700">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{task.title || "Untitled task"}</p>
-                  <p className="text-gray-500">{task.deleted_at ? new Date(task.deleted_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB") : "—"}</p>
+                  <p className="text-gray-500">
+                    {task.deleted_at ? formatLocaleDateTime(task.deleted_at, locale) : "—"}
+                  </p>
                 </div>
                 <input type="hidden" name="taskId" value={task.id} />
                 <input type="hidden" name="organization_id" value={orgId} />

@@ -2,6 +2,8 @@
 
 import { useFormStatus } from "react-dom";
 import type { ButtonHTMLAttributes } from "react";
+import { buttonClassName } from "./ui/Button";
+import type { ButtonVariant } from "./ui/Button";
 
 function Spinner() {
   return (
@@ -15,6 +17,9 @@ function Spinner() {
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode;
   loadingLabel?: string;
+  /** When set, base styles come from the design-system Button (merged with `className`). */
+  variant?: ButtonVariant;
+  buttonSize?: "sm" | "md";
 };
 
 /**
@@ -26,16 +31,21 @@ export default function SubmitButtonWithSpinner({
   loadingLabel,
   disabled,
   className = "",
+  variant,
+  buttonSize = "sm",
   ...rest
 }: Props) {
   const { pending } = useFormStatus();
   const isDisabled = disabled || pending;
 
+  const mergedClassName =
+    variant != null ? buttonClassName(variant, buttonSize, className) : className;
+
   return (
     <button
       type="submit"
       disabled={isDisabled}
-      className={className}
+      className={mergedClassName}
       aria-busy={pending}
       {...rest}
     >

@@ -5,23 +5,27 @@ import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { removePastShifts } from "../../../lib/cleanupShifts";
 import { getDashboardDisplayNames } from "../../../lib/displayName";
-import { formatWeekRangeLabel, formatDateTimeForDisplay, getTodayDateString } from "../../../lib/dateFormat";
+import { formatWeekRangeLabel, getTodayDateString } from "../../../lib/dateFormat";
+import {
+  getGreeting,
+  formatShiftSlot,
+  formatLocaleDateTime,
+  nextEngagementMilestone,
+  type AppLocale
+} from "../../../lib/formatDate";
 import { DEFAULT_CURRENCY, formatCurrency } from "../../../lib/currency";
 import ShiftPlanWeekNav from "../../../components/ShiftPlanWeekNav";
 import EmptyState from "../../../components/EmptyState";
 import OnboardingBanner from "../../../components/OnboardingBanner";
 import OnboardingChecklist from "../../../components/OnboardingChecklist";
-import { ArrowLeftRight, CheckSquare, Trophy, Users, Wallet } from "lucide-react";
+import { ArrowLeftRight, CalendarDays, CheckSquare, Trophy, Users, Wallet, AlertTriangle } from "lucide-react";
+import Link from "next/link";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin, getCurrentUserRoleInOrg } from "../../../lib/getOrganization";
 import { ADMIN_ROLES, canViewFinance } from "../../../lib/permissions";
-import {
-  localeFromCookie,
-  LOCALE_COOKIE_NAME,
-  t,
-  formatShiftSlotsLabel,
-  shiftSlotTrafficClass
-} from "../../../lib/i18n";
+import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { ShiftAvailability } from "../../../components/ui/ShiftAvailability";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { claimShiftFromDashboard } from "./actions";
 import TaskCompleteModalButton from "../../../components/TaskCompleteModal";
@@ -408,14 +412,9 @@ export default async function OrgDashboardPage({
     <div className="space-y-6">
       <header className="border-b border-gray-200 pb-3 dark:border-gray-700">
         <h1 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-          <span>
-            {myName
-              ? t("dashboard.greeting_named", locale).replace("{name}", myName)
-              : t("dashboard.greeting", locale)}
-          </span>
-          <span className="ml-1 font-normal" aria-hidden>
-            👋
-          </span>
+          {myName
+            ? `${getGreeting(locale as AppLocale)}, ${myName}`
+            : getGreeting(locale as AppLocale)}
         </h1>
         <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
           {orgHeaderLabel} – {t("dashboard.overview_short", locale)}
@@ -470,36 +469,70 @@ export default async function OrgDashboardPage({
         </p>
       )}
 
-      {(freeSlotsInSevenDayHero > 0 || poolTaskCount > 0 || overdueMyTasks > 0) && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50/90 px-4 py-3 text-sm dark:border-blue-900/60 dark:bg-blue-950/40">
-          <p className="font-semibold text-blue-900 dark:text-blue-100">
-            {t("dashboard.action_now_title", locale)}
-          </p>
-          <ul className="mt-2 list-inside list-disc space-y-1 text-blue-900/90 dark:text-blue-100/90">
+      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          {t("dashboard.today_section_title", locale)}
+        </h2>
+        {freeSlotsInSevenDayHero === 0 && poolTaskCount === 0 && overdueMyTasks === 0 ? (
+          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">{t("dashboard.action_all_done", locale)}</p>
+        ) : (
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {freeSlotsInSevenDayHero > 0 ? (
-              <li>
-                {t("dashboard.action_free_shifts", locale).replace(
-                  "{count}",
-                  String(freeSlotsInSevenDayHero)
-                )}
-              </li>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+                <div className="flex items-start gap-2">
+                  <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {t("dashboard.upcoming_shifts_7d_title", locale)}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                      {t("dashboard.action_free_shifts", locale).replace("{count}", String(freeSlotsInSevenDayHero))}
+                    </p>
+                    <Link
+                      href={`/${orgSlug}/dashboard#dashboard-upcoming-shifts`}
+                      className="mt-2 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      {t("common.view", locale)}
+                    </Link>
+                  </div>
+                </div>
+              </div>
             ) : null}
             {poolTaskCount > 0 ? (
-              <li>
-                {t("dashboard.action_pool_tasks", locale).replace("{count}", String(poolTaskCount))}
-              </li>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+                <div className="flex items-start gap-2">
+                  <CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("dashboard.pool_tasks_title", locale)}</p>
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                      {t("dashboard.action_pool_tasks", locale).replace("{count}", String(poolTaskCount))}
+                    </p>
+                    <Link href={`/${orgSlug}/tasks`} className="mt-2 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">
+                      {t("tasks.claim", locale)}
+                    </Link>
+                  </div>
+                </div>
+              </div>
             ) : null}
             {overdueMyTasks > 0 ? (
-              <li>
-                {t("dashboard.action_overdue_tasks", locale).replace(
-                  "{count}",
-                  String(overdueMyTasks)
-                )}
-              </li>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("dashboard.my_open_tasks", locale)}</p>
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                      {t("dashboard.action_overdue_tasks", locale).replace("{count}", String(overdueMyTasks))}
+                    </p>
+                    <Link href={`/${orgSlug}/tasks`} className="mt-2 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">
+                      {t("common.view", locale)}
+                    </Link>
+                  </div>
+                </div>
+              </div>
             ) : null}
-          </ul>
-        </div>
-      )}
+          </div>
+        )}
+      </section>
 
       {engagementEnabled && myProfileId && (
         <section className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-card-dark">
@@ -507,24 +540,44 @@ export default async function OrgDashboardPage({
             <Trophy className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" aria-hidden />
             <span>{t("dashboard.my_engagement", locale)}</span>
           </div>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+            {t("dashboard.engagement_milestone", locale)
+              .replace("{score}", String(myEngagementScore))
+              .replace("{next}", String(nextEngagementMilestone(myEngagementScore)))}
+          </p>
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+            <div
+              className="h-full rounded-full bg-amber-500 transition-[width] dark:bg-amber-400"
+              style={{
+                width: `${Math.min(
+                  100,
+                  (myEngagementScore / Math.max(1, nextEngagementMilestone(myEngagementScore))) * 100
+                )}%`
+              }}
+            />
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
             <span>
               <span className="text-gray-500 dark:text-gray-400">{t("dashboard.my_engagement_score", locale)}:</span>{" "}
               <span className="font-semibold tabular-nums text-gray-900 dark:text-gray-100">{myEngagementScore}</span>
             </span>
-            <span className="select-none text-gray-300 dark:text-gray-600" aria-hidden>
-              |
-            </span>
-            <span>
-              <span className="text-gray-500 dark:text-gray-400">{t("dashboard.my_engagement_rank", locale)}:</span>{" "}
-              <span className="font-semibold tabular-nums text-gray-900 dark:text-gray-100">
-                {myEngagementRank != null
-                  ? t("dashboard.my_engagement_rank_of", locale)
-                      .replace("{rank}", String(myEngagementRank))
-                      .replace("{total}", String(engagementRankingTotal))
-                  : t("dashboard.my_engagement_rank_unranked", locale)}
-              </span>
-            </span>
+            {engagementRankingTotal >= 3 ? (
+              <>
+                <span className="select-none text-gray-300 dark:text-gray-600" aria-hidden>
+                  |
+                </span>
+                <span>
+                  <span className="text-gray-500 dark:text-gray-400">{t("dashboard.my_engagement_rank", locale)}:</span>{" "}
+                  <span className="font-semibold tabular-nums text-gray-900 dark:text-gray-100">
+                    {myEngagementRank != null
+                      ? t("dashboard.my_engagement_rank_of", locale)
+                          .replace("{rank}", String(myEngagementRank))
+                          .replace("{total}", String(engagementRankingTotal))
+                      : t("dashboard.my_engagement_rank_unranked", locale)}
+                  </span>
+                </span>
+              </>
+            ) : null}
           </div>
         </section>
       )}
@@ -542,14 +595,12 @@ export default async function OrgDashboardPage({
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {(task.committees as any)?.name ?? "–"}
                     {task.due_at
-                      ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}`
+                      ? ` · ${formatLocaleDateTime(task.due_at, locale)}`
                       : ""}
                     {task.owner_id ? ` · ${t("tasks.claimed_by", locale)}` : ""}
                   </p>
                 </div>
-                <span className="shrink-0 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                  {task.status}
-                </span>
+                <StatusBadge status={task.status} locale={locale} className="shrink-0" />
               </li>
             ))}
           </ul>
@@ -632,13 +683,16 @@ export default async function OrgDashboardPage({
                       {s.event_name || t("dashboard.shifts", locale)}
                     </p>
                     <p className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                      <span
-                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${shiftSlotTrafficClass(free, required)}`}
-                        title={formatShiftSlotsLabel(locale, free, required)}
-                        aria-hidden
+                      <ShiftAvailability
+                        free={free}
+                        required={required}
+                        locale={locale}
+                        textClassName="text-xs text-gray-500 dark:text-gray-400"
                       />
                       <span>
-                        {d ? formatDateTimeForDisplay(d) : "–"} · {formatShiftSlotsLabel(locale, free, required)}
+                        {d
+                          ? formatShiftSlot(d, s.start_time, s.end_time, locale as AppLocale)
+                          : "–"}
                         {statusHint ? ` · ${statusHint}` : ""}
                       </span>
                     </p>
@@ -695,14 +749,13 @@ export default async function OrgDashboardPage({
                       {s.event_name || t("dashboard.shifts", locale)}
                     </p>
                     <p className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                      <span
-                        className={`inline-block h-2 w-2 shrink-0 rounded-full ${shiftSlotTrafficClass(free, required)}`}
-                        title={formatShiftSlotsLabel(locale, free, required)}
-                        aria-hidden
+                      <ShiftAvailability
+                        free={free}
+                        required={required}
+                        locale={locale}
+                        textClassName="text-xs text-gray-500 dark:text-gray-400"
                       />
-                      <span>
-                        {d ? formatDateTimeForDisplay(d) : "–"} · {formatShiftSlotsLabel(locale, free, required)}
-                      </span>
+                      <span>{d ? formatShiftSlot(d, s.start_time, s.end_time, locale as AppLocale) : "–"}</span>
                     </p>
                   </div>
                   <ClaimShiftRefreshForm action={claimShiftFromDashboard} className="inline">
@@ -751,7 +804,7 @@ export default async function OrgDashboardPage({
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {s?.date
-                      ? `${formatDateTimeForDisplay(s.date)} · ${String(s.start_time ?? "")}-${String(s.end_time ?? "")}`
+                      ? formatShiftSlot(String(s.date), s.start_time, s.end_time, locale as AppLocale)
                       : "–"}
                     {s?.location ? ` · ${s.location}` : ""}
                   </p>
@@ -781,7 +834,7 @@ export default async function OrgDashboardPage({
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {(task.committees as { name?: string } | null)?.name ?? "–"}
                     {task.due_at
-                      ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}`
+                      ? ` · ${formatLocaleDateTime(task.due_at, locale)}`
                       : ""}
                   </p>
                 </div>
@@ -844,7 +897,7 @@ export default async function OrgDashboardPage({
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                     {(task.committees as any)?.name ?? "–"}
                     {task.due_at
-                      ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}`
+                      ? ` · ${formatLocaleDateTime(task.due_at, locale)}`
                       : ""}
                   </p>
                 </div>
@@ -862,9 +915,7 @@ export default async function OrgDashboardPage({
                     }}
                     className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
                   />
-                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                    {task.status}
-                  </span>
+                  <StatusBadge status={task.status} locale={locale} className="shrink-0" />
                 </div>
               </li>
             ))}

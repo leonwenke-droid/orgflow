@@ -12,6 +12,7 @@ import ShiftAttendancePdfExport, { type ShiftForPdf } from "../../../components/
 import EmptyState from "../../../components/EmptyState";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+import { getTodayDateString } from "../../../lib/dateFormat";
 import { requireOrgAdminAction } from "../../../lib/permissions";
 import { writeAuditLog } from "../../../lib/audit";
 import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
@@ -946,9 +947,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
 
   await removePastShifts(service);
 
-  const todayStr = new Date().toLocaleDateString("en-CA", {
-    timeZone: "Europe/Berlin"
-  });
+  const todayStr = getTodayDateString();
 
   const shiftsQuery = service
     .from("shifts")

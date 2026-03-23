@@ -1,26 +1,25 @@
 # OrgFlow
 
-Organise your team, tasks and events in one place. OrgFlow helps organisations coordinate volunteers, tasks and shifts effortlessly.
+Organise your team, tasks and events in one place. OrgFlow helps organisations coordinate volunteers, tasks and shifts in a single workspace.
 
 ## Product description
 
 OrgFlow is a multi-tenant SaaS platform for organisations such as:
 
-- Schools
-- Sports clubs
-- Volunteer groups
-- Event crews
+- Schools and educational groups
+- Sports clubs and associations
+- Volunteer and non-profit groups
+- Event crews and production teams
 - NGOs
-- Student organisations
 
 ### Features
 
 - **Task management** – Kanban boards, token-based confirmation links, proof uploads
-- **Shift planning** – Auto-assignment, fair distribution, setup/teardown slots
-- **Teams & members** – Organise committees, invite members, assign roles
-- **Resources** – Track material procurement, events and contributions
-- **Treasury** – Balance tracking, Excel import, audit trail
-- **Engagement score** – Fair distribution, points for tasks, shifts and resources
+- **Shift planning** – Planning, claiming, and fair distribution of slots
+- **Teams & members** – Committees, invites, roles
+- **Resources** – Material procurement tied to events
+- **Treasury** – Balance tracking, Excel import, audit-oriented updates
+- **Engagement score** – Points for tasks, shifts and resources (configurable)
 
 ## Architecture overview
 
@@ -32,24 +31,23 @@ OrgFlow is a multi-tenant SaaS platform for organisations such as:
 
 ### Multi-tenant structure
 
-Every entity belongs to an organisation (`organization_id`). Core tables:
+Every entity belongs to an organisation (`organization_id`). Core concepts include:
 
-- `organizations` – id, name, slug, subdomain, plan, is_active
+- `organizations` – id, name, slug, settings, plans
 - `profiles` (members)
 - `committees` (teams)
-- `tasks`
-- `shifts`
-- `shift_assignments`
-- `treasury_updates`
-- `engagement_events`
+- `tasks`, `shifts`, `shift_assignments`
+- `treasury_updates`, engagement-related tables
 
-### Roles
+### Roles (high level)
 
 - **Owner** – Full organisation control
 - **Admin** – Manage teams, tasks, shifts, members
-- **TeamLead** – Manage tasks inside team
-- **Member** – View tasks and shifts
-- **Viewer** – Read only
+- **Lead** – Elevated management within the org
+- **Member** – Participate in tasks and shifts
+- **Viewer** – Read-oriented access where enabled
+
+Exact role names and capabilities depend on your deployment and migrations.
 
 ## Environment variables
 
@@ -60,11 +58,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 # Optional
-NEXT_PUBLIC_ROOT_HOST=orgflow.app
-NEXT_PUBLIC_APP_URL=https://orgflow.app
-TREASURY_EXCEL_CELL=M9
-N8N_WEBHOOK_URL_SEND_MAGIC_LINK=https://...
+NEXT_PUBLIC_ROOT_HOST=your-domain.com
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+TREASURY_EXCEL_CELL=
+N8N_WEBHOOK_URL_SEND_MAGIC_LINK=
 ```
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vercel, redirects, and production checks.
 
 ## Development
 
@@ -77,13 +77,15 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Production checklist
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vercel (Production branch, env vars) and Supabase migrations (`claim_shift_slot`, RLS) required for tasks/shifts and self sign-up.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for environment variables, Supabase migrations, and smoke tests.
 
-### Manual QA (Admin + Member, two browsers)
+### QA & review docs
 
-- Step-by-step checklist and **TGG test accounts**: [docs/MANUAL_QA_TGG.md](docs/MANUAL_QA_TGG.md)  
-- Broader product/code review & backlog: [docs/PRODUCT_REVIEW_AND_TODOS.md](docs/PRODUCT_REVIEW_AND_TODOS.md)  
-- Optional: copy [docs/credentials-tgg.local.example.md](docs/credentials-tgg.local.example.md) to `docs/credentials-tgg.local.md` (gitignored) to store credentials **without** committing them.
+- Admin vs member flows: [docs/QA_ADMIN_MEMBER_SEPARATION.md](docs/QA_ADMIN_MEMBER_SEPARATION.md)
+- Release / regression gate: [docs/QA_RELEASE_REGRESSION_GATE.md](docs/QA_RELEASE_REGRESSION_GATE.md)
+- Product notes & backlog: [docs/PRODUCT_REVIEW_AND_TODOS.md](docs/PRODUCT_REVIEW_AND_TODOS.md)
+
+Do not commit real credentials; use `.env.local` and/or a gitignored `docs/credentials-*.local.md` pattern.
 
 ## Build
 
@@ -104,13 +106,9 @@ Or use the Supabase Dashboard: Project Settings → SQL Editor, then run each mi
 
 ## Deployment
 
-1. Set environment variables in your hosting provider (Vercel, etc.)
-2. Run migrations (see above)
+1. Set environment variables on your host (see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md))
+2. Run migrations against the production Supabase project
 3. Deploy the Next.js app
-
-### Vercel
-
-Connect the repository and add the environment variables. The build will run automatically.
 
 ## Project structure
 

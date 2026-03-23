@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
 
 export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
+  const { locale } = useLocale();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -70,7 +72,7 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
       <p className="w-full text-xs text-gray-500 dark:text-gray-400">
-        Supported: `.xlsx`, `.xls`, `.csv` | Required: member name | Optional: email, team, role.
+        {t("members.excel_formats_hint", locale)}
       </p>
       <input
         type="file"
@@ -83,7 +85,7 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
         disabled={loading || !file}
         className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {loading ? "Importing…" : "Upload"}
+        {loading ? t("members.importing", locale) : t("members.import_btn", locale)}
       </button>
       {message && (
         <span className={message.ok ? "text-green-600" : "text-amber-600"}>
@@ -111,7 +113,7 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
       {inviteLinks.length > 0 && (
         <div className="mt-3 w-full rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
           <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-            {t("members.invite_links_export")}
+            {t("members.invite_links_export", locale)}
           </p>
           <div className="mb-2 flex gap-2">
             <button
@@ -119,14 +121,14 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
               onClick={copyAllLinks}
               className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
             >
-              {t("members.copy_all_links")}
+              {t("members.copy_all_links", locale)}
             </button>
             <button
               type="button"
               onClick={doneAndReload}
               className="rounded border border-gray-300 bg-white px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
             >
-              {t("common.done")}
+              {t("common.done", locale)}
             </button>
           </div>
           <ul className="max-h-40 overflow-y-auto text-xs text-gray-600 dark:text-gray-400">
@@ -136,7 +138,7 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
               </li>
             ))}
             {inviteLinks.length > 20 && (
-              <li>… +{inviteLinks.length - 20} {t("members.more")}</li>
+              <li>… +{inviteLinks.length - 20} {t("members.more", locale)}</li>
             )}
           </ul>
         </div>

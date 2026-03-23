@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { updateMemberNameAction, updateMemberCommitteesAction, updateMemberRoleAction, setMemberAsLeadAction, deleteMemberAction, resendLeadInviteAction, setMemberStatusAction } from "./actions";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
+import { Button } from "../../../../components/ui/Button";
 
 type Committee = { id: string; name: string };
 type Member = {
@@ -292,7 +293,7 @@ export default function MemberRow({
       <td className="py-2">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1">
-            <button type="button" onClick={handleDelete} disabled={loading} className="rounded border border-red-300 px-2 py-0.5 text-[10px] text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30">{t("common.remove", locale)}</button>
+            <Button type="button" variant="destructive" size="sm" onClick={handleDelete} disabled={loading} className="text-[10px] px-2 py-0.5">{t("common.remove", locale)}</Button>
             {(effectiveStatus !== "active") && (
               <>
                 <button type="button" onClick={handleCopyInviteLink} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/30">{t("members.copy_invite_link", locale)}</button>

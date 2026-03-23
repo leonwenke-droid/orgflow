@@ -1,62 +1,28 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { redirect, redirect as serverRedirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
-import { revalidatePath } from "next/cache";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import TaskCompleteModalButton from "../../../components/TaskCompleteModal";
-import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import EmptyState from "../../../components/EmptyState";
+import MemberTaskRow from "../../../components/MemberTaskRow";
+import TasksDoneSection from "../../../components/TasksDoneSection";
+import { claimTaskAction, offerTaskAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-async function claimTaskAction(formData: FormData) {
-  "use server";
-  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
-  const taskId = String(formData.get("taskId") ?? "").trim();
-  if (!orgSlug || !taskId) return;
-
-  const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const { error } = await supabase.rpc("claim_task", { task_id: taskId });
-  if (error) {
-    serverRedirect(`/${orgSlug}/tasks?taskAction=error`);
-  }
-  revalidatePath(`/${orgSlug}/tasks`);
-  revalidatePath(`/${orgSlug}/dashboard`);
-  serverRedirect(`/${orgSlug}/tasks?taskAction=claimed`);
-}
-
-async function offerTaskAction(formData: FormData) {
-  "use server";
-  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
-  const taskId = String(formData.get("taskId") ?? "").trim();
-  if (!orgSlug || !taskId) return;
-
-  const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const { error } = await supabase.rpc("offer_task", { task_id: taskId });
-  if (error) {
-    serverRedirect(`/${orgSlug}/tasks?taskAction=error`);
-  }
-  revalidatePath(`/${orgSlug}/tasks`);
-  revalidatePath(`/${orgSlug}/dashboard`);
-  serverRedirect(`/${orgSlug}/tasks?taskAction=offered`);
-}
+const TASK_SELECT =
+  "id, title, description, status, due_at, owner_id, claimable, proof_required, proof_url, committees(name)";
 
 export default async function TasksViewerPage(props: {
   params: Promise<{ org: string }> | { org: string };
   searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 }) {
-  const params = typeof (props.params as Promise<{ org: string }>).then === "function"
-    ? await (props.params as Promise<{ org: string }>)
-    : (props.params as { org: string });
+  const params =
+    typeof (props.params as Promise<{ org: string }>).then === "function"
+      ? await (props.params as Promise<{ org: string }>)
+      : (props.params as { org: string });
   const orgSlug = params.org;
   const sp =
     props.searchParams && typeof (props.searchParams as Promise<unknown>).then === "function"
@@ -71,7 +37,9 @@ export default async function TasksViewerPage(props: {
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
 
   const authSupabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await authSupabase.auth.getUser();
+  const {
+    data: { user }
+  } = await authSupabase.auth.getUser();
   if (!user) redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/tasks`);
 
   const service = createSupabaseServiceRoleClient();
@@ -82,15 +50,15 @@ export default async function TasksViewerPage(props: {
     .eq("organization_id", orgIdForData)
     .maybeSingle();
 
-  // Legacy/TGG fallback: profiles können unter der "rohen" org.id liegen.
-  const { data: meFallback } = (!mePrimary && orgIdForData !== org.id)
-    ? await service
-        .from("profiles")
-        .select("id, role")
-        .eq("auth_user_id", user.id)
-        .eq("organization_id", org.id)
-        .maybeSingle()
-    : { data: null };
+  const { data: meFallback } =
+    !mePrimary && orgIdForData !== org.id
+      ? await service
+          .from("profiles")
+          .select("id, role")
+          .eq("auth_user_id", user.id)
+          .eq("organization_id", org.id)
+          .maybeSingle()
+      : { data: null };
 
   const myProfile = (mePrimary ?? meFallback) as { id?: string; role?: string } | null;
   const myProfileId = myProfile?.id ?? null;
@@ -98,7 +66,7 @@ export default async function TasksViewerPage(props: {
 
   if (!myProfileId) {
     return (
-      <div className="mx-auto max-w-3xl p-6 space-y-4">
+      <div className="mx-auto max-w-3xl space-y-4 p-6">
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
           <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("common.access_denied", locale)}</h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("dashboard.use_invited_account", locale)}</p>
@@ -110,136 +78,62 @@ export default async function TasksViewerPage(props: {
   const canClaim = myRole !== "viewer";
   const effectiveOrgIdForData = mePrimary ? orgIdForData : org.id;
 
-  const { data: tasksAll } = await service
-    .from("tasks")
-    .select(
-      "id, title, description, status, due_at, owner_id, claimable, proof_required, proof_url, committees(name)"
-    )
-    .eq("organization_id", effectiveOrgIdForData)
-    .neq("status", "erledigt")
-    .order("due_at", { ascending: true });
+  const [{ data: tasksAll }, { data: tasksDone }] = await Promise.all([
+    service
+      .from("tasks")
+      .select(TASK_SELECT)
+      .eq("organization_id", effectiveOrgIdForData)
+      .neq("status", "erledigt")
+      .order("due_at", { ascending: true }),
+    service
+      .from("tasks")
+      .select(TASK_SELECT)
+      .eq("organization_id", effectiveOrgIdForData)
+      .eq("status", "erledigt")
+      .order("due_at", { ascending: false })
+      .limit(200)
+  ]);
 
   const { data: profiles } = await service
     .from("profiles")
     .select("id, full_name")
     .eq("organization_id", effectiveOrgIdForData);
-  const nameById = new Map((profiles ?? []).map((p: any) => [p.id as string, p.full_name ?? "–"]));
-
-  const tasks = tasksAll ?? [];
-
-  const openClaimable = tasks.filter(
-    (t: any) =>
-      t.owner_id == null &&
-      t.claimable === true &&
-      (t.status === "offen" || t.status === "in_arbeit")
+  const nameById: Record<string, string> = Object.fromEntries(
+    (profiles ?? []).map((p: { id: string; full_name: string | null }) => [p.id, p.full_name ?? "–"])
   );
 
-  const claimableIds = new Set(openClaimable.map((t: any) => t.id as string));
+  const tasks = tasksAll ?? [];
+  const doneList = tasksDone ?? [];
+
+  const openClaimable = tasks.filter(
+    (tk: (typeof tasks)[number]) =>
+      tk.owner_id == null &&
+      tk.claimable === true &&
+      (tk.status === "offen" || tk.status === "in_arbeit")
+  );
+
+  const claimableIds = new Set(openClaimable.map((tk: (typeof tasks)[number]) => tk.id as string));
 
   const mineSorted = tasks
-    .filter((t: any) => t.owner_id === myProfileId)
+    .filter((tk: (typeof tasks)[number]) => tk.owner_id === myProfileId)
     .slice()
-    .sort((a: any, b: any) => {
+    .sort((a: (typeof tasks)[number], b: (typeof tasks)[number]) => {
       const da = a.due_at ? new Date(a.due_at).getTime() : 0;
       const db = b.due_at ? new Date(b.due_at).getTime() : 0;
       return da - db;
     });
 
   const otherTasksSorted = tasks
-    .filter((t: any) => t.owner_id !== myProfileId && !claimableIds.has(t.id as string))
+    .filter((tk: (typeof tasks)[number]) => tk.owner_id !== myProfileId && !claimableIds.has(tk.id as string))
     .slice()
-    .sort((a: any, b: any) => {
+    .sort((a: (typeof tasks)[number], b: (typeof tasks)[number]) => {
       const da = a.due_at ? new Date(a.due_at).getTime() : 0;
       const db = b.due_at ? new Date(b.due_at).getTime() : 0;
       return da - db;
     });
 
-  const renderTaskRow = (task: any) => {
-    const ownedByMe = !!myProfileId && task.owner_id === myProfileId;
-    const claimableHere =
-      task.owner_id == null &&
-      task.claimable === true &&
-      (task.status === "offen" || task.status === "in_arbeit");
-    return (
-      <li id={`task-${task.id}`} key={task.id} className="scroll-mt-24 py-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{task.title}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {(task.committees as any)?.name ?? "–"}
-              {task.due_at
-                ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}`
-                : ""}
-              {task.owner_id
-                ? ` · ${t("tasks.claimed_by", locale)}: ${nameById.get(task.owner_id) ?? "–"}`
-                : ""}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            {claimableHere && canClaim ? (
-              <form action={claimTaskAction}>
-                <input type="hidden" name="orgSlug" value={orgSlug} />
-                <input type="hidden" name="taskId" value={task.id} />
-                <SubmitButtonWithSpinner
-                  className="inline-flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
-                  loadingLabel={t("common.loading", locale)}
-                >
-                  {t("tasks.claim", locale)}
-                </SubmitButtonWithSpinner>
-              </form>
-            ) : null}
-
-            {ownedByMe ? (
-              <TaskCompleteModalButton
-                orgSlug={orgSlug}
-                task={{
-                  id: task.id,
-                  title: task.title,
-                  description: task.description ?? null,
-                  due_at: task.due_at ?? null,
-                  status: task.status,
-                  proof_required: !!task.proof_required,
-                  proof_url: task.proof_url ?? null
-                }}
-                className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 shrink-0"
-              />
-            ) : null}
-
-            {ownedByMe && canClaim ? (
-              <form action={offerTaskAction}>
-                <input type="hidden" name="orgSlug" value={orgSlug} />
-                <input type="hidden" name="taskId" value={task.id} />
-                <SubmitButtonWithSpinner
-                  className="inline-flex items-center justify-center gap-1.5 rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-70 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
-                  loadingLabel={t("common.loading", locale)}
-                >
-                  {t("tasks.offer", locale)}
-                </SubmitButtonWithSpinner>
-              </form>
-            ) : null}
-
-            {task.proof_url && (
-              <a
-                className="text-xs text-blue-600 hover:underline dark:text-blue-400 shrink-0"
-                href={task.proof_url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t("tasks.view_proof", locale)}
-              </a>
-            )}
-
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200 shrink-0">
-              {task.status}
-            </span>
-          </div>
-        </div>
-      </li>
-    );
-  };
-
   return (
-    <div className="mx-auto max-w-3xl p-6 space-y-4">
+    <div className="mx-auto max-w-3xl space-y-4 p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("dashboard.tasks", locale)}</h1>
@@ -267,75 +161,85 @@ export default async function TasksViewerPage(props: {
 
       {mineSorted.length > 0 && (
         <div className="rounded-xl border-2 border-blue-300 bg-blue-50/80 p-4 shadow-sm dark:border-blue-700 dark:bg-blue-950/30">
-          <h2 className="mb-2 text-sm font-semibold text-blue-900 dark:text-blue-100">
-            {t("tasks.my_tasks_section_title", locale)}
-          </h2>
-          <ul className="divide-y divide-blue-100 dark:divide-blue-900/40">
-            {mineSorted.map((task: any) => renderTaskRow(task))}
+          <h2 className="mb-3 text-sm font-semibold text-blue-900 dark:text-blue-100">{t("tasks.my_tasks_section_title", locale)}</h2>
+          <ul className="space-y-3">
+            {mineSorted.map((task: (typeof tasks)[number]) => (
+              <MemberTaskRow
+                key={task.id}
+                task={task}
+                locale={locale}
+                orgSlug={orgSlug}
+                myProfileId={myProfileId}
+                nameById={nameById}
+                canClaim={canClaim}
+                claimTaskAction={claimTaskAction}
+                offerTaskAction={offerTaskAction}
+              />
+            ))}
           </ul>
         </div>
       )}
 
       {openClaimable.length > 0 && (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-            {t("tasks.open_claimable", locale)}
-          </h2>
-          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-            {openClaimable.map((task: any) => (
-              <li id={`task-${task.id}`} key={task.id} className="scroll-mt-24 py-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {(task.committees as any)?.name ?? "–"}
-                    {task.due_at ? ` · ${new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}` : ""}
-                  </p>
-                </div>
-                {canClaim ? (
-                  <form action={claimTaskAction}>
-                    <input type="hidden" name="orgSlug" value={orgSlug} />
-                    <input type="hidden" name="taskId" value={task.id} />
-                    <SubmitButtonWithSpinner
-                      className="inline-flex items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
-                      loadingLabel={t("common.loading", locale)}
-                    >
-                      {t("tasks.claim", locale)}
-                    </SubmitButtonWithSpinner>
-                  </form>
-                ) : (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{t("common.unauthorized", locale)}</span>
-                )}
-              </li>
+          <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("tasks.open_claimable", locale)}</h2>
+          <ul className="space-y-3">
+            {openClaimable.map((task: (typeof tasks)[number]) => (
+              <MemberTaskRow
+                key={task.id}
+                task={task}
+                locale={locale}
+                orgSlug={orgSlug}
+                myProfileId={myProfileId}
+                nameById={nameById}
+                canClaim={canClaim}
+                claimTaskAction={claimTaskAction}
+                offerTaskAction={offerTaskAction}
+              />
             ))}
           </ul>
         </div>
       )}
 
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-          {otherTasksSorted.length > 0
-            ? t("tasks.other_tasks_section", locale)
-            : t("dashboard.tasks", locale)}
+        <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+          {otherTasksSorted.length > 0 ? t("tasks.other_tasks_section", locale) : t("dashboard.tasks", locale)}
         </h2>
-        {tasks.length === 0 ? (
-          <EmptyState
-            messageKey="empty.tasks"
-            actionHref={`/${orgSlug}/dashboard`}
-            actionLabelKey="common.back"
-          />
+        {tasks.length === 0 && doneList.length === 0 ? (
+          <EmptyState messageKey="empty.tasks" actionHref={`/${orgSlug}/dashboard`} actionLabelKey="common.back" />
+        ) : tasks.length === 0 ? (
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t("tasks.no_open_tasks", locale)}</p>
         ) : otherTasksSorted.length === 0 ? (
-          <EmptyState
-            messageKey="tasks.no_other_tasks"
-            actionHref={`/${orgSlug}/dashboard`}
-            actionLabelKey="common.back"
-          />
+          <EmptyState messageKey="tasks.no_other_tasks" actionHref={`/${orgSlug}/dashboard`} actionLabelKey="common.back" />
         ) : (
-          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-            {otherTasksSorted.map((task: any) => renderTaskRow(task))}
+          <ul className="space-y-3">
+            {otherTasksSorted.map((task: (typeof tasks)[number]) => (
+              <MemberTaskRow
+                key={task.id}
+                task={task}
+                locale={locale}
+                orgSlug={orgSlug}
+                myProfileId={myProfileId}
+                nameById={nameById}
+                canClaim={canClaim}
+                claimTaskAction={claimTaskAction}
+                offerTaskAction={offerTaskAction}
+              />
+            ))}
           </ul>
         )}
       </div>
+
+      <TasksDoneSection
+        doneTasks={doneList}
+        locale={locale}
+        orgSlug={orgSlug}
+        myProfileId={myProfileId}
+        nameById={nameById}
+        canClaim={canClaim}
+        claimTaskAction={claimTaskAction}
+        offerTaskAction={offerTaskAction}
+      />
     </div>
   );
 }
-

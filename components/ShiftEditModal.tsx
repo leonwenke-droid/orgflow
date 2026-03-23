@@ -221,7 +221,15 @@ export default function ShiftEditModal({
                               <SubmitButtonWithSpinner className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-700 dark:bg-blue-900/30 dark:text-blue-300" loadingLabel="…">{t("shifts.replace", locale)}</SubmitButtonWithSpinner>
                             </form>
                             <form action={async () => { await removeAssignment(a.id); onRefresh?.(); }}>
-                              <SubmitButtonWithSpinner className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] text-red-600 dark:bg-red-900/30 dark:text-red-400" title={t("common.remove", locale)} loadingLabel="…">✕</SubmitButtonWithSpinner>
+                              <SubmitButtonWithSpinner
+                                variant="destructive"
+                                buttonSize="sm"
+                                className="px-1.5 py-0.5 text-[10px]"
+                                title={t("common.remove", locale)}
+                                loadingLabel="…"
+                              >
+                                ✕
+                              </SubmitButtonWithSpinner>
                             </form>
                           </li>
                         ))}
@@ -282,7 +290,9 @@ export default function ShiftEditModal({
                     </form>
                     <form action={async () => { await removeAssignment(a.id); onRefresh?.(); }}>
                       <SubmitButtonWithSpinner
-                        className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] text-red-600 hover:bg-red-500/30 disabled:opacity-70 dark:bg-red-900/30 dark:text-red-400"
+                        variant="destructive"
+                        buttonSize="sm"
+                        className="px-1.5 py-0.5 text-[10px]"
                         title={t("common.remove", locale)}
                         loadingLabel="…"
                       >

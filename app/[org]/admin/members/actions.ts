@@ -13,8 +13,6 @@ import {
 } from "../../../../lib/memberInvites";
 import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
 
-const LEGACY_DEFAULT_ORG_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
-
 function mapMemberDbError(error: { message?: string } | null): { error: string | null; errorKey?: string } {
   if (!error?.message) return { error: "Unknown error." };
   if (/stack depth limit exceeded/i.test(error.message)) {
@@ -55,22 +53,23 @@ async function issueMemberInvite(
 }
 
 /**
- * Weist alle Profile und Engagement-Scores dem Jahrgangs-Org aaaa... zu (nur für Slug abi-2026-tgg / abi2026-tgg).
- * organization_id = aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa ist die eine Org für diesen Jahrgang (Multi-Tenant).
+ * Gefährlicher Legacy-Reparatur-Lauf: weist Profile/Scores der aktuellen Org zu.
+ * Nur wenn die Organisation in der DB `settings.legacy_bulk_sync` gesetzt hat (Opt-in).
  */
 export async function syncOrgDataAction(orgSlug: string): Promise<{ error: string | null; errorKey?: string; updated?: number }> {
   const slug = (orgSlug || "").trim();
-  const allowedSlugs = ["abi-2026-tgg", "abi2026-tgg"];
-  if (!allowedSlugs.includes(slug)) {
-    return { error: "Sync nur für Organisation abi-2026-tgg / abi2026-tgg verfügbar." };
-  }
 
   const org = await getCurrentOrganization(slug);
+  const settings = org.settings as { legacy_bulk_sync?: boolean } | undefined;
+  if (!settings?.legacy_bulk_sync) {
+    return { error: "Sync ist für diese Organisation nicht verfügbar." };
+  }
+
   if (!(await isOrgAdmin(org.id))) return { error: null, errorKey: "common.unauthorized" };
 
   const { createSupabaseServiceRoleClient } = await import("../../../../lib/supabaseServer");
   const service = createSupabaseServiceRoleClient();
-  const targetOrgId = LEGACY_DEFAULT_ORG_ID;
+  const targetOrgId = org.id;
 
   let updatedCount = 0;
   const { data: profNull } = await service

@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import Sidebar from "./Sidebar";
 import AppHeader from "./AppHeader";
+import MobileNav from "./layout/MobileNav";
 
 const RESERVED = [
   "admin",
@@ -61,6 +62,7 @@ function AppShellInner({
         <AppHeader user={user} onMenuOpen={() => setMobileOpen(true)} />
         {children}
       </div>
+      <MobileNav user={user} orgSlug={orgSlug} />
     </>
   );
 }

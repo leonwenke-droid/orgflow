@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
+import { Button } from "./ui/Button";
 
 type Props = {
   materialId: string;
@@ -28,13 +29,9 @@ export default function DeleteMaterialButton({ materialId, deleteAction }: Props
   return (
     <form onSubmit={handleSubmit} className="inline">
       <input type="hidden" name="materialId" value={materialId} />
-      <button
-        type="submit"
-        disabled={pending}
-        className="text-[10px] text-gray-500 hover:text-red-600 disabled:opacity-50"
-      >
+      <Button type="submit" variant="destructive" size="sm" disabled={pending} className="text-[10px] font-normal">
         {pending ? "…" : t("common.remove", locale)}
-      </button>
+      </Button>
     </form>
   );
 }

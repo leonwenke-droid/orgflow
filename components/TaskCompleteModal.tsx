@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
+import { formatLocaleDateTime } from "../lib/formatDate";
+import { Button } from "./ui/Button";
 
 export type TaskCompletePayload = {
   id: string;
@@ -18,27 +20,23 @@ export type TaskCompletePayload = {
 export default function TaskCompleteModalButton({
   orgSlug,
   task,
-  className
+  className,
+  triggerLabel
 }: {
   orgSlug: string;
   task: TaskCompletePayload;
   className?: string;
+  /** Override button label (e.g. „Erledigen“ when in progress). */
+  triggerLabel?: string;
 }) {
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={
-          className ??
-          "rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-        }
-      >
-        {t("tasks.complete_or_update", locale)}
-      </button>
+      <Button type="button" variant="primary" size="sm" onClick={() => setOpen(true)} className={className ?? ""}>
+        {triggerLabel ?? t("tasks.complete_or_update", locale)}
+      </Button>
       {open ? (
         <TaskCompleteDialog
           orgSlug={orgSlug}
@@ -107,8 +105,6 @@ function TaskCompleteDialog({
   const disabledErledigt =
     task.proof_required && !file && !task.proof_url && status !== "erledigt";
 
-  const dateLocale = locale === "de" ? "de-DE" : "en-GB";
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -150,10 +146,7 @@ function TaskCompleteDialog({
             {task.due_at ? (
               <p className="mt-2 text-[11px] text-gray-600 dark:text-gray-400">
                 {t("tasks.deadline", locale)}:{" "}
-                {new Date(task.due_at).toLocaleString(dateLocale, {
-                  dateStyle: "short",
-                  timeStyle: "short"
-                })}
+                {formatLocaleDateTime(task.due_at, locale)}
               </p>
             ) : null}
             {task.proof_url ? (

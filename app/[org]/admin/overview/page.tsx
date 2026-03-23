@@ -6,6 +6,7 @@ import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer"
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
 import AdminForbidden from "../AdminForbidden";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../../lib/i18n";
+import { formatShiftSlot, type AppLocale } from "../../../../lib/formatDate";
 
 function dateOnly(value: string | null | undefined) {
   return String(value ?? "").slice(0, 10);
@@ -174,7 +175,9 @@ export default async function AdminOverviewPage(props: {
               return (
                 <li key={s.id} className="rounded border border-gray-200 bg-gray-50 p-2 text-xs dark:border-gray-700 dark:bg-gray-900/40">
                   <p className="truncate font-medium text-gray-900 dark:text-gray-100">{s.event_name ?? "–"}</p>
-                  <p className="text-gray-500">{dateOnly(s.date)} · {String(s.start_time ?? "").slice(0, 5)}-{String(s.end_time ?? "").slice(0, 5)}</p>
+                  <p className="text-gray-500">
+                    {formatShiftSlot(dateOnly(s.date), s.start_time, s.end_time, locale as AppLocale)}
+                  </p>
                   <p className="text-gray-500">{taken}/{req}</p>
                 </li>
               );

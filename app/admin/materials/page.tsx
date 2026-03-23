@@ -9,6 +9,7 @@ import EmptyState from "../../../components/EmptyState";
 import DeleteMaterialButton from "../../../components/DeleteMaterialButton";
 import MaterialsWizard from "./MaterialsWizard";
 import { LOCALE_COOKIE_NAME, localeFromCookie, t } from "../../../lib/i18n";
+import { formatLocaleDateFromIso } from "../../../lib/formatDate";
 import { requireOrgAdminAction } from "../../../lib/permissions";
 import { writeAuditLog } from "../../../lib/audit";
 
@@ -298,7 +299,6 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
 
   const eventNameById = new Map((events ?? []).map((e: any) => [e.id as string, e.name as string]));
 
-  const dateLocale = locale === "de" ? "de-DE" : "en-GB";
 
   return (
     <div className="space-y-6">
@@ -370,7 +370,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                     className="border-b border-gray-100 transition hover:bg-gray-50"
                   >
                     <td className="p-3 text-gray-600">
-                      {new Date(m.created_at).toLocaleDateString(dateLocale)}
+                      {formatLocaleDateFromIso(m.created_at, locale)}
                     </td>
                     <td className="p-3 text-gray-600">
                       {names || "—"}

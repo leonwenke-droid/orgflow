@@ -4,6 +4,7 @@ import { useState } from "react";
 import { updateCommitteeAction, deleteCommitteeAction } from "./actions";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
+import { Button } from "../../../../components/ui/Button";
 
 type Committee = {
   id: string;
@@ -158,14 +159,9 @@ export default function CommitteeRow({
             >
               {t("common.edit", locale)}
             </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={loading}
-              className="rounded border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30"
-            >
+            <Button type="button" variant="destructive" size="sm" onClick={handleDelete} disabled={loading} className="text-xs">
               {t("common.delete", locale)}
-            </button>
+            </Button>
           </>
         )}
       </div>

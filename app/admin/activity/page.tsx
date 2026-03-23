@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+import { formatLocaleDateTime } from "../../../lib/formatDate";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin, getCurrentUserOrganization } from "../../../lib/getOrganization";
 
 type PageProps = {
@@ -49,6 +51,9 @@ export default async function AdminActivityPage(props: PageProps) {
     .order("created_at", { ascending: false })
     .limit(200);
 
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+
   return (
     <div className="space-y-4">
       <h1 className="text-lg font-semibold">Activity log</h1>
@@ -66,7 +71,7 @@ export default async function AdminActivityPage(props: PageProps) {
           <tbody>
             {(logs ?? []).map((log: any) => (
               <tr key={log.id} className="border-b border-gray-100">
-                <td className="px-3 py-2 text-gray-600">{new Date(log.created_at).toLocaleString("de-DE")}</td>
+                <td className="px-3 py-2 text-gray-600">{formatLocaleDateTime(log.created_at, locale)}</td>
                 <td className="px-3 py-2 font-medium">{log.action}</td>
                 <td className="px-3 py-2">{log.target_table ?? "—"}</td>
                 <td className="px-3 py-2">{log.target_id ?? "—"}</td>

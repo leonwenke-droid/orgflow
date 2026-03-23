@@ -67,18 +67,18 @@ export default function JoinOrgClient({
   return (
     <div className="mt-6 space-y-6">
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <h2 className="text-sm font-semibold text-gray-900">Sign in to join</h2>
+        <h2 className="text-sm font-semibold text-gray-900">Anmelden, um beizutreten</h2>
         <p className="mt-1 text-xs text-gray-600">
-          Sign in with your account, or create one, to join {orgName}.
+          Melde dich mit deinem Account an (oder erstelle einen), um {orgName} beizutreten.
         </p>
         <div className="mt-3">
           <AuthForm redirectTo={redirectTo} />
         </div>
       </div>
       <p className="text-xs text-gray-500">
-        Don&apos;t have an account?{" "}
+        Noch kein Account?{" "}
         <Link href={`/auth/lead-setup?next=${encodeURIComponent(redirectTo)}`} className="text-blue-600 hover:underline">
-          Sign up
+          Registrieren
         </Link>
       </p>
     </div>

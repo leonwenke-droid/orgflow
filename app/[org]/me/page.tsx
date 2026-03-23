@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { formatLocaleDateTime, formatCalendarDateYmd, formatShiftClockRange } from "../../../lib/formatDate";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,6 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
 
   const cookieStore = await cookies();
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
-  const localeForDate = locale === "de" ? "de-DE" : "en-GB";
 
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();
@@ -103,7 +103,9 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
   ]);
 
   const score = (scoreRow as any)?.score ?? 0;
-  const updatedAt = (scoreRow as any)?.updated_at ? new Date((scoreRow as any).updated_at).toLocaleString(localeForDate) : null;
+  const updatedAt = (scoreRow as any)?.updated_at
+    ? formatLocaleDateTime(String((scoreRow as any).updated_at), locale)
+    : null;
 
   const rankRows = (allOrgScores ?? []) as { user_id: string; score: number }[];
   const totalRanked = rankRows.length;
@@ -253,7 +255,8 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
               <li key={`${s.date}-${idx}`} className="py-2">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{s.event_name || t("dashboard.shifts", locale)}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {s.date ? new Date(s.date).toLocaleDateString(localeForDate) : "–"} · {s.start_time ?? ""}-{s.end_time ?? ""}
+                  {s.date ? formatCalendarDateYmd(String(s.date), locale) : "–"} ·{" "}
+                  {formatShiftClockRange(s.start_time ?? null, s.end_time ?? null, locale)}
                 </p>
               </li>
             ))}

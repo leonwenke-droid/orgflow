@@ -243,16 +243,16 @@ export default async function AdminDashboard({
           </p>
         </header>
 
-        <AdminSectionCards locale={locale} titleKey="nav.core" hintKey="admin.section.core_hint" cards={coreCards} />
+        <AdminSectionCards locale={locale} titleKey="nav.my_area" hintKey="admin.section.core_hint" cards={coreCards} />
         <AdminSectionCards
           locale={locale}
-          titleKey="nav.organisation"
+          titleKey="nav.manage_org"
           hintKey="admin.section.org_hint"
           cards={organisationCards}
         />
         <AdminSectionCards
           locale={locale}
-          titleKey="nav.administration"
+          titleKey="nav.manage_org"
           hintKey="admin.section.admin_hint"
           cards={administrationCards}
           compact

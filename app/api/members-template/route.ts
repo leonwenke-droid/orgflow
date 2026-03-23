@@ -10,8 +10,8 @@ export const runtime = "nodejs";
 export async function GET() {
   const ws = XLSX.utils.aoa_to_sheet([
     ["Name", "Score", "", "Komitees (kommagetrennt)", "Leitungen (kommagetrennt)"],
-    ["Max Mustermann", 0, "", "Dekoration", "Dekoration"],
-    ["Anna Beispiel", 10, "", "Catering, Dekoration", "Catering"]
+    ["Max Mustermann", 0, "", "Marketing, Technik", "Marketing"],
+    ["Anna Beispiel", 10, "", "Catering, Aufbau", "Catering"]
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Engagement Overview");

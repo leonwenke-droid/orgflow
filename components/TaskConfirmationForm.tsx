@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
+import { formatLocaleDateTime } from "../lib/formatDate";
 
 type Task = {
   id: string;
@@ -73,10 +74,7 @@ export default function TaskConfirmationForm({
         {task.due_at && (
           <p className="mt-2 text-[11px] text-gray-600">
             {t("tasks.deadline", locale)}:{" "}
-            {new Date(task.due_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB", {
-              dateStyle: "short",
-              timeStyle: "short"
-            })}
+            {formatLocaleDateTime(task.due_at, locale)}
           </p>
         )}
       </div>

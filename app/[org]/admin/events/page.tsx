@@ -5,6 +5,7 @@ import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../..
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../lib/i18n";
+import { formatCalendarDateYmd } from "../../../../lib/formatDate";
 import CreateEventForm from "./CreateEventForm";
 
 export const dynamic = "force-dynamic";
@@ -48,8 +49,8 @@ export default async function AdminEventsPage(props: {
               <span className="ml-2 text-gray-500 dark:text-gray-400">/{e.slug}</span>
               {(e.start_date || e.end_date) && (
                 <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                  {e.start_date && new Date(e.start_date).toLocaleDateString(locale === "de" ? "de-DE" : "en-GB")}
-                  {e.end_date && e.end_date !== e.start_date && ` – ${new Date(e.end_date).toLocaleDateString(locale === "de" ? "de-DE" : "en-GB")}`}
+                  {e.start_date && formatCalendarDateYmd(e.start_date, locale)}
+                  {e.end_date && e.end_date !== e.start_date && ` – ${formatCalendarDateYmd(e.end_date, locale)}`}
                 </span>
               )}
             </div>

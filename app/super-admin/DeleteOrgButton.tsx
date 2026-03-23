@@ -4,6 +4,7 @@ import { useState } from "react";
 import { deleteOrganizationAction } from "./actions";
 import { useLocale } from "../../components/LocaleProvider";
 import { t } from "../../lib/i18n";
+import { Button } from "../../components/ui/Button";
 
 export default function DeleteOrgButton({
   orgId,
@@ -39,13 +40,9 @@ export default function DeleteOrgButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center rounded-md border border-red-500/50 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/20"
-      >
+      <Button type="button" variant="destructive" size="sm" onClick={() => setOpen(true)} className="text-xs font-semibold">
         {t("common.remove", locale)}
-      </button>
+      </Button>
       {open && (
         <form
           onSubmit={handleSubmit}
@@ -67,13 +64,15 @@ export default function DeleteOrgButton({
           />
           {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
           <div className="mt-3 flex gap-2">
-            <button
+            <Button
               type="submit"
+              variant="destructive"
+              size="sm"
               disabled={loading || confirmation.trim() !== orgName}
-              className="rounded bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+              className="text-xs font-semibold"
             >
               {loading ? "Removing…" : "Permanently remove"}
-            </button>
+            </Button>
             <button
               type="button"
               onClick={() => { setOpen(false); setConfirmation(""); setError(null); }}

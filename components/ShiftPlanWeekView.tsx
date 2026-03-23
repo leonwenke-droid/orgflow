@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { formatDateLabel } from "../lib/dateFormat";
+import { formatShiftClockRange, type AppLocale } from "../lib/formatDate";
+import { useLocale } from "./LocaleProvider";
 
 export type ShiftAssignment = {
   id: string;
@@ -39,20 +41,19 @@ export type WeekData = {
 
 const WEEKDAY_NAMES = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
-function slotLabel(s: ShiftSlot): string {
+function slotLabel(s: ShiftSlot, locale: AppLocale): string {
   const name = (s.event_name ?? "").trim();
   if (/1\.\s*Pause$/i.test(name)) return "1. Pause";
   if (/2\.\s*Pause$/i.test(name)) return "2. Pause";
-  return `${String(s.start_time).slice(0, 5)}–${String(s.end_time).slice(0, 5)}`;
+  return formatShiftClockRange(s.start_time, s.end_time, locale);
 }
 
-function slotLabelDetail(s: ShiftSlot): string {
+function slotLabelDetail(s: ShiftSlot, locale: AppLocale): string {
   const name = (s.event_name ?? "").trim();
-  if (/1\.\s*Pause$/i.test(name))
-    return `1. Pause (${String(s.start_time).slice(0, 5)} – ${String(s.end_time).slice(0, 5)})`;
-  if (/2\.\s*Pause$/i.test(name))
-    return `2. Pause (${String(s.start_time).slice(0, 5)} – ${String(s.end_time).slice(0, 5)})`;
-  return `${String(s.start_time).slice(0, 5)} – ${String(s.end_time).slice(0, 5)}`;
+  const range = formatShiftClockRange(s.start_time, s.end_time, locale);
+  if (/1\.\s*Pause$/i.test(name)) return `1. Pause (${range})`;
+  if (/2\.\s*Pause$/i.test(name)) return `2. Pause (${range})`;
+  return range.replace("–", " – ");
 }
 
 type Props = {
@@ -61,6 +62,8 @@ type Props = {
 };
 
 export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
+  const { locale } = useLocale();
+  const appLocale = locale as AppLocale;
   const [overlayDay, setOverlayDay] = useState<DayData | null>(null);
 
   const getName = (userId: string) => {
@@ -121,7 +124,7 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
                               key={s.id}
                               className="rounded bg-card/50 px-1.5 py-1 text-[10px]"
                             >
-                              <span className="text-gray-700">{slotLabel(s)}</span>
+                              <span className="text-gray-700">{slotLabel(s, appLocale)}</span>
                               <div className="mt-0.5 ml-1 flex flex-wrap gap-x-1.5 gap-y-0.5 text-gray-600 [&>span]:after:content-['·'] [&>span]:after:ml-1 [&>span]:after:text-gray-400 [&>span:last-child]:after:content-none [&>span:last-child]:after:ml-0">
                                 {s.assignments?.length > 0
                                   ? s.assignments.map(renderAssignment)
@@ -202,7 +205,7 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
                       className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs"
                     >
                       <span className="font-medium text-gray-700">
-                        {slotLabelDetail(s)}
+                        {slotLabelDetail(s, appLocale)}
                       </span>
                       <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-gray-600 text-xs">
                         {s.assignments?.length > 0

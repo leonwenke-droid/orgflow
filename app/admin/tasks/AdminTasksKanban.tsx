@@ -7,6 +7,7 @@ import CopyTaskLinkButton from "../../../components/CopyTaskLinkButton";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import { useLocale } from "../../../components/LocaleProvider";
 import { t } from "../../../lib/i18n";
+import { formatLocaleDateFromIso } from "../../../lib/formatDate";
 import { deleteTask, updateTaskKanbanStatus } from "./kanban-actions";
 
 const STATUS_COLUMNS = [
@@ -50,7 +51,6 @@ export default function AdminTasksKanban({
 }) {
   const router = useRouter();
   const { locale } = useLocale();
-  const localeForDate = locale === "de" ? "de-DE" : "en-GB";
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
@@ -140,7 +140,7 @@ export default function AdminTasksKanban({
                                 : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200"
                             }`}
                           >
-                            {new Date(task.due_at).toLocaleDateString(localeForDate)}
+                            {formatLocaleDateFromIso(task.due_at, locale)}
                             {overdue ? ` · ${t("tasks.overdue_badge", locale)}` : ""}
                           </span>
                         )}
@@ -201,7 +201,9 @@ export default function AdminTasksKanban({
                         <input type="hidden" name="taskId" value={task.id} />
                         <input type="hidden" name="organization_id" value={orgId ?? ""} />
                         <SubmitButtonWithSpinner
-                          className="inline-flex items-center gap-1.5 rounded bg-red-100 px-2 py-0.5 text-[9px] text-red-600 hover:bg-red-200 disabled:opacity-70 dark:bg-red-900/30 dark:text-red-300"
+                          variant="destructive"
+                          buttonSize="sm"
+                          className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[9px]"
                           title={t("tasks.remove_task_title", locale)}
                           loadingLabel="…"
                         >

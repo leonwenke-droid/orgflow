@@ -1,5 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import { localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../lib/i18n";
+import { formatLocaleDateTime } from "../../../../lib/formatDate";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
@@ -74,6 +76,9 @@ export default async function FeedbackAdminPage(props: { params: Promise<{ org: 
     .order("created_at", { ascending: false })
     .limit(200);
 
+  const cookieStore = await cookies();
+  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-6">
       <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Feedback" />
@@ -111,7 +116,9 @@ export default async function FeedbackAdminPage(props: { params: Promise<{ org: 
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900 dark:text-gray-100">{it.title}</p>
                   {it.description ? <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{it.description}</p> : null}
-                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">{new Date(it.created_at).toLocaleString()}</p>
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
+                    {formatLocaleDateTime(it.created_at, locale)}
+                  </p>
                 </div>
                 <form action={updateStatusAction} className="flex items-center gap-2">
                   <input type="hidden" name="orgSlug" value={orgSlug} />

@@ -74,7 +74,7 @@ export default async function AdminCommitteesPage(props: {
     <div className="mx-auto max-w-4xl p-6">
       <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />
       <h1 className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">Teams – {org.name}</h1>
-      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Create & edit (organisation)</p>
+      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Teams verwalten</p>
 
       <CreateCommitteeForm orgSlug={orgSlug} orgId={org.id} committees={committeeList} />
 

@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import html2canvas from "html2canvas";
 import type { WeekData, DayData, ShiftSlot, ShiftAssignment } from "./ShiftPlanWeekView";
 import { formatDateLabel, getTodayDateString } from "../lib/dateFormat";
+import { formatShiftClockRange, type AppLocale } from "../lib/formatDate";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
 
@@ -98,20 +99,19 @@ function downloadCanvas(canvas: HTMLCanvasElement, dateStr: string, format: "png
 
 const WEEKDAY_NAMES = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
-function slotLabel(s: ShiftSlot): string {
+function slotLabel(s: ShiftSlot, locale: AppLocale): string {
   const name = (s.event_name ?? "").trim();
   if (/1\.\s*Pause$/i.test(name)) return "1. Pause";
   if (/2\.\s*Pause$/i.test(name)) return "2. Pause";
-  return `${String(s.start_time).slice(0, 5)}–${String(s.end_time).slice(0, 5)}`;
+  return formatShiftClockRange(s.start_time, s.end_time, locale);
 }
 
-function slotLabelDetail(s: ShiftSlot): string {
+function slotLabelDetail(s: ShiftSlot, locale: AppLocale): string {
   const name = (s.event_name ?? "").trim();
-  if (/1\.\s*Pause$/i.test(name))
-    return `1. Pause (${String(s.start_time).slice(0, 5)} – ${String(s.end_time).slice(0, 5)})`;
-  if (/2\.\s*Pause$/i.test(name))
-    return `2. Pause (${String(s.start_time).slice(0, 5)} – ${String(s.end_time).slice(0, 5)})`;
-  return `${String(s.start_time).slice(0, 5)} – ${String(s.end_time).slice(0, 5)}`;
+  const range = formatShiftClockRange(s.start_time, s.end_time, locale);
+  if (/1\.\s*Pause$/i.test(name)) return `1. Pause (${range})`;
+  if (/2\.\s*Pause$/i.test(name)) return `2. Pause (${range})`;
+  return range.replace("–", " – ");
 }
 
 function DownloadIcon() {
@@ -141,6 +141,8 @@ export default function ShiftPlanWeekNav({
   showClaimButton = false,
   organizationId
 }: Props) {
+  const { locale } = useLocale();
+  const appLocale = locale as AppLocale;
   const safeIndex = Math.max(0, Math.min(currentWeekIndex, weeks.length - 1));
   const [weekIndex, setWeekIndex] = useState(safeIndex);
   const todayStr = getTodayDateString();
@@ -254,7 +256,7 @@ export default function ShiftPlanWeekNav({
                   showClaimButton && orgSlug && count < required && claimOk;
                 return (
                 <div key={s.id} className="rounded bg-gray-50 px-1.5 py-1 text-[10px] dark:bg-gray-800">
-                  <span className="text-gray-700 dark:text-gray-300">{slotLabel(s)}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{slotLabel(s, appLocale)}</span>
                   <div className="ml-1 text-gray-600 dark:text-gray-400">
                     {count > 0
                       ? formatAssignments(s.assignments, profileNames)
@@ -411,7 +413,7 @@ export default function ShiftPlanWeekNav({
                         className="flex flex-col gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 dark:border-gray-600 dark:bg-gray-800"
                       >
                         <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                          {slotLabel(s)}
+                          {slotLabel(s, appLocale)}
                         </span>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           {count > 0
@@ -541,7 +543,7 @@ export default function ShiftPlanWeekNav({
                       key={s.id}
                       className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs"
                     >
-                      <span className="font-medium text-gray-700">{slotLabelDetail(s)}</span>
+                      <span className="font-medium text-gray-700">{slotLabelDetail(s, appLocale)}</span>
                       <p className="mt-1 text-gray-600">
                         {formatAssignmentsPlain(s.assignments, profileNames)}
                       </p>
@@ -582,7 +584,7 @@ export default function ShiftPlanWeekNav({
                   key={s.id}
                   className="rounded border border-blue-500/20 bg-slate-700/50 px-3 py-2 text-xs"
                 >
-                  <span className="font-medium text-blue-300">{slotLabelDetail(s)}</span>
+                  <span className="font-medium text-blue-300">{slotLabelDetail(s, appLocale)}</span>
                   <p className="mt-1 text-blue-200/90">
                     {formatAssignmentsPlain(s.assignments, profileNames)}
                   </p>

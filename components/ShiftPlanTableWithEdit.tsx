@@ -307,7 +307,9 @@ export default function ShiftPlanTableWithEdit({
                           <input type="hidden" name="eventName" value={eventName} />
                           <input type="hidden" name="eventDate" value={dateStr} />
                           <SubmitButtonWithSpinner
-                            className="flex min-h-[36px] items-center justify-center rounded bg-red-100 px-2 py-1 text-[10px] text-red-600 hover:bg-red-200 disabled:opacity-70 sm:min-h-0"
+                            variant="destructive"
+                            buttonSize="sm"
+                            className="flex min-h-[36px] items-center justify-center text-[10px] sm:min-h-0"
                             title={t("shifts.delete_event", locale)}
                             loadingLabel="…"
                           >
@@ -376,7 +378,16 @@ export default function ShiftPlanTableWithEdit({
                                 }}
                               >
                                 <input type="hidden" name="shiftId" value={s.id} />
-                                <SubmitButtonWithSpinner className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 disabled:opacity-70 text-sm dark:bg-red-900/30 dark:text-red-400" title={t("common.remove", locale)} loadingLabel="…" aria-label={t("common.remove", locale)}>✕</SubmitButtonWithSpinner>
+                                <SubmitButtonWithSpinner
+                                  variant="destructive"
+                                  buttonSize="sm"
+                                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-sm"
+                                  title={t("common.remove", locale)}
+                                  loadingLabel="…"
+                                  aria-label={t("common.remove", locale)}
+                                >
+                                  ✕
+                                </SubmitButtonWithSpinner>
                               </form>
                             </div>
                             </div>
@@ -456,7 +467,15 @@ export default function ShiftPlanTableWithEdit({
                               }}
                             >
                               <input type="hidden" name="shiftId" value={s.id} />
-                              <SubmitButtonWithSpinner className="rounded bg-red-500/20 px-2 py-1 text-[11px] text-red-300 hover:bg-red-500/30 disabled:opacity-70 dark:bg-red-900/30 dark:text-red-400" title={t("common.remove", locale)} loadingLabel="…">✕</SubmitButtonWithSpinner>
+                              <SubmitButtonWithSpinner
+                                variant="destructive"
+                                buttonSize="sm"
+                                className="px-2 py-1 text-[11px]"
+                                title={t("common.remove", locale)}
+                                loadingLabel="…"
+                              >
+                                ✕
+                              </SubmitButtonWithSpinner>
                             </form>
                             </div>
                           </div>

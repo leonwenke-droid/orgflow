@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Bell } from "lucide-react";
+import { useLocale } from "./LocaleProvider";
+import { formatLocaleDateTime } from "../lib/formatDate";
 
 type NotifItem = {
   id: string;
@@ -13,6 +15,7 @@ type NotifItem = {
 };
 
 export default function NotificationBell() {
+  const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotifItem[]>([]);
   const [unread, setUnread] = useState(0);
@@ -119,7 +122,7 @@ export default function NotificationBell() {
                         <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{n.title}</p>
                         {n.body && <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-400">{n.body}</p>}
                         <p className="mt-1 text-[10px] text-gray-400">
-                          {new Date(n.created_at).toLocaleString()}
+                          {formatLocaleDateTime(n.created_at, locale)}
                         </p>
                       </a>
                     ) : (
@@ -132,6 +135,9 @@ export default function NotificationBell() {
                       >
                         <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{n.title}</p>
                         {n.body && <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-400">{n.body}</p>}
+                        <p className="mt-1 text-[10px] text-gray-400">
+                          {formatLocaleDateTime(n.created_at, locale)}
+                        </p>
                       </button>
                     )}
                   </li>

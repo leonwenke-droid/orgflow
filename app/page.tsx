@@ -88,7 +88,7 @@ export default async function LandingPage() {
           </span>
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-blue-600" />
-            Treasury tracking with import support
+            Finanzen & Kasse mit Import
           </span>
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-blue-600" />
@@ -167,7 +167,7 @@ export default async function LandingPage() {
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <Wallet className="h-8 w-8 text-blue-600 mb-4" />
-              <h4 className="font-semibold text-gray-900 mb-2">Treasury transparency</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">Finanzen transparent halten</h4>
               <p className="text-gray-600 text-sm">
                 Keep balances and entries understandable for everyone involved, including imports and audit-friendly logs.
               </p>

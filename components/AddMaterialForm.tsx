@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
+import { Button } from "./ui/Button";
 
 type Profile = { id: string; full_name: string };
 type EventOption = { id: string; name: string };
@@ -127,13 +128,9 @@ export default function AddMaterialForm({
                 ))}
               </select>
               {personSlots.length > 1 ? (
-                <button
-                  type="button"
-                  onClick={() => removePerson(key)}
-                  className="shrink-0 rounded px-2 py-1.5 text-[10px] text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                >
+                <Button type="button" variant="destructive" size="sm" onClick={() => removePerson(key)} className="shrink-0 text-[10px] font-normal">
                   {t("common.remove", locale)}
-                </button>
+                </Button>
               ) : null}
             </div>
           ))}

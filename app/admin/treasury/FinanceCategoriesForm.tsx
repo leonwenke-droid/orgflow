@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "../../../components/LocaleProvider";
 import { t } from "../../../lib/i18n";
+import { Button } from "../../../components/ui/Button";
 
 type Category = { key: string; name: string };
 
@@ -68,15 +69,17 @@ export default function FinanceCategoriesForm({
             className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-300"
           >
             {c.name}
-            <button
+            <Button
               type="button"
+              variant="destructive"
+              size="sm"
               disabled={loading}
               onClick={() => removeAt(c.key)}
-              className="rounded px-1 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-900/20"
+              className="min-h-0 px-1 py-0 text-sm leading-none font-normal"
               aria-label={t("common.remove", locale)}
             >
               ×
-            </button>
+            </Button>
           </span>
         ))}
         {cats.length === 0 && <span className="text-xs text-gray-500 dark:text-gray-400">{t("finance.categories_empty", locale)}</span>}

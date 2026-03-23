@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { formatLocaleDateTime } from "../../../lib/formatDate";
+import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -186,7 +188,7 @@ export default async function OrgFeedbackPage(props: { params: Promise<{ org: st
                     <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">{it.description}</p>
                   ) : null}
                   <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-                    {new Date(it.created_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB")}
+                    {formatLocaleDateTime(it.created_at, locale)}
                   </p>
                 </div>
                 {isAdmin ? (
@@ -212,9 +214,7 @@ export default async function OrgFeedbackPage(props: { params: Promise<{ org: st
                     </button>
                   </form>
                 ) : (
-                  <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                    {it.status}
-                  </span>
+                  <StatusBadge status={it.status} locale={locale} />
                 )}
               </div>
             </li>
