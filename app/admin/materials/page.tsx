@@ -9,6 +9,8 @@ import EmptyState from "../../../components/EmptyState";
 import DeleteMaterialButton from "../../../components/DeleteMaterialButton";
 import MaterialsWizard from "./MaterialsWizard";
 import { LOCALE_COOKIE_NAME, localeFromCookie, t } from "../../../lib/i18n";
+import { requireOrgAdminAction } from "../../../lib/permissions";
+import { writeAuditLog } from "../../../lib/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +50,9 @@ async function addMaterialProcurement(
   }
 
   const orgId = (profile as { organization_id?: string | null }).organization_id ?? null;
+  if (!orgId) return { errorKey: "materials.error_unauthorized" };
+  const actor = await requireOrgAdminAction(orgId);
+  if (!actor) return { errorKey: "materials.error_unauthorized" };
 
   if (eventId && orgId) {
     const { data: ev } = await service
@@ -102,7 +107,7 @@ async function addMaterialProcurement(
     .insert(validUserIds.map((user_id) => ({ material_id: material.id, user_id })));
 
   if (partError) {
-    return { error: partError.message };
+    return { errorKey: "materials.error_save" };
   }
 
   const { error: evError } = await service
@@ -117,8 +122,17 @@ async function addMaterialProcurement(
     );
 
   if (evError) {
-    return { error: evError.message };
+    return { errorKey: "materials.error_save" };
   }
+
+  await writeAuditLog({
+    organizationId: orgId,
+    actorProfileId: actor.actorProfileId,
+    action: "material.created",
+    targetTable: "material_procurements",
+    targetId: String(material.id),
+    metadata: { participantCount: validUserIds.length, size, eventId }
+  });
 
   revalidatePath("/admin/materials");
   return { success: true };
@@ -136,14 +150,25 @@ async function deleteMaterialProcurement(formData: FormData) {
   const service = createSupabaseServiceRoleClient();
   const { data: profile } = await service
     .from("profiles")
-    .select("role")
+    .select("role, organization_id, id")
     .eq("auth_user_id", user.id)
     .single();
 
   if (!profile || !["admin", "lead"].includes(profile.role)) return;
+  const orgId = (profile as { organization_id?: string | null }).organization_id ?? null;
+  if (!orgId) return;
+  const actor = await requireOrgAdminAction(orgId);
+  if (!actor) return;
 
   await service.from("engagement_events").delete().eq("source_id", materialId);
   await service.from("material_procurements").delete().eq("id", materialId);
+  await writeAuditLog({
+    organizationId: orgId,
+    actorProfileId: actor.actorProfileId,
+    action: "material.deleted",
+    targetTable: "material_procurements",
+    targetId: materialId
+  });
   revalidatePath("/admin/materials");
 }
 

@@ -39,7 +39,7 @@ export default function EmptyState({
           {actionHref && actionLabel && (
             <Link
               href={actionHref}
-              className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              className="btn-primary"
             >
               {actionLabel}
             </Link>
@@ -47,7 +47,7 @@ export default function EmptyState({
           {secondaryActionHref && secondaryLabel && (
             <Link
               href={secondaryActionHref}
-              className="inline-flex rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+              className="btn-secondary"
             >
               {secondaryLabel}
             </Link>

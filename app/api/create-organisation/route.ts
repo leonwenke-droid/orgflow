@@ -25,13 +25,23 @@ export async function POST(req: Request) {
     const modules = Array.isArray(body.modules)
       ? (body.modules as string[]).map((m: string) => String(m).trim()).filter(Boolean)
       : ["tasks", "shifts", "finance", "resources", "engagement"];
-    const teams = Array.isArray(body.teams)
-      ? (body.teams as string[]).map((t: string) => String(t).trim()).filter(Boolean)
-      : [];
+    const teamsRaw = Array.isArray(body.teams) ? (body.teams as string[]) : [];
+    const teams = [...new Set(
+      teamsRaw
+        .map((t: string) => String(t).trim())
+        .filter((t) => t.length >= 2)
+        .map((t) => t.slice(0, 50))
+    )];
 
     if (!name) {
       return NextResponse.json(
         { message: "Organisation name is required." },
+        { status: 400 }
+      );
+    }
+    if (name.length < 2) {
+      return NextResponse.json(
+        { message: "Organisation name must be at least 2 characters." },
         { status: 400 }
       );
     }

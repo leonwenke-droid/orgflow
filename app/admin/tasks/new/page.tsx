@@ -35,6 +35,7 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
   const description = formData.get("description")?.toString().trim() || null;
   const committeeId = formData.get("committee_id")?.toString() || null;
   const ownerId = formData.get("owner_id")?.toString() || null;
+  const ownerScope = formData.get("owner_scope")?.toString() === "committee" ? "committee" : "year";
   const dueAt = formData.get("due_at")?.toString() || null;
   const proofRequired = formData.get("proof_required") === "on";
   const eventId = formData.get("event_id")?.toString().trim() || null;
@@ -46,6 +47,12 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
 
   if (dueAt && new Date(dueAt).getTime() < Date.now()) {
     return { errorKey: "tasks.deadline_past" };
+  }
+  if (ownerScope === "committee" && !committeeId) {
+    return { errorKey: "tasks.committee_required_for_scope" };
+  }
+  if (!ownerId && !claimable) {
+    return { errorKey: "tasks.owner_or_claimable_required" };
   }
 
   const token = crypto.randomUUID().replace(/-/g, "");

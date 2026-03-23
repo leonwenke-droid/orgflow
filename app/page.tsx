@@ -46,58 +46,65 @@ export default async function LandingPage() {
               href="/create-organisation"
               className="px-4 py-2 rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
             >
-              Start your organisation
+              Start your cohort
             </Link>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-7xl px-6 py-20 md:py-28 text-center">
+      <section className="mx-auto max-w-7xl px-6 py-16 md:py-24 text-center">
         <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 tracking-tight">
-          Organise your team, tasks and events in one place.
+          Abitur cohort coordination without spreadsheet chaos.
         </h2>
         <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-          OrgFlow helps organisations coordinate volunteers, tasks and shifts
-          effortlessly.
+          OrgFlow helps school cohorts assign responsibilities, fill shifts fairly,
+          and keep treasury updates transparent in one shared workspace.
         </p>
         <div className="flex flex-wrap gap-3 justify-center mb-10">
           <Link
             href="/create-organisation"
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
           >
-            Start your organisation
+            Start your cohort now
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="#organisations"
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-6 py-3 text-base font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center gap-2 px-2 py-3 text-base font-medium text-gray-600 hover:text-gray-900 transition-colors"
           >
-            View organisations
+            See active cohorts
           </Link>
         </div>
-        <div className="flex flex-wrap gap-4 justify-center text-sm text-gray-600">
+        <div className="flex flex-wrap gap-4 justify-center text-sm text-gray-600 mb-8">
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-blue-600" />
-            Automatic shift assignment
+            Fair shift allocation and swap flow
           </span>
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-blue-600" />
-            Task management with token links
+            Clear ownership for every task
           </span>
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-blue-600" />
-            Treasury & Excel import
+            Treasury tracking with import support
           </span>
           <span className="flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-blue-600" />
-            Engagement tracking
+            Engagement scoring for fair workload
           </span>
+        </div>
+        <div className="mx-auto max-w-4xl rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-left sm:text-center">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-gray-600">
+            <span className="inline-flex items-center gap-1.5"><Shield className="h-3.5 w-3.5 text-blue-600" />Role-based access control</span>
+            <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />Audit-friendly finance records</span>
+            <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />Privacy pages and consent handling</span>
+          </div>
         </div>
       </section>
 
       {/* Problem */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-gray-50 py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-6">
           <h3 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4">
             Coordination is hard
@@ -108,21 +115,21 @@ export default async function LandingPage() {
             everything together.
           </p>
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <Users className="h-10 w-10 text-blue-600 mb-4" />
               <h4 className="font-semibold text-gray-900 mb-2">Scattered teams</h4>
               <p className="text-gray-600 text-sm">
                 Members in different groups, no single source of truth.
               </p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <Calendar className="h-10 w-10 text-blue-600 mb-4" />
               <h4 className="font-semibold text-gray-900 mb-2">Shift chaos</h4>
               <p className="text-gray-600 text-sm">
                 Manual scheduling, unfair distribution, last-minute swaps.
               </p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <Wallet className="h-10 w-10 text-blue-600 mb-4" />
               <h4 className="font-semibold text-gray-900 mb-2">Finance opacity</h4>
               <p className="text-gray-600 text-sm">
@@ -134,56 +141,34 @@ export default async function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-20">
+      <section id="features" className="py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-6">
           <h3 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4">
-            Everything you need
+            Core workflows that reduce coordination overhead
           </h3>
           <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-16">
-            Tasks, shifts, teams, resources, finances and engagement — all in
-            one platform.
+            Focus on the three workflows that break first in real student operations.
           </p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <CheckCircle2 className="h-8 w-8 text-blue-600 mb-4" />
-              <h4 className="font-semibold text-gray-900 mb-2">Task management</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">Task ownership and follow-through</h4>
               <p className="text-gray-600 text-sm">
-                Kanban boards, token-based confirmation links, proof uploads.
+                Assign each task to a clear owner, track status transitions, and collect proof when needed.
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <Calendar className="h-8 w-8 text-blue-600 mb-4" />
-              <h4 className="font-semibold text-gray-900 mb-2">Shift planning</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">Shift planning that stays fair</h4>
               <p className="text-gray-600 text-sm">
-                Auto-assignment, fair distribution, setup/teardown slots.
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <Users className="h-8 w-8 text-blue-600 mb-4" />
-              <h4 className="font-semibold text-gray-900 mb-2">Teams & members</h4>
-              <p className="text-gray-600 text-sm">
-                Organise committees, invite members, assign roles.
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <Zap className="h-8 w-8 text-blue-600 mb-4" />
-              <h4 className="font-semibold text-gray-900 mb-2">Resources</h4>
-              <p className="text-gray-600 text-sm">
-                Track material procurement, events and contributions.
+                Plan setup and teardown slots, support swaps, and avoid last-minute overload on the same people.
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <Wallet className="h-8 w-8 text-blue-600 mb-4" />
-              <h4 className="font-semibold text-gray-900 mb-2">Treasury</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">Treasury transparency</h4>
               <p className="text-gray-600 text-sm">
-                Balance tracking, Excel import, audit trail.
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <BarChart3 className="h-8 w-8 text-blue-600 mb-4" />
-              <h4 className="font-semibold text-gray-900 mb-2">Engagement score</h4>
-              <p className="text-gray-600 text-sm">
-                Fair distribution, points for tasks, shifts and resources.
+                Keep balances and entries understandable for the whole cohort, including imports and audit-friendly logs.
               </p>
             </div>
           </div>
@@ -191,7 +176,7 @@ export default async function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-gray-50 py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-6">
           <h3 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4">
             How it works
@@ -241,7 +226,7 @@ export default async function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20">
+      <section id="pricing" className="py-16 md:py-20">
         <div className="mx-auto max-w-7xl px-6">
           <h3 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-4">
             Pricing
@@ -344,7 +329,7 @@ export default async function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="bg-blue-600 py-20">
+      <section className="bg-blue-600 py-16 md:py-20">
         <div className="mx-auto max-w-4xl px-6 text-center">
           <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
             Ready to organise your team?
@@ -357,18 +342,21 @@ export default async function LandingPage() {
             href="/create-organisation"
             className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-semibold text-blue-600 shadow-sm hover:bg-gray-100 transition-colors"
           >
-            Start your organisation
+            Start your cohort now
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </section>
 
       {/* Organisations */}
-      <section id="organisations" className="py-20 bg-gray-50">
+      <section id="organisations" className="py-16 md:py-20 bg-gray-50">
         <div className="mx-auto max-w-7xl px-6">
           <h3 className="text-xl md:text-2xl font-semibold text-gray-900 text-center mb-8">
             Active organisations
           </h3>
+          <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-gray-600">
+            Live organisations already run their planning through one flow for tasks, shifts and treasury updates.
+          </p>
           {organizations.length === 0 ? (
             <p className="text-center text-gray-500 text-sm">
               No organisations yet — be the first to create one.

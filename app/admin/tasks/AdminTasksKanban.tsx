@@ -199,6 +199,7 @@ export default function AdminTasksKanban({
                       </span>
                       <form action={deleteTask} className="inline">
                         <input type="hidden" name="taskId" value={task.id} />
+                        <input type="hidden" name="organization_id" value={orgId ?? ""} />
                         <SubmitButtonWithSpinner
                           className="inline-flex items-center gap-1.5 rounded bg-red-100 px-2 py-0.5 text-[9px] text-red-600 hover:bg-red-200 disabled:opacity-70 dark:bg-red-900/30 dark:text-red-300"
                           title={t("tasks.remove_task_title", locale)}

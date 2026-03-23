@@ -30,6 +30,8 @@ export async function POST(req: NextRequest) {
 
     const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    // Clear any stale session first to prevent cross-org account-switch race conditions.
+    await supabase.auth.signOut();
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -51,8 +53,7 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json(
         {
-          message: "Login fehlgeschlagen. Bitte Zugangsdaten prüfen.",
-          detail: error.message
+          message: "Login fehlgeschlagen. Bitte Zugangsdaten prüfen."
         },
         { status: 400 }
       );

@@ -4,6 +4,9 @@
  */
 
 import type { DbRole } from "../types";
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseServiceRoleClient } from "./supabaseServer";
 
 /** Roles that can manage org (teams, tasks, shifts, members) */
 export const ADMIN_ROLES: DbRole[] = ["super_admin", "admin", "owner", "lead"];
@@ -38,4 +41,32 @@ export function canViewFinance(role: DbRole | null | undefined): boolean {
 
 export function isReadOnly(role: DbRole | null | undefined): boolean {
   return role != null && VIEWER_ROLES.includes(role);
+}
+
+export async function requireOrgAdminAction(
+  organizationId: string
+): Promise<{ actorProfileId: string; role: DbRole } | null> {
+  const orgId = String(organizationId ?? "").trim();
+  if (!orgId) return null;
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (!user?.id) return null;
+
+  const { data: adminOk } = await supabase.rpc("is_org_admin", { org_id: orgId });
+  if (adminOk !== true) return null;
+
+  const service = createSupabaseServiceRoleClient();
+  const { data: profile } = await service
+    .from("profiles")
+    .select("id, role")
+    .eq("auth_user_id", user.id)
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  if (!profile?.id || !canManageOrg((profile.role as DbRole | undefined) ?? null)) return null;
+  return {
+    actorProfileId: profile.id as string,
+    role: profile.role as DbRole
+  };
 }

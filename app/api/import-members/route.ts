@@ -18,8 +18,10 @@ export const runtime = "nodejs";
 
 const NAME_COL = 0;
 const SCORE_COL = 1;
-const KOMITEES_COL = 4;
-const LEITUNGEN_COL = 5;
+const KOMITEES_COL = 3;
+const LEITUNGEN_COL = 4;
+
+type ImportIssue = { row?: number; name?: string; reason: string };
 
 function parseCommitteeList(val: unknown): string[] {
   if (val == null || val === "" || String(val).trim() === "-") return [];
@@ -177,6 +179,9 @@ export async function POST(req: NextRequest) {
     }
 
     let created = 0;
+    let skipped = 0;
+    let failed = 0;
+    const issues: ImportIssue[] = [];
     const inviteLinks: { fullName: string; email?: string; inviteUrl: string; whatsappText: string }[] = [];
 
     const { data: existingProfiles } = await service
@@ -222,7 +227,21 @@ export async function POST(req: NextRequest) {
           : "member";
         const teamName = String((teamIdx >= 0 ? row[teamIdx] : "") ?? "").trim();
 
-        if (!fullName || existingNames.has(fullName.trim()) || (email && existingNames.has(email.toLowerCase()))) continue;
+        if (!fullName) {
+          skipped++;
+          issues.push({ row: i + 1, reason: "Missing name." });
+          continue;
+        }
+        if (existingNames.has(fullName.trim()) || (email && existingNames.has(email.toLowerCase()))) {
+          skipped++;
+          issues.push({ row: i + 1, name: fullName, reason: "Already exists (duplicate name/email)." });
+          continue;
+        }
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          skipped++;
+          issues.push({ row: i + 1, name: fullName, reason: "Invalid email format." });
+          continue;
+        }
         const id = randomUUID();
         const token = generateInviteToken();
         const tokenHash = hashInviteToken(token);
@@ -256,7 +275,11 @@ export async function POST(req: NextRequest) {
           invite_expires_at: expiresAt.toISOString(),
           invited_by: invitedBy
         });
-        if (profErr) continue;
+        if (profErr) {
+          failed++;
+          issues.push({ row: i + 1, name: fullName, reason: `Insert failed: ${profErr.message}` });
+          continue;
+        }
         if (committeeId) {
           await service.from("profile_committees").insert([{ user_id: id, committee_id: committeeId }]);
         }
@@ -307,7 +330,11 @@ export async function POST(req: NextRequest) {
       }
 
       for (const [fullName, row] of nameToRow) {
-        if (existingNames.has(fullName)) continue;
+        if (existingNames.has(fullName)) {
+          skipped++;
+          issues.push({ name: fullName, reason: "Already exists (duplicate name)." });
+          continue;
+        }
         const id = randomUUID();
         const token = generateInviteToken();
         const tokenHash = hashInviteToken(token);
@@ -332,7 +359,11 @@ export async function POST(req: NextRequest) {
           invite_expires_at: expiresAt.toISOString(),
           invited_by: invitedBy
         });
-        if (profErr) continue;
+        if (profErr) {
+          failed++;
+          issues.push({ name: fullName, reason: `Insert failed: ${profErr.message}` });
+          continue;
+        }
 
         if (row.score > 0) {
           await service.from("engagement_events").insert({
@@ -365,8 +396,11 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      message: `${created} Mitglieder importiert.`,
+      message: `${created} Mitglieder importiert. ${skipped} übersprungen. ${failed} fehlgeschlagen.`,
       created,
+      skipped,
+      failed,
+      issues: issues.slice(0, 50),
       inviteLinks: inviteLinks.length > 0 ? inviteLinks : undefined
     });
   } catch (e) {

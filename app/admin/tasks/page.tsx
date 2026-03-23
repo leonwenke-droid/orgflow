@@ -12,6 +12,8 @@ import CommitteeFilter from "../../../components/CommitteeFilter";
 import EmptyState from "../../../components/EmptyState";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t as tr } from "../../../lib/i18n";
 import AdminTasksKanban from "./AdminTasksKanban";
+import { restoreTask } from "./kanban-actions";
+import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
 
 export const dynamic = "force-dynamic";
 
@@ -195,6 +197,12 @@ export default async function AdminTasksPage(props: PageProps) {
       "id, title, description, status, due_at, committee_id, owner_id, created_by, proof_required, proof_url, access_token, organization_id, event_id, committees ( name )"
     )
     .order("due_at", { ascending: true });
+  const deletedTasksQuery = service
+    .from("tasks")
+    .select("id, title, deleted_at")
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false })
+    .limit(50);
   const profilesQuery = service.from("profiles").select("id, full_name");
   const eventsQuery = orgId
     ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
@@ -202,17 +210,22 @@ export default async function AdminTasksPage(props: PageProps) {
   if (orgId) {
     committeeQuery.eq("organization_id", orgId);
     tasksQuery.eq("organization_id", orgId);
+    tasksQuery.is("deleted_at", null);
+    deletedTasksQuery.eq("organization_id", orgId);
     profilesQuery.eq("organization_id", orgId);
+  } else {
+    tasksQuery.is("deleted_at", null);
   }
   if (eventIdFilter) {
     tasksQuery.eq("event_id", eventIdFilter);
   }
 
-  const [{ data: committees }, { data: tasks }, { data: profiles }, { data: eventsList }] = await Promise.all([
+  const [{ data: committees }, { data: tasks }, { data: profiles }, { data: eventsList }, { data: deletedTasks }] = await Promise.all([
     committeeQuery,
     tasksQuery,
     profilesQuery,
-    eventsQuery
+    eventsQuery,
+    deletedTasksQuery
   ]);
   const events = (eventsList ?? []) as { id: string; name: string }[];
 
@@ -290,7 +303,7 @@ export default async function AdminTasksPage(props: PageProps) {
           </label>
           <button
             type="submit"
-            className="rounded border border-gray-300 px-2 py-1 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+            className="btn-secondary px-2 py-1 text-xs"
           >
             {tr("common.ok", locale)}
           </button>
@@ -300,7 +313,7 @@ export default async function AdminTasksPage(props: PageProps) {
             <form action={autoAssignTasks} className="inline">
               <input type="hidden" name="organization_id" value={orgId} />
               <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
-              <SubmitButtonWithSpinner className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70" loadingLabel="…">
+              <SubmitButtonWithSpinner className="btn-primary px-3 py-1.5 text-xs" loadingLabel="…">
                 {tr("tasks.run_auto_assignment", locale)}
               </SubmitButtonWithSpinner>
             </form>
@@ -320,6 +333,27 @@ export default async function AdminTasksPage(props: PageProps) {
       )}
       {tasksFiltered.length > 0 && (
         <AdminTasksKanban tasks={tasksFiltered} orgId={orgId} orgSlug={effectiveOrgSlug} profileNames={profileNamesObj} />
+      )}
+      <RealtimeRefreshBridge organizationId={orgId} table="tasks" />
+      {(deletedTasks?.length ?? 0) > 0 && orgId && (
+        <section className="card">
+          <h3 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{tr("tasks.trash_title", locale)}</h3>
+          <div className="space-y-2">
+            {(deletedTasks ?? []).map((task: { id: string; title?: string | null; deleted_at?: string | null }) => (
+              <form key={task.id} action={restoreTask} className="flex items-center justify-between gap-2 rounded border border-gray-200 px-3 py-2 text-xs dark:border-gray-700">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{task.title || "Untitled task"}</p>
+                  <p className="text-gray-500">{task.deleted_at ? new Date(task.deleted_at).toLocaleString(locale === "de" ? "de-DE" : "en-GB") : "—"}</p>
+                </div>
+                <input type="hidden" name="taskId" value={task.id} />
+                <input type="hidden" name="organization_id" value={orgId} />
+                <SubmitButtonWithSpinner className="btn-secondary px-2 py-1 text-xs" loadingLabel="…">
+                  {tr("common.restore", locale)}
+                </SubmitButtonWithSpinner>
+              </form>
+            ))}
+          </div>
+        </section>
       )}
     </div>
   );

@@ -115,6 +115,9 @@ export default function NewTaskForm({
           {t("tasks.claimable_label", locale)}
         </label>
       </div>
+      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+        {t("tasks.owner_or_claimable_hint", locale)}
+      </p>
       <div className="pt-2">
         <SubmitButtonWithSpinner
           className="btn-primary text-xs inline-flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"

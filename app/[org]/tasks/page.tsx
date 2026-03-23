@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import TaskCompleteModalButton from "../../../components/TaskCompleteModal";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
+import EmptyState from "../../../components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
@@ -317,9 +318,17 @@ export default async function TasksViewerPage(props: {
             : t("dashboard.tasks", locale)}
         </h2>
         {tasks.length === 0 ? (
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t("empty.tasks", locale)}</p>
+          <EmptyState
+            messageKey="empty.tasks"
+            actionHref={`/${orgSlug}/dashboard`}
+            actionLabelKey="common.back"
+          />
         ) : otherTasksSorted.length === 0 ? (
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t("tasks.no_other_tasks", locale)}</p>
+          <EmptyState
+            messageKey="tasks.no_other_tasks"
+            actionHref={`/${orgSlug}/dashboard`}
+            actionLabelKey="common.back"
+          />
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {otherTasksSorted.map((task: any) => renderTaskRow(task))}

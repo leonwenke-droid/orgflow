@@ -20,12 +20,15 @@ export default function CreateCommitteeForm({
   const { locale } = useLocale();
   const [limitError, setLimitError] = useState<string | null>(null);
   const [otherError, setOtherError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(formData: FormData) {
+    if (submitting) return;
     setLimitError(null);
     setOtherError(null);
     const name = formData.get("name")?.toString()?.trim();
     if (!name) return;
+    setSubmitting(true);
     const description = formData.get("description")?.toString()?.trim() || null;
     const isActive = formData.get("is_active") === "on";
     const result = await createCommitteeAction(orgSlug, {
@@ -33,6 +36,7 @@ export default function CreateCommitteeForm({
       description,
       is_active: isActive
     });
+    setSubmitting(false);
     if (result.errorKey) {
       setOtherError(t(result.errorKey, locale));
       return;
@@ -73,9 +77,10 @@ export default function CreateCommitteeForm({
         />
         <button
           type="submit"
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 sm:shrink-0"
+          disabled={submitting}
+          className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 sm:shrink-0"
         >
-          {t("teams.create", locale)}
+          {submitting ? t("tasks.saving", locale) : t("teams.create", locale)}
         </button>
       </div>
       <div>

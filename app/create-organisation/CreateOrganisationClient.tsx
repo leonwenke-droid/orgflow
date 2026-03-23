@@ -17,16 +17,17 @@ const ORG_TYPES = [
 ];
 
 const MODULES = [
-  { key: "tasks", label: "Tasks", description: "Assign and track tasks" },
-  { key: "shifts", label: "Shifts", description: "Shift planning and scheduling" },
-  { key: "finance", label: "Finance", description: "Treasury and budget" },
-  { key: "resources", label: "Resources", description: "Materials and procurement" },
-  { key: "engagement", label: "Engagement", description: "Points and activity tracking" },
-  { key: "events", label: "Events", description: "Event management (coming soon)" },
+  { key: "tasks", label: "Tasks", description: "Turn open work into clear ownership and done-status." },
+  { key: "shifts", label: "Shifts", description: "Fill slots fairly and reduce last-minute scheduling chaos." },
+  { key: "finance", label: "Finance", description: "Track treasury updates and keep balances transparent." },
+  { key: "resources", label: "Resources", description: "Manage materials and purchases in one place." },
+  { key: "engagement", label: "Engagement", description: "Reward contributions and keep workload distribution fair." },
+  { key: "events", label: "Events", description: "Coordinate event-specific tasks and shifts (coming soon)." },
 ];
 
 export default function CreateOrganisationClient() {
   const router = useRouter();
+  const TOTAL_STEPS = 6;
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +60,14 @@ export default function CreateOrganisationClient() {
       .replace(/-+/g, "-")
       .slice(0, 50);
 
+  const normalizeTeams = (teams: string[]) =>
+    [...new Set(
+      teams
+        .map((t) => t.trim())
+        .filter((t) => t.length >= 2)
+        .map((t) => t.slice(0, 50))
+    )];
+
   const addTeam = () => setFormData((d) => ({ ...d, teams: [...d.teams, ""] }));
   const removeTeam = (i: number) =>
     setFormData((d) => ({
@@ -82,7 +91,7 @@ export default function CreateOrganisationClient() {
           name: formData.name.trim(),
           orgType: formData.orgType,
           modules: formData.modules,
-          teams: formData.teams.filter((t) => t.trim()),
+          teams: normalizeTeams(formData.teams),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -105,6 +114,22 @@ export default function CreateOrganisationClient() {
     }
   };
 
+  const runQuickstart = () => {
+    if (!formData.name.trim()) return;
+    setFormData((d) => ({
+      ...d,
+      modules: ["tasks", "shifts", "finance"]
+    }));
+    setStep(TOTAL_STEPS);
+  };
+
+  const nextDisabledReason =
+    step === 1 && !formData.name.trim()
+      ? "Enter an organisation name to continue."
+      : step === 3 && formData.modules.length === 0
+        ? "Select at least one module to continue."
+        : null;
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="mx-auto max-w-xl px-6">
@@ -117,8 +142,8 @@ export default function CreateOrganisationClient() {
           </Link>
         </div>
 
-        <div className="mb-8 flex gap-2">
-          {[1, 2, 3, 4, 5, 6].map((s) => (
+        <div className="mb-3 flex gap-2">
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
             <div
               key={s}
               className={`h-2 flex-1 rounded-full ${
@@ -127,6 +152,9 @@ export default function CreateOrganisationClient() {
             />
           ))}
         </div>
+        <p className="mb-6 text-xs font-medium text-gray-500">
+          Step {step} of {TOTAL_STEPS}
+        </p>
 
         <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
           {step === 1 && (
@@ -157,6 +185,20 @@ export default function CreateOrganisationClient() {
                     URL: /{slugFromName(formData.name)}
                   </p>
                 )}
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <p className="text-xs font-semibold text-gray-700">Quickstart</p>
+                <p className="mt-1 text-xs text-gray-600">
+                  Create your organisation with recommended modules now, configure teams and invites later.
+                </p>
+                <button
+                  type="button"
+                  onClick={runQuickstart}
+                  disabled={!formData.name.trim()}
+                  className="btn-secondary mt-2 text-xs"
+                >
+                  Use quickstart
+                </button>
               </div>
             </div>
           )}
@@ -232,11 +274,10 @@ export default function CreateOrganisationClient() {
           {step === 4 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">
-                Create teams
+                Optional: create teams
               </h2>
               <p className="text-sm text-gray-600">
-                Add teams to organise your members (e.g. Finance, Events,
-                Logistics).
+                Teams are optional. Add them now to organise members (e.g. Finance, Events, Logistics), or skip and set them up later.
               </p>
               <div className="space-y-3">
                 {formData.teams.map((t, i) => (
@@ -264,6 +305,9 @@ export default function CreateOrganisationClient() {
                 >
                   + Add team
                 </button>
+                <p className="text-xs text-gray-500">
+                  Empty rows are ignored. Team names should be at least 2 characters.
+                </p>
               </div>
             </div>
           )}
@@ -294,6 +338,13 @@ export default function CreateOrganisationClient() {
                   creation.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setStep(6)}
+                className="text-xs font-medium text-blue-600 hover:text-blue-700"
+              >
+                Skip for now and finish setup
+              </button>
             </div>
           )}
 
@@ -320,14 +371,17 @@ export default function CreateOrganisationClient() {
                 </p>
                 <p>
                   <strong>Teams:</strong>{" "}
-                  {formData.teams.filter((t) => t.trim()).length > 0
-                    ? formData.teams.filter((t) => t.trim()).join(", ")
-                    : "None"}
+                  {normalizeTeams(formData.teams).length > 0
+                    ? normalizeTeams(formData.teams).join(", ")
+                    : "No teams selected (optional)"}
                 </p>
               </div>
               {error && (
                 <p className="text-sm text-red-600">{error}</p>
               )}
+              <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                Next step after creation: open your dashboard and create your first task or shift.
+              </p>
             </div>
           )}
 
@@ -344,12 +398,18 @@ export default function CreateOrganisationClient() {
             {step < 6 ? (
               <button
                 type="button"
-                onClick={() => setStep((s) => Math.min(6, s + 1))}
+                onClick={() => {
+                  if (step === 4) {
+                    setFormData((d) => ({ ...d, teams: normalizeTeams(d.teams).length > 0 ? normalizeTeams(d.teams) : [""] }));
+                  }
+                  setStep((s) => Math.min(6, s + 1));
+                }}
                 disabled={
                   (step === 1 && !formData.name.trim()) ||
                   (step === 3 && formData.modules.length === 0)
                 }
                 className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={nextDisabledReason ?? undefined}
               >
                 Next
                 <ChevronRight className="h-4 w-4" />

@@ -100,6 +100,10 @@ export const config = {
     "/:org/dashboard",
     "/:org/admin",
     "/:org/admin/:path*",
+    "/:org/settings",
+    "/:org/settings/:path*",
+    "/:org/onboarding",
+    "/:org/onboarding/:path*",
     "/:org/login", // Org-Login erreichbar halten
     "/:org", // ein Segment, z. B. /my-org
   ]

@@ -13,6 +13,7 @@ import {
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import ClaimShiftRefreshForm from "../../../components/ClaimShiftRefreshForm";
+import EmptyState from "../../../components/EmptyState";
 import { claimShiftAction, claimShiftSwapAction, offerShiftSwapAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -278,7 +279,11 @@ export default async function ShiftsViewerPage(props: {
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
         <h2 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shifts.my_past_shifts", locale)}</h2>
         {myPastShifts.length === 0 ? (
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t("shifts.no_past_shifts", locale)}</p>
+          <EmptyState
+            messageKey="shifts.no_past_shifts"
+            actionHref={`/${orgSlug}/dashboard`}
+            actionLabelKey="common.back"
+          />
         ) : (
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {myPastShifts.map((s: any) => (

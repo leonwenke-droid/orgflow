@@ -40,3 +40,20 @@ Release-Freigabe nur bei:
 
 - allen Blocker-Punkten `passed`
 - gruenem Build/Lint/Typecheck
+
+## Phase-A Abnahme (Sprint 1)
+
+Stand: 2026-03-18
+
+- A1 Teams anlegen (`stack depth`): `passed` (Admin-Create nutzt Service-Role-Write; DB-Fehler wird nutzerfreundlich gemappt).
+- A2 Mitgliederanlage (`stack depth`): `passed` (Add/Update/Delete/Invite-Pfade nutzen Service-Role-Write; rekursive RLS-Pfade umgangen).
+- A3 Aufgabenstatus Admin+Member: `passed` (Membership-Abfrage in API via Service-Role stabilisiert; `proof_required` wird nur beim Status `erledigt` erzwungen).
+- A4 Debug-/Seed-Meldungen im UI: `passed` (technische Seed-Meldung durch produktgeeigneten Nutzerhinweis ersetzt).
+- A5 Route-/Layout-Auth Flash: `passed` (Admin-Sidebar wird auf Admin-Routen erst nach positivem Role-Check gerendert; Middleware-Matcher fuer Settings/Onboarding gehaertet).
+- A6 Session-/Org-Wechsel: `passed` (Login flow leert alte Session vor neuem Sign-In, reduziert Access-denied-Race bei Account-Wechsel).
+
+### Build/Quality Nachweis
+
+- `npm run lint`: passed
+- `npx tsc --noEmit`: passed
+- `npm run build`: passed

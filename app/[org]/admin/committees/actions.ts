@@ -1,17 +1,16 @@
 "use server";
 
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
 import { canAddTeam } from "../../../../lib/planLimits";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
 function normName(s: string) {
   return s.trim().toLowerCase();
 }
 
 async function duplicateNameInOrg(
-  supabase: ReturnType<typeof createServerComponentClient>,
+  supabase: ReturnType<typeof createSupabaseServiceRoleClient>,
   orgId: string,
   name: string,
   exceptCommitteeId?: string
@@ -35,7 +34,7 @@ export async function createCommitteeAction(
   const trimmed = (payload.name || "").trim();
   if (!trimmed) return { error: null, errorKey: "members.error_name_required" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
   if (await duplicateNameInOrg(supabase, orgIdForData, trimmed)) {
     return { error: null, errorKey: "teams.duplicate_name" };
   }
@@ -61,7 +60,12 @@ export async function createCommitteeAction(
     organization_id: orgIdForData
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (/stack depth limit exceeded/i.test(error.message)) {
+      return { errorKey: "common.generic_error", error: null };
+    }
+    return { error: error.message };
+  }
   revalidatePath(`/${orgSlug}/admin/committees`);
   return { error: null };
 }
@@ -89,7 +93,7 @@ export async function updateCommitteeAction(
   const trimmed = (fields.name || "").trim();
   if (!trimmed) return { error: null, errorKey: "members.error_name_required" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
   if (await duplicateNameInOrg(supabase, orgIdForData, trimmed, committeeId)) {
     return { error: null, errorKey: "teams.duplicate_name" };
   }
@@ -111,7 +115,12 @@ export async function updateCommitteeAction(
     .eq("id", committeeId)
     .eq("organization_id", orgIdForData);
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (/stack depth limit exceeded/i.test(error.message)) {
+      return { errorKey: "common.generic_error", error: null };
+    }
+    return { error: error.message };
+  }
   revalidatePath(`/${orgSlug}/admin/committees`);
   return { error: null };
 }
@@ -124,14 +133,19 @@ export async function deleteCommitteeAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
   const { error } = await supabase
     .from("committees")
     .delete()
     .eq("id", committeeId)
     .eq("organization_id", orgIdForData);
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (/stack depth limit exceeded/i.test(error.message)) {
+      return { errorKey: "common.generic_error", error: null };
+    }
+    return { error: error.message };
+  }
   revalidatePath(`/${orgSlug}/admin/committees`);
   return { error: null };
 }

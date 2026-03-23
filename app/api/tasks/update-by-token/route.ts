@@ -91,8 +91,7 @@ export async function POST(req: NextRequest) {
       console.error("tasks update error", updateError);
       return NextResponse.json(
         {
-          message: "Fehler beim Aktualisieren der Aufgabe.",
-          detail: updateError.message
+          message: "Fehler beim Aktualisieren der Aufgabe."
         },
         { status: 500 }
       );

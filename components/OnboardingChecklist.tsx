@@ -29,15 +29,15 @@ export default function OnboardingChecklist({
   if (allDone) return null;
 
   const steps: { done: boolean; labelKey: string; href?: string }[] = [
-    { done: hasTeam, labelKey: "empty.teams", href: isAdmin ? `/${orgSlug}/admin/committees` : undefined },
-    { done: hasMembers, labelKey: "empty.members", href: isAdmin ? `/${orgSlug}/admin/members` : undefined },
-    { done: hasTaskOrShift, labelKey: "empty.tasks", href: isAdmin ? `/admin/tasks?org=${encodeURIComponent(orgSlug)}` : undefined },
+    { done: hasTeam, labelKey: "onboarding.checklist_teams", href: isAdmin ? `/${orgSlug}/admin/committees` : undefined },
+    { done: hasMembers, labelKey: "onboarding.checklist_members", href: isAdmin ? `/${orgSlug}/admin/members` : undefined },
+    { done: hasTaskOrShift, labelKey: "onboarding.checklist_first_action", href: isAdmin ? `/admin/tasks?org=${encodeURIComponent(orgSlug)}` : undefined },
   ];
 
   return (
     <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
       <h2 className="mb-2 text-sm font-semibold text-amber-900 dark:text-amber-200">
-        {locale === "de" ? "Erste Schritte" : "Getting started"}
+        {t("onboarding.checklist_title", locale)}
       </h2>
       <ul className="space-y-1.5 text-sm">
         {steps.map(({ done, labelKey, href }) => (

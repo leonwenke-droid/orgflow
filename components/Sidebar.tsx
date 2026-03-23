@@ -120,6 +120,7 @@ export default function Sidebar({
   const [modules, setModules] = useState<OrgModules | null>(null);
   const [canViewFinance, setCanViewFinance] = useState<boolean | null>(null);
   const [canManageOrgUi, setCanManageOrgUi] = useState<boolean | null>(null);
+  const isAdminRoute = orgSlug ? pathname.startsWith(`/${orgSlug}/admin`) : false;
 
   useEffect(() => {
     if (!orgSlug) {
@@ -146,6 +147,8 @@ export default function Sidebar({
   }, [orgSlug]);
 
   if (!orgSlug || !user) return null;
+  // Avoid any admin-navigation flash before role check resolves.
+  if (isAdminRoute && canManageOrgUi !== true) return null;
 
   const isActive = (href: string) => {
     const currentOrg = searchParams?.get("org")?.trim() || null;
@@ -191,7 +194,14 @@ export default function Sidebar({
               {section.items.map(({ href, labelKey, icon: Icon }) => (
                 <Link key={href} href={href} prefetch className={linkClassName(href)}>
                   <Icon className="h-4 w-4 shrink-0" />
-                  {t(labelKey, locale)}
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate">{t(labelKey, locale)}</span>
+                    {href === `/${orgSlug}/dashboard` ? (
+                      <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
+                        {t("nav.recommended_start", locale)}
+                      </span>
+                    ) : null}
+                  </span>
                 </Link>
               ))}
             </div>

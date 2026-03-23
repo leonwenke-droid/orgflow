@@ -35,7 +35,8 @@ export async function POST(req: NextRequest) {
     const org = await getCurrentOrganization(orgSlug);
     const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
-    let { data: profilePrimary } = await supabase
+    const service = createSupabaseServiceRoleClient();
+    let { data: profilePrimary } = await service
       .from("profiles")
       .select("id, role")
       .eq("auth_user_id", user.id)
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
     let profile = profilePrimary;
     if (!profile && orgIdForData !== org.id) {
-      const { data: p2 } = await supabase
+      const { data: p2 } = await service
         .from("profiles")
         .select("id, role")
         .eq("auth_user_id", user.id)
@@ -63,7 +64,6 @@ export async function POST(req: NextRequest) {
     const profileRole = String((profile as { role?: string }).role ?? "");
     const isAdminLike = ADMIN_ROLES.includes(profileRole as (typeof ADMIN_ROLES)[number]);
 
-    const service = createSupabaseServiceRoleClient();
     const { data: task, error: taskError } = await service
       .from("tasks")
       .select("id, proof_required, proof_url, owner_id, organization_id")
@@ -139,8 +139,7 @@ export async function POST(req: NextRequest) {
       console.error("tasks update error", updateError);
       return NextResponse.json(
         {
-          message: "Failed to update task.",
-          detail: updateError.message
+          message: "Failed to update task."
         },
         { status: 500 }
       );

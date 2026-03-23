@@ -7,6 +7,8 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [summary, setSummary] = useState<{ created: number; skipped: number; failed: number } | null>(null);
+  const [issues, setIssues] = useState<Array<{ row?: number; name?: string; reason: string }>>([]);
   const [inviteLinks, setInviteLinks] = useState<{ fullName: string; inviteUrl: string; whatsappText: string }[]>([]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -17,6 +19,8 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
     }
     setLoading(true);
     setMessage(null);
+    setSummary(null);
+    setIssues([]);
     setInviteLinks([]);
     try {
       const formData = new FormData();
@@ -32,6 +36,12 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
         return;
       }
       setMessage({ ok: true, text: data.message || `${data.created} importiert.` });
+      setSummary({
+        created: Number(data.created ?? 0),
+        skipped: Number(data.skipped ?? 0),
+        failed: Number(data.failed ?? 0)
+      });
+      setIssues(Array.isArray(data.issues) ? data.issues : []);
       setFile(null);
       if (Array.isArray(data.inviteLinks) && data.inviteLinks.length > 0) {
         setInviteLinks(data.inviteLinks);
@@ -59,6 +69,9 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
+      <p className="w-full text-xs text-gray-500 dark:text-gray-400">
+        Supported: `.xlsx`, `.xls`, `.csv` | Required: member name | Optional: email, team, role.
+      </p>
       <input
         type="file"
         accept=".xlsx,.xls,.csv"
@@ -76,6 +89,24 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
         <span className={message.ok ? "text-green-600" : "text-amber-600"}>
           {message.text}
         </span>
+      )}
+      {summary && (
+        <div className="w-full rounded border border-gray-200 bg-gray-50 p-2 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+          <span className="font-medium">Result:</span>{" "}
+          created {summary.created} | skipped {summary.skipped} | failed {summary.failed}
+        </div>
+      )}
+      {issues.length > 0 && (
+        <div className="w-full rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+          <p className="font-medium">Import notes</p>
+          <ul className="mt-1 max-h-32 list-disc overflow-y-auto pl-4">
+            {issues.slice(0, 20).map((issue, idx) => (
+              <li key={idx}>
+                {issue.row ? `Row ${issue.row}` : issue.name ?? "Entry"}: {issue.reason}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {inviteLinks.length > 0 && (
         <div className="mt-3 w-full rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">

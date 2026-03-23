@@ -12,6 +12,9 @@ import ShiftAttendancePdfExport, { type ShiftForPdf } from "../../../components/
 import EmptyState from "../../../components/EmptyState";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+import { requireOrgAdminAction } from "../../../lib/permissions";
+import { writeAuditLog } from "../../../lib/audit";
+import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
 
 export const dynamic = "force-dynamic";
 
@@ -262,6 +265,23 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
   if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
 }
 
+async function resolveShiftOrganizationId(shiftId: string): Promise<string | null> {
+  const service = createSupabaseServiceRoleClient();
+  const { data } = await service.from("shifts").select("organization_id").eq("id", shiftId).maybeSingle();
+  return (data as { organization_id?: string | null } | null)?.organization_id ?? null;
+}
+
+async function resolveAssignmentOrganizationId(assignmentId: string): Promise<string | null> {
+  const service = createSupabaseServiceRoleClient();
+  const { data } = await service
+    .from("shift_assignments")
+    .select("shifts(organization_id)")
+    .eq("id", assignmentId)
+    .maybeSingle();
+  const row = data as { shifts?: { organization_id?: string | null } | null } | null;
+  return row?.shifts?.organization_id ?? null;
+}
+
 async function createShifts(
   _prev: { error?: string; errorKey?: string } | null,
   formData: FormData
@@ -290,6 +310,10 @@ async function createShifts(
     if (!eventName) {
       return { error: "Title required.", errorKey: "shifts.title_required" };
     }
+
+    if (!organizationId) return { errorKey: "common.unauthorized" };
+    const actor = await requireOrgAdminAction(organizationId);
+    if (!actor) return { errorKey: "common.unauthorized" };
 
     const supabase = createServerComponentClient({ cookies });
     const {
@@ -418,6 +442,13 @@ async function createShifts(
     }
 
     revalidatePath("/admin/shifts");
+    await writeAuditLog({
+      organizationId,
+      actorProfileId: actor.actorProfileId,
+      action: "shift.created_batch",
+      targetTable: "shifts",
+      metadata: { type, autoAssign }
+    });
     return { success: true };
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unbekannter Fehler.";
@@ -429,13 +460,27 @@ async function assignToShift(shiftId: string, formData: FormData) {
   "use server";
   const userId = formData.get("user_id")?.toString();
   if (!userId) return;
+  const organizationId = await resolveShiftOrganizationId(shiftId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
   const service = createSupabaseServiceRoleClient();
   const { error } = await service.from("shift_assignments").insert({
     shift_id: shiftId,
     user_id: userId,
     status: "zugewiesen"
   });
-  if (!error) revalidatePath("/admin/shifts");
+  if (!error) {
+    await writeAuditLog({
+      organizationId,
+      actorProfileId: actor.actorProfileId,
+      action: "shift.assignment_added",
+      targetTable: "shift_assignments",
+      targetId: shiftId,
+      metadata: { userId }
+    });
+    revalidatePath("/admin/shifts");
+  }
 }
 
 async function updateShift(shiftId: string, formData: FormData) {
@@ -448,6 +493,10 @@ async function updateShift(shiftId: string, formData: FormData) {
   const notes = formData.get("notes")?.toString().trim() || null;
 
   if (!eventName || !date || !startTime || !endTime) return;
+  const organizationId = await resolveShiftOrganizationId(shiftId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
   const { error } = await service
@@ -463,6 +512,13 @@ async function updateShift(shiftId: string, formData: FormData) {
     .eq("id", shiftId);
 
   if (!error) {
+    await writeAuditLog({
+      organizationId,
+      actorProfileId: actor.actorProfileId,
+      action: "shift.updated",
+      targetTable: "shifts",
+      targetId: shiftId
+    });
     revalidatePath("/admin/shifts");
     revalidatePath("/dashboard", "layout");
   }
@@ -484,6 +540,10 @@ async function updateEventGroup(shiftIds: string[], formData: FormData) {
   const location = formData.get("location")?.toString().trim() || null;
   const notes = formData.get("notes")?.toString().trim() || null;
   if (!newBaseName || !date || !shiftIds?.length) return;
+  const orgForCheck = await resolveShiftOrganizationId(shiftIds[0]);
+  if (!orgForCheck) return;
+  const actor = await requireOrgAdminAction(orgForCheck);
+  if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
   const { data: shifts } = await service
@@ -522,10 +582,21 @@ async function updateEventGroup(shiftIds: string[], formData: FormData) {
   }
   revalidatePath("/admin/shifts");
   revalidatePath("/dashboard", "layout");
+  await writeAuditLog({
+    organizationId: orgForCheck,
+    actorProfileId: actor.actorProfileId,
+    action: "shift.event_group_updated",
+    targetTable: "shifts",
+    metadata: { count: shiftIds.length }
+  });
 }
 
 async function removeAssignment(assignmentId: string) {
   "use server";
+  const organizationId = await resolveAssignmentOrganizationId(assignmentId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
   const service = createSupabaseServiceRoleClient();
   const { error } = await service
     .from("shift_assignments")
@@ -533,6 +604,13 @@ async function removeAssignment(assignmentId: string) {
     .eq("id", assignmentId);
 
   if (!error) {
+    await writeAuditLog({
+      organizationId,
+      actorProfileId: actor.actorProfileId,
+      action: "shift.assignment_removed",
+      targetTable: "shift_assignments",
+      targetId: assignmentId
+    });
     revalidatePath("/admin/shifts");
     revalidatePath("/dashboard");
   }
@@ -542,6 +620,10 @@ async function replaceAssignment(assignmentId: string, formData: FormData) {
   "use server";
   const newUserId = formData.get("user_id")?.toString();
   if (!newUserId) return;
+  const organizationId = await resolveAssignmentOrganizationId(assignmentId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
   const { error } = await service
@@ -550,6 +632,14 @@ async function replaceAssignment(assignmentId: string, formData: FormData) {
     .eq("id", assignmentId);
 
   if (!error) {
+    await writeAuditLog({
+      organizationId,
+      actorProfileId: actor.actorProfileId,
+      action: "shift.assignment_replaced",
+      targetTable: "shift_assignments",
+      targetId: assignmentId,
+      metadata: { newUserId }
+    });
     revalidatePath("/admin/shifts");
     revalidatePath("/dashboard");
   }
@@ -577,12 +667,24 @@ async function getShiftDonePoints(
 /** Zugewiesene Person ist angetreten → Status erledigt, Trigger vergibt shift_done. */
 async function markAssignmentAttended(assignmentId: string) {
   "use server";
+  const organizationId = await resolveAssignmentOrganizationId(assignmentId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
   const service = createSupabaseServiceRoleClient();
   const { error } = await service
     .from("shift_assignments")
     .update({ status: "erledigt" })
     .eq("id", assignmentId);
   if (!error) {
+    await writeAuditLog({
+      organizationId,
+      actorProfileId: actor.actorProfileId,
+      action: "shift.assignment_status_updated",
+      targetTable: "shift_assignments",
+      targetId: assignmentId,
+      metadata: { status: "erledigt" }
+    });
     revalidatePath("/admin/shifts");
     revalidatePath("/dashboard");
   }
@@ -594,6 +696,10 @@ async function markAssignmentNotAttended(
   replacementUserId: string | null
 ) {
   "use server";
+  const organizationId = await resolveAssignmentOrganizationId(assignmentId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
   const service = createSupabaseServiceRoleClient();
   const { data: assignment } = await service
     .from("shift_assignments")
@@ -625,6 +731,14 @@ async function markAssignmentNotAttended(
   }
   revalidatePath("/admin/shifts");
   revalidatePath("/dashboard");
+  await writeAuditLog({
+    organizationId,
+    actorProfileId: actor.actorProfileId,
+    action: "shift.assignment_status_updated",
+    targetTable: "shift_assignments",
+    targetId: assignmentId,
+    metadata: { status: "abgesagt", replacementUserId }
+  });
 }
 
 /** Status nachträglich ändern (z. B. von erledigt auf nicht angetreten). Entfernt alte Engagement-Einträge, setzt neuen Status, Trigger/App setzen Scores. */
@@ -634,6 +748,10 @@ async function updateAssignmentStatus(
   replacementUserId: string | null
 ) {
   "use server";
+  const organizationId = await resolveAssignmentOrganizationId(assignmentId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
   const service = createSupabaseServiceRoleClient();
   const { data: assignment } = await service
     .from("shift_assignments")
@@ -664,15 +782,37 @@ async function updateAssignmentStatus(
   }
   revalidatePath("/admin/shifts");
   revalidatePath("/dashboard");
+  await writeAuditLog({
+    organizationId,
+    actorProfileId: actor.actorProfileId,
+    action: "shift.assignment_status_updated",
+    targetTable: "shift_assignments",
+    targetId: assignmentId,
+    metadata: { status, replacementUserId }
+  });
 }
 
 async function deleteShift(formData: FormData) {
   "use server";
   const shiftId = formData.get("shiftId")?.toString();
   if (!shiftId) return;
+  const organizationId = await resolveShiftOrganizationId(shiftId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
   const service = createSupabaseServiceRoleClient();
   await service.from("shift_assignments").delete().eq("shift_id", shiftId);
-  await service.from("shifts").delete().eq("id", shiftId);
+  await service
+    .from("shifts")
+    .update({ deleted_at: new Date().toISOString(), deleted_by: actor.actorProfileId })
+    .eq("id", shiftId);
+  await writeAuditLog({
+    organizationId,
+    actorProfileId: actor.actorProfileId,
+    action: "shift.soft_deleted",
+    targetTable: "shifts",
+    targetId: shiftId
+  });
   revalidatePath("/admin/shifts");
   revalidatePath("/dashboard");
 }
@@ -697,8 +837,43 @@ async function deleteEventShifts(formData: FormData) {
   );
   const ids = toDelete.map((s: { id: string }) => s.id);
   if (ids.length === 0) return;
+  const orgForCheck = await resolveShiftOrganizationId(ids[0]);
+  if (!orgForCheck) return;
+  const actor = await requireOrgAdminAction(orgForCheck);
+  if (!actor) return;
   await service.from("shift_assignments").delete().in("shift_id", ids);
-  await service.from("shifts").delete().in("id", ids);
+  await service
+    .from("shifts")
+    .update({ deleted_at: new Date().toISOString(), deleted_by: actor.actorProfileId })
+    .in("id", ids);
+  await writeAuditLog({
+    organizationId: orgForCheck,
+    actorProfileId: actor.actorProfileId,
+    action: "shift.soft_deleted_batch",
+    targetTable: "shifts",
+    metadata: { count: ids.length, baseEventName }
+  });
+  revalidatePath("/admin/shifts");
+  revalidatePath("/dashboard");
+}
+
+async function restoreShift(formData: FormData) {
+  "use server";
+  const shiftId = String(formData.get("shiftId") ?? "").trim();
+  if (!shiftId) return;
+  const organizationId = await resolveShiftOrganizationId(shiftId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
+  const service = createSupabaseServiceRoleClient();
+  await service.from("shifts").update({ deleted_at: null, deleted_by: null }).eq("id", shiftId);
+  await writeAuditLog({
+    organizationId,
+    actorProfileId: actor.actorProfileId,
+    action: "shift.restored",
+    targetTable: "shifts",
+    targetId: shiftId
+  });
   revalidatePath("/admin/shifts");
   revalidatePath("/dashboard");
 }
@@ -780,13 +955,23 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     .select("id, event_name, date, start_time, end_time, location, notes, has_aufbau, has_abbau")
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
+  const deletedShiftsQuery = service
+    .from("shifts")
+    .select("id, event_name, date, start_time, deleted_at")
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false })
+    .limit(50);
   const profilesQuery = service.from("profiles").select("id, full_name").order("full_name");
   const eventsQuery = orgId
     ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
     : Promise.resolve({ data: [] as { id: string; name: string }[] });
   if (orgId) {
     shiftsQuery.eq("organization_id", orgId);
+    shiftsQuery.is("deleted_at", null);
+    deletedShiftsQuery.eq("organization_id", orgId);
     profilesQuery.eq("organization_id", orgId);
+  } else {
+    shiftsQuery.is("deleted_at", null);
   }
   if (eventIdFilter) {
     shiftsQuery.eq("event_id", eventIdFilter);
@@ -797,7 +982,8 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     { data: assignmentsRaw },
     { data: profiles },
     { data: counters },
-    { data: eventsList }
+    { data: eventsList },
+    { data: deletedShifts }
   ] = await Promise.all([
     shiftsQuery,
     service
@@ -805,7 +991,8 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
       .select("id, shift_id, status, user_id, replacement_user_id"),
     profilesQuery,
     service.from("user_counters").select("user_id, load_index, responsibility_malus"),
-    eventsQuery
+    eventsQuery,
+    deletedShiftsQuery
   ]);
   const events = (eventsList ?? []).map((e: { id: string; name: string }) => ({ id: e.id, name: e.name }));
 
@@ -913,7 +1100,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
               <input type="hidden" name="organization_id" value={orgId} />
               <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
               <SubmitButtonWithSpinner
-                className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
+                className="btn-primary px-3 py-1.5 text-xs"
                 loadingLabel="…"
               >
                 {t("shifts.run_auto_assignment", locale)}
@@ -953,6 +1140,26 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         )}
         </div>
       </section>
+      {(deletedShifts?.length ?? 0) > 0 && (
+        <section className="card">
+          <h3 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{t("shifts.trash_title", locale)}</h3>
+          <div className="space-y-2">
+            {(deletedShifts ?? []).map((shift: { id: string; event_name?: string | null; date?: string | null; start_time?: string | null; deleted_at?: string | null }) => (
+              <form key={shift.id} action={restoreShift} className="flex items-center justify-between gap-2 rounded border border-gray-200 px-3 py-2 text-xs dark:border-gray-700">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{shift.event_name || "Untitled shift"}</p>
+                  <p className="text-gray-500">{shift.date || "—"} {shift.start_time || ""}</p>
+                </div>
+                <input type="hidden" name="shiftId" value={shift.id} />
+                <SubmitButtonWithSpinner className="btn-secondary px-2 py-1 text-xs" loadingLabel="…">
+                  {t("common.restore", locale)}
+                </SubmitButtonWithSpinner>
+              </form>
+            ))}
+          </div>
+        </section>
+      )}
+      <RealtimeRefreshBridge organizationId={orgId} table="shift_assignments" />
     </div>
   );
 }

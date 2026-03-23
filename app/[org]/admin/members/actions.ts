@@ -1,10 +1,9 @@
 "use server";
 
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
 import { canAddMember } from "../../../../lib/planLimits";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import {
   buildInviteUrl,
   buildWhatsAppInviteText,
@@ -16,8 +15,16 @@ import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
 
 const LEGACY_DEFAULT_ORG_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 
+function mapMemberDbError(error: { message?: string } | null): { error: string | null; errorKey?: string } {
+  if (!error?.message) return { error: "Unknown error." };
+  if (/stack depth limit exceeded/i.test(error.message)) {
+    return { error: null, errorKey: "common.generic_error" };
+  }
+  return { error: error.message };
+}
+
 async function issueMemberInvite(
-  supabase: ReturnType<typeof createServerComponentClient>,
+  supabase: ReturnType<typeof createSupabaseServiceRoleClient>,
   orgId: string,
   orgName: string,
   profile: { id: string; full_name?: string | null; email?: string | null }
@@ -105,14 +112,14 @@ export async function updateMemberNameAction(
   const name = (fullName || "").trim();
   if (!name) return { error: null, errorKey: "members.error_name_required" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
   const { error } = await supabase
     .from("profiles")
     .update({ full_name: name })
     .eq("id", profileId)
     .eq("organization_id", orgIdForData);
 
-  if (error) return { error: error.message };
+  if (error) return mapMemberDbError(error);
   revalidatePath(`/${orgSlug}/admin/members`);
   return { error: null };
 }
@@ -126,7 +133,7 @@ export async function updateMemberCommitteesAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
 
   const ids = committeeIds.filter(Boolean);
   const primaryId = ids[0] || null;
@@ -136,13 +143,13 @@ export async function updateMemberCommitteesAction(
     .delete()
     .eq("user_id", profileId);
 
-  if (delErr) return { error: delErr.message };
+  if (delErr) return mapMemberDbError(delErr);
 
   if (ids.length > 0) {
     const { error: insErr } = await supabase.from("profile_committees").insert(
       ids.map((cid) => ({ user_id: profileId, committee_id: cid }))
     );
-    if (insErr) return { error: insErr.message };
+    if (insErr) return mapMemberDbError(insErr);
   }
 
   const { error } = await supabase
@@ -151,7 +158,7 @@ export async function updateMemberCommitteesAction(
     .eq("id", profileId)
     .eq("organization_id", orgIdForData);
 
-  if (error) return { error: error.message };
+  if (error) return mapMemberDbError(error);
   revalidatePath(`/${orgSlug}/admin/members`);
   return { error: null };
 }
@@ -165,14 +172,14 @@ export async function updateMemberRoleAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
   const { error } = await supabase
     .from("profiles")
     .update({ role })
     .eq("id", profileId)
     .eq("organization_id", orgIdForData);
 
-  if (error) return { error: error.message };
+  if (error) return mapMemberDbError(error);
   revalidatePath(`/${orgSlug}/admin/members`);
   return { error: null };
 }
@@ -185,7 +192,7 @@ export async function deleteMemberAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
 
   const { error } = await supabase
     .from("profiles")
@@ -193,7 +200,7 @@ export async function deleteMemberAction(
     .eq("id", profileId)
     .eq("organization_id", orgIdForData);
 
-  if (error) return { error: error.message };
+  if (error) return mapMemberDbError(error);
 
   revalidatePath(`/${orgSlug}/admin/members`);
   return { error: null };
@@ -208,7 +215,7 @@ export async function setMemberStatusAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
   const { error } = await supabase
     .from("profiles")
     .update({
@@ -221,7 +228,7 @@ export async function setMemberStatusAction(
     .eq("id", profileId)
     .eq("organization_id", orgIdForData);
 
-  if (error) return { error: error.message };
+  if (error) return mapMemberDbError(error);
   revalidatePath(`/${orgSlug}/admin/members`);
   return { error: null };
 }
@@ -234,7 +241,7 @@ export async function resendLeadInviteAction(
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
   const { data: profile, error: fetchErr } = await supabase
     .from("profiles")
     .select("id, full_name, email")
@@ -273,7 +280,7 @@ export async function setMemberAsLeadAction(
   const emailTrimmed = (email || "").trim();
   if (!emailTrimmed) return { error: null, errorKey: "members.error_email_required_lead" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, full_name, auth_user_id, status")
@@ -289,7 +296,7 @@ export async function setMemberAsLeadAction(
     .eq("id", profileId)
     .eq("organization_id", orgIdForData);
 
-  if (updateErr) return { error: updateErr.message };
+  if (updateErr) return mapMemberDbError(updateErr);
 
   revalidatePath(`/${orgSlug}/admin/members`);
   if (!(profile as { auth_user_id?: string | null }).auth_user_id || (profile as { status?: string | null }).status !== "active") {
@@ -321,7 +328,7 @@ export async function addMemberAction(
   const name = (fullName || "").trim();
   if (!name) return { error: null, errorKey: "members.error_name_required" };
 
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createSupabaseServiceRoleClient();
 
   const { count } = await supabase
     .from("profiles")
@@ -350,7 +357,7 @@ export async function addMemberAction(
     invite_status: "pending"
   });
 
-  if (error) return { error: error.message };
+  if (error) return mapMemberDbError(error);
 
   if (committeeIds.length > 0) {
     await supabase.from("profile_committees").insert(

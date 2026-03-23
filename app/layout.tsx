@@ -14,7 +14,7 @@ import FooterLinks from "../components/FooterLinks";
 export const metadata = {
   title: "OrgFlow",
   description:
-    "Organise your team, tasks and events in one place. OrgFlow helps organisations coordinate volunteers, tasks and shifts effortlessly."
+    "OrgFlow helps school cohorts and teams coordinate tasks, shifts and treasury updates without spreadsheet chaos."
 };
 
 function EnvErrorPage() {
