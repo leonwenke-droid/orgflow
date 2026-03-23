@@ -13,6 +13,7 @@ import EmptyState from "../../../components/EmptyState";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 import { getTodayDateString } from "../../../lib/dateFormat";
+import { isMissingSoftDeleteColumnError } from "../../../lib/supabaseSoftDelete";
 import { requireOrgAdminAction } from "../../../lib/permissions";
 import { writeAuditLog } from "../../../lib/audit";
 import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
@@ -949,55 +950,64 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
 
   const todayStr = getTodayDateString();
 
-  const shiftsQuery = service
-    .from("shifts")
-    .select("id, event_name, date, start_time, end_time, location, notes, has_aufbau, has_abbau")
-    .order("date", { ascending: true })
-    .order("start_time", { ascending: true });
-  const deletedShiftsQuery = service
+  const SHIFT_SELECT = "id, event_name, date, start_time, end_time, location, notes, has_aufbau, has_abbau";
+
+  function buildShiftsQuery(includeDeletedFilter: boolean) {
+    let q = service
+      .from("shifts")
+      .select(SHIFT_SELECT)
+      .order("date", { ascending: true })
+      .order("start_time", { ascending: true });
+    if (orgId) {
+      q = q.eq("organization_id", orgId);
+    }
+    if (eventIdFilter) {
+      q = q.eq("event_id", eventIdFilter);
+    }
+    if (includeDeletedFilter) {
+      q = q.is("deleted_at", null);
+    }
+    return q;
+  }
+
+  let shiftsRes = await buildShiftsQuery(true);
+  if (shiftsRes.error && isMissingSoftDeleteColumnError(shiftsRes.error.message)) {
+    shiftsRes = await buildShiftsQuery(false);
+  }
+  const shiftsRaw = shiftsRes.data;
+  const shiftsError =
+    shiftsRes.error && !isMissingSoftDeleteColumnError(shiftsRes.error.message) ? shiftsRes.error : null;
+
+  let deletedShiftsQuery = service
     .from("shifts")
     .select("id, event_name, date, start_time, deleted_at")
     .not("deleted_at", "is", null)
     .order("deleted_at", { ascending: false })
     .limit(50);
+  if (orgId) {
+    deletedShiftsQuery = deletedShiftsQuery.eq("organization_id", orgId);
+  }
+  const deletedShiftsRes = await deletedShiftsQuery;
+  const deletedShifts =
+    deletedShiftsRes.error && isMissingSoftDeleteColumnError(deletedShiftsRes.error.message)
+      ? []
+      : (deletedShiftsRes.data ?? []);
+
   const profilesQuery = service.from("profiles").select("id, full_name").order("full_name");
   const eventsQuery = orgId
     ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
     : Promise.resolve({ data: [] as { id: string; name: string }[] });
   if (orgId) {
-    shiftsQuery.eq("organization_id", orgId);
-    shiftsQuery.is("deleted_at", null);
-    deletedShiftsQuery.eq("organization_id", orgId);
     profilesQuery.eq("organization_id", orgId);
-  } else {
-    shiftsQuery.is("deleted_at", null);
-  }
-  if (eventIdFilter) {
-    shiftsQuery.eq("event_id", eventIdFilter);
   }
 
-  const [
-    { data: shiftsRaw, error: shiftsError },
-    { data: assignmentsRaw },
-    { data: profiles },
-    { data: counters },
-    { data: eventsList },
-    { data: deletedShifts }
-  ] = await Promise.all([
-    shiftsQuery,
-    service
-      .from("shift_assignments")
-      .select("id, shift_id, status, user_id, replacement_user_id"),
+  const [{ data: assignmentsRaw }, { data: profiles }, { data: counters }, { data: eventsList }] = await Promise.all([
+    service.from("shift_assignments").select("id, shift_id, status, user_id, replacement_user_id"),
     profilesQuery,
     service.from("user_counters").select("user_id, load_index, responsibility_malus"),
-    eventsQuery,
-    deletedShiftsQuery
+    eventsQuery
   ]);
   const events = (eventsList ?? []).map((e: { id: string; name: string }) => ({ id: e.id, name: e.name }));
-
-  if (shiftsError) {
-    console.error("[admin/shifts] Schichten laden:", shiftsError);
-  }
 
   const assignmentsByShift = new Map<
     string,

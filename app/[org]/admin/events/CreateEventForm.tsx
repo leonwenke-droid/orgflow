@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
 
@@ -96,8 +97,20 @@ export default function CreateEventForm({ orgId }: { orgId: string }) {
             className="rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
         </div>
-        <button type="submit" disabled={loading} className="btn-primary text-xs">
-          {loading ? t("events.form_creating", locale) : t("events.form_submit", locale)}
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary inline-flex items-center gap-2 text-xs disabled:opacity-70"
+          aria-busy={loading}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" aria-hidden />
+              {t("events.form_creating", locale)}
+            </>
+          ) : (
+            t("events.form_submit", locale)
+          )}
         </button>
       </form>
       {error && (

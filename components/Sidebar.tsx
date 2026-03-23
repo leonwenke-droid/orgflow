@@ -8,6 +8,7 @@ import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
 import {
   LayoutDashboard,
+  LayoutGrid,
   CheckSquare,
   CalendarDays,
   CalendarClock,
@@ -80,6 +81,7 @@ function getNavSections(
     { href: `/${org}/account`, labelKey: "nav.my_account", icon: UserCircle },
   ];
   const manageOrg: NavItem[] = [
+    ...(manage ? [{ href: `/${org}/admin`, labelKey: "dashboard.admin", icon: LayoutGrid }] : []),
     ...(manage ? [{ href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users }] : []),
     ...(manage ? [{ href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }] : []),
     ...(manage && m.tasks !== false
@@ -149,6 +151,10 @@ export default function Sidebar({
 
   const isActive = (href: string) => {
     const currentOrg = searchParams?.get("org")?.trim() || null;
+    // Admin hub: nur exakte Route, nicht alle /admin/*-Unterseiten
+    if (href === `/${orgSlug}/admin`) {
+      return pathname === `/${orgSlug}/admin`;
+    }
     if (href.includes("/admin/materials"))
       return (pathname === "/admin/materials" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/materials`);
     if (href.includes("/admin/treasury"))

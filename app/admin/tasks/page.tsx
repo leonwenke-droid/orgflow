@@ -12,6 +12,7 @@ import CommitteeFilter from "../../../components/CommitteeFilter";
 import EmptyState from "../../../components/EmptyState";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t as tr } from "../../../lib/i18n";
 import { formatLocaleDateTime } from "../../../lib/formatDate";
+import { isMissingSoftDeleteColumnError } from "../../../lib/supabaseSoftDelete";
 import AdminTasksKanban from "./AdminTasksKanban";
 import { restoreTask } from "./kanban-actions";
 import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
@@ -191,43 +192,60 @@ export default async function AdminTasksPage(props: PageProps) {
 
   await service.rpc("apply_task_missed_penalties");
 
+  const TASK_SELECT =
+    "id, title, description, status, due_at, committee_id, owner_id, created_by, proof_required, proof_url, access_token, organization_id, event_id, committees ( name )";
+
   const committeeQuery = service.from("committees").select("id, name").order("name");
-  const tasksQuery = service
-    .from("tasks")
-    .select(
-      "id, title, description, status, due_at, committee_id, owner_id, created_by, proof_required, proof_url, access_token, organization_id, event_id, committees ( name )"
-    )
-    .order("due_at", { ascending: true });
-  const deletedTasksQuery = service
-    .from("tasks")
-    .select("id, title, deleted_at")
-    .not("deleted_at", "is", null)
-    .order("deleted_at", { ascending: false })
-    .limit(50);
   const profilesQuery = service.from("profiles").select("id, full_name");
   const eventsQuery = orgId
     ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
     : Promise.resolve({ data: [] as { id: string; name: string }[] });
   if (orgId) {
     committeeQuery.eq("organization_id", orgId);
-    tasksQuery.eq("organization_id", orgId);
-    tasksQuery.is("deleted_at", null);
-    deletedTasksQuery.eq("organization_id", orgId);
     profilesQuery.eq("organization_id", orgId);
-  } else {
-    tasksQuery.is("deleted_at", null);
-  }
-  if (eventIdFilter) {
-    tasksQuery.eq("event_id", eventIdFilter);
   }
 
-  const [{ data: committees }, { data: tasks }, { data: profiles }, { data: eventsList }, { data: deletedTasks }] = await Promise.all([
+  const [{ data: committees }, { data: profiles }, { data: eventsList }] = await Promise.all([
     committeeQuery,
-    tasksQuery,
     profilesQuery,
-    eventsQuery,
-    deletedTasksQuery
+    eventsQuery
   ]);
+
+  function buildTasksQuery(includeDeletedFilter: boolean) {
+    let q = service.from("tasks").select(TASK_SELECT).order("due_at", { ascending: true });
+    if (orgId) {
+      q = q.eq("organization_id", orgId);
+    }
+    if (eventIdFilter) {
+      q = q.eq("event_id", eventIdFilter);
+    }
+    if (includeDeletedFilter) {
+      q = q.is("deleted_at", null);
+    }
+    return q;
+  }
+
+  let tasksRes = await buildTasksQuery(true);
+  if (tasksRes.error && isMissingSoftDeleteColumnError(tasksRes.error.message)) {
+    tasksRes = await buildTasksQuery(false);
+  }
+  const tasks = tasksRes.data;
+  const tasksLoadError = tasksRes.error && !isMissingSoftDeleteColumnError(tasksRes.error.message) ? tasksRes.error : null;
+
+  let deletedTasksQuery = service
+    .from("tasks")
+    .select("id, title, deleted_at")
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false })
+    .limit(50);
+  if (orgId) {
+    deletedTasksQuery = deletedTasksQuery.eq("organization_id", orgId);
+  }
+  const deletedTasksRes = await deletedTasksQuery;
+  const deletedTasks =
+    deletedTasksRes.error && isMissingSoftDeleteColumnError(deletedTasksRes.error.message)
+      ? []
+      : (deletedTasksRes.data ?? []);
   const events = (eventsList ?? []) as { id: string; name: string }[];
 
   const profileNames = new Map(
@@ -257,6 +275,11 @@ export default async function AdminTasksPage(props: PageProps) {
 
   return (
     <div className="space-y-4">
+      {tasksLoadError && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200" role="alert">
+          {tasksLoadError.message}
+        </p>
+      )}
       {effectiveOrgSlug && (
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel={tr("dashboard.tasks", locale)} />
       )}

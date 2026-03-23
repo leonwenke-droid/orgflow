@@ -281,19 +281,19 @@ export default function ShiftPlanWeekNav({
           type="button"
           onClick={() => setWeekIndex((i) => Math.max(0, i - 1))}
           disabled={!canGoLeft}
-          className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           aria-label="Vorherige Woche"
         >
           ←
         </button>
-        <h3 className="flex-1 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">
+        <h3 className="flex-1 text-center text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
           Woche {weekLabel}
         </h3>
         <button
           type="button"
           onClick={() => setWeekIndex((i) => Math.min(weeks.length - 1, i + 1))}
           disabled={!canGoRight}
-          className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           aria-label="Nächste Woche"
         >
           →
@@ -313,16 +313,16 @@ export default function ShiftPlanWeekNav({
               }
             }}
             disabled={!canDayLeft}
-            className="shrink-0 rounded-xl border border-gray-300 bg-white p-3 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation"
+            className="shrink-0 rounded-xl border border-gray-300 bg-white p-3 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             aria-label="Vorheriger Tag"
           >
             ←
           </button>
           <div className="min-w-0 flex-1 text-center">
-            <p className="truncate text-base font-semibold text-gray-900">
+            <p className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
               {currentDay && formatDateLabel(currentDay.dateStr, { weekday: "long" })}
             </p>
-            <p className="mt-0.5 text-xs text-gray-500">
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
               {currentDay && `${currentDay.dateStr.slice(8, 10)}.${currentDay.dateStr.slice(5, 7)}.${currentDay.dateStr.slice(0, 4)}`}
             </p>
           </div>
@@ -336,7 +336,7 @@ export default function ShiftPlanWeekNav({
               }
             }}
             disabled={!canDayRight}
-            className="shrink-0 rounded-xl border border-gray-300 bg-white p-3 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation"
+            className="shrink-0 rounded-xl border border-gray-300 bg-white p-3 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             aria-label="Next day"
           >
             →
@@ -352,12 +352,12 @@ export default function ShiftPlanWeekNav({
             }
             className={`relative flex flex-col rounded-xl border-2 p-4 text-left ${
               currentDay.dateStr === todayStr
-                ? "border-blue-400 bg-blue-50/50 ring-2 ring-blue-200"
-                : "border-gray-200 bg-white"
-            } ${currentDay.shifts.length > 0 ? "cursor-pointer active:bg-gray-50" : ""}`}
+                ? "border-blue-400 bg-blue-50/50 ring-2 ring-blue-200 dark:border-blue-600 dark:bg-blue-950/40 dark:ring-blue-800"
+                : "border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800/90"
+            } ${currentDay.shifts.length > 0 ? "cursor-pointer active:bg-gray-50 dark:active:bg-gray-700" : ""}`}
           >
             {currentDay.dateStr === todayStr && (
-              <span className="absolute right-12 top-3 rounded-md bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-600">
+              <span className="absolute right-12 top-3 rounded-md bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-600 dark:bg-blue-900/50 dark:text-blue-200">
                 Heute
               </span>
             )}
@@ -448,9 +448,9 @@ export default function ShiftPlanWeekNav({
               }
               className={`relative flex min-w-0 flex-col rounded border p-2 text-left ${
                 day.dateStr === todayStr
-                  ? "border-blue-300 bg-blue-50/50 ring-1 ring-blue-200"
-                  : "border-gray-200 bg-gray-50"
-              } ${hasShifts ? "cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-300" : ""}`}
+                  ? "border-blue-300 bg-blue-50/50 ring-1 ring-blue-200 dark:border-blue-600 dark:bg-blue-950/40 dark:ring-blue-800"
+                  : "border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/90"
+              } ${hasShifts ? "cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-300 dark:hover:bg-gray-700/80 dark:focus:ring-blue-600" : ""}`}
             >
               {renderDayCard(day)}
               {hasShifts && (
@@ -483,40 +483,40 @@ export default function ShiftPlanWeekNav({
         >
           <div
             ref={overlayCardRef}
-            className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl"
+            className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-600 dark:bg-gray-900"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
               <div>
-                <h3 className="text-sm font-semibold text-gray-900">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                   {overlayDay.dateStr && formatDateLabel(overlayDay.dateStr, { weekday: "long" })}
                 </h3>
                 {overlayDay.dateStr === getTodayDateString() && (
-                  <span className="mt-1 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-600">
+                  <span className="mt-1 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-600 dark:bg-blue-900/50 dark:text-blue-200">
                     Heute
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-1">
-                <span className="mr-1 text-[10px] text-gray-500">Download:</span>
+                <span className="mr-1 text-[10px] text-gray-500 dark:text-gray-400">Download:</span>
                 <button
                   type="button"
                   onClick={() => captureOverlayAsImage("png")}
-                  className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-200 focus:outline-none"
+                  className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-200 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   PNG
                 </button>
                 <button
                   type="button"
                   onClick={() => captureOverlayAsImage("jpeg")}
-                  className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-200 focus:outline-none"
+                  className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-200 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   JPG
                 </button>
                 <button
                   type="button"
                   onClick={() => setOverlayDay(null)}
-                  className="rounded p-1 text-gray-600 hover:bg-gray-200 focus:outline-none"
+                  className="rounded p-1 text-gray-600 hover:bg-gray-200 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-700"
                   aria-label="Close"
                 >
                   ✕

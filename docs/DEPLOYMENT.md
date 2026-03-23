@@ -41,7 +41,9 @@ Supabase limits auth emails per hour. If you see rate-limit errors, wait and ret
 
 ## Supabase: migrations on the production project
 
-Apply migrations to the **same** Supabase project as your production env vars. Examples of areas covered by migrations:
+Apply migrations to the **same** Supabase project as your production env vars. If the app shows errors like **`column ... deleted_at does not exist`** on admin tasks/shifts, apply the soft-delete migration (e.g. `20260326010000_tasks_shifts_soft_delete.sql` in the repo) via `npm run db:push` or the SQL Editor.
+
+Examples of areas covered by migrations:
 
 | Area | Examples (file names may vary) |
 |------|--------------------------------|
