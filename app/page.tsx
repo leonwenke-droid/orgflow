@@ -46,7 +46,7 @@ export default async function LandingPage() {
               href="/create-organisation"
               className="px-4 py-2 rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
             >
-              Start your cohort
+              Start your organisation
             </Link>
           </div>
         </div>
@@ -55,25 +55,26 @@ export default async function LandingPage() {
       {/* Hero */}
       <section className="mx-auto max-w-7xl px-6 py-16 md:py-24 text-center">
         <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 tracking-tight">
-          Abitur cohort coordination without spreadsheet chaos.
+          Organise your team, tasks and events in one place.
         </h2>
         <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-          OrgFlow helps school cohorts assign responsibilities, fill shifts fairly,
-          and keep treasury updates transparent in one shared workspace.
+          OrgFlow helps clubs, schools, volunteer groups and companies assign
+          responsibilities, plan shifts fairly, and keep finances transparent in
+          one shared workspace — without spreadsheet chaos.
         </p>
         <div className="flex flex-wrap gap-3 justify-center mb-10">
           <Link
             href="/create-organisation"
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
           >
-            Start your cohort now
+            Start your organisation
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="#organisations"
             className="inline-flex items-center gap-2 px-2 py-3 text-base font-medium text-gray-600 hover:text-gray-900 transition-colors"
           >
-            See active cohorts
+            See active organisations
           </Link>
         </div>
         <div className="flex flex-wrap gap-4 justify-center text-sm text-gray-600 mb-8">
@@ -147,7 +148,7 @@ export default async function LandingPage() {
             Core workflows that reduce coordination overhead
           </h3>
           <p className="text-lg text-gray-600 text-center max-w-2xl mx-auto mb-16">
-            Focus on the three workflows that break first in real student operations.
+            Focus on the three workflows that break first when teams coordinate without a single system of record.
           </p>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -168,7 +169,7 @@ export default async function LandingPage() {
               <Wallet className="h-8 w-8 text-blue-600 mb-4" />
               <h4 className="font-semibold text-gray-900 mb-2">Treasury transparency</h4>
               <p className="text-gray-600 text-sm">
-                Keep balances and entries understandable for the whole cohort, including imports and audit-friendly logs.
+                Keep balances and entries understandable for everyone involved, including imports and audit-friendly logs.
               </p>
             </div>
           </div>
@@ -342,7 +343,7 @@ export default async function LandingPage() {
             href="/create-organisation"
             className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-base font-semibold text-blue-600 shadow-sm hover:bg-gray-100 transition-colors"
           >
-            Start your cohort now
+            Start your organisation
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
