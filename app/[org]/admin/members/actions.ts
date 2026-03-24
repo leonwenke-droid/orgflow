@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
-import { assertCanManageMembersAndTeams } from "../../../../lib/permissions";
+import { assertCanManageMembersAndTeams } from "../../../../lib/permissionsServer";
 import { canAddMember } from "../../../../lib/planLimits";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import {

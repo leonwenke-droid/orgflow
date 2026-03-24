@@ -10,7 +10,7 @@ import DeleteMaterialButton from "../../../components/DeleteMaterialButton";
 import MaterialsWizard from "./MaterialsWizard";
 import { LOCALE_COOKIE_NAME, localeFromCookie, t } from "../../../lib/i18n";
 import { formatLocaleDateFromIso } from "../../../lib/formatDate";
-import { requireOrgAdminAction } from "../../../lib/permissions";
+import { requireOrgAdminAction } from "../../../lib/permissionsServer";
 import { writeAuditLog } from "../../../lib/audit";
 
 export const dynamic = "force-dynamic";

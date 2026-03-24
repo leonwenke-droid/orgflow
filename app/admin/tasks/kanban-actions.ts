@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import { requireOrgAdminAction } from "../../../lib/permissions";
+import { requireOrgAdminAction } from "../../../lib/permissionsServer";
 import { writeAuditLog } from "../../../lib/audit";
 
 const STATUSES = new Set(["offen", "in_arbeit", "erledigt"]);

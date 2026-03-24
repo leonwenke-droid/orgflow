@@ -8,7 +8,8 @@ import {
   getOrgIdForData,
   isOrgAdmin
 } from "../../../../lib/getOrganization";
-import { assertCanManageMembersAndTeams, canManageMembersAndTeams } from "../../../../lib/permissions";
+import { canManageMembersAndTeams } from "../../../../lib/permissions";
+import { assertCanManageMembersAndTeams } from "../../../../lib/permissionsServer";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";

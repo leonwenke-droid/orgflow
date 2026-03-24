@@ -14,7 +14,7 @@ import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner
 import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
 import { getTodayDateString } from "../../../lib/dateFormat";
 import { isMissingSoftDeleteColumnError } from "../../../lib/supabaseSoftDelete";
-import { requireOrgAdminAction } from "../../../lib/permissions";
+import { requireOrgAdminAction } from "../../../lib/permissionsServer";
 import { writeAuditLog } from "../../../lib/audit";
 import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
 

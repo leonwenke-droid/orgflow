@@ -1,13 +1,8 @@
 /**
- * Role-based permissions for OrgFlow
- * Maps DB roles to permission levels
+ * Role-based permissions for OrgFlow (safe to import from Client Components — no next/headers).
  */
 
 import type { DbRole } from "../types";
-import { cookies } from "next/headers";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { createSupabaseServiceRoleClient } from "./supabaseServer";
-import { getCurrentUserRoleInOrg, isOrgAdmin } from "./getOrganization";
 
 /** Roles that can use operational admin tools (tasks/shifts/resources/engagement hub) */
 export const OPERATIONAL_ADMIN_ROLES: DbRole[] = ["super_admin", "admin", "owner", "lead"];
@@ -46,20 +41,6 @@ export function canAccessOperationalAdmin(role: DbRole | null | undefined): bool
   return role != null && OPERATIONAL_ADMIN_ROLES.includes(role);
 }
 
-/** Server: is org admin RPC + darf Mitglieder/Teams verwalten (nicht Lead). */
-export async function assertCanManageMembersAndTeams(orgId: string): Promise<boolean> {
-  if (!(await isOrgAdmin(orgId))) return false;
-  const role = await getCurrentUserRoleInOrg(orgId);
-  return canManageMembersAndTeams(role);
-}
-
-/** Server: is org admin + darf Organisationseinstellungen ändern (nicht Lead). */
-export async function assertCanChangeOrgSettings(orgId: string): Promise<boolean> {
-  if (!(await isOrgAdmin(orgId))) return false;
-  const role = await getCurrentUserRoleInOrg(orgId);
-  return canChangeOrgSettings(role);
-}
-
 export function canManageTeamTasks(role: DbRole | null | undefined): boolean {
   return role != null && TEAM_LEAD_ROLES.includes(role);
 }
@@ -74,32 +55,4 @@ export function canViewFinance(role: DbRole | null | undefined): boolean {
 
 export function isReadOnly(role: DbRole | null | undefined): boolean {
   return role != null && VIEWER_ROLES.includes(role);
-}
-
-export async function requireOrgAdminAction(
-  organizationId: string
-): Promise<{ actorProfileId: string; role: DbRole } | null> {
-  const orgId = String(organizationId ?? "").trim();
-  if (!orgId) return null;
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-  if (!user?.id) return null;
-
-  const { data: adminOk } = await supabase.rpc("is_org_admin", { org_id: orgId });
-  if (adminOk !== true) return null;
-
-  const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
-    .from("profiles")
-    .select("id, role")
-    .eq("auth_user_id", user.id)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (!profile?.id || !canManageOrg((profile.role as DbRole | undefined) ?? null)) return null;
-  return {
-    actorProfileId: profile.id as string,
-    role: profile.role as DbRole
-  };
 }

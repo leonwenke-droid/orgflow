@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
-import { assertCanChangeOrgSettings } from "../../../lib/permissions";
+import { assertCanChangeOrgSettings } from "../../../lib/permissionsServer";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
