@@ -43,6 +43,12 @@ export default async function LandingPage() {
               Pricing
             </Link>
             <Link
+              href="/login?redirectTo=/dashboard"
+              className="px-3 py-1.5 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
               href="/create-organisation"
               className="px-4 py-2 rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
             >

@@ -5,6 +5,13 @@ export const defaultLocale: Locale = "en";
 export const translations: Record<Locale, Record<string, string>> = {
   en: {
     "dashboard.title": "Dashboard",
+    "dashboard.hub_title": "Your organisations",
+    "dashboard.hub_subtitle":
+      "Open an organisation you belong to, or create a new one with the same setup as on desktop (name, type, modules, …).",
+    "dashboard.hub_open": "Open",
+    "dashboard.hub_empty": "You are not a member of any organisation yet.",
+    "dashboard.hub_create": "Create organisation",
+    "dashboard.hub_super_admin": "Super admin",
     "dashboard.tasks": "Tasks",
     "dashboard.shifts": "Shifts",
     "dashboard.finance": "Finance",
@@ -695,6 +702,13 @@ export const translations: Record<Locale, Record<string, string>> = {
   },
   de: {
     "dashboard.title": "Dashboard",
+    "dashboard.hub_title": "Deine Organisationen",
+    "dashboard.hub_subtitle":
+      "Öffne eine Organisation, in der du Mitglied bist, oder lege eine neue an – mit dem gleichen Ablauf wie am PC (Name, Typ, Module, …).",
+    "dashboard.hub_open": "Öffnen",
+    "dashboard.hub_empty": "Du bist noch in keiner Organisation Mitglied.",
+    "dashboard.hub_create": "Organisation anlegen",
+    "dashboard.hub_super_admin": "Super-Admin",
     "dashboard.tasks": "Aufgaben",
     "dashboard.shifts": "Schichten",
     "dashboard.finance": "Finanzen",

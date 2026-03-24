@@ -4,6 +4,14 @@ import { notFound } from "next/navigation";
 import type { DbRole } from "../types";
 import { createSupabaseServiceRoleClient } from "./supabaseServer";
 
+/** Organisations the current user belongs to (for /dashboard hub). */
+export type UserOrgMembership = {
+  id: string;
+  slug: string;
+  name: string;
+  role: DbRole | null;
+};
+
 /**
  * Canonical organization id for data keyed to the resolved org row (from URL slug or subdomain,
  * including matches via `organizations.slug_aliases`).
@@ -322,4 +330,59 @@ export async function getEffectiveUserRoleForOrg(orgSlug: string, org: Organizat
 
   const prof = await resolveMemberProfileForOrganization(user.id, orgSlug, org);
   return (prof?.role as DbRole | undefined) ?? null;
+}
+
+/**
+ * All active organisations the signed-in user has a non-disabled profile in.
+ */
+export async function getOrganizationsForCurrentUser(): Promise<UserOrgMembership[]> {
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (!user?.id) return [];
+
+  const service = createSupabaseServiceRoleClient();
+  const { data: profiles } = await service
+    .from("profiles")
+    .select("organization_id, role, status")
+    .eq("auth_user_id", user.id)
+    .neq("status", "disabled");
+
+  const rows = (profiles ?? []).filter((p) => p.organization_id);
+  const orgIds = [...new Set(rows.map((p) => String(p.organization_id)))];
+  if (orgIds.length === 0) return [];
+
+  const { data: orgs } = await service
+    .from("organizations")
+    .select("id, slug, name, school_name, school_short")
+    .in("id", orgIds)
+    .eq("is_active", true);
+
+  const orgById = new Map(
+    (orgs ?? []).map((o: { id: string; slug: string; name: string; school_name?: string | null; school_short?: string | null }) => [
+      o.id,
+      o
+    ])
+  );
+
+  const byOrg = new Map<string, UserOrgMembership>();
+  for (const p of rows) {
+    const oid = String(p.organization_id);
+    const o = orgById.get(oid);
+    if (!o) continue;
+    const displayName = String(o.school_short || o.school_name || o.name || "").trim() || o.name;
+    if (!byOrg.has(oid)) {
+      byOrg.set(oid, {
+        id: o.id,
+        slug: o.slug,
+        name: displayName,
+        role: (p.role as DbRole | undefined) ?? null
+      });
+    }
+  }
+
+  return Array.from(byOrg.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+  );
 }
