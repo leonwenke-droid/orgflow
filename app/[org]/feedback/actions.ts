@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
+import { getCurrentOrganization, pickProfileForOrgAccess } from "../../../lib/getOrganization";
 
 export async function submitMemberFeatureRequest(
   orgSlug: string,
@@ -16,7 +16,6 @@ export async function submitMemberFeatureRequest(
   if (!slug || !title) return { errorKey: "feedback.error_title" };
 
   const org = await getCurrentOrganization(slug);
-  const orgIdForData = getOrgIdForData(slug, org.id);
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -24,19 +23,18 @@ export async function submitMemberFeatureRequest(
   } = await supabase.auth.getUser();
   if (!user?.id) return { errorKey: "feedback.error_sign_in" };
 
-  const { data: prof } = await supabase
+  const { data: profRows } = await supabase
     .from("profiles")
-    .select("id, status")
-    .eq("auth_user_id", user.id)
-    .eq("organization_id", orgIdForData)
-    .maybeSingle();
+    .select("id, status, organization_id")
+    .eq("auth_user_id", user.id);
+  const prof = pickProfileForOrgAccess(profRows, slug, org);
 
-  if (!prof?.id || (prof as { status?: string }).status === "disabled") {
+  if (!prof?.id) {
     return { errorKey: "feedback.error_not_member" };
   }
 
   const { error } = await supabase.from("feature_requests").insert({
-    organization_id: orgIdForData,
+    organization_id: org.id,
     created_by: prof.id as string,
     title,
     description,

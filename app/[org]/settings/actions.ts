@@ -14,7 +14,7 @@ export async function updateOrganizationAction(
 ): Promise<{ error?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await assertCanChangeOrgSettings(orgIdForData))) {
+  if (!(await assertCanChangeOrgSettings(orgIdForData, org.id))) {
     return { error: "Not authorized to update this organization." };
   }
 
@@ -79,7 +79,7 @@ export async function updateOrgFeaturesAction(
 ): Promise<{ error?: string; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await assertCanChangeOrgSettings(orgIdForData))) {
+  if (!(await assertCanChangeOrgSettings(orgIdForData, org.id))) {
     return { error: "Not authorized.", errorKey: "common.unauthorized" };
   }
 

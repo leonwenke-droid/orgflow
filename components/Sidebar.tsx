@@ -82,7 +82,6 @@ function getNavSections(org: string, modules?: OrgModules, role?: DbRole | null)
     ...(m.shifts !== false ? [{ href: shiftsHref, labelKey: "dashboard.shifts", icon: CalendarDays }] : []),
     { href: `/${org}/me`, labelKey: "nav.my_stats", icon: BarChart3 },
     { href: `/${org}/account`, labelKey: "nav.my_account", icon: UserCircle },
-    { href: `/${org}/feedback`, labelKey: "nav.feature_requests", icon: MessageSquare },
   ];
 
   if (financeOk && !operational) {
@@ -91,57 +90,38 @@ function getNavSections(org: string, modules?: OrgModules, role?: DbRole | null)
 
   const sections: { titleKey: string; items: NavItem[] }[] = [{ titleKey: "nav.my_area", items: myArea }];
 
-  if (!operational) {
-    return sections.filter((s) => s.items.length > 0);
+  if (operational) {
+    const adminItems: NavItem[] = [
+      { href: `/${org}/admin`, labelKey: "nav.admin_hub", icon: LayoutGrid },
+      { href: `/${org}/admin/overview`, labelKey: "nav.org_overview", icon: PanelsTopLeft },
+    ];
+    if (fullControl) {
+      adminItems.push(
+        { href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users },
+        { href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }
+      );
+    }
+    if (m.tasks !== false) adminItems.push({ href: `/${org}/admin/tasks`, labelKey: "nav.admin_tasks", icon: ClipboardList });
+    if (m.shifts !== false) adminItems.push({ href: `/${org}/admin/shifts`, labelKey: "nav.admin_shifts", icon: CalendarClock });
+    if (m.resources !== false) adminItems.push({ href: `/${org}/admin/materials`, labelKey: "dashboard.resources", icon: Package });
+    if (eventsVisible) adminItems.push({ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange });
+    if (financeOk) adminItems.push({ href: treasuryHref, labelKey: "dashboard.finance", icon: Wallet });
+    if (m.engagement !== false) {
+      adminItems.push({ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy });
+    }
+    if (fullControl) {
+      adminItems.push(
+        { href: `/${org}/settings`, labelKey: "dashboard.settings", icon: Settings2 },
+        { href: `/${org}/admin/feedback`, labelKey: "nav.feedback_manage", icon: MessageSquare }
+      );
+    }
+    sections.push({ titleKey: "nav.manage_org", items: adminItems });
   }
 
   sections.push({
-    titleKey: "nav.section.overview",
-    items: [
-      { href: `/${org}/admin`, labelKey: "nav.admin_hub", icon: LayoutGrid },
-      { href: `/${org}/admin/overview`, labelKey: "nav.org_overview", icon: PanelsTopLeft },
-    ],
+    titleKey: "",
+    items: [{ href: `/${org}/feedback`, labelKey: "nav.feedback", icon: MessageSquare }],
   });
-
-  if (fullControl) {
-    sections.push({
-      titleKey: "nav.section.people",
-      items: [
-        { href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users },
-        { href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound },
-      ],
-    });
-  }
-
-  const operations: NavItem[] = [];
-  if (m.tasks !== false) operations.push({ href: `/${org}/admin/tasks`, labelKey: "nav.admin_tasks", icon: ClipboardList });
-  if (m.shifts !== false) operations.push({ href: `/${org}/admin/shifts`, labelKey: "nav.admin_shifts", icon: CalendarClock });
-  if (m.resources !== false) operations.push({ href: `/${org}/admin/materials`, labelKey: "dashboard.resources", icon: Package });
-  if (eventsVisible) operations.push({ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange });
-  if (operations.length > 0) {
-    sections.push({ titleKey: "nav.section.operations", items: operations });
-  }
-
-  if (financeOk && operational) {
-    sections.push({ titleKey: "nav.section.finance", items: [{ href: treasuryHref, labelKey: "dashboard.finance", icon: Wallet }] });
-  }
-
-  if (m.engagement !== false) {
-    sections.push({
-      titleKey: "nav.section.engagement",
-      items: [{ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy }],
-    });
-  }
-
-  if (fullControl) {
-    sections.push({
-      titleKey: "nav.section.org_settings",
-      items: [
-        { href: `/${org}/settings`, labelKey: "dashboard.settings", icon: Settings2 },
-        { href: `/${org}/admin/feedback`, labelKey: "nav.feature_requests_admin", icon: MessageSquare },
-      ],
-    });
-  }
 
   return sections.filter((s) => s.items.length > 0);
 }
@@ -265,12 +245,14 @@ export default function Sidebar({
             {idx > 0 ? (
               <div className="my-3 border-t border-gray-200 dark:border-gray-800" aria-hidden />
             ) : null}
-            <div className="mb-1 flex items-center gap-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              {section.titleKey === "nav.section.org_settings" ? (
-                <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-              ) : null}
-              <span>{t(section.titleKey, locale)}</span>
-            </div>
+            {section.titleKey ? (
+              <div className="mb-1 flex items-center gap-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {section.titleKey === "nav.manage_org" ? (
+                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+                ) : null}
+                <span>{t(section.titleKey, locale)}</span>
+              </div>
+            ) : null}
             <div className="space-y-0.5">
               {section.items.map(({ href, labelKey, icon: Icon }) => (
                 <Link key={href} href={href} prefetch className={linkClassName(href)}>

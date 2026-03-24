@@ -33,7 +33,7 @@ export default async function OrgSettingsPage({
   if (!(await isOrgAdmin(orgIdForData))) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
-  const settingsRole = await getCurrentUserRoleInOrg(orgIdForData);
+  const settingsRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
   if (!canChangeOrgSettings(settingsRole)) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }

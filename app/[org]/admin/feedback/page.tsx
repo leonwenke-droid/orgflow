@@ -6,7 +6,8 @@ import {
   getCurrentOrganization,
   getCurrentUserRoleInOrg,
   getOrgIdForData,
-  isOrgAdmin
+  isOrgAdmin,
+  pickProfileForOrgAccess
 } from "../../../../lib/getOrganization";
 import { canManageMembersAndTeams } from "../../../../lib/permissions";
 import { assertCanManageMembersAndTeams } from "../../../../lib/permissionsServer";
@@ -25,24 +26,23 @@ async function createFeedbackAction(formData: FormData) {
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return;
+  if (!(await assertCanManageMembersAndTeams(orgIdForData, org.id))) return;
 
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();
   const service = createSupabaseServiceRoleClient();
   let createdBy: string | null = null;
   if (user?.id) {
-    const { data: prof } = await service
+    const { data: profRows } = await service
       .from("profiles")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .eq("organization_id", orgIdForData)
-      .maybeSingle();
-    createdBy = (prof as any)?.id ?? null;
+      .select("id, status, organization_id")
+      .eq("auth_user_id", user.id);
+    const prof = pickProfileForOrgAccess(profRows, orgSlug, org);
+    createdBy = prof?.id ?? null;
   }
 
   await service.from("feature_requests").insert({
-    organization_id: orgIdForData,
+    organization_id: org.id,
     created_by: createdBy,
     title,
     description,
@@ -59,10 +59,10 @@ async function updateStatusAction(formData: FormData) {
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return;
+  if (!(await assertCanManageMembersAndTeams(orgIdForData, org.id))) return;
 
   const service = createSupabaseServiceRoleClient();
-  await service.from("feature_requests").update({ status, updated_at: new Date().toISOString() }).eq("id", id).eq("organization_id", orgIdForData);
+  await service.from("feature_requests").update({ status, updated_at: new Date().toISOString() }).eq("id", id).eq("organization_id", org.id);
 }
 
 export default async function FeedbackAdminPage(props: { params: Promise<{ org: string }> | { org: string } }) {
@@ -74,7 +74,7 @@ export default async function FeedbackAdminPage(props: { params: Promise<{ org: 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
-  const feedbackRole = await getCurrentUserRoleInOrg(orgIdForData);
+  const feedbackRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
   if (!canManageMembersAndTeams(feedbackRole)) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
@@ -83,7 +83,7 @@ export default async function FeedbackAdminPage(props: { params: Promise<{ org: 
   const { data: items } = await service
     .from("feature_requests")
     .select("id, title, description, status, created_at")
-    .eq("organization_id", orgIdForData)
+    .eq("organization_id", org.id)
     .order("created_at", { ascending: false })
     .limit(200);
 

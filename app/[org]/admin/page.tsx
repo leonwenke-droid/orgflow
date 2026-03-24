@@ -123,7 +123,7 @@ export default async function AdminDashboard({
   } = await authClient.auth.getSession();
   const currentAuthUserId = session?.user?.id ?? null;
 
-  const userRole = await getCurrentUserRoleInOrg(orgIdForData);
+  const userRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
   const showFinanceCard = canViewFinance(userRole);
   const fullOrgControl = canManageMembersAndTeams(userRole);
 

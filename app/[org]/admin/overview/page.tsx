@@ -47,7 +47,7 @@ export default async function AdminOverviewPage(props: {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
 
-  const userRole = await getCurrentUserRoleInOrg(orgIdForData);
+  const userRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
   const showFinanceShortcuts = canViewFinance(userRole);
   const fullOrgControl = canManageMembersAndTeams(userRole);
 
@@ -165,14 +165,14 @@ export default async function AdminOverviewPage(props: {
             href={`/${orgSlug}/feedback`}
             className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
           >
-            {t("nav.feature_requests", locale)}
+            {t("nav.feedback", locale)}
           </Link>
           {fullOrgControl ? (
             <Link
               href={`/${orgSlug}/admin/feedback`}
               className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
             >
-              {t("nav.feature_requests_admin", locale)}
+              {t("nav.feedback_manage", locale)}
             </Link>
           ) : null}
           <Link

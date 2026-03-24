@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
+import { getCurrentOrganization, pickProfileForOrgAccess } from "../../../lib/getOrganization";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { formatLocaleDateTime } from "../../../lib/formatDate";
 import FeedbackForm from "./FeedbackForm";
@@ -16,7 +16,6 @@ export default async function OrgFeedbackPage(props: {
     : (props.params as { org: string });
   const orgSlug = params.org;
   const org = await getCurrentOrganization(orgSlug);
-  const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
   const cookieStore = await cookies();
   const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
@@ -39,14 +38,13 @@ export default async function OrgFeedbackPage(props: {
     );
   }
 
-  const { data: prof } = await supabase
+  const { data: profRows } = await supabase
     .from("profiles")
-    .select("id, status")
-    .eq("auth_user_id", user.id)
-    .eq("organization_id", orgIdForData)
-    .maybeSingle();
+    .select("id, status, organization_id")
+    .eq("auth_user_id", user.id);
+  const prof = pickProfileForOrgAccess(profRows, orgSlug, org);
 
-  if (!prof?.id || (prof as { status?: string }).status === "disabled") {
+  if (!prof?.id) {
     return (
       <div className="mx-auto max-w-2xl p-6">
         <p className="text-sm text-red-600 dark:text-red-400">{t("feedback.error_not_member", locale)}</p>
@@ -57,7 +55,7 @@ export default async function OrgFeedbackPage(props: {
   const { data: items } = await supabase
     .from("feature_requests")
     .select("id, title, description, status, created_at")
-    .eq("organization_id", orgIdForData)
+    .eq("organization_id", org.id)
     .order("created_at", { ascending: false })
     .limit(100);
 

@@ -14,16 +14,22 @@ import {
 } from "./permissions";
 
 /** Server: is org admin RPC + darf Mitglieder/Teams verwalten (nicht Lead). */
-export async function assertCanManageMembersAndTeams(orgId: string): Promise<boolean> {
-  if (!(await isOrgAdmin(orgId))) return false;
-  const role = await getCurrentUserRoleInOrg(orgId);
+export async function assertCanManageMembersAndTeams(
+  orgIdForData: string,
+  canonicalOrgId?: string | null
+): Promise<boolean> {
+  if (!(await isOrgAdmin(orgIdForData))) return false;
+  const role = await getCurrentUserRoleInOrg(orgIdForData, canonicalOrgId);
   return canManageMembersAndTeams(role);
 }
 
 /** Server: is org admin + darf Organisationseinstellungen ändern (nicht Lead). */
-export async function assertCanChangeOrgSettings(orgId: string): Promise<boolean> {
-  if (!(await isOrgAdmin(orgId))) return false;
-  const role = await getCurrentUserRoleInOrg(orgId);
+export async function assertCanChangeOrgSettings(
+  orgIdForData: string,
+  canonicalOrgId?: string | null
+): Promise<boolean> {
+  if (!(await isOrgAdmin(orgIdForData))) return false;
+  const role = await getCurrentUserRoleInOrg(orgIdForData, canonicalOrgId);
   return canChangeOrgSettings(role);
 }
 

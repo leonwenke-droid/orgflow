@@ -11,6 +11,24 @@ export function getOrgIdForData(_orgSlug: string, orgId: string): string {
   return String(orgId ?? "").trim();
 }
 
+/**
+ * Match a profile row to the org opened in the URL (canonical id + mapped id if ever split).
+ * Fetch profiles with `.eq("auth_user_id", userId)` only, then pass rows here.
+ */
+export function pickProfileForOrgAccess<T extends { id: string; organization_id?: string | null; status?: string | null }>(
+  rows: T[] | null | undefined,
+  orgSlug: string,
+  org: { id: string }
+): T | null {
+  const cand = new Set([getOrgIdForData(orgSlug, org.id), org.id].map((x) => String(x).trim()).filter(Boolean));
+  const list = rows ?? [];
+  return (
+    list.find(
+      (p) => p.organization_id != null && cand.has(String(p.organization_id)) && p.status !== "disabled"
+    ) ?? null
+  );
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -134,19 +152,31 @@ export async function isOrgAdmin(orgId: string): Promise<boolean> {
 }
 
 /**
- * Holt die Rolle des aktuellen Users in der gegebenen Organisation (für rollenbasierte UI).
+ * Role in the org from the URL. Pass both data org id and canonical org row id when they can differ (legacy).
  */
-export async function getCurrentUserRoleInOrg(orgId: string): Promise<DbRole | null> {
+export async function getCurrentUserRoleInOrg(
+  orgIdForData: string,
+  canonicalOrgId?: string | null
+): Promise<DbRole | null> {
   const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase
+  const { data: rows } = await supabase
     .from("profiles")
-    .select("role")
-    .eq("auth_user_id", user.id)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  return (profile as { role?: DbRole } | null)?.role ?? null;
+    .select("role, organization_id, status")
+    .eq("auth_user_id", user.id);
+  const cand = new Set(
+    [orgIdForData, canonicalOrgId].map((x) => String(x ?? "").trim()).filter(Boolean)
+  );
+  const prof = (rows ?? []).find(
+    (r) =>
+      r.organization_id != null &&
+      cand.has(String(r.organization_id)) &&
+      (r as { status?: string }).status !== "disabled"
+  );
+  return (prof?.role as DbRole | undefined) ?? null;
 }
 
 /**

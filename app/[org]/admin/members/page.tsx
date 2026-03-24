@@ -31,7 +31,7 @@ export default async function AdminMembersPage({
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
-  const userRole = await getCurrentUserRoleInOrg(orgIdForData);
+  const userRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
   if (!canManageMembersAndTeams(userRole)) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }

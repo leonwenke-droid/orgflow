@@ -236,9 +236,7 @@ export default async function OrgDashboardPage({
   const userIsAdmin =
     userIsAdminPrimary || (orgIdForData !== org.id ? await isOrgAdmin(org.id) : false);
 
-  const userRolePrimary = await getCurrentUserRoleInOrg(orgIdForData);
-  const userRole =
-    userRolePrimary ?? (orgIdForData !== org.id ? await getCurrentUserRoleInOrg(org.id) : null);
+  const userRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
   const showGettingStarted = userRole != null && ADMIN_ROLES.includes(userRole);
   const userCanViewFinance = userRole == null || canViewFinance(userRole) || userIsAdmin;
 
