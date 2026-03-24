@@ -525,26 +525,26 @@ export default function ShiftPlanWeekNav({
             </div>
             <div className="space-y-3 overflow-y-auto p-4">
               {overlayDay.dayTitle && (
-                <p className="text-sm font-medium text-gray-900">{overlayDay.dayTitle}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{overlayDay.dayTitle}</p>
               )}
               {overlayDay.location && (
-                <p className="text-xs text-gray-600">Ort: {overlayDay.location}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Ort: {overlayDay.location}</p>
               )}
               {overlayDay.notes && (
-                <p className="whitespace-pre-wrap text-xs text-gray-600">{overlayDay.notes}</p>
+                <p className="whitespace-pre-wrap text-xs text-gray-600 dark:text-gray-400">{overlayDay.notes}</p>
               )}
-              <div className="border-t border-gray-200 pt-2">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+              <div className="border-t border-gray-200 pt-2 dark:border-gray-700">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   Zeitfenster
                 </p>
                 <ul className="space-y-2">
                   {overlayDay.shifts.map((s) => (
                     <li
                       key={s.id}
-                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs"
+                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800/90 dark:text-gray-200"
                     >
-                      <span className="font-medium text-gray-700">{slotLabelDetail(s, appLocale)}</span>
-                      <p className="mt-1 text-gray-600">
+                      <span className="font-medium text-gray-700 dark:text-gray-200">{slotLabelDetail(s, appLocale)}</span>
+                      <p className="mt-1 text-gray-600 dark:text-gray-300">
                         {formatAssignmentsPlain(s.assignments, profileNames)}
                       </p>
                     </li>

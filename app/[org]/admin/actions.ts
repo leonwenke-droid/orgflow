@@ -103,3 +103,74 @@ export async function getEngagementScoresAction(
 
   return { error: null, scores };
 }
+
+export type EngagementLogRow = {
+  id: string;
+  kind: "manual" | "event";
+  created_at: string;
+  points: number;
+  event_type?: string | null;
+  reason?: string | null;
+};
+
+/** Admin-only: engagement_events + score_import_log for one profile in the org. */
+export async function getEngagementLogForProfileAction(
+  orgSlug: string,
+  profileId: string
+): Promise<{ errorKey?: string; entries?: EngagementLogRow[] }> {
+  const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  if (!(await isOrgAdmin(orgIdForData))) return { errorKey: "common.unauthorized" };
+
+  const supabase = createSupabaseServiceRoleClient();
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("id, organization_id")
+    .eq("id", profileId)
+    .maybeSingle();
+  const p = prof as { id: string; organization_id: string } | null;
+  if (!p || p.organization_id !== orgIdForData) {
+    return { errorKey: "common.unauthorized" };
+  }
+
+  const [{ data: evs }, { data: logs }] = await Promise.all([
+    supabase
+      .from("engagement_events")
+      .select("id, event_type, points, created_at")
+      .eq("user_id", profileId)
+      .neq("event_type", "score_import")
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("score_import_log")
+      .select("id, points, reason, created_at")
+      .eq("organization_id", orgIdForData)
+      .eq("user_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(50)
+  ]);
+
+  const eventRows: EngagementLogRow[] = (evs ?? []).map((e: { id: string; event_type?: string; points?: number; created_at?: string }) => ({
+    id: `ev-${e.id}`,
+    kind: "event" as const,
+    created_at: e.created_at ?? new Date().toISOString(),
+    points: e.points ?? 0,
+    event_type: e.event_type ?? null
+  }));
+
+  const manualRows: EngagementLogRow[] = (logs ?? []).map(
+    (e: { id: string; points?: number; reason?: string; created_at?: string }) => ({
+      id: `im-${e.id}`,
+      kind: "manual" as const,
+      created_at: e.created_at ?? new Date().toISOString(),
+      points: e.points ?? 0,
+      reason: e.reason ?? null
+    })
+  );
+
+  const entries = [...eventRows, ...manualRows].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  return { entries };
+}

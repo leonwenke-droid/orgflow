@@ -3,7 +3,13 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
-import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
+import {
+  getCurrentOrganization,
+  getCurrentUserRoleInOrg,
+  getOrgIdForData,
+  isOrgAdmin
+} from "../../../../lib/getOrganization";
+import { canViewFinance } from "../../../../lib/permissions";
 import AdminForbidden from "../AdminForbidden";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../../lib/i18n";
 import { formatShiftSlot, type AppLocale } from "../../../../lib/formatDate";
@@ -40,6 +46,9 @@ export default async function AdminOverviewPage(props: {
   if (!(await isOrgAdmin(orgIdForData))) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
+
+  const userRole = await getCurrentUserRoleInOrg(orgIdForData);
+  const showFinanceShortcuts = canViewFinance(userRole);
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -118,6 +127,57 @@ export default async function AdminOverviewPage(props: {
           </Link>
         </div>
       </div>
+
+      <section className="mb-8 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("admin.overview_shortcuts_title", locale)}</h2>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("admin.overview_shortcuts_hint", locale)}</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link
+            href={`/${orgSlug}/admin`}
+            className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          >
+            {t("nav.admin_hub", locale)}
+          </Link>
+          <Link
+            href={`/${orgSlug}/settings`}
+            className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          >
+            {t("dashboard.settings", locale)}
+          </Link>
+          <Link
+            href={`/${orgSlug}/account`}
+            className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          >
+            {t("nav.my_account", locale)}
+          </Link>
+          {showFinanceShortcuts ? (
+            <Link
+              href={`/${orgSlug}/admin/treasury`}
+              className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+            >
+              {t("dashboard.finance", locale)}
+            </Link>
+          ) : null}
+          <Link
+            href={`/${orgSlug}/admin/feedback`}
+            className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          >
+            {t("nav.feature_requests", locale)}
+          </Link>
+          <Link
+            href={`/${orgSlug}/admin/events`}
+            className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          >
+            {t("events.title", locale)}
+          </Link>
+          <Link
+            href={`/${orgSlug}/admin#admin-engagement`}
+            className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          >
+            {t("admin.overview_engagement_ranking", locale)}
+          </Link>
+        </div>
+      </section>
 
       <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-700 dark:bg-card-dark">

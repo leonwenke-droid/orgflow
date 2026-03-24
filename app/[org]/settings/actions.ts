@@ -9,7 +9,7 @@ const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export async function updateOrganizationAction(
   orgSlug: string,
-  payload: { name?: string; slug?: string }
+  payload: { name?: string; slug?: string; logoUrl?: string | null }
 ): Promise<{ error?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
@@ -17,7 +17,7 @@ export async function updateOrganizationAction(
     return { error: "Not authorized to update this organization." };
   }
 
-  const updates: { name?: string; slug?: string } = {};
+  const updates: { name?: string; slug?: string; settings?: Record<string, unknown> } = {};
   if (payload.name != null) {
     const name = String(payload.name).trim();
     if (!name) return { error: "Name is required." };
@@ -40,16 +40,21 @@ export async function updateOrganizationAction(
       updates.slug = slug;
     }
   }
+  if (payload.logoUrl !== undefined) {
+    const prev = { ...(org.settings as Record<string, unknown>) };
+    const branding = { ...((prev.branding as Record<string, unknown>) ?? {}) };
+    const u = String(payload.logoUrl ?? "").trim();
+    if (u) branding.logo_url = u;
+    else delete branding.logo_url;
+    updates.settings = { ...prev, branding };
+  }
 
   if (Object.keys(updates).length === 0) {
     return {};
   }
 
   const service = createSupabaseServiceRoleClient();
-  const { error } = await service
-    .from("organizations")
-    .update(updates)
-    .eq("id", org.id);
+  const { error } = await service.from("organizations").update(updates).eq("id", org.id);
 
   if (error) {
     return { error: error.message };

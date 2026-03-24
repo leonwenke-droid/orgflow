@@ -75,15 +75,24 @@ export default function AdminTasksKanban({
       {STATUS_COLUMNS.map((col) => (
         <div
           key={col.key}
-          className={`flex flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors dark:border-gray-700 dark:bg-card-dark ${
+          className={`flex min-h-[min(40vh,12rem)] flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors dark:border-gray-700 dark:bg-card-dark ${
             dropTarget === col.key ? "ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-gray-900" : ""
           }`}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            setDropTarget(col.key);
+          }}
           onDragOver={(e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
             setDropTarget(col.key);
           }}
-          onDragLeave={() => setDropTarget((d) => (d === col.key ? null : d))}
+          onDragLeave={(e) => {
+            const rel = e.relatedTarget;
+            if (rel instanceof Node && e.currentTarget.contains(rel)) return;
+            setDropTarget((d) => (d === col.key ? null : d));
+          }}
           onDrop={(e) => {
             e.preventDefault();
             const taskId = e.dataTransfer.getData("taskId");
@@ -102,7 +111,7 @@ export default function AdminTasksKanban({
               )}
             </span>
           </div>
-          <div className="min-h-[4rem] space-y-2 text-xs">
+          <div className="min-h-[6rem] flex-1 space-y-2 text-xs">
             {tasks
               .filter((x) => x.status === col.key)
               .map((task) => {

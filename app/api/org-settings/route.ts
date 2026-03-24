@@ -32,6 +32,9 @@ export async function GET(req: NextRequest) {
   const o = org as { id: string; name: string; settings?: Record<string, unknown>; slug?: string };
   const settings = o.settings ?? {};
   const features = (settings.features as Record<string, boolean>) ?? {};
+  const branding = (settings.branding as { logo_url?: string } | undefined) ?? {};
+  const logoUrl =
+    typeof branding.logo_url === "string" && branding.logo_url.trim() ? branding.logo_url.trim() : undefined;
   const orgIdForData = getOrgIdForData(slug, o.id);
 
   let role: DbRole | null = null;
@@ -85,13 +88,14 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     name: typeof o.name === "string" ? o.name.trim() : o.name,
     settings,
+    logoUrl,
     modules: {
       tasks: features.tasks !== false,
       shifts: features.shifts !== false,
       finance: features.treasury !== false,
       resources: (features.resources ?? features.materials ?? true) !== false,
       engagement: features.engagement_tracking !== false,
-      events: features.events === true,
+      events: features.events !== false,
     },
     role: role ?? undefined,
     canManageOrg: role != null ? canManageOrg(role) : false,

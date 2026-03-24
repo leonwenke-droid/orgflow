@@ -12,6 +12,7 @@ import {
   CheckSquare,
   CalendarDays,
   CalendarClock,
+  CalendarRange,
   ClipboardList,
   Users,
   UsersRound,
@@ -22,7 +23,8 @@ import {
   MessageSquare,
   UserCircle,
   ShieldCheck,
-  ChevronDown,
+  Settings2,
+  PanelsTopLeft,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import type { DbRole } from "../types";
@@ -68,7 +70,8 @@ function getNavSections(
   role?: DbRole | null
 ): { titleKey: string; items: NavItem[] }[] {
   const m = modules ?? {};
-  const showFinance = (m.finance !== false) && (canViewFinance !== false);
+  const showFinance = m.finance !== false && canViewFinance !== false;
+  const eventsVisible = m.events !== false;
   // If role is still loading / unknown, do NOT show admin-only modules yet.
   const manage = isOrgManagerRole(role);
   const tasksHref = `/${org}/tasks`;
@@ -81,7 +84,8 @@ function getNavSections(
     { href: `/${org}/account`, labelKey: "nav.my_account", icon: UserCircle },
   ];
   const manageOrg: NavItem[] = [
-    ...(manage ? [{ href: `/${org}/admin`, labelKey: "dashboard.admin", icon: LayoutGrid }] : []),
+    ...(manage ? [{ href: `/${org}/admin`, labelKey: "nav.admin_hub", icon: LayoutGrid }] : []),
+    ...(manage ? [{ href: `/${org}/admin/overview`, labelKey: "nav.org_overview", icon: PanelsTopLeft }] : []),
     ...(manage ? [{ href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users }] : []),
     ...(manage ? [{ href: `/${org}/admin/committees`, labelKey: "dashboard.teams", icon: UsersRound }] : []),
     ...(manage && m.tasks !== false
@@ -93,7 +97,9 @@ function getNavSections(
     ...(manage && m.resources !== false ? [{ href: `/${org}/admin/materials`, labelKey: "dashboard.resources", icon: Package }] : []),
     ...(manage && showFinance ? [{ href: `/${org}/admin/treasury`, labelKey: "dashboard.finance", icon: Wallet }] : []),
     ...(manage && m.engagement !== false ? [{ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy }] : []),
-    ...(manage && m.events ? [{ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarClock }] : []),
+    ...(manage && eventsVisible ? [{ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange }] : []),
+    ...(manage ? [{ href: `/${org}/settings`, labelKey: "dashboard.settings", icon: Settings2 }] : []),
+    ...(manage ? [{ href: `/${org}/admin/feedback`, labelKey: "nav.feature_requests", icon: MessageSquare }] : []),
   ];
   return [
     { titleKey: "nav.my_area", items: myArea },
@@ -116,6 +122,7 @@ export default function Sidebar({
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const [orgName, setOrgName] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [modules, setModules] = useState<OrgModules | null>(null);
   const [canViewFinance, setCanViewFinance] = useState<boolean | null>(null);
   const [role, setRole] = useState<DbRole | null>(null);
@@ -124,6 +131,7 @@ export default function Sidebar({
   useEffect(() => {
     if (!orgSlug) {
       setOrgName(null);
+      setLogoUrl(null);
       setModules(null);
       setCanViewFinance(null);
       return;
@@ -134,6 +142,7 @@ export default function Sidebar({
       .then((data) => {
         if (!cancelled && data) {
           if (data.name) setOrgName(data.name);
+          setLogoUrl(typeof data.logoUrl === "string" && data.logoUrl.trim() ? data.logoUrl.trim() : null);
           if (data.modules) setModules(data.modules);
           setCanViewFinance(data.canViewFinance !== false);
           setRole((data.role as DbRole | undefined) ?? null);
@@ -154,6 +163,18 @@ export default function Sidebar({
     // Admin hub: nur exakte Route, nicht alle /admin/*-Unterseiten
     if (href === `/${orgSlug}/admin`) {
       return pathname === `/${orgSlug}/admin`;
+    }
+    if (href === `/${orgSlug}/admin/overview`) {
+      return pathname.startsWith(`/${orgSlug}/admin/overview`);
+    }
+    if (href === `/${orgSlug}/settings`) {
+      return pathname === `/${orgSlug}/settings` || pathname.startsWith(`/${orgSlug}/settings/`);
+    }
+    if (href.includes("/admin/feedback")) {
+      return pathname.startsWith(`/${orgSlug}/admin/feedback`);
+    }
+    if (href === `/${orgSlug}/admin/events`) {
+      return pathname.startsWith(`/${orgSlug}/admin/events`);
     }
     if (href.includes("/admin/materials"))
       return (pathname === "/admin/materials" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/materials`);
@@ -182,14 +203,22 @@ export default function Sidebar({
       </div>
       {orgName && (
         <div className="border-b border-gray-200 px-3 py-3 dark:border-gray-700">
-          <div className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
-              {orgName.substring(0, 2).toUpperCase()}
-            </div>
+          <div className="flex items-center gap-2 rounded-lg px-2 py-2">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- user-supplied org logo URL
+              <img
+                src={logoUrl}
+                alt=""
+                className="h-7 w-7 shrink-0 rounded-md border border-gray-200 object-cover dark:border-gray-600"
+              />
+            ) : (
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
+                {orgName.substring(0, 2).toUpperCase()}
+              </div>
+            )}
             <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900 dark:text-gray-100" title={orgName}>
               {orgName}
             </span>
-            <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
           </div>
         </div>
       )}

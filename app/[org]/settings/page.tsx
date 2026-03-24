@@ -51,7 +51,14 @@ export default async function OrgSettingsPage({
               Subdomain: {org.subdomain}
             </p>
           )}
-          <EditOrgForm orgSlug={orgSlug} initialName={org.name} initialSlug={org.slug} />
+          <EditOrgForm
+            orgSlug={orgSlug}
+            initialName={org.name}
+            initialSlug={org.slug}
+            initialLogoUrl={
+              String((org.settings as { branding?: { logo_url?: string } })?.branding?.logo_url ?? "").trim()
+            }
+          />
         </section>
 
         <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">

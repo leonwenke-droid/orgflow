@@ -8,15 +8,18 @@ import { updateOrganizationAction } from "./actions";
 export default function EditOrgForm({
   orgSlug,
   initialName,
-  initialSlug
+  initialSlug,
+  initialLogoUrl = ""
 }: {
   orgSlug: string;
   initialName: string;
   initialSlug: string;
+  initialLogoUrl?: string;
 }) {
   const { locale } = useLocale();
   const [name, setName] = useState(initialName);
   const [slug, setSlug] = useState(initialSlug);
+  const [logoUrl, setLogoUrl] = useState(initialLogoUrl);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +27,7 @@ export default function EditOrgForm({
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const result = await updateOrganizationAction(orgSlug, { name, slug });
+    const result = await updateOrganizationAction(orgSlug, { name, slug, logoUrl: logoUrl.trim() || null });
     setLoading(false);
     if (result.error) {
       setError(result.error);
@@ -64,6 +67,26 @@ export default function EditOrgForm({
         <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
           URL will be /{slug || "…"}/…
         </p>
+      </div>
+      <div>
+        <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          {t("settings.org_logo_url", locale)}
+        </label>
+        <input
+          type="url"
+          value={logoUrl}
+          onChange={(e) => setLogoUrl(e.target.value)}
+          placeholder="https://…"
+          className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        />
+        <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">{t("settings.org_logo_hint", locale)}</p>
+        {logoUrl.trim() ? (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-[11px] text-gray-500 dark:text-gray-400">{t("settings.org_logo_preview", locale)}</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoUrl.trim()} alt="" className="h-8 w-8 rounded-md border border-gray-200 object-cover dark:border-gray-600" />
+          </div>
+        ) : null}
       </div>
       {error && (
         <p className="text-xs text-red-600 dark:text-red-400" role="alert">

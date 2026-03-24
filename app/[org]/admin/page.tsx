@@ -259,15 +259,8 @@ export default async function AdminDashboard({
         />
 
         {engagementEnabled && (
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-            <details>
-              <summary className="cursor-pointer list-none text-sm font-semibold text-gray-900 dark:text-gray-100">
-                {t("dashboard.engagement", locale)}
-              </summary>
-              <div className="mt-3">
-                <EngagementScoresBlock orgSlug={orgSlug} currentAuthUserId={currentAuthUserId} />
-              </div>
-            </details>
+          <section id="admin-engagement" className="mt-8 scroll-mt-8">
+            <EngagementScoresBlock orgSlug={orgSlug} currentAuthUserId={currentAuthUserId} />
           </section>
         )}
       </div>

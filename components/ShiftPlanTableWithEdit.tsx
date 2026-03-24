@@ -150,14 +150,14 @@ export default function ShiftPlanTableWithEdit({
     const showReplacement = notAttendedAssignmentId === a.id;
     const checkinUrl = assignmentCheckinUrl(a.id);
     return (
-      <li key={a.id} className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-[11px]">
+      <li key={a.id} className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-[11px] dark:border-gray-600 dark:bg-gray-800/80">
         <div className="mb-1.5 flex items-center justify-between gap-2">
-          <span className="truncate font-medium text-gray-900">{name}</span>
+          <span className="truncate font-medium text-gray-900 dark:text-gray-100">{name}</span>
           <button type="button" onClick={() => { setEditingAssignmentId(null); setNotAttendedAssignmentId(null); }} className="shrink-0 text-[10px] text-gray-500 hover:text-gray-700">{t("common.close", locale)}</button>
         </div>
         {checkinUrl && (
-          <div className="mb-2 rounded border border-gray-200 bg-white p-2">
-            <p className="text-[10px] font-semibold text-gray-700">{t("shifts.checkin_qr", locale)}</p>
+          <div className="mb-2 rounded border border-gray-200 bg-white p-2 dark:border-gray-600 dark:bg-gray-900/50">
+            <p className="text-[10px] font-semibold text-gray-700 dark:text-gray-200">{t("shifts.checkin_qr", locale)}</p>
             <a href={checkinUrl} className="mt-0.5 block truncate text-[10px] text-blue-600 underline" title={checkinUrl}>
               {checkinUrl}
             </a>
@@ -176,8 +176,8 @@ export default function ShiftPlanTableWithEdit({
           <button type="button" onClick={() => setNotAttendedAssignmentId(a.id)} className="rounded bg-amber-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-amber-300 hover:bg-amber-500/35 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center">✗ {t("shifts.not_attended", locale)}</button>
         </div>
         {showReplacement && (
-          <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await updateAssignmentStatus(a.id, "abgesagt", uid); setNotAttendedAssignmentId(null); setEditingAssignmentId(null); router.refresh(); }} className="space-y-1.5 border-t border-gray-200 pt-1">
-            <label className="mb-0.5 block text-[10px] text-gray-600">{t("shifts.replacement", locale)}</label>
+          <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await updateAssignmentStatus(a.id, "abgesagt", uid); setNotAttendedAssignmentId(null); setEditingAssignmentId(null); router.refresh(); }} className="space-y-1.5 border-t border-gray-200 pt-1 dark:border-gray-600">
+            <label className="mb-0.5 block text-[10px] text-gray-600 dark:text-gray-400">{t("shifts.replacement", locale)}</label>
             <select name="replacement_user_id" className="max-w-full rounded border border-gray-300 bg-white px-1.5 py-1.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:py-0.5" defaultValue={a.replacement_user_id ?? ""}>
               <option value="">{t("shifts.no_replacement", locale)}</option>
               {membersSortedByLoad.filter((m) => m.id !== a.user_id).map((m) => (
@@ -276,10 +276,10 @@ export default function ShiftPlanTableWithEdit({
           return (
             <div
               key={dateStr}
-              className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+              className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900/40"
             >
-              <div className="border-b border-gray-200 bg-gray-50 px-3 py-2">
-                <h4 className="text-xs font-semibold tracking-wide text-gray-900">
+              <div className="border-b border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800/80">
+                <h4 className="text-xs font-semibold tracking-wide text-gray-900 dark:text-gray-100">
                   {dateLabel}
                 </h4>
               </div>
@@ -289,10 +289,10 @@ export default function ShiftPlanTableWithEdit({
                   const headerOrt = firstShift?.location?.trim();
                   const headerInfos = firstShift?.notes?.trim();
                   return (
-                <div key={`${dateStr}-${eventName}`} className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                  <div className="space-y-1 border-b border-gray-200 bg-white px-3 py-2">
+                <div key={`${dateStr}-${eventName}`} className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
+                  <div className="space-y-1 border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900/30">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-xs font-medium text-gray-900">
+                      <span className="min-w-0 truncate text-xs font-medium text-gray-900 dark:text-gray-100">
                         {eventName || "—"}
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
@@ -319,7 +319,7 @@ export default function ShiftPlanTableWithEdit({
                       </div>
                     </div>
                     {(headerOrt || headerInfos) && (
-                      <div className="truncate text-[10px] text-gray-500" title={[headerOrt, headerInfos].filter(Boolean).join(" — ") || undefined}>
+                      <div className="truncate text-[10px] text-gray-500 dark:text-gray-400" title={[headerOrt, headerInfos].filter(Boolean).join(" — ") || undefined}>
                         {[headerOrt, headerInfos].filter(Boolean).join(" · ")}
                       </div>
                     )}
@@ -343,19 +343,19 @@ export default function ShiftPlanTableWithEdit({
                       return (
                         <div
                           key={s.id}
-                          className="space-y-1.5 rounded-lg border border-gray-200 bg-gray-50 p-2.5"
+                          className="space-y-1.5 rounded-lg border border-gray-200 bg-gray-50 p-2.5 dark:border-gray-600 dark:bg-gray-800/60"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
-                              <div className="text-[11px] font-medium text-gray-700">
+                              <div className="text-[11px] font-medium text-gray-700 dark:text-gray-200">
                                 {timeStr(s.start_time)}–{timeStr(s.end_time)}
                                 {(s.has_aufbau || s.has_abbau) && (
-                                  <span className="ml-1 text-[10px] text-gray-500">
+                                  <span className="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
                                     ({[s.has_aufbau && "Aufbau", s.has_abbau && "Abbau"].filter(Boolean).join(" + ")})
                                   </span>
                                 )}
                               </div>
-                              <div className="flex flex-col gap-0.5 text-[10px] text-gray-600">
+                              <div className="flex flex-col gap-0.5 text-[10px] text-gray-600 dark:text-gray-300">
                                 {names.length > 0 ? names.map((name, i) => <span key={i} className="truncate" title={name}>{name}</span>) : "–"}
                               </div>
                             </div>
@@ -392,7 +392,7 @@ export default function ShiftPlanTableWithEdit({
                             </div>
                             </div>
                           </div>
-                          <div className="border-t border-gray-200 pt-1.5 text-[11px] text-gray-600">
+                          <div className="border-t border-gray-200 pt-1.5 text-[11px] text-gray-600 dark:border-gray-600 dark:text-gray-300">
                             {renderStatusBlock(s, assignments, isPast, statusText)}
                           </div>
                         </div>
@@ -404,7 +404,7 @@ export default function ShiftPlanTableWithEdit({
                   <div className="hidden sm:block overflow-x-auto">
                     <table className="min-w-full border-collapse text-xs">
                       <thead>
-                        <tr className="bg-gray-50 text-[11px] font-medium text-gray-700">
+                        <tr className="bg-gray-50 text-[11px] font-medium text-gray-700 dark:bg-gray-800/80 dark:text-gray-200">
                           <th className="py-2 px-2 text-left w-24">Zeit</th>
                           <th className="py-2 px-2 text-left max-w-[100px]">Personen</th>
                           <th className="py-2 px-2 text-left min-w-[140px]">Status</th>
@@ -426,16 +426,16 @@ export default function ShiftPlanTableWithEdit({
                           ? `${done}/${assignments.length}`
                           : "–";
                     return (
-                      <tr key={s.id} className={idx % 2 === 0 ? "bg-transparent" : "bg-gray-50"}>
-                        <td className="w-24 whitespace-nowrap px-2 py-2 text-[11px] text-gray-700">
+                      <tr key={s.id} className={idx % 2 === 0 ? "bg-transparent dark:bg-transparent" : "bg-gray-50 dark:bg-gray-800/40"}>
+                        <td className="w-24 whitespace-nowrap px-2 py-2 text-[11px] text-gray-700 dark:text-gray-200">
                           {timeStr(s.start_time)}–{timeStr(s.end_time)}
                           {(s.has_aufbau || s.has_abbau) && (
-                            <span className="ml-1 text-[10px] text-gray-500">
+                            <span className="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
                               ({[s.has_aufbau && "Aufbau", s.has_abbau && "Abbau"].filter(Boolean).join(" + ")})
                             </span>
                           )}
                         </td>
-                        <td className="max-w-[100px] px-2 py-2 align-top text-gray-700">
+                        <td className="max-w-[100px] px-2 py-2 align-top text-gray-700 dark:text-gray-200">
                           {names.length > 0 ? (
                             <div className="flex flex-col gap-0.5 text-[11px]">
                               {names.map((name, i) => (
@@ -444,7 +444,7 @@ export default function ShiftPlanTableWithEdit({
                             </div>
                           ) : "–"}
                         </td>
-                        <td className="min-w-[140px] px-2 py-2 align-top text-gray-600">
+                        <td className="min-w-[140px] px-2 py-2 align-top text-gray-600 dark:text-gray-300">
                           {renderStatusBlock(s, assignments, isPast, statusText)}
                         </td>
                         <td className="py-2 px-2 text-right">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { createCommitteeAction } from "./actions";
 import Link from "next/link";
 import { useLocale } from "../../../../components/LocaleProvider";
@@ -22,10 +23,13 @@ export default function CreateCommitteeForm({
   const [otherError, setOtherError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     if (submitting) return;
     setLimitError(null);
     setOtherError(null);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const name = formData.get("name")?.toString()?.trim();
     if (!name) return;
     setSubmitting(true);
@@ -49,11 +53,14 @@ export default function CreateCommitteeForm({
       }
       return;
     }
+    form.reset();
+    const activeCb = form.querySelector<HTMLInputElement>('input[name="is_active"]');
+    if (activeCb) activeCb.checked = true;
     router.refresh();
   }
 
   return (
-    <form action={handleSubmit} className="mt-6 flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
       {otherError && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200">
           <p className="font-medium">{otherError}</p>
@@ -78,8 +85,9 @@ export default function CreateCommitteeForm({
         <button
           type="submit"
           disabled={submitting}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 sm:shrink-0"
+          className="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 sm:shrink-0"
         >
+          {submitting ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden /> : null}
           {submitting ? t("tasks.saving", locale) : t("teams.create", locale)}
         </button>
       </div>

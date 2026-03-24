@@ -1,10 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getEngagementScoresAction, type ScoreRow } from "./actions";
+import {
+  getEngagementScoresAction,
+  getEngagementLogForProfileAction,
+  type EngagementLogRow,
+  type ScoreRow
+} from "./actions";
 import { useLocale } from "../../../components/LocaleProvider";
-import { t } from "../../../lib/i18n";
+import { t, type Locale } from "../../../lib/i18n";
+import { formatLocaleDateFromIso } from "../../../lib/formatDate";
+
+function eventTypeLabel(type: string | null | undefined, loc: Locale): string {
+  if (!type) return "–";
+  const key = `engagement.event_type.${type}`;
+  const label = t(key, loc);
+  if (label !== key) return label;
+  return type.replace(/_/g, " ");
+}
 
 export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = null }: { orgSlug: string; currentAuthUserId?: string | null }) {
   const { locale } = useLocale();
@@ -13,6 +27,9 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
   const [scores, setScores] = useState<ScoreRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [detailsFor, setDetailsFor] = useState<ScoreRow | null>(null);
+  const [logEntries, setLogEntries] = useState<EngagementLogRow[] | null>(null);
+  const [logLoading, setLogLoading] = useState(false);
+  const [logError, setLogError] = useState<string | null>(null);
 
   async function loadScores() {
     if (scores !== null) {
@@ -34,6 +51,32 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
     setScores(result.scores ?? []);
     setExpanded(true);
   }
+
+  useEffect(() => {
+    if (!detailsFor?.profile?.id) {
+      setLogEntries(null);
+      setLogError(null);
+      setLogLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLogLoading(true);
+    setLogError(null);
+    setLogEntries(null);
+    void getEngagementLogForProfileAction(orgSlug, detailsFor.profile.id).then((r) => {
+      if (cancelled) return;
+      setLogLoading(false);
+      if (r.errorKey) {
+        setLogError(t(r.errorKey, locale));
+        setLogEntries([]);
+        return;
+      }
+      setLogEntries(r.entries ?? []);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [detailsFor, orgSlug, locale]);
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-card-dark">
@@ -74,26 +117,32 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
       {expanded && scores !== null && (
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-800/80">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t("engagement.export_rank", locale)}</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">{t("engagement.export_name", locale)}</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">{t("engagement.export_total", locale)}</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  {t("engagement.export_rank", locale)}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  {t("engagement.export_name", locale)}
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  {t("engagement.export_total", locale)}
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {scores.length > 0 ? (
                 scores.map((score, index) => (
-                  <tr key={score.id} className="transition hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900">
+                  <tr key={score.id} className="transition hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{index + 1}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">
                       {currentAuthUserId && score.profile?.auth_user_id === currentAuthUserId
                         ? t("engagement.you_row", locale)
                         : (score.profile?.full_name ?? "–")}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
-                        <span className="font-bold tabular-nums text-gray-900">{score.total_score ?? 0}</span>
+                        <span className="font-bold tabular-nums text-gray-900 dark:text-gray-100">{score.total_score ?? 0}</span>
                         <button
                           type="button"
                           className="rounded border border-gray-300 px-2 py-1 text-[11px] text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
@@ -157,9 +206,31 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
                 </div>
               </div>
 
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t("engagement.log_title", locale)}
-              </p>
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t("engagement.log_title", locale)}</p>
+              {logLoading && <p className="text-xs text-gray-500 dark:text-gray-400">{t("engagement.log_loading", locale)}</p>}
+              {logError && <p className="text-xs text-red-600 dark:text-red-400">{logError}</p>}
+              {!logLoading && !logError && logEntries && logEntries.length === 0 && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("engagement.log_empty", locale)}</p>
+              )}
+              {!logLoading && logEntries && logEntries.length > 0 && (
+                <ul className="max-h-48 space-y-2 overflow-y-auto rounded border border-gray-200 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-950/50">
+                  {logEntries.map((row) => (
+                    <li key={row.id} className="border-b border-gray-100 pb-2 last:border-0 dark:border-gray-800">
+                      <div className="flex justify-between gap-2 font-medium text-gray-800 dark:text-gray-200">
+                        <span className="tabular-nums">{row.points > 0 ? `+${row.points}` : row.points}</span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                          {formatLocaleDateFromIso(row.created_at, locale)}
+                        </span>
+                      </div>
+                      {row.kind === "manual" ? (
+                        <p className="mt-0.5 text-gray-600 dark:text-gray-300">{row.reason ?? "–"}</p>
+                      ) : (
+                        <p className="mt-0.5 text-gray-600 dark:text-gray-300">{eventTypeLabel(row.event_type, locale)}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>

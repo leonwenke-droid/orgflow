@@ -224,7 +224,7 @@ export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props
     <button
       type="button"
       onClick={exportPdf}
-      className="rounded bg-gray-100 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+      className="rounded border border-gray-300 bg-gray-100 px-3 py-1.5 text-xs text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
     >
       {t("shifts.export_attendance_pdf", locale)}
     </button>
