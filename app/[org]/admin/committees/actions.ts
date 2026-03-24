@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
+import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
+import { assertCanManageMembersAndTeams } from "../../../../lib/permissions";
 import { canAddTeam } from "../../../../lib/planLimits";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
@@ -30,7 +31,7 @@ export async function createCommitteeAction(
 ): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
   const trimmed = (payload.name || "").trim();
   if (!trimmed) return { error: null, errorKey: "members.error_name_required" };
 
@@ -89,7 +90,7 @@ export async function updateCommitteeAction(
 ): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
   const trimmed = (fields.name || "").trim();
   if (!trimmed) return { error: null, errorKey: "members.error_name_required" };
 
@@ -131,7 +132,7 @@ export async function deleteCommitteeAction(
 ): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = createSupabaseServiceRoleClient();
   const { error } = await supabase

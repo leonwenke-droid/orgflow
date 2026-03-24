@@ -1,6 +1,12 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
+import {
+  getCurrentOrganization,
+  getCurrentUserRoleInOrg,
+  getOrgIdForData,
+  isOrgAdmin
+} from "../../../../lib/getOrganization";
+import { canManageMembersAndTeams } from "../../../../lib/permissions";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
 import MembersExcelUpload from "./MembersExcelUpload";
@@ -25,6 +31,10 @@ export default async function AdminMembersPage({
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  const userRole = await getCurrentUserRoleInOrg(orgIdForData);
+  if (!canManageMembersAndTeams(userRole)) {
+    return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  }
 
   const spRaw = searchParams;
   const statusParams =

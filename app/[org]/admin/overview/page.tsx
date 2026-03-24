@@ -9,7 +9,7 @@ import {
   getOrgIdForData,
   isOrgAdmin
 } from "../../../../lib/getOrganization";
-import { canViewFinance } from "../../../../lib/permissions";
+import { canManageMembersAndTeams, canViewFinance } from "../../../../lib/permissions";
 import AdminForbidden from "../AdminForbidden";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../../lib/i18n";
 import { formatShiftSlot, type AppLocale } from "../../../../lib/formatDate";
@@ -49,6 +49,7 @@ export default async function AdminOverviewPage(props: {
 
   const userRole = await getCurrentUserRoleInOrg(orgIdForData);
   const showFinanceShortcuts = canViewFinance(userRole);
+  const fullOrgControl = canManageMembersAndTeams(userRole);
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -138,12 +139,14 @@ export default async function AdminOverviewPage(props: {
           >
             {t("nav.admin_hub", locale)}
           </Link>
-          <Link
-            href={`/${orgSlug}/settings`}
-            className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
-          >
-            {t("dashboard.settings", locale)}
-          </Link>
+          {fullOrgControl ? (
+            <Link
+              href={`/${orgSlug}/settings`}
+              className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+            >
+              {t("dashboard.settings", locale)}
+            </Link>
+          ) : null}
           <Link
             href={`/${orgSlug}/account`}
             className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
@@ -152,18 +155,26 @@ export default async function AdminOverviewPage(props: {
           </Link>
           {showFinanceShortcuts ? (
             <Link
-              href={`/${orgSlug}/admin/treasury`}
+              href={`/admin/treasury?org=${encodeURIComponent(orgSlug)}`}
               className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
             >
               {t("dashboard.finance", locale)}
             </Link>
           ) : null}
           <Link
-            href={`/${orgSlug}/admin/feedback`}
+            href={`/${orgSlug}/feedback`}
             className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
           >
             {t("nav.feature_requests", locale)}
           </Link>
+          {fullOrgControl ? (
+            <Link
+              href={`/${orgSlug}/admin/feedback`}
+              className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+            >
+              {t("nav.feature_requests_admin", locale)}
+            </Link>
+          ) : null}
           <Link
             href={`/${orgSlug}/admin/events`}
             className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"

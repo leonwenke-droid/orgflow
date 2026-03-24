@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
+import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
+import { assertCanManageMembersAndTeams } from "../../../../lib/permissions";
 import { canAddMember } from "../../../../lib/planLimits";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import {
@@ -65,7 +66,7 @@ export async function syncOrgDataAction(orgSlug: string): Promise<{ error: strin
     return { error: "Sync ist für diese Organisation nicht verfügbar." };
   }
 
-  if (!(await isOrgAdmin(org.id))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(org.id))) return { error: null, errorKey: "common.unauthorized" };
 
   const { createSupabaseServiceRoleClient } = await import("../../../../lib/supabaseServer");
   const service = createSupabaseServiceRoleClient();
@@ -107,7 +108,7 @@ export async function updateMemberNameAction(
 ): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
   const name = (fullName || "").trim();
   if (!name) return { error: null, errorKey: "members.error_name_required" };
 
@@ -130,7 +131,7 @@ export async function updateMemberCommitteesAction(
 ): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = createSupabaseServiceRoleClient();
 
@@ -169,7 +170,7 @@ export async function updateMemberRoleAction(
 ): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = createSupabaseServiceRoleClient();
   const { error } = await supabase
@@ -189,7 +190,7 @@ export async function deleteMemberAction(
 ): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = createSupabaseServiceRoleClient();
 
@@ -212,7 +213,7 @@ export async function setMemberStatusAction(
 ): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = createSupabaseServiceRoleClient();
   const { error } = await supabase
@@ -238,7 +239,7 @@ export async function resendLeadInviteAction(
 ): Promise<{ error: string | null; errorKey?: string; inviteUrl?: string; whatsappText?: string; expiresAt?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = createSupabaseServiceRoleClient();
   const { data: profile, error: fetchErr } = await supabase
@@ -274,7 +275,7 @@ export async function setMemberAsLeadAction(
 ): Promise<{ error: string | null; errorKey?: string; inviteUrl?: string; whatsappText?: string; expiresAt?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const emailTrimmed = (email || "").trim();
   if (!emailTrimmed) return { error: null, errorKey: "members.error_email_required_lead" };
@@ -322,7 +323,7 @@ export async function addMemberAction(
 ): Promise<{ error: string | null; errorKey?: string; inviteUrl?: string; whatsappText?: string; expiresAt?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
 
   const name = (fullName || "").trim();
   if (!name) return { error: null, errorKey: "members.error_name_required" };

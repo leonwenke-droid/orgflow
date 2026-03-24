@@ -22,7 +22,7 @@ import {
   getOrgIdForData,
   isOrgAdmin
 } from "../../../lib/getOrganization";
-import { canViewFinance } from "../../../lib/permissions";
+import { canManageMembersAndTeams, canViewFinance } from "../../../lib/permissions";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import AdminForbidden from "./AdminForbidden";
 import EngagementScoresBlock from "./EngagementScoresBlock";
@@ -125,18 +125,19 @@ export default async function AdminDashboard({
 
   const userRole = await getCurrentUserRoleInOrg(orgIdForData);
   const showFinanceCard = canViewFinance(userRole);
+  const fullOrgControl = canManageMembersAndTeams(userRole);
 
   const features = (org.settings?.features as Record<string, boolean>) ?? {};
   const engagementEnabled = features.engagement_tracking !== false;
 
-  /** Same order and labels as Sidebar: Core (admin subset) → Organisation → Verwaltung */
+  /** Mitglieder/Teams nur Owner/Admin/Super-Admin — wie Sidebar „Personen & Struktur“. */
   const coreCards: AdminCard[] = [
     {
       href: `/${orgSlug}/admin/members`,
       icon: Users,
       titleKey: "dashboard.members",
       descKey: "admin.card.members_desc",
-      show: true,
+      show: fullOrgControl,
       priority: "secondary"
     },
     {
@@ -144,7 +145,7 @@ export default async function AdminDashboard({
       icon: UsersRound,
       titleKey: "dashboard.teams",
       descKey: "admin.card.teams_desc",
-      show: true,
+      show: fullOrgControl,
       priority: "secondary"
     }
   ];
@@ -217,7 +218,7 @@ export default async function AdminDashboard({
       icon: Settings2,
       titleKey: "dashboard.settings",
       descKey: "settings.edit_org",
-      show: true,
+      show: fullOrgControl,
       priority: "secondary"
     },
     {
@@ -225,7 +226,7 @@ export default async function AdminDashboard({
       icon: MessageSquare,
       titleKey: "admin.card.feature_requests_title",
       descKey: "admin.card.feature_requests_desc",
-      show: true,
+      show: fullOrgControl,
       priority: "secondary"
     }
   ];
@@ -243,16 +244,16 @@ export default async function AdminDashboard({
           </p>
         </header>
 
-        <AdminSectionCards locale={locale} titleKey="nav.my_area" hintKey="admin.section.core_hint" cards={coreCards} />
+        <AdminSectionCards locale={locale} titleKey="nav.section.people" hintKey="admin.section.core_hint" cards={coreCards} />
         <AdminSectionCards
           locale={locale}
-          titleKey="nav.manage_org"
+          titleKey="nav.section.operations"
           hintKey="admin.section.org_hint"
           cards={organisationCards}
         />
         <AdminSectionCards
           locale={locale}
-          titleKey="nav.manage_org"
+          titleKey="nav.section.org_settings"
           hintKey="admin.section.admin_hint"
           cards={administrationCards}
           compact

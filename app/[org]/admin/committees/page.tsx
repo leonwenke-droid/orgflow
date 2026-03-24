@@ -2,7 +2,13 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
+import {
+  getCurrentOrganization,
+  getCurrentUserRoleInOrg,
+  getOrgIdForData,
+  isOrgAdmin
+} from "../../../../lib/getOrganization";
+import { canManageMembersAndTeams } from "../../../../lib/permissions";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
 import CreateCommitteeForm from "./CreateCommitteeForm";
@@ -20,6 +26,10 @@ export default async function AdminCommitteesPage(props: {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  const userRole = await getCurrentUserRoleInOrg(orgIdForData);
+  if (!canManageMembersAndTeams(userRole)) {
+    return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  }
 
   const supabase = createServerComponentClient({ cookies });
   const { data: committees } = await supabase

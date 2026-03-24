@@ -2,7 +2,13 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../lib/i18n";
 import { formatLocaleDateTime } from "../../../../lib/formatDate";
-import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
+import {
+  getCurrentOrganization,
+  getCurrentUserRoleInOrg,
+  getOrgIdForData,
+  isOrgAdmin
+} from "../../../../lib/getOrganization";
+import { assertCanManageMembersAndTeams, canManageMembersAndTeams } from "../../../../lib/permissions";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
@@ -18,7 +24,7 @@ async function createFeedbackAction(formData: FormData) {
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return;
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return;
 
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();
@@ -52,7 +58,7 @@ async function updateStatusAction(formData: FormData) {
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return;
+  if (!(await assertCanManageMembersAndTeams(orgIdForData))) return;
 
   const service = createSupabaseServiceRoleClient();
   await service.from("feature_requests").update({ status, updated_at: new Date().toISOString() }).eq("id", id).eq("organization_id", orgIdForData);
@@ -67,6 +73,10 @@ export default async function FeedbackAdminPage(props: { params: Promise<{ org: 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  const feedbackRole = await getCurrentUserRoleInOrg(orgIdForData);
+  if (!canManageMembersAndTeams(feedbackRole)) {
+    return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  }
 
   const service = createSupabaseServiceRoleClient();
   const { data: items } = await service
