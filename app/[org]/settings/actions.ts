@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
+import { getCurrentOrganization } from "../../../lib/getOrganization";
 import { assertCanChangeOrgSettings } from "../../../lib/permissionsServer";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
@@ -13,8 +13,7 @@ export async function updateOrganizationAction(
   payload: { name?: string; slug?: string; logoUrl?: string | null }
 ): Promise<{ error?: string }> {
   const org = await getCurrentOrganization(orgSlug);
-  const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await assertCanChangeOrgSettings(orgIdForData, org.id))) {
+  if (!(await assertCanChangeOrgSettings(orgSlug, org))) {
     return { error: "Not authorized to update this organization." };
   }
 
@@ -78,8 +77,7 @@ export async function updateOrgFeaturesAction(
   features: Partial<FeaturesMap>
 ): Promise<{ error?: string; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
-  const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await assertCanChangeOrgSettings(orgIdForData, org.id))) {
+  if (!(await assertCanChangeOrgSettings(orgSlug, org))) {
     return { error: "Not authorized.", errorKey: "common.unauthorized" };
   }
 

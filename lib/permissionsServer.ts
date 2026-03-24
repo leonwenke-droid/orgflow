@@ -5,7 +5,12 @@
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { DbRole } from "../types";
-import { getCurrentUserRoleInOrg, isOrgAdmin } from "./getOrganization";
+import {
+  type Organization,
+  getCurrentUserRoleInOrg,
+  getEffectiveUserRoleForOrg,
+  isOrgAdmin
+} from "./getOrganization";
 import { createSupabaseServiceRoleClient } from "./supabaseServer";
 import {
   canChangeOrgSettings,
@@ -23,13 +28,9 @@ export async function assertCanManageMembersAndTeams(
   return canManageMembersAndTeams(role);
 }
 
-/** Server: is org admin + darf Organisationseinstellungen ändern (nicht Lead). */
-export async function assertCanChangeOrgSettings(
-  orgIdForData: string,
-  canonicalOrgId?: string | null
-): Promise<boolean> {
-  if (!(await isOrgAdmin(orgIdForData))) return false;
-  const role = await getCurrentUserRoleInOrg(orgIdForData, canonicalOrgId);
+/** Server: darf Organisationseinstellungen ändern (admin/owner/super; nicht Lead). Nutzt effektive Rolle inkl. Legacy-Org-Zuordnung. */
+export async function assertCanChangeOrgSettings(orgSlug: string, org: Organization): Promise<boolean> {
+  const role = await getEffectiveUserRoleForOrg(orgSlug, org);
   return canChangeOrgSettings(role);
 }
 

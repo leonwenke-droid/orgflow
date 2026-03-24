@@ -304,3 +304,22 @@ export async function isSuperAdmin(): Promise<boolean> {
   return data === true;
 }
 
+/**
+ * Effective role for the org in the URL (handles legacy profile.organization_id ≠ org.id and slug aliases).
+ */
+export async function getEffectiveUserRoleForOrg(orgSlug: string, org: Organization): Promise<DbRole | null> {
+  if (await isSuperAdmin()) return "super_admin";
+
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (!user?.id) return null;
+
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const primary = await getCurrentUserRoleInOrg(orgIdForData, org.id);
+  if (primary != null) return primary;
+
+  const prof = await resolveMemberProfileForOrganization(user.id, orgSlug, org);
+  return (prof?.role as DbRole | undefined) ?? null;
+}

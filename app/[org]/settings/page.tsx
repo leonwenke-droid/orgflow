@@ -1,12 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import {
-  getCurrentOrganization,
-  getCurrentUserRoleInOrg,
-  getOrgIdForData,
-  isOrgAdmin
-} from "../../../lib/getOrganization";
+import { getCurrentOrganization, getEffectiveUserRoleForOrg } from "../../../lib/getOrganization";
 import { canChangeOrgSettings } from "../../../lib/permissions";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import AdminForbidden from "../admin/AdminForbidden";
@@ -28,12 +23,8 @@ export default async function OrgSettingsPage({
       ? (await (params as Promise<{ org: string }>)).org
       : (params as { org: string }).org;
   const org = await getCurrentOrganization(orgSlug);
-  const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
-  if (!(await isOrgAdmin(orgIdForData))) {
-    return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
-  }
-  const settingsRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
+  const settingsRole = await getEffectiveUserRoleForOrg(orgSlug, org);
   if (!canChangeOrgSettings(settingsRole)) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
