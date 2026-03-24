@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, ChevronLeft, Check } from "lucide-react";
+import AuthForm from "../../components/AuthForm";
 
 const ORG_TYPES = [
   { value: "school", label: "School" },
@@ -25,12 +26,15 @@ const MODULES = [
   { key: "events", label: "Events", description: "Coordinate event-specific tasks and shifts (coming soon)." },
 ];
 
+const PENDING_KEY = "create-org-pending";
+
 export default function CreateOrganisationClient() {
   const router = useRouter();
   const TOTAL_STEPS = 6;
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authWall, setAuthWall] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     orgType: "school",
@@ -41,11 +45,26 @@ export default function CreateOrganisationClient() {
 
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem("create-org-form");
+      const saved = sessionStorage.getItem(PENDING_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed?.name) setFormData(parsed);
-        sessionStorage.removeItem("create-org-form");
+        const parsed = JSON.parse(saved) as { step?: number; formData?: typeof formData };
+        if (parsed?.formData && typeof parsed.step === "number") {
+          setFormData(parsed.formData);
+          setStep(Math.min(TOTAL_STEPS, Math.max(1, parsed.step)));
+          setAuthWall(false);
+        }
+        sessionStorage.removeItem(PENDING_KEY);
+      } else {
+        const legacy = sessionStorage.getItem("create-org-form");
+        if (legacy) {
+          const parsed = JSON.parse(legacy);
+          if (parsed?.name) {
+            setFormData(parsed);
+            setStep(6);
+            setAuthWall(false);
+          }
+          sessionStorage.removeItem("create-org-form");
+        }
       }
     } catch {
       // ignore
@@ -97,8 +116,17 @@ export default function CreateOrganisationClient() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         if (res.status === 401) {
-          sessionStorage.setItem("create-org-form", JSON.stringify(formData));
-          router.push(`/login?redirectTo=${encodeURIComponent("/create-organisation")}`);
+          try {
+            sessionStorage.setItem(
+              PENDING_KEY,
+              JSON.stringify({ step: 6, formData })
+            );
+          } catch {
+            // ignore quota / private mode
+          }
+          setAuthWall(true);
+          setLoading(false);
+          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
           return;
         }
         setError(data.message || "Failed to create organisation.");
@@ -427,6 +455,21 @@ export default function CreateOrganisationClient() {
             )}
           </div>
         </div>
+
+        {authWall ? (
+          <div className="mx-auto mt-8 max-w-xl rounded-xl border border-amber-200 bg-amber-50 p-6 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40">
+            <h2 className="text-base font-semibold text-amber-950 dark:text-amber-100">
+              Sign in to finish
+            </h2>
+            <p className="mt-2 text-sm text-amber-900/90 dark:text-amber-200/90">
+              Your setup is saved in this browser. Sign in or create an account, then tap{" "}
+              <strong>Create organisation</strong> again on the step above.
+            </p>
+            <div className="mt-4 rounded-lg border border-amber-200/80 bg-white p-4 dark:border-amber-800 dark:bg-gray-900">
+              <AuthForm redirectTo="/create-organisation" />
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
