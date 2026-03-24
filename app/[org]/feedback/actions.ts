@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { getCurrentOrganization, pickProfileForOrgAccess } from "../../../lib/getOrganization";
+import {
+  getCurrentOrganization,
+  isSuperAdmin,
+  resolveMemberProfileForOrganization
+} from "../../../lib/getOrganization";
 
 export async function submitMemberFeatureRequest(
   orgSlug: string,
@@ -23,19 +27,19 @@ export async function submitMemberFeatureRequest(
   } = await supabase.auth.getUser();
   if (!user?.id) return { errorKey: "feedback.error_sign_in" };
 
-  const { data: profRows } = await supabase
-    .from("profiles")
-    .select("id, status, organization_id")
-    .eq("auth_user_id", user.id);
-  const prof = pickProfileForOrgAccess(profRows, slug, org);
+  const superUser = await isSuperAdmin();
+  const prof = superUser
+    ? null
+    : await resolveMemberProfileForOrganization(user.id, slug, org);
 
-  if (!prof?.id) {
+  if (!superUser && !prof?.id) {
     return { errorKey: "feedback.error_not_member" };
   }
 
+  const organizationId = prof?.organization_id ?? org.id;
   const { error } = await supabase.from("feature_requests").insert({
-    organization_id: org.id,
-    created_by: prof.id as string,
+    organization_id: organizationId,
+    created_by: (prof?.id as string | undefined) ?? null,
     title,
     description,
     status: "new"

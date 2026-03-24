@@ -13,7 +13,6 @@ import {
   Package,
   Wallet,
   Trophy,
-  MessageSquare,
   Settings2
 } from "lucide-react";
 import {
@@ -218,14 +217,6 @@ export default async function AdminDashboard({
       icon: Settings2,
       titleKey: "dashboard.settings",
       descKey: "settings.edit_org",
-      show: fullOrgControl,
-      priority: "secondary"
-    },
-    {
-      href: `/${orgSlug}/admin/feedback`,
-      icon: MessageSquare,
-      titleKey: "admin.card.feature_requests_title",
-      descKey: "admin.card.feature_requests_desc",
       show: fullOrgControl,
       priority: "secondary"
     }

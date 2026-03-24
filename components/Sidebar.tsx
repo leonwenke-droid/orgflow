@@ -78,6 +78,7 @@ function getNavSections(org: string, modules?: OrgModules, role?: DbRole | null)
 
   const myArea: NavItem[] = [
     { href: `/${org}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
+    { href: `/${org}/admin/overview`, labelKey: "nav.org_overview", icon: PanelsTopLeft },
     ...(m.tasks !== false ? [{ href: tasksHref, labelKey: "dashboard.tasks", icon: CheckSquare }] : []),
     ...(m.shifts !== false ? [{ href: shiftsHref, labelKey: "dashboard.shifts", icon: CalendarDays }] : []),
     { href: `/${org}/me`, labelKey: "nav.my_stats", icon: BarChart3 },
@@ -91,10 +92,7 @@ function getNavSections(org: string, modules?: OrgModules, role?: DbRole | null)
   const sections: { titleKey: string; items: NavItem[] }[] = [{ titleKey: "nav.my_area", items: myArea }];
 
   if (operational) {
-    const adminItems: NavItem[] = [
-      { href: `/${org}/admin`, labelKey: "nav.admin_hub", icon: LayoutGrid },
-      { href: `/${org}/admin/overview`, labelKey: "nav.org_overview", icon: PanelsTopLeft },
-    ];
+    const adminItems: NavItem[] = [{ href: `/${org}/admin`, labelKey: "nav.admin_hub", icon: LayoutGrid }];
     if (fullControl) {
       adminItems.push(
         { href: `/${org}/admin/members`, labelKey: "dashboard.members", icon: Users },
@@ -110,10 +108,7 @@ function getNavSections(org: string, modules?: OrgModules, role?: DbRole | null)
       adminItems.push({ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy });
     }
     if (fullControl) {
-      adminItems.push(
-        { href: `/${org}/settings`, labelKey: "dashboard.settings", icon: Settings2 },
-        { href: `/${org}/admin/feedback`, labelKey: "nav.feedback_manage", icon: MessageSquare }
-      );
+      adminItems.push({ href: `/${org}/settings`, labelKey: "dashboard.settings", icon: Settings2 });
     }
     sections.push({ titleKey: "nav.manage_org", items: adminItems });
   }
@@ -182,9 +177,6 @@ export default function Sidebar({
     }
     if (href === `/${orgSlug}/settings`) {
       return pathname === `/${orgSlug}/settings` || pathname.startsWith(`/${orgSlug}/settings/`);
-    }
-    if (href.includes("/admin/feedback")) {
-      return pathname.startsWith(`/${orgSlug}/admin/feedback`);
     }
     if (href === `/${orgSlug}/feedback`) {
       return pathname.startsWith(`/${orgSlug}/feedback`);

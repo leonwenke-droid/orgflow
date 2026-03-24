@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { getCurrentOrganization, pickProfileForOrgAccess } from "../../../lib/getOrganization";
+import {
+  getCurrentOrganization,
+  isSuperAdmin,
+  resolveMemberProfileForOrganization
+} from "../../../lib/getOrganization";
 import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
 import { formatLocaleDateTime } from "../../../lib/formatDate";
 import FeedbackForm from "./FeedbackForm";
@@ -38,13 +42,12 @@ export default async function OrgFeedbackPage(props: {
     );
   }
 
-  const { data: profRows } = await supabase
-    .from("profiles")
-    .select("id, status, organization_id")
-    .eq("auth_user_id", user.id);
-  const prof = pickProfileForOrgAccess(profRows, orgSlug, org);
+  const superUser = await isSuperAdmin();
+  const prof = superUser
+    ? null
+    : await resolveMemberProfileForOrganization(user.id, orgSlug, org);
 
-  if (!prof?.id) {
+  if (!superUser && !prof?.id) {
     return (
       <div className="mx-auto max-w-2xl p-6">
         <p className="text-sm text-red-600 dark:text-red-400">{t("feedback.error_not_member", locale)}</p>
@@ -52,12 +55,16 @@ export default async function OrgFeedbackPage(props: {
     );
   }
 
-  const { data: items } = await supabase
+  const orgIdsForFeedback = [...new Set([org.id, prof?.organization_id].filter(Boolean))] as string[];
+  const frBase = supabase
     .from("feature_requests")
     .select("id, title, description, status, created_at")
-    .eq("organization_id", org.id)
     .order("created_at", { ascending: false })
     .limit(100);
+  const { data: items } =
+    orgIdsForFeedback.length <= 1
+      ? await frBase.eq("organization_id", orgIdsForFeedback[0] ?? org.id)
+      : await frBase.in("organization_id", orgIdsForFeedback);
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 p-6">

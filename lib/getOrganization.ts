@@ -2,6 +2,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { DbRole } from "../types";
+import { createSupabaseServiceRoleClient } from "./supabaseServer";
 
 /**
  * Canonical organization id for data keyed to the resolved org row (from URL slug or subdomain,
@@ -55,6 +56,71 @@ export interface Organization {
   updated_at: string;
   setup_token?: string | null;
   setup_token_used_at?: string | null;
+}
+
+function orgIdentifierTokens(
+  o: Pick<Organization, "slug" | "subdomain" | "slug_aliases"> & { id?: string }
+): Set<string> {
+  const norm = (s: string | null | undefined) => String(s ?? "").trim().toLowerCase();
+  return new Set(
+    [o.slug, o.subdomain, ...(o.slug_aliases ?? [])].map(norm).filter(Boolean)
+  );
+}
+
+/** True if the profile's organization row is the same as URL-resolved org (by id or slug/alias overlap). */
+function profileOrgMatchesResolvedOrg(
+  resolvedOrg: Organization,
+  profileOrg: { id: string; slug: string; subdomain: string | null; slug_aliases?: string[] | null },
+  urlSlug: string
+): boolean {
+  if (profileOrg.id === resolvedOrg.id) return true;
+  const a = orgIdentifierTokens(resolvedOrg);
+  const nu = String(urlSlug ?? "").trim().toLowerCase();
+  if (nu) a.add(nu);
+  const b = orgIdentifierTokens(profileOrg as unknown as Organization);
+  for (const t of b) {
+    if (a.has(t)) return true;
+  }
+  return false;
+}
+
+/**
+ * Reliable membership for the org opened in the URL (service role).
+ * Use for Feedback, Gesamtübersicht, etc. when profile.organization_id may not equal org.id (legacy / aliases).
+ */
+export async function resolveMemberProfileForOrganization(
+  userId: string,
+  orgSlug: string,
+  org: Organization
+): Promise<{ id: string; organization_id: string; role: DbRole | null } | null> {
+  const service = createSupabaseServiceRoleClient();
+  const { data: rows } = await service
+    .from("profiles")
+    .select("id, status, organization_id, role")
+    .eq("auth_user_id", userId);
+
+  const active = (rows ?? []).filter(
+    (p) => p.status !== "disabled" && p.organization_id
+  ) as { id: string; organization_id: string; role: DbRole | null }[];
+
+  for (const p of active) {
+    if (p.organization_id === org.id) return p;
+  }
+
+  const distinctIds = [...new Set(active.map((p) => String(p.organization_id)))];
+  if (distinctIds.length === 0) return null;
+
+  const { data: orgRows } = await service
+    .from("organizations")
+    .select("id, slug, subdomain, slug_aliases")
+    .in("id", distinctIds);
+
+  for (const p of active) {
+    const pOrg = (orgRows ?? []).find((r: { id: string }) => r.id === p.organization_id);
+    if (pOrg && profileOrgMatchesResolvedOrg(org, pOrg, orgSlug)) return p;
+  }
+
+  return null;
 }
 
 /**
