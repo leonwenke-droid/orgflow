@@ -1,6 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import AuthForm from "../../components/AuthForm";
 import CreateOrganisationClient from "./CreateOrganisationClient";
 
 export const dynamic = "force-dynamic";
@@ -11,28 +12,22 @@ export default async function CreateOrganisationPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 flex items-center justify-center">
-        <div className="mx-auto max-w-md p-8 rounded-xl border border-gray-200 bg-white shadow-sm text-center">
-          <h1 className="text-xl font-semibold text-gray-900">
-            Sign in to create your organisation
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-background-dark">
+        <div className="mx-auto w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+          <h1 className="text-center text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Start your organisation
           </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            You need to be signed in to create an organisation.
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+            Sign in with an existing account, or create one — then you can set up your organisation here.
           </p>
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href={`/login?redirectTo=${encodeURIComponent("/create-organisation")}`}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/"
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
+          <div className="mt-6">
+            <AuthForm redirectTo="/create-organisation" />
+          </div>
+          <p className="mt-6 text-center text-xs text-gray-500 dark:text-gray-500">
+            <Link href="/" className="text-blue-600 hover:underline dark:text-blue-400">
               Back to home
             </Link>
-          </div>
+          </p>
         </div>
       </div>
     );
