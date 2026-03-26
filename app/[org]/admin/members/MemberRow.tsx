@@ -211,99 +211,150 @@ export default function MemberRow({
           ? t("members.invite_revoked", locale)
           : t("members.invite_pending", locale);
 
+  const invited = effectiveStatus === "invited" || member.invite_status === "pending";
+  const role = String(member.role ?? "member");
+
+  const fullName = (isCurrentUser ? "Du" : (member.full_name ?? "–")) as string;
+  const initials =
+    fullName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase())
+      .join("") || "—";
+
+  const avatarClass = invited
+    ? "bg-warning-light text-warning-dark"
+    : role === "admin"
+      ? "bg-brand-light text-brand-dark"
+      : "bg-success-light text-success-dark";
+
+  const roleTag = invited
+    ? "tag tag-amber"
+    : role === "admin"
+      ? "tag tag-blue"
+      : "tag tag-neutral";
+
   return (
-    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
-      <td className="py-2 pr-3">
+    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold ${avatarClass}`}>
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate font-medium text-gray-900">{fullName}</div>
+            <div className="truncate text-xs text-gray-500">{member.email ?? "—"}</div>
+          </div>
+        </div>
+      </td>
+
+      <td className="px-4 py-3">
+        <span className={roleTag}>
+          {invited ? t("members.filter_invited", locale) : role === "admin" ? "Admin" : t("members.filter_active", locale)}
+        </span>
+        <div className="mt-1 text-[10px] text-gray-500">
+          {effectiveStatus === "disabled"
+            ? t("members.status_disabled", locale)
+            : invited
+              ? inviteStatusLabel
+              : t("members.status_active", locale)}
+        </div>
+      </td>
+
+      <td className="px-4 py-3">
+        <span className="text-sm text-gray-700">{committeeNames || "—"}</span>
+      </td>
+
+      <td className="px-4 py-3">
+        <details className="relative inline-block">
+          <summary className="cursor-pointer select-none rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+            ···
+          </summary>
+          <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-lg">
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => setEditingName(true)} className="btn-secondary">
+                  {t("common.edit", locale)}
+                </button>
+                <button type="button" onClick={() => setShowCommittees(true)} className="btn-secondary">
+                  {t("dashboard.teams", locale)}
+                </button>
+                <button type="button" onClick={handleToggleDisabled} disabled={loading} className="btn-secondary">
+                  {effectiveStatus === "disabled" ? t("members.reactivate", locale) : t("members.disable", locale)}
+                </button>
+                <button type="button" onClick={handleDelete} disabled={loading} className="btn-danger">
+                  {t("common.remove", locale)}
+                </button>
+              </div>
+
+              {(effectiveStatus !== "active") && (
+                <div className="border-t border-gray-100 pt-3">
+                  <div className="text-xs font-medium text-gray-700">{t("members.invite_pending", locale)}</div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button type="button" onClick={handleCopyInviteLink} disabled={loading} className="btn-secondary">
+                      {t("members.copy_invite_link", locale)}
+                    </button>
+                    <button type="button" onClick={handleCopyWhatsAppText} disabled={loading} className="btn-secondary">
+                      {t("members.copy_whatsapp_invite", locale)}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {error ? <div className="text-xs text-danger">{error}</div> : null}
+            </div>
+          </div>
+        </details>
+
         {editingName ? (
-          <div className="flex items-center gap-1">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="min-w-[140px] rounded border border-gray-300 bg-white px-2 py-0.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
               autoFocus
             />
-            <button type="button" onClick={handleSaveName} disabled={loading} className="rounded bg-blue-600 px-2 py-0.5 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">{t("common.save", locale)}</button>
-            <button type="button" onClick={() => { setEditingName(false); setName(member.full_name ?? ""); setError(null); }} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-600 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">{t("common.cancel", locale)}</button>
+            <button type="button" onClick={handleSaveName} disabled={loading} className="btn-primary">
+              {t("common.save", locale)}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingName(false);
+                setName(member.full_name ?? "");
+                setError(null);
+              }}
+              className="btn-secondary"
+            >
+              {t("common.cancel", locale)}
+            </button>
           </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900 dark:text-gray-100">{isCurrentUser ? "Du" : (member.full_name ?? "–")}</span>
-            <button type="button" onClick={() => setEditingName(true)} className="text-[10px] text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">Edit</button>
-          </div>
-        )}
-      </td>
-      <td className="py-2 pr-3">
-        <div className="relative" ref={popoverRef}>
-          <button
-            type="button"
-            onClick={() => setShowCommittees(!showCommittees)}
-            className="rounded border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            {committeeNames || "–"} ▾
-          </button>
-          {showCommittees && (
-            <div className="absolute left-0 top-full z-10 mt-1 min-w-[180px] rounded-lg border border-gray-200 bg-white py-2 shadow-lg dark:border-gray-600 dark:bg-gray-800">
-              <div className="max-h-48 space-y-1 overflow-y-auto px-2">
+        ) : null}
+
+        {showCommittees ? (
+          <div className="relative mt-2" ref={popoverRef}>
+            <div className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+              <div className="max-h-48 space-y-1 overflow-y-auto">
                 {committees.map((c) => (
-                  <label key={c.id} className="flex cursor-pointer items-center gap-2 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700">
+                  <label key={c.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
                     <input type="checkbox" checked={committeeIds.has(c.id)} onChange={() => toggleCommittee(c.id)} className="rounded border-gray-400" />
                     {c.name}
                   </label>
                 ))}
               </div>
-              <div className="mt-2 border-t border-gray-200 px-2 pt-2 dark:border-gray-600">
-                <button type="button" onClick={handleCommitteesSave} disabled={loading} className="w-full rounded bg-blue-600 py-1 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">{t("common.save", locale)}</button>
+              <div className="mt-2 flex items-center gap-2">
+                <button type="button" onClick={handleCommitteesSave} disabled={loading} className="btn-primary">
+                  {t("common.save", locale)}
+                </button>
+                <button type="button" onClick={() => setShowCommittees(false)} className="btn-secondary">
+                  {t("common.cancel", locale)}
+                </button>
               </div>
             </div>
-          )}
-        </div>
-      </td>
-      <td className="py-2 pr-3">
-        {showLeadEmailForm ? (
-          <form onSubmit={handleSubmitLeadWithEmail} className="flex flex-wrap items-center gap-1">
-            <input type="email" required value={leadEmail} onChange={(e) => setLeadEmail(e.target.value)} placeholder="E-Mail" className="min-w-[140px] rounded border border-gray-300 bg-white px-2 py-0.5 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400" />
-            <button type="submit" disabled={loading} className="rounded bg-blue-600 px-2 py-0.5 text-[10px] text-white hover:bg-blue-700 disabled:opacity-50">{t("common.save", locale)}</button>
-            <button type="button" onClick={() => { setShowLeadEmailForm(false); setIsLead(false); setError(null); }} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-600 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">{t("common.cancel", locale)}</button>
-          </form>
-        ) : (
-          <label className="flex cursor-pointer items-center gap-1.5 text-gray-600 dark:text-gray-400">
-            <input type="checkbox" checked={isLead} onChange={(e) => handleLeadChange(e.target.checked)} className="rounded border-gray-400" />
-            <span className="text-xs">Lead</span>
-          </label>
-        )}
-      </td>
-      <td className="py-2 pr-3">
-          {effectiveStatus && (
-            <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
-              effectiveStatus === "active"
-                ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                : effectiveStatus === "disabled"
-                  ? "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-            }`}>
-              {effectiveStatus === "active"
-                ? t("members.status_active", locale)
-                : effectiveStatus === "disabled"
-                  ? t("members.status_disabled", locale)
-                  : inviteStatusLabel}
-            </span>
-          )}
-      </td>
-      <td className="py-2">
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-1">
-            <Button type="button" variant="destructive" size="sm" onClick={handleDelete} disabled={loading} className="text-[10px] px-2 py-0.5">{t("common.remove", locale)}</Button>
-            {(effectiveStatus !== "active") && (
-              <>
-                <button type="button" onClick={handleCopyInviteLink} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/30">{t("members.copy_invite_link", locale)}</button>
-                <button type="button" onClick={handleCopyWhatsAppText} disabled={loading} className="rounded border border-blue-300 px-2 py-0.5 text-[10px] text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/30">{t("members.copy_whatsapp_invite", locale)}</button>
-              </>
-            )}
-            <button type="button" onClick={handleToggleDisabled} disabled={loading} className="rounded border border-gray-300 px-2 py-0.5 text-[10px] text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">{effectiveStatus === "disabled" ? t("members.reactivate", locale) : t("members.disable", locale)}</button>
           </div>
-          {error && <span className="text-[10px] text-red-600 dark:text-red-400">{error}</span>}
-        </div>
+        ) : null}
       </td>
     </tr>
   );

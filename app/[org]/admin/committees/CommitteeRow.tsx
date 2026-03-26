@@ -78,94 +78,96 @@ export default function CommitteeRow({
   const showInactive = committee.is_active === false;
 
   return (
-    <li className="flex flex-col gap-2 border-b border-gray-100 pb-3 text-sm last:border-0 dark:border-gray-800">
-      {editing ? (
-        <div className="flex flex-col gap-2">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            autoFocus
-          />
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            placeholder={t("teams.description_placeholder", locale)}
-            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-          />
-          <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
-            <input
-              type="checkbox"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              className="rounded border-gray-300"
-            />
-            {t("teams.active", locale)}
-          </label>
-        </div>
-      ) : (
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <span className="text-gray-900 dark:text-gray-100">{committee.name}</span>
-            {showInactive && (
-              <span className="rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-                {t("teams.inactive_badge", locale)}
-              </span>
-            )}
-            {typeof committee.memberCount === "number" ? (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                {t("teams.member_count", locale).replace("{count}", String(committee.memberCount))}
-              </span>
-            ) : null}
+    <div className="card">
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-light text-xs font-semibold text-brand-dark">
+              {committee.name
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((p) => p[0]?.toUpperCase())
+                .join("") || "—"}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="truncate text-sm font-medium text-gray-900">{committee.name}</div>
+                {showInactive ? <span className="tag tag-neutral">{t("teams.inactive_badge", locale)}</span> : null}
+                {typeof committee.memberCount === "number" ? (
+                  <span className="text-xs text-gray-500">
+                    {t("teams.member_count", locale).replace("{count}", String(committee.memberCount))}
+                  </span>
+                ) : null}
+              </div>
+              {committee.description ? <div className="mt-1 line-clamp-2 text-sm text-gray-500">{committee.description}</div> : null}
+            </div>
           </div>
-          {committee.description ? (
-            <p className="text-xs text-gray-600 dark:text-gray-400">{committee.description}</p>
-          ) : null}
+
+          <details className="relative">
+            <summary className="cursor-pointer select-none rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+              ···
+            </summary>
+            <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-lg">
+              {!editing ? (
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setEditing(true)} className="btn-secondary">
+                    {t("common.edit", locale)}
+                  </button>
+                  <button type="button" onClick={handleDelete} disabled={loading} className="btn-danger">
+                    {t("common.delete", locale)}
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs text-gray-600">—</div>
+              )}
+            </div>
+          </details>
         </div>
-      )}
-      <div className="flex flex-wrap items-center gap-1">
+
         {editing ? (
-          <>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={loading}
-              className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? "…" : t("common.save", locale)}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(false);
-                setName(committee.name);
-                setDescription(committee.description ?? "");
-                setIsActive(committee.is_active !== false);
-                setError(null);
-              }}
-              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              {t("common.cancel", locale)}
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              {t("common.edit", locale)}
-            </button>
-            <Button type="button" variant="destructive" size="sm" onClick={handleDelete} disabled={loading} className="text-xs">
-              {t("common.delete", locale)}
-            </Button>
-          </>
-        )}
+          <div className="mt-4 space-y-3">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              autoFocus
+            />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              placeholder={t("teams.description_placeholder", locale)}
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+            />
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded border-gray-300" />
+              {t("teams.active", locale)}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={handleSave} disabled={loading} className="btn-primary">
+                {t("common.save", locale)}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing(false);
+                  setName(committee.name);
+                  setDescription(committee.description ?? "");
+                  setIsActive(committee.is_active !== false);
+                  setError(null);
+                }}
+                className="btn-secondary"
+              >
+                {t("common.cancel", locale)}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {error ? <p className="mt-3 text-sm text-danger-dark">{error}</p> : null}
       </div>
-      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-    </li>
+    </div>
   );
 }

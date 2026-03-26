@@ -1,21 +1,9 @@
-import type { ElementType } from "react";
 import { getRequestLocale } from "../../../lib/localeServer";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import type { Locale } from "../../../lib/i18n";
 import { t } from "../../../lib/i18n";
-import {
-  Users,
-  UsersRound,
-  ClipboardList,
-  CalendarClock,
-  CalendarRange,
-  Package,
-  Wallet,
-  Trophy,
-  Settings2
-} from "lucide-react";
+import { Users, ClipboardList, CalendarClock, AlertTriangle } from "lucide-react";
 import {
   getCurrentOrganization,
   getCurrentUserRoleInOrg,
@@ -25,79 +13,7 @@ import {
 import { canManageMembersAndTeams, canViewFinance } from "../../../lib/permissions";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import AdminForbidden from "./AdminForbidden";
-import EngagementScoresBlock from "./EngagementScoresBlock";
-
-type AdminCard = {
-  href: string;
-  icon: ElementType;
-  titleKey: string;
-  descKey: string;
-  show: boolean;
-  priority?: "primary" | "secondary";
-  badgeKey?: string;
-};
-
-function AdminSectionCards({
-  locale,
-  titleKey,
-  hintKey,
-  cards,
-  compact = false
-}: {
-  locale: Locale;
-  titleKey: string;
-  hintKey: string;
-  cards: AdminCard[];
-  compact?: boolean;
-}) {
-  const visible = cards
-    .filter((c) => c.show)
-    .sort((a, b) => {
-      const aw = a.priority === "primary" ? 0 : 1;
-      const bw = b.priority === "primary" ? 0 : 1;
-      return aw - bw;
-    });
-  if (visible.length === 0) return null;
-  return (
-    <section className="mb-8">
-      <div className="mb-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          {t(titleKey, locale)}
-        </h2>
-        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{t(hintKey, locale)}</p>
-      </div>
-      <div className={`grid grid-cols-1 ${compact ? "gap-3" : "gap-4"} sm:grid-cols-2 lg:grid-cols-3`}>
-        {visible.map(({ href, icon: Icon, titleKey: tk, descKey: dk, priority, badgeKey }) => (
-          <Link
-            key={href}
-            href={href}
-            prefetch
-            className={`group flex flex-col ${compact ? "gap-2.5 p-4" : "gap-3 p-5"} rounded-xl border bg-white shadow-sm transition-all dark:bg-card-dark ${
-              priority === "primary"
-                ? "border-blue-200 ring-1 ring-blue-100 hover:border-blue-300 hover:shadow-md dark:border-blue-800/70 dark:ring-blue-900/50"
-                : "border-gray-200 hover:border-blue-200 hover:shadow-md dark:border-gray-700 dark:hover:border-blue-700"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className={`flex ${compact ? "h-9 w-9" : "h-10 w-10"} items-center justify-center rounded-lg bg-blue-50 dark:bg-gray-800`}>
-                <Icon className={`${compact ? "h-4 w-4" : "h-5 w-5"} text-blue-600 dark:text-blue-400`} />
-              </div>
-              {badgeKey ? (
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
-                  {t(badgeKey, locale)}
-                </span>
-              ) : null}
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900 dark:text-foreground-dark">{t(tk, locale)}</p>
-              <p className={`${compact ? "mt-0.5 text-xs" : "mt-0.5 text-sm"} text-gray-500 dark:text-muted`}>{t(dk, locale)}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 export default async function AdminDashboard({
   params
@@ -126,136 +42,151 @@ export default async function AdminDashboard({
   const showFinanceCard = canViewFinance(userRole);
   const fullOrgControl = canManageMembersAndTeams(userRole);
 
-  const features = (org.settings?.features as Record<string, boolean>) ?? {};
-  const engagementEnabled = features.engagement_tracking !== false;
+  const service = createSupabaseServiceRoleClient();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const in7 = new Date();
+  in7.setDate(in7.getDate() + 7);
+  const in7Str = in7.toISOString().slice(0, 10);
 
-  /** Mitglieder/Teams nur Owner/Admin/Super-Admin — wie Sidebar „Personen & Struktur“. */
-  const coreCards: AdminCard[] = [
-    {
-      href: `/${orgSlug}/admin/members`,
-      icon: Users,
-      titleKey: "dashboard.members",
-      descKey: "admin.card.members_desc",
-      show: fullOrgControl,
-      priority: "secondary"
-    },
-    {
-      href: `/${orgSlug}/admin/committees`,
-      icon: UsersRound,
-      titleKey: "dashboard.teams",
-      descKey: "admin.card.teams_desc",
-      show: fullOrgControl,
-      priority: "secondary"
-    }
-  ];
+  const [
+    { count: memberCount },
+    { count: openTasksCount },
+    { count: overdueTasksCount },
+    { count: activeMembersCount },
+    { data: shifts7d },
+    { data: committees }
+  ] = await Promise.all([
+    service.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData),
+    service
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgIdForData)
+      .neq("status", "erledigt"),
+    service
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgIdForData)
+      .neq("status", "erledigt")
+      .lt("due_at", new Date().toISOString()),
+    service
+      .from("engagement_scores")
+      .select("user_id", { count: "exact", head: true })
+      .eq("organization_id", orgIdForData)
+      .gt("score", 0),
+    service
+      .from("shifts")
+      .select("id, committee_id, required_slots, shift_assignments(id)")
+      .eq("organization_id", orgIdForData)
+      .gte("date", todayStr)
+      .lte("date", in7Str),
+    service.from("committees").select("id, name").eq("organization_id", orgIdForData).order("name")
+  ]);
 
-  const organisationCards: AdminCard[] = [
-    {
-      href: `/${orgSlug}/admin/tasks`,
-      icon: ClipboardList,
-      titleKey: "nav.admin_tasks",
-      descKey: "admin.card.tasks_desc",
-      show: true,
-      priority: "primary",
-      badgeKey: "admin.badge.priority"
-    },
-    {
-      href: `/${orgSlug}/admin/shifts`,
-      icon: CalendarClock,
-      titleKey: "nav.admin_shifts",
-      descKey: "admin.card.shifts_desc",
-      show: true,
-      priority: "primary",
-      badgeKey: "admin.badge.priority"
-    },
-    {
-      href: `/${orgSlug}/admin/materials`,
-      icon: Package,
-      titleKey: "dashboard.resources",
-      descKey: "admin.card.resources_desc",
-      show: true,
-      priority: "secondary"
-    },
-    {
-      href: `/${orgSlug}/admin/finanzen`,
-      icon: Wallet,
-      titleKey: "dashboard.finance",
-      descKey: "admin.card.finance_desc",
-      show: showFinanceCard,
-      priority: "secondary"
-    },
-    {
-      href: `/${orgSlug}/admin/scores/assign`,
-      icon: Trophy,
-      titleKey: "dashboard.engagement",
-      descKey: "admin.card.engagement_desc",
-      show: true,
-      priority: "secondary"
-    },
-    {
-      href: `/${orgSlug}/admin/events`,
-      icon: CalendarRange,
-      titleKey: "events.title",
-      descKey: "admin.card.events_desc",
-      show: true,
-      priority: "secondary"
-    },
-    {
-      href: `/${orgSlug}/admin/overview`,
-      icon: CalendarRange,
-      titleKey: "admin.card.overview_title",
-      descKey: "admin.card.overview_desc",
-      show: true,
-      priority: "primary",
-      badgeKey: "admin.badge.new"
-    }
-  ];
+  const shiftsSlots7d = (shifts7d ?? []).reduce((sum, s: any) => sum + (Number(s.required_slots ?? 0) || 0), 0);
 
-  const administrationCards: AdminCard[] = [
-    {
-      href: `/${orgSlug}/settings`,
-      icon: Settings2,
-      titleKey: "dashboard.settings",
-      descKey: "settings.edit_org",
-      show: fullOrgControl,
-      priority: "secondary"
-    }
-  ];
+  const committeeUtil = (committees ?? []).map((c: any) => {
+    const teamShifts = (shifts7d ?? []).filter((s: any) => s.committee_id === c.id);
+    const required = teamShifts.reduce((sum: number, s: any) => sum + (Number(s.required_slots ?? 0) || 0), 0);
+    const taken = teamShifts.reduce((sum: number, s: any) => sum + ((s.shift_assignments ?? []).length || 0), 0);
+    const pct = required > 0 ? Math.round((taken / required) * 100) : 0;
+    return { id: c.id as string, name: String(c.name ?? "—"), required, taken, pct };
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-background-dark">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8">
-          <AdminBreadcrumb orgSlug={orgSlug} />
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-foreground-dark sm:text-3xl">
-            {t("admin.page_title", locale)}
-          </h1>
-          <p className="mt-1.5 text-sm text-gray-600 dark:text-muted">
-            {t("admin.org_subtitle", locale).replace("{name}", org.name)}
-          </p>
-        </header>
+    <div className="mx-auto max-w-6xl space-y-6 p-6">
+      <header>
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("admin.page_title", locale)} />
+        <h1 className="page-title">{t("admin.page_title", locale)}</h1>
+        <p className="page-sub">{org.name}</p>
+      </header>
 
-        <AdminSectionCards locale={locale} titleKey="nav.section.people" hintKey="admin.section.core_hint" cards={coreCards} />
-        <AdminSectionCards
-          locale={locale}
-          titleKey="nav.section.operations"
-          hintKey="admin.section.org_hint"
-          cards={organisationCards}
-        />
-        <AdminSectionCards
-          locale={locale}
-          titleKey="nav.section.org_settings"
-          hintKey="admin.section.admin_hint"
-          cards={administrationCards}
-          compact
-        />
+      {typeof overdueTasksCount === "number" && overdueTasksCount > 0 ? (
+        <div className="card border border-warning-light bg-warning-light/40 p-4">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-warning-dark" aria-hidden />
+            <div className="min-w-0">
+              <div className="text-sm font-medium text-warning-dark">
+                {locale === "en"
+                  ? `${overdueTasksCount} tasks are overdue — please assign or reschedule`
+                  : `${overdueTasksCount} Aufgaben sind überfällig — bitte zuweisen oder neu planen`}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
-        {engagementEnabled && (
-          <section id="admin-engagement" className="mt-8 scroll-mt-8">
-            <EngagementScoresBlock orgSlug={orgSlug} currentAuthUserId={currentAuthUserId} />
-          </section>
-        )}
-      </div>
+      <section className="grid gap-4 md:grid-cols-4">
+        <div className="stat-card">
+          <div className="section-label">{t("dashboard.members", locale)}</div>
+          <div className="text-2xl font-semibold text-gray-900">{memberCount ?? 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="section-label">{locale === "en" ? "Open tasks" : "Aufgaben offen"}</div>
+          <div className="text-2xl font-semibold text-warning-dark">{openTasksCount ?? 0}</div>
+        </div>
+        <div className="stat-card">
+          <div className="section-label">{locale === "en" ? "Shift slots (7d)" : "Schichten (7d)"}</div>
+          <div className="text-2xl font-semibold text-gray-900">{shiftsSlots7d}</div>
+        </div>
+        <div className="stat-card">
+          <div className="section-label">{locale === "en" ? "Active members" : "Aktive Mitglieder"}</div>
+          <div className="text-2xl font-semibold text-gray-900">{activeMembersCount ?? 0}</div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="card">
+          <div className="p-4">
+            <div className="section-label">{locale === "en" ? "Teams by workload" : "Teams nach Auslastung"}</div>
+            {committeeUtil.length === 0 ? (
+              <p className="text-sm text-gray-500">—</p>
+            ) : (
+              <ul className="space-y-3">
+                {committeeUtil.map((c) => (
+                  <li key={c.id}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 text-sm font-medium text-gray-900">{c.name}</div>
+                      <div className="shrink-0 text-xs text-gray-500">
+                        {c.taken}/{c.required}
+                      </div>
+                    </div>
+                    <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
+                      <div className="h-2 rounded-full bg-brand" style={{ width: `${Math.max(0, Math.min(100, c.pct))}%` }} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="p-4">
+            <div className="section-label">{locale === "en" ? "Quick actions" : "Schnellaktionen"}</div>
+            <div className="space-y-2">
+              <Link href={`/${orgSlug}/admin/shifts`} className="btn-primary inline-flex w-full items-center justify-center gap-2">
+                <CalendarClock className="h-4 w-4" aria-hidden />
+                {locale === "en" ? "New shift" : "Neue Schicht"}
+              </Link>
+              <Link href={`/${orgSlug}/admin/tasks`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                <ClipboardList className="h-4 w-4" aria-hidden />
+                {locale === "en" ? "Auto-assign" : "Auto-zuweisen"}
+              </Link>
+              {fullOrgControl ? (
+                <Link href={`/${orgSlug}/admin/members`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                  <Users className="h-4 w-4" aria-hidden />
+                  {locale === "en" ? "Invite members" : "Mitglieder einladen"}
+                </Link>
+              ) : null}
+              {showFinanceCard ? (
+                <Link href={`/${orgSlug}/admin/finanzen`} className="btn-secondary inline-flex w-full items-center justify-center">
+                  {locale === "en" ? "Finance" : "Finanzen"}
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

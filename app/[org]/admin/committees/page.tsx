@@ -81,31 +81,38 @@ export default async function AdminCommitteesPage(props: {
   );
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
-      <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />
-      <h1 className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">Teams – {org.name}</h1>
-      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Teams verwalten</p>
+    <div className="mx-auto max-w-6xl space-y-5 p-6">
+      <header>
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />
+        <h1 className="page-title">Teams</h1>
+        <p className="page-sub">{org.name}</p>
+      </header>
 
-      <CreateCommitteeForm orgSlug={orgSlug} orgId={org.id} committees={committeeList} />
+      <div className="grid gap-4 md:grid-cols-2">
+        {committeesWithCounts.map((c: any) => (
+          <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
+        ))}
 
-      <ul className="mt-6 space-y-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        {committeesWithCounts.map(
-          (c: {
-            id: string;
-            name: string;
-            description?: string | null;
-            is_active?: boolean | null;
-            memberCount: number;
-          }) => (
-            <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
-          )
-        )}
-        {(!committees || committees.length === 0) && (
-          <li className="list-none">
-            <EmptyState messageKey="empty.teams" actionHref={`/${orgSlug}/admin/committees`} actionLabelKey="cta.create_team" />
-          </li>
-        )}
-      </ul>
+        <div className="card border border-dashed border-gray-200">
+          <div className="flex h-full min-h-[160px] flex-col items-center justify-center gap-2 p-6 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 text-lg font-medium text-gray-700">+</div>
+            <div className="text-sm font-medium text-gray-900">Neues Team anlegen</div>
+            <div className="text-xs text-gray-500">Erstellt ein neues Team für Aufgaben & Schichten.</div>
+            <a href="#create-team" className="btn-primary mt-2">Team erstellen</a>
+          </div>
+        </div>
+      </div>
+
+      <div id="create-team" className="card p-4">
+        <div className="section-label">Neues Team</div>
+        <CreateCommitteeForm orgSlug={orgSlug} orgId={org.id} committees={committeeList} />
+      </div>
+
+      {(!committees || committees.length === 0) ? (
+        <div className="card p-4">
+          <EmptyState messageKey="empty.teams" actionHref={`/${orgSlug}/admin/committees`} actionLabelKey="cta.create_team" />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -146,143 +146,108 @@ export default async function AdminMembersPage({
   };
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
-      <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("members.page_title", locale)} />
-      <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
-        {t("members.page_title", locale)} – {org.name}
-      </h1>
-      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t("members.page_subtitle", locale)}</p>
+    <div className="mx-auto max-w-6xl space-y-5 p-6">
+      <header>
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("members.page_title", locale)} />
+        <h1 className="page-title">{t("members.page_title", locale)}</h1>
+        <p className="page-sub">{org.name}</p>
+      </header>
 
-      <form method="get" className="mt-4 flex flex-wrap items-end gap-2">
-        <input type="hidden" name="status" value={statusFilter} />
-        <label className="flex flex-col gap-1 text-xs text-gray-600 dark:text-gray-400">
-          <span>{t("tasks.filter_search", locale)}</span>
-          <input
-            type="search"
-            name="q"
-            defaultValue={qRaw}
-            placeholder={t("members.search_placeholder", locale)}
-            className="min-w-[200px] rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-          />
-        </label>
-        <button
-          type="submit"
-          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-        >
-          {t("tasks.filter_search", locale)}
-        </button>
-      </form>
+      <div className="card p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <form method="get" className="flex flex-1 flex-wrap items-center gap-2">
+            <input type="hidden" name="status" value={statusFilter} />
+            <input
+              type="search"
+              name="q"
+              defaultValue={qRaw}
+              placeholder={t("members.search_placeholder", locale)}
+              className="w-full min-w-[220px] flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400"
+            />
+            <button type="submit" className="btn-secondary">{t("tasks.filter_search", locale)}</button>
+          </form>
+          <a href={`/api/member-invites/export?orgSlug=${encodeURIComponent(orgSlug)}`} className="btn-secondary">
+            {t("members.download_pending", locale)}
+          </a>
+          <a href="#add-member" className="btn-primary">
+            + {t("members.add_member_btn", locale)}
+          </a>
+        </div>
 
-      <div className="mt-6">
-        <div className="flex flex-wrap gap-2 text-xs">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           {(
             [
               ["all", "members.filter_all"],
-              ["invited", "members.filter_invited"],
               ["active", "members.filter_active"],
+              ["invited", "members.filter_invited"],
               ["disabled", "members.filter_disabled"]
             ] as const
           ).map(([key, labelKey]) => (
             <a
               key={key}
               href={key === "all" ? (qRaw ? `?q=${encodeURIComponent(qRaw)}` : "?status=all") : `?status=${encodeURIComponent(key)}${qRaw ? `&q=${encodeURIComponent(qRaw)}` : ""}`}
-              className={`rounded-full border px-3 py-1 ${statusFilter === key ? "border-blue-600 bg-blue-600 text-white" : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300"}`}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                statusFilter === key ? "bg-white text-gray-900 shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-white/60 hover:text-gray-900"
+              }`}
             >
               {t(labelKey, locale)}
             </a>
           ))}
-          <a
-            href={`/api/member-invites/export?orgSlug=${encodeURIComponent(orgSlug)}`}
-            className="rounded-full border border-gray-300 px-3 py-1 text-gray-700 dark:border-gray-600 dark:text-gray-300"
-          >
-            {t("members.download_pending", locale)}
-          </a>
         </div>
+
+        <details className="mt-4">
+          <summary className="cursor-pointer text-sm font-medium text-gray-700">{t("members.excel_import", locale)}</summary>
+          <div className="mt-3 space-y-2">
+            <p className="text-sm text-gray-600">{t("members.excel_import_hint", locale)}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <a href="/api/members-template" download="Members-Template.xlsx" className="text-sm text-brand hover:underline">
+                {t("members.download_template", locale)}
+              </a>
+              <MembersExcelUpload orgSlug={orgSlug} />
+            </div>
+          </div>
+        </details>
       </div>
 
-      <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("members.excel_import", locale)}</h2>
-        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{t("members.excel_import_hint", locale)}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <a
-            href="/api/members-template"
-            download="Members-Template.xlsx"
-            className="text-sm text-blue-600 underline hover:text-blue-700 dark:text-blue-400"
-          >
-            {t("members.download_template", locale)}
-          </a>
-          <MembersExcelUpload orgSlug={orgSlug} />
-        </div>
-      </div>
-
-      <div className="mt-6">
+      <div id="add-member" className="card p-4">
+        <div className="section-label">{t("members.add_member_btn", locale)}</div>
         <AddMemberForm orgSlug={orgSlug} committees={committeeList} />
       </div>
 
-      <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-        {t("members.list_count", locale)
-          .replace("{count}", String(searchedMembers.length))
-          .replace("{page}", String(safePage))
-          .replace("{total}", String(totalPages))}
-      </p>
-
-      <div className="mt-2 flex flex-wrap gap-2 text-xs">
-        {safePage > 1 && (
-          <a
-            href={queryBase(safePage - 1)}
-            className="rounded border border-gray-300 px-3 py-1 text-gray-700 dark:border-gray-600 dark:text-gray-300"
-          >
-            {t("members.page_prev", locale)}
-          </a>
-        )}
-        {safePage < totalPages && (
-          <a
-            href={queryBase(safePage + 1)}
-            className="rounded border border-gray-300 px-3 py-1 text-gray-700 dark:border-gray-600 dark:text-gray-300"
-          >
-            {t("members.page_next", locale)}
-          </a>
-        )}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-gray-500">
+          {t("members.list_count", locale)
+            .replace("{count}", String(searchedMembers.length))
+            .replace("{page}", String(safePage))
+            .replace("{total}", String(totalPages))}
+        </p>
+        <div className="flex gap-2">
+          {safePage > 1 ? <a href={queryBase(safePage - 1)} className="btn-secondary">{t("members.page_prev", locale)}</a> : null}
+          {safePage < totalPages ? <a href={queryBase(safePage + 1)} className="btn-secondary">{t("members.page_next", locale)}</a> : null}
+        </div>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-card-dark">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-800">
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {t("engagement.export_name", locale)}
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {t("dashboard.teams", locale)}
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {t("members.lead_column", locale)}
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {t("feedback.status", locale)}
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {t("engagement.action", locale)}
-              </th>
+          <thead className="bg-gray-50">
+            <tr className="border-b border-gray-100">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">{t("engagement.export_name", locale)}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">{t("members.lead_column", locale)}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">{t("dashboard.teams", locale)}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">{t("common.actions", locale)}</th>
             </tr>
           </thead>
           <tbody>
             {pagedMembers.map((m: any) => (
-              <MemberRow
-                key={m.id}
-                orgSlug={orgSlug}
-                member={m}
-                committees={committeeList}
-                currentAuthUserId={currentAuthUserId}
-              />
+              <MemberRow key={m.id} orgSlug={orgSlug} member={m} committees={committeeList} currentAuthUserId={currentAuthUserId} />
             ))}
-            {(!pagedMembers || pagedMembers.length === 0) && (
+            {(!pagedMembers || pagedMembers.length === 0) ? (
               <tr>
-                <td colSpan={5} className="p-0">
+                <td colSpan={4} className="p-0">
                   <EmptyState messageKey="empty.members" actionHref={`/${orgSlug}/admin/members`} actionLabelKey="cta.invite_members" className="rounded-none border-0" />
                 </td>
               </tr>
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>
