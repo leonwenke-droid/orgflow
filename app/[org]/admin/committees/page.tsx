@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
   getCurrentOrganization,
-  getCurrentUserRoleInOrg,
+  getEffectiveUserRoleForOrg,
   getOrgIdForData,
   isOrgAdmin
 } from "../../../../lib/getOrganization";
@@ -26,7 +26,7 @@ export default async function AdminCommitteesPage(props: {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
-  const userRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
+  const userRole = await getEffectiveUserRoleForOrg(orgSlug, org);
   if (!canManageMembersAndTeams(userRole)) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
