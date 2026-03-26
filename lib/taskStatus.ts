@@ -2,11 +2,11 @@
  * Visual left border for task rows (PHASE 7).
  */
 export const STATUS_BORDER: Record<string, string> = {
-  in_arbeit: "border-l-4 border-l-amber-400",
-  ueberfaellig: "border-l-4 border-l-red-500",
-  offen: "border-l-4 border-l-gray-200 dark:border-l-gray-600",
-  erledigt: "border-l-4 border-l-green-400 opacity-60",
-  abgebrochen: "border-l-4 border-l-slate-400 opacity-80"
+  in_arbeit: "border-l-[3px] border-l-[#BA7517]",
+  ueberfaellig: "border-l-[3px] border-l-[#A32D2D]",
+  offen: "border-l-[3px] border-l-gray-200 dark:border-l-gray-700",
+  erledigt: "border-l-[3px] border-l-[#3B6D11] opacity-60",
+  abgebrochen: "border-l-[3px] border-l-slate-400 opacity-80"
 };
 
 export function taskRowBorderClass(status: string | null | undefined, dueAt: string | null | undefined): string {

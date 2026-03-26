@@ -1,244 +1,89 @@
-import { unstable_noStore } from "next/cache";
-import { getRequestLocale } from "../../../lib/localeServer";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { removePastShifts } from "../../../lib/cleanupShifts";
-import { getDashboardDisplayNames } from "../../../lib/displayName";
-import { formatWeekRangeLabel, getTodayDateString } from "../../../lib/dateFormat";
-import {
-  getGreeting,
-  formatShiftSlot,
-  formatLocaleDateTime,
-  nextEngagementMilestone,
-  type AppLocale
-} from "../../../lib/formatDate";
-import { DEFAULT_CURRENCY, formatCurrency } from "../../../lib/currency";
-import ShiftPlanWeekNav from "../../../components/ShiftPlanWeekNav";
-import EmptyState from "../../../components/EmptyState";
-import OnboardingBanner from "../../../components/OnboardingBanner";
-import OnboardingChecklist from "../../../components/OnboardingChecklist";
-import { ArrowLeftRight, CalendarDays, CheckSquare, Trophy, Users, Wallet, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import type { WeekData } from "../../../components/ShiftPlanWeekView";
-import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin, getCurrentUserRoleInOrg } from "../../../lib/getOrganization";
-import { ADMIN_ROLES, canViewFinance } from "../../../lib/permissions";
-import { t } from "../../../lib/i18n";
-import { ShiftAvailability } from "../../../components/ui/ShiftAvailability";
-import { StatusBadge } from "../../../components/ui/StatusBadge";
+
+import { getRequestLocale } from "../../../lib/localeServer";
+import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { getGreeting, nextEngagementMilestone, formatShiftSlot, type AppLocale } from "../../../lib/formatDate";
+import { t } from "../../../lib/i18n";
+
 import { claimShiftFromDashboard } from "./actions";
-import TaskCompleteModalButton from "../../../components/TaskCompleteModal";
-import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
-import ClaimShiftRefreshForm from "../../../components/ClaimShiftRefreshForm";
 
 export const dynamic = "force-dynamic";
 
-type ActivityStats = {
-  shifts_done_30d: number;
-  tasks_done_30d: number;
-  materials_30d: number;
-  materials_small_30d: number;
-  materials_medium_30d: number;
-  materials_large_30d: number;
-  active_participants_30d: number;
-  total_members: number;
+type ShiftRow = {
+  id: string;
+  event_name: string | null;
+  date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  location: string | null;
+  required_slots: number | null;
+  auto_assign: boolean | null;
+  claimable: boolean | null;
+  shift_assignments: { id: string; user_id: string | null; replacement_user_id: string | null }[] | null;
 };
 
-async function getData(organizationId: string, supabaseOverride?: SupabaseClient) {
-  unstable_noStore();
-  const supabase = supabaseOverride ?? createServerComponentClient({ cookies });
-
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const since = thirtyDaysAgo.toISOString();
-
-  const [
-    treasuryRes,
-    tasksCountRes,
-    shiftsRes,
-    { data: profiles },
-    { data: committees },
-    { data: orgProfileIds },
-    { data: engagementEvents }
-  ] = await Promise.all([
-    supabase
-      .from("treasury_updates")
-      .select("amount, created_at")
-      .eq("organization_id", organizationId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("tasks")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId),
-    supabase
-      .from("shifts")
-      .select(
-        "id, event_name, date, start_time, end_time, location, notes, required_slots, auto_assign, claimable, shift_assignments ( id, status, user_id, replacement_user_id, swap_offered )"
-      )
-      .eq("organization_id", organizationId)
-      .order("date", { ascending: true }),
-    supabase
-      .from("profiles")
-      .select("id, full_name")
-      .eq("organization_id", organizationId),
-    supabase
-      .from("committees")
-      .select("id, name")
-      .eq("organization_id", organizationId)
-      .order("name"),
-    supabase
-      .from("profiles")
-      .select("id")
-      .eq("organization_id", organizationId),
-    supabase
-      .from("engagement_events")
-      .select("user_id, event_type, created_at")
-      .gte("created_at", since)
-  ]);
-
-  const treasury = treasuryRes.data ?? null;
-  const shifts = shiftsRes.data ?? [];
-
-  const profileIds = (orgProfileIds ?? []).map((p: { id: string }) => p.id);
-  const eventsFiltered =
-    profileIds.length > 0
-      ? (engagementEvents ?? []).filter((e: { user_id: string | null }) => e.user_id && profileIds.includes(e.user_id))
-      : [];
-
-  try {
-    await removePastShifts(supabase);
-    await supabase.rpc("apply_task_missed_penalties");
-  } catch (e) {
-    console.error("[dashboard getData] cleanup/penalties:", e);
-  }
-
-  const profileNames = getDashboardDisplayNames(
-    (profiles ?? []) as { id: string; full_name: string | null }[]
+function formatDateSeparator(ymd: string, locale: "de" | "en") {
+  const s = String(ymd ?? "").slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || "–";
+  const [y, m, d] = s.split("-").map(Number);
+  const loc = locale === "en" ? "en-GB" : "de-DE";
+  return new Intl.DateTimeFormat(loc, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(
+    new Date(y, m - 1, d)
   );
-
-  const events = eventsFiltered as { user_id: string; event_type: string }[];
-  const materialEvents = events.filter((e) =>
-    ["material_small", "material_medium", "material_large"].includes(e.event_type)
-  );
-
-  const positiveEventTypes = new Set([
-    "shift_done",
-    "task_done",
-    "material_small",
-    "material_medium",
-    "material_large"
-  ]);
-  const activeUserIds = events
-    .filter((e) => e.user_id && positiveEventTypes.has(e.event_type))
-    .map((e) => e.user_id);
-
-  const activity: ActivityStats = {
-    shifts_done_30d: events.filter((e) => e.event_type === "shift_done").length,
-    tasks_done_30d: events.filter((e) => e.event_type === "task_done").length,
-    materials_30d: materialEvents.length,
-    materials_small_30d: materialEvents.filter((e) => e.event_type === "material_small").length,
-    materials_medium_30d: materialEvents.filter((e) => e.event_type === "material_medium").length,
-    materials_large_30d: materialEvents.filter((e) => e.event_type === "material_large").length,
-    active_participants_30d: new Set(activeUserIds).size,
-    total_members: (profiles ?? []).length
-  };
-
-  return {
-    treasury: (treasury ?? null) as { amount: number; created_at: string } | null,
-    activity,
-    shifts: shifts ?? [],
-    profileNames,
-    committees: (committees ?? []) as { id: string; name: string }[],
-    tasksCount: tasksCountRes.count ?? 0,
-    shiftsCount: (shifts ?? []).length
-  };
 }
 
-export default async function OrgDashboardPage({
-  params,
-  searchParams
-}: {
-  params: Promise<{ org: string }> | { org: string };
-  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
-}) {
-  const orgSlug = typeof (params as Promise<{ org: string }>).then === "function"
-    ? (await (params as Promise<{ org: string }>)).org
-    : (params as { org: string }).org;
-  const sp =
-    searchParams && typeof (searchParams as Promise<unknown>).then === "function"
-      ? await (searchParams as Promise<Record<string, string | string[] | undefined>>)
-      : ((searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
-  const claimShiftError = sp.claimShift === "error" || sp.claimShift === "1";
-  const shiftsFreeOnly = sp.free === "1" || sp.free === "true";
-  const org = await getCurrentOrganization(orgSlug);
-  const locale = await getRequestLocale();
-  const localeForMoney = locale === "de" ? "de-DE" : "en-GB";
-  const currencyCode = org.settings?.currency ?? DEFAULT_CURRENCY;
+function dotClass(free: number) {
+  if (free <= 0) return "bg-danger";
+  if (free === 1) return "bg-warning";
+  return "bg-success";
+}
 
-  const supabase = createServerComponentClient({ cookies });
+export default async function OrgDashboardPage(props: {
+  params: Promise<{ org: string }> | { org: string };
+}) {
+  const params =
+    typeof (props.params as Promise<{ org: string }>).then === "function"
+      ? await (props.params as Promise<{ org: string }>)
+      : (props.params as { org: string });
+
+  const orgSlug = params.org;
+  const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const locale = await getRequestLocale();
+  const fl = locale as AppLocale;
+
+  const authSupabase = createServerComponentClient({ cookies });
   const {
     data: { user }
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/dashboard`);
-  }
+  } = await authSupabase.auth.getUser();
+  if (!user) redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/dashboard`);
 
   const service = createSupabaseServiceRoleClient();
-  const isSuper = await isSuperAdmin();
-  const orgIdForData = getOrgIdForData(orgSlug, org.id);
-
-  const { data: myProfilePrimary } = await service
+  const { data: myProfile } = await service
     .from("profiles")
     .select("id, full_name, role")
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgIdForData)
     .maybeSingle();
-  const { data: myProfileFallback } =
-    !myProfilePrimary && orgIdForData !== org.id
-      ? await service
-          .from("profiles")
-          .select("id, full_name, role")
-          .eq("auth_user_id", user.id)
-          .eq("organization_id", org.id)
-          .maybeSingle()
-      : { data: null };
 
-  const memberRow = (myProfilePrimary ?? myProfileFallback) as {
-    id: string;
-    full_name: string | null;
-    role: string | null;
-  } | null;
-
-  if (!isSuper && !memberRow) {
+  const member = myProfile as { id?: string; full_name?: string | null; role?: string | null } | null;
+  const myProfileId = member?.id ?? null;
+  if (!myProfileId) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t("common.access_denied", locale)}</h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          {t("dashboard.use_invited_account", locale)}
-        </p>
+      <div className="mx-auto max-w-5xl p-6">
+        <div className="card p-6">
+          <h1 className="page-title">{t("common.access_denied", locale)}</h1>
+          <p className="page-sub">{t("dashboard.use_invited_account", locale)}</p>
+        </div>
       </div>
     );
   }
 
-  const userOrg = await getCurrentUserOrganization();
-  const canAccessOrgData = isSuper || userOrg?.id === org.id || !!memberRow;
-
-  const effectiveOrgIdForData = myProfilePrimary ? orgIdForData : org.id;
-
-  let { treasury, activity, shifts, profileNames, committees, tasksCount, shiftsCount } =
-    await getData(effectiveOrgIdForData, service);
-
-  const userIsAdminPrimary = await isOrgAdmin(orgIdForData);
-  const userIsAdmin =
-    userIsAdminPrimary || (orgIdForData !== org.id ? await isOrgAdmin(org.id) : false);
-
-  const userRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
-  const showGettingStarted = userRole != null && ADMIN_ROLES.includes(userRole);
-  const userCanViewFinance = userRole == null || canViewFinance(userRole) || userIsAdmin;
+  const canClaimShifts = (member?.role ?? null) !== "viewer";
 
   const meta = user.user_metadata as Record<string, unknown> | undefined;
   const metaName =
@@ -246,856 +91,199 @@ export default async function OrgDashboardPage({
     (typeof meta?.name === "string" && meta.name.trim()) ||
     null;
   const emailLocal = user.email?.split("@")[0]?.trim() || null;
-  const myName =
-    (memberRow?.full_name && String(memberRow.full_name).trim()) ||
-    metaName ||
-    emailLocal ||
-    null;
-  const myProfileId = memberRow?.id ?? null;
-  const myRole = memberRow?.role ?? null;
-  const canClaimShifts = myRole !== "viewer" && !!myProfileId;
+  const myName = (member?.full_name && String(member.full_name).trim()) || metaName || emailLocal || null;
 
-  const todayStr = getTodayDateString();
+  const todayStr = new Date().toISOString().slice(0, 10);
   const in7 = new Date();
   in7.setDate(in7.getDate() + 7);
   const in7Str = in7.toISOString().slice(0, 10);
-  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = orgFeatures.engagement_tracking !== false;
 
-  const { data: myAssignedShifts } = myProfileId
-    ? await service
-        .from("shift_assignments")
-        .select(
-          "id, status, user_id, replacement_user_id, swap_offered, shifts!inner(id, event_name, date, start_time, end_time, location, organization_id)"
-        )
-        .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)
-        .eq("shifts.organization_id", effectiveOrgIdForData)
-        .gte("shifts.date", todayStr)
-        .order("shifts.date", { ascending: true })
-        .order("shifts.start_time", { ascending: true })
-        .limit(6)
-    : { data: [] };
-
-  const { data: myOpenTasks } = myProfileId
-    ? await service
-        .from("tasks")
-        .select(
-          "id, title, description, status, due_at, claimable, proof_required, proof_url, committees(name)"
-        )
-        .eq("organization_id", effectiveOrgIdForData)
-        .eq("owner_id", myProfileId)
-        .neq("status", "erledigt")
-        .order("due_at", { ascending: true })
-        .limit(8)
-    : { data: [] };
-
-  let myOpenTaskCount = 0;
-  if (myProfileId) {
-    const { count } = await service
+  const [{ count: openTaskCount }, { data: engagementRows }, { data: shifts }, { data: myAssignments }] = await Promise.all([
+    service
       .from("tasks")
       .select("id", { count: "exact", head: true })
-      .eq("organization_id", effectiveOrgIdForData)
+      .eq("organization_id", orgIdForData)
       .eq("owner_id", myProfileId)
-      .neq("status", "erledigt");
-    myOpenTaskCount = count ?? 0;
-  }
+      .neq("status", "erledigt"),
+    service
+      .from("engagement_scores")
+      .select("user_id, score")
+      .eq("organization_id", orgIdForData)
+      .order("score", { ascending: false }),
+    service
+      .from("shifts")
+      .select(
+        "id, event_name, date, start_time, end_time, location, required_slots, auto_assign, claimable, shift_assignments(id, user_id, replacement_user_id)"
+      )
+      .eq("organization_id", orgIdForData)
+      .gte("date", todayStr)
+      .lte("date", in7Str)
+      .order("date", { ascending: true })
+      .order("start_time", { ascending: true }),
+    service
+      .from("shift_assignments")
+      .select("id, user_id, replacement_user_id, shifts!inner(id, organization_id)")
+      .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)
+      .eq("shifts.organization_id", orgIdForData)
+  ]);
 
-  const { data: engagementRows } =
-    engagementEnabled && myProfileId
-      ? await service
-          .from("engagement_scores")
-          .select("user_id, score")
-          .eq("organization_id", effectiveOrgIdForData)
-          .order("score", { ascending: false })
-      : { data: [] };
-
-  const myEngagementScoreRow = (engagementRows ?? []).find((row) => row.user_id === myProfileId);
-  const myEngagementScore = typeof myEngagementScoreRow?.score === "number" ? myEngagementScoreRow.score : 0;
+  const myScoreRow = (engagementRows ?? []).find((row: any) => row.user_id === myProfileId);
+  const myEngagementScore = typeof myScoreRow?.score === "number" ? myScoreRow.score : 0;
   const myEngagementRank =
-    myEngagementScoreRow && engagementRows
-      ? 1 + (engagementRows ?? []).filter((row) => (row.score ?? 0) > myEngagementScore).length
+    myScoreRow && engagementRows
+      ? 1 + (engagementRows ?? []).filter((row: any) => (row.score ?? 0) > myEngagementScore).length
       : null;
-  const engagementRankingTotal = (engagementRows ?? []).length;
+  const engagementTotal = (engagementRows ?? []).length;
 
-  const { data: poolClaimableTasks } =
-    myProfileId && canClaimShifts
-      ? await service
-          .from("tasks")
-          .select("id, title, due_at, claimable, committees(name)")
-          .eq("organization_id", effectiveOrgIdForData)
-          .is("owner_id", null)
-          .eq("claimable", true)
-          .in("status", ["offen", "in_arbeit"])
-          .order("due_at", { ascending: true })
-          .limit(6)
-      : { data: [] };
+  const assignedShiftIds = new Set((myAssignments ?? []).map((a: any) => String(a?.shifts?.id ?? "")).filter(Boolean));
 
-  const { data: orgOpenTasksForAdmin } =
-    userRole != null && ADMIN_ROLES.includes(userRole)
-      ? await service
-          .from("tasks")
-          .select("id, title, status, due_at, owner_id, claimable, committees(name)")
-          .eq("organization_id", effectiveOrgIdForData)
-          .neq("status", "erledigt")
-          .order("due_at", { ascending: true })
-          .limit(8)
-      : { data: [] };
-
-  const shiftRows = (shifts ?? []) as {
-    date: string;
-    id: string;
-    start_time?: string | null;
-    end_time?: string | null;
-    event_name?: string | null;
-    required_slots?: number | null;
-    auto_assign?: boolean | null;
-    claimable?: boolean | null;
-    shift_assignments?: { id: string; user_id?: string | null; replacement_user_id?: string | null }[];
-  }[];
-
-  const claimableForDashboard = canClaimShifts
-    ? shiftRows.filter((s) => {
-        const d = String(s.date ?? "").slice(0, 10);
-        if (!d || d < todayStr) return false;
-        if (s.auto_assign === true) return false;
-        if (s.claimable === false) return false;
-        const required = Number(s.required_slots ?? 1) || 1;
-        const taken = (s.shift_assignments ?? []).length;
-        return taken < required;
-      })
-    : [];
-
-  const upcomingShiftsNext7Days = [...shiftRows]
-    .filter((s) => {
-      const d = String(s.date ?? "").slice(0, 10);
-      return d && d >= todayStr && d <= in7Str;
-    })
-    .sort((a, b) => {
-      const da = String(a.date ?? "").slice(0, 10);
-      const db = String(b.date ?? "").slice(0, 10);
-      const cmp = da.localeCompare(db);
-      if (cmp !== 0) return cmp;
-      return String(a.start_time ?? "").localeCompare(String(b.start_time ?? ""));
-    });
-
-  const claimableShiftsAfter7Days = claimableForDashboard.filter((s) => {
-    const d = String(s.date ?? "").slice(0, 10);
-    return d > in7Str;
-  });
-
-  const shiftHasFreeSlot = (s: (typeof shiftRows)[number]) => {
+  const upcomingShifts = (shifts ?? []) as ShiftRow[];
+  const freeCount = upcomingShifts.filter((s) => {
     const required = Number(s.required_slots ?? 1) || 1;
     const taken = (s.shift_assignments ?? []).length;
     return Math.max(0, required - taken) > 0;
-  };
-
-  const upcomingShiftsNext7DaysDisplay = shiftsFreeOnly
-    ? upcomingShiftsNext7Days.filter(shiftHasFreeSlot)
-    : upcomingShiftsNext7Days;
-
-  const freeSlotsInSevenDayHero = upcomingShiftsNext7DaysDisplay.filter(shiftHasFreeSlot).length;
-  const poolTaskCount = (poolClaimableTasks ?? []).length;
-  const overdueMyTasks = (myOpenTasks ?? []).filter((task: { due_at?: string | null }) => {
-    if (!task?.due_at) return false;
-    return new Date(task.due_at).getTime() < Date.now();
   }).length;
 
-  const livechartCommittees = committees.filter(
-    (c) => !/Jahrgangssprecher/i.test(c.name)
-  );
-
-  const orgHeaderLabel = (org.school_short && String(org.school_short).trim()) || org.name;
+  const grouped = new Map<string, ShiftRow[]>();
+  for (const s of upcomingShifts) {
+    const key = String(s.date ?? "").slice(0, 10) || "—";
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(s);
+  }
+  const groupedEntries = [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
   return (
-    <div className="space-y-6">
-      <header className="border-b border-gray-200 pb-3 dark:border-gray-700">
-        <h1 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-          {myName
-            ? `${getGreeting(locale as AppLocale)}, ${myName}`
-            : getGreeting(locale as AppLocale)}
-        </h1>
-        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-          {orgHeaderLabel} – {t("dashboard.overview_short", locale)}
-        </p>
-        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500/90 dark:text-gray-400/90">
-          <span className="inline-flex items-center gap-1">
-            <Users className="h-3.5 w-3.5 shrink-0 opacity-45" aria-hidden />
-            <span>
-              {t("dashboard.header_stat_members", locale).replace(
-                "{count}",
-                String(activity.total_members)
-              )}
-            </span>
-          </span>
-          <span className="select-none text-gray-300 dark:text-gray-600" aria-hidden>
-            |
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <CheckSquare className="h-3.5 w-3.5 shrink-0 opacity-45" aria-hidden />
-            <span>
-              {t("dashboard.header_stat_open_tasks", locale).replace(
-                "{count}",
-                String(myOpenTaskCount)
-              )}
-            </span>
-          </span>
-          {userCanViewFinance ? (
-            <>
-              <span className="select-none text-gray-300 dark:text-gray-600" aria-hidden>
-                |
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Wallet className="h-3.5 w-3.5 shrink-0 opacity-45" aria-hidden />
-                <span>
-                  {treasury ? formatCurrency(treasury.amount, localeForMoney, currencyCode) : "–"}
-                </span>
-              </span>
-            </>
-          ) : null}
-        </p>
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
+      <header>
+        <h1 className="page-title">{myName ? `${getGreeting(fl)}, ${myName}` : getGreeting(fl)}</h1>
+        <p className="page-sub">{locale === "en" ? "Here is what matters today." : "Hier ist, was heute noch wichtig ist."}</p>
       </header>
 
-      {claimShiftError && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-800 dark:bg-red-900/20 dark:text-red-100">
-          {t("dashboard.claim_shift_failed", locale)}
-        </p>
-      )}
-
-      {!engagementEnabled && (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-100">
-          {t("dashboard.engagement_disabled_note", locale)}
-        </p>
-      )}
-
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          {t("dashboard.today_section_title", locale)}
-        </h2>
-        {freeSlotsInSevenDayHero === 0 && poolTaskCount === 0 && overdueMyTasks === 0 ? (
-          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">{t("dashboard.action_all_done", locale)}</p>
-        ) : (
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            {freeSlotsInSevenDayHero > 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
-                <div className="flex items-start gap-2">
-                  <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {t("dashboard.upcoming_shifts_7d_title", locale)}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                      {t("dashboard.action_free_shifts", locale).replace("{count}", String(freeSlotsInSevenDayHero))}
-                    </p>
-                    <Link
-                      href={`/${orgSlug}/dashboard#dashboard-upcoming-shifts`}
-                      className="mt-2 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
-                    >
-                      {t("common.view", locale)}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-            {poolTaskCount > 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
-                <div className="flex items-start gap-2">
-                  <CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("dashboard.pool_tasks_title", locale)}</p>
-                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                      {t("dashboard.action_pool_tasks", locale).replace("{count}", String(poolTaskCount))}
-                    </p>
-                    <Link href={`/${orgSlug}/tasks`} className="mt-2 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">
-                      {t("tasks.claim", locale)}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-            {overdueMyTasks > 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t("dashboard.my_open_tasks", locale)}</p>
-                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                      {t("dashboard.action_overdue_tasks", locale).replace("{count}", String(overdueMyTasks))}
-                    </p>
-                    <Link href={`/${orgSlug}/tasks`} className="mt-2 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">
-                      {t("common.view", locale)}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : null}
+      <section className="grid gap-4 md:grid-cols-3">
+        <div className="stat-card">
+          <div className="section-label">{locale === "en" ? "Your score" : "Dein Score"}</div>
+          <div className="text-2xl font-semibold text-gray-900">{myEngagementScore} Pkt.</div>
+          <div className="mt-3 h-2 w-full rounded-full bg-gray-200">
+            {(() => {
+              const next = nextEngagementMilestone(myEngagementScore);
+              const pct = Math.max(0, Math.min(100, Math.round((myEngagementScore / Math.max(1, next)) * 100)));
+              return <div className="h-2 rounded-full bg-brand" style={{ width: `${pct}%` }} />;
+            })()}
           </div>
-        )}
-      </section>
-
-      {engagementEnabled && myProfileId && (
-        <section className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            <Trophy className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" aria-hidden />
-            <span>{t("dashboard.my_engagement", locale)}</span>
-          </div>
-          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-            {t("dashboard.engagement_milestone", locale)
-              .replace("{score}", String(myEngagementScore))
-              .replace("{next}", String(nextEngagementMilestone(myEngagementScore)))}
-          </p>
-          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-            <div
-              className="h-full rounded-full bg-amber-500 transition-[width] dark:bg-amber-400"
-              style={{
-                width: `${Math.min(
-                  100,
-                  (myEngagementScore / Math.max(1, nextEngagementMilestone(myEngagementScore))) * 100
-                )}%`
-              }}
-            />
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
-            <span>
-              <span className="text-gray-500 dark:text-gray-400">{t("dashboard.my_engagement_score", locale)}:</span>{" "}
-              <span className="font-semibold tabular-nums text-gray-900 dark:text-gray-100">{myEngagementScore}</span>
-            </span>
-            {engagementRankingTotal >= 3 ? (
-              <>
-                <span className="select-none text-gray-300 dark:text-gray-600" aria-hidden>
-                  |
-                </span>
-                <span>
-                  <span className="text-gray-500 dark:text-gray-400">{t("dashboard.my_engagement_rank", locale)}:</span>{" "}
-                  <span className="font-semibold tabular-nums text-gray-900 dark:text-gray-100">
-                    {myEngagementRank != null
-                      ? t("dashboard.my_engagement_rank_of", locale)
-                          .replace("{rank}", String(myEngagementRank))
-                          .replace("{total}", String(engagementRankingTotal))
-                      : t("dashboard.my_engagement_rank_unranked", locale)}
-                  </span>
-                </span>
-              </>
-            ) : null}
-          </div>
-        </section>
-      )}
-
-      {(orgOpenTasksForAdmin ?? []).length > 0 && (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            {t("dashboard.tasks_need_attention", locale)}
-          </h2>
-          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-            {(orgOpenTasksForAdmin ?? []).map((task: any) => (
-              <li key={task.id} className="flex items-center justify-between gap-3 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {(task.committees as any)?.name ?? "–"}
-                    {task.due_at
-                      ? ` · ${formatLocaleDateTime(task.due_at, locale)}`
-                      : ""}
-                    {task.owner_id ? ` · ${t("tasks.claimed_by", locale)}` : ""}
-                  </p>
-                </div>
-                <StatusBadge status={task.status} locale={locale} className="shrink-0" />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section
-        id="dashboard-upcoming-shifts"
-        className="rounded-xl border-2 border-blue-100 bg-white p-5 shadow-md dark:border-blue-900/40 dark:bg-card-dark"
-      >
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <h2 className="text-base font-bold tracking-tight text-gray-900 dark:text-gray-100">
-                {t("dashboard.upcoming_shifts_7d_title", locale)}
-              </h2>
-              <a
-                className="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
-                href={`/${orgSlug}/shifts`}
-              >
-                {t("common.view", locale)}
-              </a>
-            </div>
-          </div>
-          <div className="flex shrink-0 flex-wrap gap-2 text-xs">
-            <a
-              href={`/${orgSlug}/dashboard`}
-              className={`rounded-full border px-3 py-1 ${
-                !shiftsFreeOnly
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300"
-              }`}
-            >
-              {t("dashboard.filter_all_shifts", locale)}
-            </a>
-            <a
-              href={`/${orgSlug}/dashboard?free=1`}
-              className={`rounded-full border px-3 py-1 ${
-                shiftsFreeOnly
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300"
-              }`}
-            >
-              {t("dashboard.filter_free_shifts", locale)}
-            </a>
+          <div className="mt-2 text-xs text-gray-500">
+            {locale === "en"
+              ? `Next milestone: ${nextEngagementMilestone(myEngagementScore)} pts.`
+              : `Nächster Meilenstein: ${nextEngagementMilestone(myEngagementScore)} Pkt.`}
           </div>
         </div>
-        {upcomingShiftsNext7DaysDisplay.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("empty.shifts", locale)}</p>
-        ) : (
-          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-            {upcomingShiftsNext7DaysDisplay.map((s) => {
-              const required = Number(s.required_slots ?? 1) || 1;
-              const taken = (s.shift_assignments ?? []).length;
-              const free = Math.max(0, required - taken);
-              const d = String(s.date ?? "").slice(0, 10);
-              const imAssigned =
-                !!myProfileId &&
-                (s.shift_assignments ?? []).some(
-                  (a) =>
-                    a.user_id === myProfileId || a.replacement_user_id === myProfileId
-                );
-              const canShowClaim =
-                canClaimShifts &&
-                s.auto_assign !== true &&
-                s.claimable !== false &&
-                free > 0 &&
-                !imAssigned;
-              let statusHint: string | null = null;
-              if (imAssigned) statusHint = t("dashboard.shift_you_signed_up", locale);
-              else if (s.auto_assign === true)
-                statusHint = t("dashboard.shift_auto_assign_hint", locale);
-              else if (s.claimable === false)
-                statusHint = t("dashboard.shift_not_self_signup", locale);
-              else if (free === 0) statusHint = t("dashboard.shift_slots_full", locale);
-              return (
-                <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {s.event_name || t("dashboard.shifts", locale)}
-                    </p>
-                    <p className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                      <ShiftAvailability
-                        free={free}
-                        required={required}
-                        locale={locale}
-                        textClassName="text-xs text-gray-500 dark:text-gray-400"
-                      />
-                      <span>
-                        {d
-                          ? formatShiftSlot(d, s.start_time, s.end_time, locale as AppLocale)
-                          : "–"}
-                        {statusHint ? ` · ${statusHint}` : ""}
-                      </span>
-                    </p>
-                    {(s.shift_assignments ?? []).length > 0 ? (
-                      <p className="mt-1 truncate text-[11px] text-gray-500 dark:text-gray-400">
-                        {(s.shift_assignments ?? [])
-                          .map((a) => profileNames.get(a.user_id ?? a.replacement_user_id ?? "") ?? null)
-                          .filter(Boolean)
-                          .slice(0, 3)
-                          .join(" · ")}
-                      </p>
-                    ) : null}
-                  </div>
-                  {canShowClaim ? (
-                    <ClaimShiftRefreshForm action={claimShiftFromDashboard} className="inline">
-                      <input type="hidden" name="orgSlug" value={orgSlug} />
-                      <input type="hidden" name="shiftId" value={s.id} />
-                      <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
-                      <SubmitButtonWithSpinner
-                        className="inline-flex min-w-[7rem] items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
-                        loadingLabel={t("common.loading", locale)}
-                      >
-                        {t("shifts.claim", locale)}
-                      </SubmitButtonWithSpinner>
-                    </ClaimShiftRefreshForm>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
 
-      {claimableShiftsAfter7Days.length > 0 && (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              {t("dashboard.more_claimable_shifts_title", locale)}
-            </h2>
-            <a className="text-xs text-blue-600 hover:underline dark:text-blue-400" href={`/${orgSlug}/shifts`}>
-              {t("common.view", locale)}
-            </a>
+        <div className="stat-card">
+          <div className="section-label">{locale === "en" ? "Org rank" : "Rang in der Org"}</div>
+          <div className="text-2xl font-semibold text-gray-900">
+            {myEngagementRank != null ? `#${myEngagementRank}` : "—"}
+            {myEngagementRank != null ? <span className="text-sm font-medium text-gray-500"> / {engagementTotal}</span> : null}
           </div>
-          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-            {claimableShiftsAfter7Days.map((s) => {
-              const required = Number(s.required_slots ?? 1) || 1;
-              const taken = (s.shift_assignments ?? []).length;
-              const free = Math.max(0, required - taken);
-              const d = String(s.date ?? "").slice(0, 10);
-              return (
-                <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {s.event_name || t("dashboard.shifts", locale)}
-                    </p>
-                    <p className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                      <ShiftAvailability
-                        free={free}
-                        required={required}
-                        locale={locale}
-                        textClassName="text-xs text-gray-500 dark:text-gray-400"
-                      />
-                      <span>{d ? formatShiftSlot(d, s.start_time, s.end_time, locale as AppLocale) : "–"}</span>
-                    </p>
-                  </div>
-                  <ClaimShiftRefreshForm action={claimShiftFromDashboard} className="inline">
-                    <input type="hidden" name="orgSlug" value={orgSlug} />
-                    <input type="hidden" name="shiftId" value={s.id} />
-                    <input type="hidden" name="organization_id" value={effectiveOrgIdForData} />
-                    <SubmitButtonWithSpinner
-                      className="inline-flex min-w-[7rem] items-center justify-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-70"
-                      loadingLabel={t("common.loading", locale)}
-                    >
-                      {t("shifts.claim", locale)}
-                    </SubmitButtonWithSpinner>
-                  </ClaimShiftRefreshForm>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
-      {(myAssignedShifts ?? []).length > 0 && (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-              {t("dashboard.my_assigned_shifts", locale)}
-            </h2>
-            <a className="text-xs text-blue-600 hover:underline dark:text-blue-400" href={`/${orgSlug}/shifts`}>
-              {t("common.view", locale)}
-            </a>
-          </div>
-          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-            {(myAssignedShifts ?? []).map((a: any) => {
-              const s = a.shifts;
-              return (
-                <li key={a.id} className="py-2">
-                  <p className="flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {a.swap_offered ? (
-                      <span title={t("dashboard.swap_offered_hint", locale)}>
-                        <ArrowLeftRight
-                          className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
-                          aria-hidden
-                        />
-                      </span>
-                    ) : null}
-                    <span>{s?.event_name || t("dashboard.shifts", locale)}</span>
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {s?.date
-                      ? formatShiftSlot(String(s.date), s.start_time, s.end_time, locale as AppLocale)
-                      : "–"}
-                    {s?.location ? ` · ${s.location}` : ""}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
-      {(poolClaimableTasks ?? []).length > 0 && (
-        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-            {t("dashboard.pool_tasks_title", locale)}
-          </h2>
-          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-            {(poolClaimableTasks ?? []).map((task: any) => (
-              <li key={task.id} className="flex items-start gap-2 py-2">
-                <span title={t("dashboard.task_claimable_hint", locale)}>
-                  <ArrowLeftRight
-                    className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400"
-                    aria-hidden
-                  />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {(task.committees as { name?: string } | null)?.name ?? "–"}
-                    {task.due_at
-                      ? ` · ${formatLocaleDateTime(task.due_at, locale)}`
-                      : ""}
-                  </p>
-                </div>
-                <a
-                  href={`/${orgSlug}/tasks`}
-                  className="shrink-0 text-xs text-blue-600 hover:underline dark:text-blue-400"
-                >
-                  {t("tasks.claim", locale)}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {false && (
-        <section className="mb-2">
-          <h2 className="mb-2 text-sm font-semibold text-gray-600">
-            Livecharts per team
-          </h2>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7">
-            {livechartCommittees.map((c) => (
-              <div
-                key={c.id}
-                className="flex h-16 min-w-0 flex-col items-center justify-center rounded border border-gray-200 bg-white px-1.5 py-1 text-center shadow-sm"
-              >
-                <span
-                  className="w-full truncate text-[10px] font-semibold text-gray-700"
-                  title={c.name}
-                >
-                  {c.name}
-                </span>
-                <span className="text-[9px] text-gray-500">Chart</span>
-              </div>
-            ))}
-            {livechartCommittees.length === 0 && (
-              <p className="col-span-full py-2 text-xs text-gray-500">
-                No teams created yet.
-              </p>
-            )}
-          </div>
-        </section>
-      )}
-
-      <section
-        id="dashboard-my-open-tasks"
-        className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark"
-      >
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-          {t("dashboard.my_open_tasks", locale)}
-        </h2>
-        {(myOpenTasks ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("empty.tasks", locale)}</p>
-        ) : (
-          <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
-            {(myOpenTasks ?? []).map((task: any) => (
-              <li key={task.id} className="flex flex-wrap items-center justify-between gap-3 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    {(task.committees as any)?.name ?? "–"}
-                    {task.due_at
-                      ? ` · ${formatLocaleDateTime(task.due_at, locale)}`
-                      : ""}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <TaskCompleteModalButton
-                    orgSlug={orgSlug}
-                    task={{
-                      id: task.id,
-                      title: task.title,
-                      description: task.description ?? null,
-                      due_at: task.due_at ?? null,
-                      status: task.status,
-                      proof_required: !!task.proof_required,
-                      proof_url: task.proof_url ?? null
-                    }}
-                    className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
-                  />
-                  <StatusBadge status={task.status} locale={locale} className="shrink-0" />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            {t("dashboard.shift_plan", locale)}
-          </h2>
-          <p className="mt-1 text-xs text-gray-600">
-            {t("dashboard.shift_plan_hint", locale)}
-          </p>
+          <div className="mt-2 text-xs text-gray-500">{org.name}</div>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          {!shifts || shifts.length === 0 ? (
-            <EmptyState
-              messageKey="empty.shifts"
-              actionHref={userIsAdmin ? `/${orgSlug}/admin/shifts` : `/${orgSlug}/shifts`}
-              actionLabelKey={userIsAdmin ? "cta.create_shift" : "cta.member_shifts_page"}
-              {...(userIsAdmin
-                ? {
-                    secondaryActionHref: `/${orgSlug}/shifts`,
-                    secondaryActionLabelKey: "cta.member_shifts_page"
-                  }
-                : {})}
-            />
+
+        <div className="stat-card">
+          <div className="section-label">{locale === "en" ? "Open tasks" : "Offene Aufgaben"}</div>
+          <div className="text-2xl font-semibold text-warning-dark">{openTaskCount ?? 0}</div>
+          <div className="mt-2 text-xs text-gray-500">{locale === "en" ? "Overdue shown in tasks" : "Überfällig in Aufgaben sichtbar"}</div>
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="p-4">
+          <div className="section-label">{locale === "en" ? "Today" : "Heute zu tun"}</div>
+          {freeCount === 0 && (openTaskCount ?? 0) === 0 ? (
+            <p className="text-sm text-gray-600">{locale === "en" ? "All done — no action needed." : "Alles erledigt — kein Handlungsbedarf."}</p>
           ) : (
-            (() => {
-              const toDateKey = (d: unknown) => {
-                if (d == null) return "";
-                const str =
-                  typeof d === "string" ? d : new Date(d as string).toISOString();
-                return str.slice(0, 10);
-              };
-              const byDate = (shifts as { date: unknown }[]).reduce(
-                (acc: Record<string, unknown[]>, s: { date: unknown }) => {
-                  const d = toDateKey(s.date);
-                  if (!d) return acc;
-                  if (!acc[d]) acc[d] = [];
-                  acc[d].push(s);
-                  return acc;
-                },
-                {}
-              );
-              const getMonday = (dateStr: string) => {
-                const ymd = dateStr.slice(0, 10);
-                const d = new Date(ymd + "T12:00:00Z");
-                const day = d.getUTCDay();
-                const diff = day === 0 ? 6 : day - 1;
-                d.setUTCDate(d.getUTCDate() - diff);
-                return d.toISOString().slice(0, 10);
-              };
-              const weekKeys = new Set<string>();
-              Object.keys(byDate).forEach((dateStr) => {
-                const mon = getMonday(dateStr);
-                if (mon) weekKeys.add(mon);
-              });
-              const todayStr = getTodayDateString();
-              const todayMonday = getMonday(todayStr);
-              weekKeys.add(todayMonday);
-              for (let i = -2; i <= 4; i++) {
-                const d = new Date(todayStr + "T12:00:00Z");
-                d.setUTCDate(d.getUTCDate() + i * 7);
-                weekKeys.add(getMonday(d.toISOString().slice(0, 10)));
-              }
-              const WEEKDAY_NAMES = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-              const daySlots = (monday: string) => {
-                const out: string[] = [];
-                const d = new Date(monday + "Z");
-                for (let i = 0; i < 7; i++) {
-                  const x = new Date(d);
-                  x.setUTCDate(d.getUTCDate() + i);
-                  out.push(x.toISOString().slice(0, 10));
-                }
-                return out;
-              };
-              const weeksData: WeekData[] = Array.from(weekKeys)
-                .sort()
-                .map((monday) => {
-                  const days = daySlots(monday);
-                  const weekLabel = formatWeekRangeLabel(monday, days[6]);
-                  return {
-                    weekLabel,
-                    monday,
-                    days: days.map((dateStr, i) => {
-                      const dayShifts = (byDate[dateStr] ?? []) as {
-                        id: string;
-                        event_name: string | null;
-                        start_time: unknown;
-                        end_time: unknown;
-                        location: string | null;
-                        notes: string | null;
-                        required_slots?: number | null;
-                        claimable?: boolean | null;
-                        auto_assign?: boolean | null;
-                        shift_assignments?: {
-                          id: string;
-                          status: string;
-                          user_id?: string | null;
-                          replacement_user_id?: string | null;
-                          swap_offered?: boolean | null;
-                        }[];
-                      }[];
-                      const sorted = [...dayShifts].sort((a, b) =>
-                        String(a.start_time).localeCompare(String(b.start_time))
-                      );
-                      const first = sorted[0];
-                      const dayTitle = first
-                        ? ((first.event_name ?? "")
-                            .replace(/\s*–\s*[12]\. Pause$/i, "")
-                            .trim() ||
-                            (first.event_name ?? ""))
-                        : null;
-                      return {
-                        dateStr,
-                        weekdayName: WEEKDAY_NAMES[i],
-                        dayTitle: dayTitle || null,
-                        location: first?.location ?? null,
-                        notes: first?.notes ?? null,
-                        shifts: sorted.map((s) => ({
-                          id: s.id,
-                          event_name: s.event_name ?? "",
-                          start_time: String(s.start_time ?? ""),
-                          end_time: String(s.end_time ?? ""),
-                          required_slots: s.required_slots ?? 1,
-                          claimable: s.claimable !== false,
-                          auto_assign: s.auto_assign === true,
-                          assignments: (
-                            (s.shift_assignments ?? []) as {
-                              id: string;
-                              status: string;
-                              user_id?: string | null;
-                              replacement_user_id?: string | null;
-                            }[]
-                          ).map((a) => ({
-                            id: a.id,
-                            status: a.status ?? "zugewiesen",
-                            user_id: a.user_id ?? null,
-                            replacement_user_id: a.replacement_user_id ?? null,
-                            swap_offered: !!(a as { swap_offered?: boolean }).swap_offered
-                          }))
-                        }))
-                      };
-                    })
-                  };
-                });
-              const currentWeekIndex = weeksData.findIndex(
-                (w) => w.monday === todayMonday
-              );
-              const profileNamesObj: Record<string, string> = {};
-              profileNames.forEach((value, key) => {
-                profileNamesObj[key] = value;
-              });
-              return (
-                <ShiftPlanWeekNav
-                  weeks={weeksData}
-                  currentWeekIndex={currentWeekIndex >= 0 ? currentWeekIndex : 0}
-                  profileNames={profileNamesObj}
-                  orgSlug={orgSlug}
-                  showClaimButton={canClaimShifts}
-                  organizationId={effectiveOrgIdForData}
-                />
-              );
-            })()
+            <div className="space-y-2">
+              {freeCount > 0 ? (
+                <div className="flex items-center justify-between gap-3 border-l-4 border-l-brand bg-white px-3 py-3">
+                  <div className="min-w-0">
+                    <div className="font-medium text-gray-900">{locale === "en" ? "Open shifts" : "Schichten mit freien Plätzen"}</div>
+                    <div className="text-xs text-gray-500">{freeCount} {locale === "en" ? "shift(s) available" : "Schicht(en) verfügbar"}</div>
+                  </div>
+                  <Link href={`/${orgSlug}/shifts`} className="btn-secondary">{locale === "en" ? "View" : "Ansehen"}</Link>
+                </div>
+              ) : null}
+              {(openTaskCount ?? 0) > 0 ? (
+                <div className="flex items-center justify-between gap-3 border-l-4 border-l-warning bg-white px-3 py-3">
+                  <div className="min-w-0">
+                    <div className="font-medium text-gray-900">{locale === "en" ? "Open tasks" : "Offene Aufgaben"}</div>
+                    <div className="text-xs text-gray-500">{openTaskCount ?? 0} {locale === "en" ? "tasks" : "Aufgaben"}</div>
+                  </div>
+                  <Link href={`/${orgSlug}/tasks`} className="btn-primary">{locale === "en" ? "Do now" : "Erledigen"}</Link>
+                </div>
+              ) : null}
+            </div>
           )}
         </div>
       </section>
 
-      {showGettingStarted && <OnboardingBanner />}
+      <section className="card">
+        <div className="p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="section-label">{locale === "en" ? "Upcoming shifts" : "Kommende Schichten"}</div>
+            <Link href={`/${orgSlug}/shifts`} className="btn-secondary">{locale === "en" ? "View all" : "Alle ansehen"}</Link>
+          </div>
 
-      {showGettingStarted && canAccessOrgData && (
-        <OnboardingChecklist
-          orgSlug={orgSlug}
-          teamsCount={committees.length}
-          membersCount={activity.total_members}
-          tasksOrShiftsCount={tasksCount + shiftsCount}
-          isAdmin={userIsAdmin}
-        />
-      )}
+          {upcomingShifts.length === 0 ? (
+            <p className="text-sm text-gray-500">—</p>
+          ) : (
+            <div className="space-y-4">
+              {groupedEntries.map(([dateKey, rows]) => (
+                <div key={dateKey}>
+                  <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700">
+                    {dateKey === "—" ? "—" : formatDateSeparator(dateKey, locale)}
+                  </div>
+                  <ul className="divide-y divide-gray-100">
+                    {rows.map((s) => {
+                      const required = Number(s.required_slots ?? 1) || 1;
+                      const taken = (s.shift_assignments ?? []).length;
+                      const free = Math.max(0, required - taken);
+                      const assigned = assignedShiftIds.has(String(s.id));
+                      const isFull = free <= 0;
+                      const showButton = canClaimShifts && !assigned && free > 0 && s.auto_assign !== true && s.claimable !== false;
+                      return (
+                        <li key={s.id} className={`py-3 ${isFull ? "opacity-60" : ""}`}>
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className={`h-2 w-2 rounded-full ${dotClass(free)}`} aria-hidden />
+                                <span className="text-xs text-gray-500">{free} {locale === "en" ? "free" : "frei"}</span>
+                                <span className="font-medium text-gray-900">{s.event_name || t("dashboard.shifts", locale)}</span>
+                                {assigned ? <span className="tag tag-blue">{locale === "en" ? "Signed up" : "Eingetragen"}</span> : null}
+                              </div>
+                              <div className="mt-1 text-xs text-gray-500">
+                                {s.date ? formatShiftSlot(String(s.date), s.start_time, s.end_time, fl) : "–"}
+                                {s.location ? ` · ${s.location}` : ""}
+                                {` · ${free} von ${required} ${locale === "en" ? "free" : "frei"}`}
+                                {isFull ? ` · ${locale === "en" ? "Full" : "Belegt"}` : ""}
+                              </div>
+                            </div>
+                            {showButton ? (
+                              <form action={claimShiftFromDashboard}>
+                                <input type="hidden" name="orgSlug" value={orgSlug} />
+                                <input type="hidden" name="organization_id" value={orgIdForData} />
+                                <input type="hidden" name="shiftId" value={s.id} />
+                                <button type="submit" className="btn-primary">{locale === "en" ? "Sign up" : "Eintragen"}</button>
+                              </form>
+                            ) : null}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
+
