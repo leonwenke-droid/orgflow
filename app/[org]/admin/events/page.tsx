@@ -11,6 +11,20 @@ import CreateEventForm from "./CreateEventForm";
 
 export const dynamic = "force-dynamic";
 
+function dateOnly(v: string | null | undefined) {
+  return String(v ?? "").slice(0, 10);
+}
+
+function dateBoxParts(ymd: string | null | undefined, locale: string) {
+  const s = dateOnly(ymd);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return { day: "–", mon: "—" };
+  const [y, m, d] = s.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  const loc = locale === "en" ? "en-GB" : "de-DE";
+  const mon = new Intl.DateTimeFormat(loc, { month: "short" }).format(dt);
+  return { day: String(d), mon };
+}
+
 export default async function AdminEventsPage(props: {
   params: Promise<{ org: string }> | { org: string };
 }) {
@@ -31,55 +45,91 @@ export default async function AdminEventsPage(props: {
     .eq("organization_id", orgIdForData)
     .order("start_date", { ascending: false });
 
+  const eventIds = (events ?? []).map((e: any) => e.id as string);
+  const [{ data: shiftRows }, { data: taskRows }] = await Promise.all([
+    eventIds.length > 0
+      ? supabase.from("shifts").select("id, event_id").eq("organization_id", orgIdForData).in("event_id", eventIds)
+      : Promise.resolve({ data: [] as any[] }),
+    eventIds.length > 0
+      ? supabase.from("tasks").select("id, event_id, status").eq("organization_id", orgIdForData).in("event_id", eventIds)
+      : Promise.resolve({ data: [] as any[] })
+  ]);
+
+  const shiftsCountByEvent: Record<string, number> = {};
+  for (const r of shiftRows ?? []) {
+    const id = String((r as any).event_id ?? "");
+    if (!id) continue;
+    shiftsCountByEvent[id] = (shiftsCountByEvent[id] ?? 0) + 1;
+  }
+
+  const openTasksByEvent: Record<string, number> = {};
+  for (const r of taskRows ?? []) {
+    const id = String((r as any).event_id ?? "");
+    if (!id) continue;
+    const st = String((r as any).status ?? "");
+    if (st === "erledigt") continue;
+    openTasksByEvent[id] = (openTasksByEvent[id] ?? 0) + 1;
+  }
+
   return (
-    <div className="mx-auto max-w-4xl p-6">
-      <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("events.title", locale)} />
-      <h1 className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">{t("events.title", locale)} – {org.name}</h1>
-      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-        {t("events.description", locale)}
-      </p>
+    <div className="mx-auto max-w-6xl space-y-5 p-6">
+      <header>
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("events.title", locale)} />
+        <h1 className="page-title">{t("events.title", locale)}</h1>
+        <p className="page-sub">{org.name}</p>
+      </header>
 
-      <CreateEventForm orgId={org.id} />
+      <div className="card p-4">
+        <div className="section-label">{locale === "en" ? "New event" : "Neue Veranstaltung"}</div>
+        <CreateEventForm orgId={org.id} />
+      </div>
 
-      <ul className="mt-6 space-y-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        {(events ?? []).map((e: { id: string; name: string; slug: string; start_date: string | null; end_date: string | null }) => (
-          <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <div>
-              <span className="font-medium text-gray-900 dark:text-gray-100">{e.name}</span>
-              <span className="ml-2 text-gray-500 dark:text-gray-400">/{e.slug}</span>
-              {(e.start_date || e.end_date) && (
-                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                  {e.start_date && formatCalendarDateYmd(e.start_date, locale)}
-                  {e.end_date && e.end_date !== e.start_date && ` – ${formatCalendarDateYmd(e.end_date, locale)}`}
-                </span>
-              )}
+      <div className="space-y-3">
+        {(events ?? []).map((e: { id: string; name: string; start_date: string | null; end_date: string | null }) => {
+          const start = e.start_date;
+          const { day, mon } = dateBoxParts(start, locale);
+          const isPast = !!start && dateOnly(start) < dateOnly(new Date().toISOString());
+          const plannedShifts = shiftsCountByEvent[e.id] ?? 0;
+          const openTasks = openTasksByEvent[e.id] ?? 0;
+          return (
+            <div key={e.id} className="card">
+              <div className="flex flex-wrap items-center gap-4 p-4">
+                <div
+                  className={`flex h-12 w-12 flex-col items-center justify-center rounded-lg border text-center ${
+                    isPast ? "border-gray-200 bg-gray-50 text-gray-600" : "border-brand-light bg-brand-light text-brand-dark"
+                  }`}
+                >
+                  <div className="text-sm font-semibold leading-none">{day}</div>
+                  <div className="text-[10px] font-medium leading-none">{mon}</div>
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="text-[15px] font-medium text-gray-900">{e.name}</div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {start ? formatCalendarDateYmd(start, locale) : "—"}
+                    {e.end_date && e.end_date !== start ? ` – ${formatCalendarDateYmd(e.end_date, locale)}` : ""}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="tag tag-green">{plannedShifts} {locale === "en" ? "shifts planned" : "Schichten geplant"}</span>
+                    <span className="tag tag-amber">{openTasks} {locale === "en" ? "tasks open" : "Aufgaben offen"}</span>
+                    <span className="tag tag-neutral">{locale === "en" ? "In planning" : "In Planung"}</span>
+                  </div>
+                </div>
+
+                <Link href={`/${orgSlug}/admin/events/${e.id}`} className="btn-secondary">
+                  {locale === "en" ? "Open" : "Öffnen"}
+                </Link>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/${orgSlug}/admin/events/${e.id}`}
-                className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-              >
-                {t("events.details", locale)}
-              </Link>
-              <Link
-                href={`/admin/shifts?org=${encodeURIComponent(orgSlug)}&event=${e.id}`}
-                className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-              >
-                {t("events.view_shifts", locale)}
-              </Link>
-              <Link
-                href={`/admin/tasks?org=${encodeURIComponent(orgSlug)}&event=${e.id}`}
-                className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-              >
-                {t("events.view_tasks", locale)}
-              </Link>
-            </div>
-          </li>
-        ))}
-        {(!events || events.length === 0) && (
-          <li className="text-gray-500 dark:text-gray-400">{t("events.empty", locale)}</li>
-        )}
-      </ul>
+          );
+        })}
+
+        {(!events || events.length === 0) ? (
+          <div className="card p-4">
+            <p className="text-sm text-gray-600">{t("events.empty", locale)}</p>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

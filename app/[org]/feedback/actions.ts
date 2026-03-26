@@ -15,9 +15,14 @@ export async function submitMemberFeatureRequest(
   formData: FormData
 ): Promise<{ ok?: boolean; errorKey?: string }> {
   const slug = String(orgSlug ?? "").trim();
-  const title = String(formData.get("title") ?? "").trim();
+  const titleRaw = String(formData.get("title") ?? "").trim();
+  const type = String(formData.get("type") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim() || null;
-  if (!slug || !title) return { errorKey: "feedback.error_title" };
+  if (!slug || !titleRaw) return { errorKey: "feedback.error_title" };
+
+  const prefix =
+    type === "bug" ? "[Bug] " : type === "idea" ? "[Idea] " : type === "question" ? "[Question] " : "";
+  const title = `${prefix}${titleRaw}`.trim();
 
   const org = await getCurrentOrganization(slug);
 

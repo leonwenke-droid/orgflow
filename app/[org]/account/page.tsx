@@ -5,9 +5,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import ThemeToggle from "../../../components/ThemeToggle";
-import LanguageToggle from "../../../components/LanguageToggle";
 import { t } from "../../../lib/i18n";
+import AppearanceControls from "../../../components/AppearanceControls";
 
 export const dynamic = "force-dynamic";
 
@@ -54,58 +53,54 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("account.title", locale)}</h1>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t("account.intro", locale)}</p>
-          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-            {(prof as { full_name?: string }).full_name ?? user.email}
-          </p>
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
+      <header className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="page-title">{locale === "en" ? "My account" : "Mein Konto"}</h1>
+          <p className="page-sub">{org.name}</p>
+          <p className="mt-3 text-sm text-gray-700">{(prof as { full_name?: string }).full_name ?? user.email}</p>
         </div>
-        <Link href={`/${orgSlug}/dashboard`} className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+        <Link href={`/${orgSlug}/dashboard`} className="btn-secondary">
           {t("common.back", locale)}
         </Link>
-      </div>
+      </header>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-          {t("settings.appearance", locale)}
-        </h2>
-        <div className="flex flex-wrap items-center gap-4">
-          <ThemeToggle />
-          <LanguageToggle />
+      <section className="card">
+        <div className="p-4 space-y-4">
+          <div className="section-label">{locale === "en" ? "Appearance & language" : "Darstellung & Sprache"}</div>
+          <AppearanceControls showSectionLabels={false} />
         </div>
-        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t("settings.theme_note", locale)}</p>
       </section>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-          {t("account.email_heading", locale)}
-        </h2>
-        <p className="text-sm text-gray-700 dark:text-gray-300">{user.email}</p>
-        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{t("account.email_note", locale)}</p>
+      <section className="card">
+        <div className="p-4 space-y-2">
+          <div className="section-label">{locale === "en" ? "Email" : "E-Mail"}</div>
+          <div className="text-sm text-gray-800">{user.email}</div>
+          <div className="text-xs text-gray-500">{t("account.email_note", locale)}</div>
+        </div>
       </section>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-          {t("account.password_reset", locale)}
-        </h2>
-        <Link
-          href="/auth/forgot-password"
-          className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          {t("account.password_reset", locale)}
-        </Link>
+      <section className="card">
+        <div className="p-4 space-y-3">
+          <div className="section-label">{locale === "en" ? "Security" : "Sicherheit"}</div>
+          <div className="text-sm text-gray-700">{t("security.2fa_hint", locale)}</div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/auth/forgot-password" className="btn-primary">
+              {locale === "en" ? "Reset password" : "Passwort zurücksetzen"}
+            </Link>
+            <Link href={`/${orgSlug}/feedback`} className="btn-secondary">
+              {locale === "en" ? "Send feedback" : "Feedback geben"}
+            </Link>
+          </div>
+          <div className="text-xs text-gray-500">{t("security.privacy_note", locale)}</div>
+        </div>
       </section>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-          {t("account.security_heading", locale)}
-        </h2>
-        <p className="text-sm text-gray-700 dark:text-gray-300">{t("security.2fa_hint", locale)}</p>
-        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t("security.privacy_note", locale)}</p>
-        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t("realtime.optional_note", locale)}</p>
+      <section className="card">
+        <div className="p-4 space-y-2">
+          <div className="section-label">{locale === "en" ? "Realtime" : "Realtime"}</div>
+          <div className="text-xs text-gray-500">{t("realtime.optional_note", locale)}</div>
+        </div>
       </section>
     </div>
   );

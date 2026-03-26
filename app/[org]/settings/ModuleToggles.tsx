@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale } from "../../../components/LocaleProvider";
 import { t } from "../../../lib/i18n";
 import { updateOrgFeaturesAction, type FeaturesMap } from "./actions";
+import { Switch } from "../../../components/ui/Switch";
 
 const MODULE_KEYS: { key: keyof FeaturesMap; labelKey: string }[] = [
   { key: "tasks", labelKey: "dashboard.tasks" },
@@ -48,28 +49,29 @@ export default function ModuleToggles({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-gray-500 dark:text-gray-400">
-        {locale === "de" ? "Aktive Module für diese Organisation. Deaktivierte Module werden in der Navigation und im Admin-Bereich ausgeblendet." : "Active modules for this organisation. Disabled modules are hidden in the navigation and admin area."}
+      <p className="text-xs text-gray-500">
+        {locale === "de"
+          ? "Aktive Module für diese Organisation. Deaktivierte Module werden in der Navigation und im Admin-Bereich ausgeblendet."
+          : "Active modules for this organisation. Disabled modules are hidden in the navigation and admin area."}
       </p>
-      {message && <p className="text-xs text-red-600 dark:text-red-400">{message}</p>}
-      <ul className="space-y-2">
+      {message && <p className="text-xs text-danger-dark">{message}</p>}
+      <ul className="divide-y divide-gray-100">
         {MODULE_KEYS.map(({ key, labelKey }) => (
-          <li key={key} className="space-y-1">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id={`module-${key}`}
+          <li key={key} className="py-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-gray-900">{t(labelKey, locale)}</div>
+                {key === "engagement_tracking" ? (
+                  <div className="mt-1 text-xs text-gray-500">{t("settings.engagement_tracking_help", locale)}</div>
+                ) : null}
+              </div>
+              <Switch
                 checked={features[key] !== false}
-                disabled={loading}
-                onChange={(e) => handleToggle(key, e.target.checked)}
-                className="rounded border-gray-400"
+                onToggle={() => handleToggle(String(key), !(features[key] !== false))}
               />
-              <label htmlFor={`module-${key}`} className="cursor-pointer text-sm text-gray-700 dark:text-gray-300">
-                {t(labelKey, locale)}
-              </label>
             </div>
             {key === "engagement_tracking" && (
-              <p className="ml-7 text-xs text-gray-500 dark:text-gray-400">{t("settings.engagement_tracking_help", locale)}</p>
+              <div className="sr-only">{t("settings.engagement_tracking_help", locale)}</div>
             )}
           </li>
         ))}

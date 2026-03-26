@@ -67,42 +67,49 @@ export default async function OrgFeedbackPage(props: {
       : await frBase.in("organization_id", orgIdsForFeedback);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 p-6">
-      <div>
-        <Link
-          href={`/${orgSlug}/dashboard`}
-          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-        >
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
+      <header className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="page-title">{t("feedback.page_title", locale)}</h1>
+          <p className="page-sub">{org.name}</p>
+        </div>
+        <Link href={`/${orgSlug}/dashboard`} className="btn-secondary">
           ← {t("feedback.back_dashboard", locale)}
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">{t("feedback.page_title", locale)}</h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{t("feedback.page_intro", locale)}</p>
-      </div>
+      </header>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("feedback.form_section", locale)}</h2>
-        <FeedbackForm orgSlug={orgSlug} />
+      <section className="card">
+        <div className="p-4 space-y-4">
+          <div>
+            <div className="section-label">{t("feedback.form_section", locale)}</div>
+            <p className="mt-1 text-sm text-gray-600">{t("feedback.page_intro", locale)}</p>
+          </div>
+          <FeedbackForm orgSlug={orgSlug} />
+        </div>
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
-          {t("feedback.list_section", locale)}
+      <section className="card overflow-hidden">
+        <div className="border-b border-gray-100 px-4 py-3">
+          <div className="section-label">{t("feedback.list_section", locale)}</div>
         </div>
-        <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+        <ul className="divide-y divide-gray-100">
           {(items ?? []).map((it: { id: string; title: string; description: string | null; status: string; created_at: string }) => (
-            <li key={it.id} className="p-4">
-              <p className="font-semibold text-gray-900 dark:text-gray-100">{it.title}</p>
-              {it.description ? (
-                <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-400">{it.description}</p>
-              ) : null}
-              <p className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-                {formatLocaleDateTime(it.created_at, locale)} · {it.status}
-              </p>
+            <li key={it.id} className="px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-gray-900">{it.title}</p>
+                  {it.description ? (
+                    <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-sm text-gray-600">{it.description}</p>
+                  ) : null}
+                  <p className="mt-2 text-xs text-gray-500">{formatLocaleDateTime(it.created_at, locale)}</p>
+                </div>
+                <span className="tag tag-neutral">{String(it.status ?? "").toUpperCase() || "—"}</span>
+              </div>
             </li>
           ))}
-          {(!items || items.length === 0) && (
-            <li className="p-6 text-sm text-gray-600 dark:text-gray-400">{t("feedback.empty_list", locale)}</li>
-          )}
+          {(!items || items.length === 0) ? (
+            <li className="p-4 text-sm text-gray-600">{t("feedback.empty_list", locale)}</li>
+          ) : null}
         </ul>
       </section>
     </div>

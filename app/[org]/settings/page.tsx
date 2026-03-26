@@ -6,13 +6,12 @@ import { getCurrentOrganization, getEffectiveUserRoleForOrg } from "../../../lib
 import { canChangeOrgSettings } from "../../../lib/permissions";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import AdminForbidden from "../admin/AdminForbidden";
-import ThemeToggle from "../../../components/ThemeToggle";
-import LanguageToggle from "../../../components/LanguageToggle";
 import EditOrgForm from "./EditOrgForm";
 import ModuleToggles from "./ModuleToggles";
 import PrivacyActions from "./PrivacyActions";
 import { t } from "../../../lib/i18n";
 import BillingSection from "./BillingSection";
+import AppearanceControls from "../../../components/AppearanceControls";
 
 export default async function OrgSettingsPage({
   params
@@ -33,106 +32,73 @@ export default async function OrgSettingsPage({
   const locale = await getRequestLocale();
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
-      <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("dashboard.settings", locale)} />
-      <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-foreground-dark">
-        {t("dashboard.settings", locale)} – {org.name}
-      </h1>
-      <p className="mt-1 text-sm text-gray-600 dark:text-muted">
-        {t("settings.edit_org", locale)}
-      </p>
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
+      <header>
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("dashboard.settings", locale)} />
+        <h1 className="page-title">{t("dashboard.settings", locale)}</h1>
+        <p className="page-sub">{org.name}</p>
+      </header>
 
-      <div className="mt-8 space-y-6">
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-            {t("settings.organization", locale)}
-          </h2>
-          {org.subdomain && (
-            <p className="mb-3 text-xs text-gray-500 dark:text-muted">
-              Subdomain: {org.subdomain}
-            </p>
-          )}
+      <section className="card">
+        <div className="p-4 space-y-4">
+          <div>
+            <div className="section-label">{t("settings.organization", locale)}</div>
+            {org.subdomain ? <div className="mt-1 text-xs text-gray-500">Subdomain: {org.subdomain}</div> : null}
+          </div>
           <EditOrgForm
             orgSlug={orgSlug}
             initialName={org.name}
             initialSlug={org.slug}
-            initialLogoUrl={
-              String((org.settings as { branding?: { logo_url?: string } })?.branding?.logo_url ?? "").trim()
-            }
+            initialLogoUrl={String((org.settings as { branding?: { logo_url?: string } })?.branding?.logo_url ?? "").trim()}
           />
-        </section>
+        </div>
+      </section>
 
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-            {locale === "de" ? "Aktive Module" : "Active modules"}
-          </h2>
-          <ModuleToggles
-            orgSlug={orgSlug}
-            initialFeatures={(org.settings as { features?: Record<string, boolean> })?.features ?? {}}
-          />
-        </section>
+      <section className="card">
+        <div className="p-4 space-y-4">
+          <div className="section-label">{locale === "en" ? "Modules" : "Module"}</div>
+          <ModuleToggles orgSlug={orgSlug} initialFeatures={(org.settings as { features?: Record<string, boolean> })?.features ?? {}} />
+        </div>
+      </section>
 
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-            {t("settings.plan", locale)}
-          </h2>
+      <section className="card">
+        <div className="p-4 space-y-4">
+          <div className="section-label">{locale === "en" ? "Appearance & language" : "Darstellung & Sprache"}</div>
+          <AppearanceControls showSectionLabels={false} />
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="p-4 space-y-4">
+          <div className="section-label">{t("settings.plan", locale)}</div>
           <BillingSection orgSlug={orgSlug} currentPlan={(org as any).plan ?? "free"} />
-        </section>
+        </div>
+      </section>
 
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-            {t("settings.appearance", locale)}
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <span className="text-sm text-gray-600 dark:text-muted">{t("settings.theme_note", locale)}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <LanguageToggle />
-              <span className="text-sm text-gray-600 dark:text-muted">{t("settings.language_note", locale)}</span>
-            </div>
+      <section className="card">
+        <div className="p-4 space-y-3">
+          <div className="section-label">{locale === "en" ? "Teams & members" : "Teams & Mitglieder"}</div>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/${orgSlug}/admin/committees`} className="btn-secondary">
+              {t("settings.manage_teams", locale)}
+            </Link>
+            <Link href={`/${orgSlug}/admin/members`} className="btn-secondary">
+              {t("settings.manage_members", locale)}
+            </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-            {t("settings.teams_section", locale)}
-          </h2>
-          <Link
-            href={`/${orgSlug}/admin/committees`}
-            className="text-sm text-blue-600 underline hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-          >
-            {t("settings.manage_teams", locale)}
-          </Link>
-        </section>
-
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-            Members & permissions
-          </h2>
-          <Link
-            href={`/${orgSlug}/admin/members`}
-            className="text-sm text-blue-600 underline hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-          >
-            {t("settings.manage_members", locale)}
-          </Link>
-        </section>
-
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-muted">
-            {locale === "de" ? "Datenschutz & Daten" : "Privacy & data"}
-          </h2>
+      <section className="card">
+        <div className="p-4 space-y-4">
+          <div className="section-label">{locale === "de" ? "Datenschutz & Daten" : "Privacy & data"}</div>
           <PrivacyActions orgSlug={orgSlug} />
-        </section>
+        </div>
+      </section>
 
-        <Link
-          href={`/${orgSlug}/admin`}
-          className="inline-block rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
-          ← {t("settings.back_to_admin", locale)}
-        </Link>
-      </div>
+      <Link href={`/${orgSlug}/admin`} className="btn-secondary inline-flex">
+        ← {t("settings.back_to_admin", locale)}
+      </Link>
     </div>
   );
 }
