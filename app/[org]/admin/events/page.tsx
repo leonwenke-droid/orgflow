@@ -1,10 +1,11 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getRequestLocale } from "../../../../lib/localeServer";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
-import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../lib/i18n";
+import { t } from "../../../../lib/i18n";
 import { formatCalendarDateYmd } from "../../../../lib/formatDate";
 import CreateEventForm from "./CreateEventForm";
 
@@ -21,8 +22,7 @@ export default async function AdminEventsPage(props: {
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   const supabase = createServerComponentClient({ cookies });
   const { data: events } = await supabase

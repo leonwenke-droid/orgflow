@@ -1,9 +1,10 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getRequestLocale } from "../../../lib/localeServer";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin } from "../../../lib/getOrganization";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 
 /**
  * Onboarding for a new organisation: authorised person sets up –
@@ -24,8 +25,7 @@ export default async function OnboardingPage(props: {
 
   const canAccess = await isOrgAdmin(org.id);
   if (!canAccess) redirect(`/${orgSlug}/dashboard`);
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   return (
     <div className="mx-auto max-w-2xl p-6">

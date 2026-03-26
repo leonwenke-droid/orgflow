@@ -1,12 +1,10 @@
-import { cookies } from "next/headers";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../lib/i18n";
+import { getRequestLocale } from "../../lib/localeServer";
+import { t } from "../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function ImprintPage() {
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
-
+  const locale = await getRequestLocale();
   const isDe = locale === "de";
 
   return (

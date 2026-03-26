@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
+import { getRequestLocale } from "../../../../../lib/localeServer";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../../lib/getOrganization";
-import { LOCALE_COOKIE_NAME, localeFromCookie, t } from "../../../../../lib/i18n";
+import { t } from "../../../../../lib/i18n";
 import AdminBreadcrumb from "../../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../../AdminForbidden";
 import AssignPointsForm from "./AssignPointsForm";
@@ -15,8 +16,7 @@ export default async function AssignPointsPage({
   const orgSlug = typeof (params as Promise<{ org: string }>).then === "function"
     ? (await (params as Promise<{ org: string }>)).org
     : (params as { org: string }).org;
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
 

@@ -1,9 +1,10 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getRequestLocale } from "../../../lib/localeServer";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import EmptyState from "../../../components/EmptyState";
 import MemberTaskRow from "../../../components/MemberTaskRow";
@@ -33,8 +34,7 @@ export default async function TasksViewerPage(props: {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   const authSupabase = createServerComponentClient({ cookies });
   const {

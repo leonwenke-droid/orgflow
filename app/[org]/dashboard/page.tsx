@@ -1,4 +1,5 @@
 import { unstable_noStore } from "next/cache";
+import { getRequestLocale } from "../../../lib/localeServer";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -23,7 +24,7 @@ import Link from "next/link";
 import type { WeekData } from "../../../components/ShiftPlanWeekView";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isSuperAdmin, isOrgAdmin, getCurrentUserRoleInOrg } from "../../../lib/getOrganization";
 import { ADMIN_ROLES, canViewFinance } from "../../../lib/permissions";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 import { ShiftAvailability } from "../../../components/ui/ShiftAvailability";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -174,8 +175,7 @@ export default async function OrgDashboardPage({
   const claimShiftError = sp.claimShift === "error" || sp.claimShift === "1";
   const shiftsFreeOnly = sp.free === "1" || sp.free === "true";
   const org = await getCurrentOrganization(orgSlug);
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
   const localeForMoney = locale === "de" ? "de-DE" : "en-GB";
   const currencyCode = org.settings?.currency ?? DEFAULT_CURRENCY;
 

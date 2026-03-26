@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
+import { getRequestLocale } from "../../lib/localeServer";
 import Link from "next/link";
 import { Building2, Plus } from "lucide-react";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getOrganizationsForCurrentUser, isSuperAdmin } from "../../lib/getOrganization";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../lib/i18n";
+import { t } from "../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +24,7 @@ export default async function DashboardHubPage() {
   }
 
   const orgs = await getOrganizationsForCurrentUser();
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   if (orgs.length === 1) {
     redirect(`/${orgs[0].slug}/dashboard`);

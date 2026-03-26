@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
+import { getRequestLocale } from "../../../lib/localeServer";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import { localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+
 import { formatLocaleDateTime } from "../../../lib/formatDate";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin, getCurrentUserOrganization } from "../../../lib/getOrganization";
 
@@ -51,8 +52,7 @@ export default async function AdminActivityPage(props: PageProps) {
     .order("created_at", { ascending: false })
     .limit(200);
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   return (
     <div className="space-y-4">

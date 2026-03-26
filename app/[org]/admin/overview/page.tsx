@@ -1,4 +1,5 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getRequestLocale } from "../../../../lib/localeServer";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
@@ -11,7 +12,7 @@ import {
   resolveMemberProfileForOrganization
 } from "../../../../lib/getOrganization";
 import { canAccessOperationalAdmin } from "../../../../lib/permissions";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../../lib/i18n";
+import { t } from "../../../../lib/i18n";
 import { formatShiftSlot, type AppLocale } from "../../../../lib/formatDate";
 import { DEFAULT_CURRENCY, formatCurrency } from "../../../../lib/currency";
 
@@ -58,8 +59,7 @@ export default async function OrgOverviewPage(props: {
       : ((props.searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
   const period = sp.period === "month" ? "month" : "week";
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
 

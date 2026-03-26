@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getRequestLocale } from "../../../lib/localeServer";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import TreasuryUploadForm from "../../../components/TreasuryUploadForm";
 import TreasuryEntryForm from "../../../components/TreasuryEntryForm";
@@ -6,7 +7,7 @@ import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData } f
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { formatCurrency } from "../../../lib/currency";
 import { formatTreasuryBalanceDate } from "../../../lib/formatDate";
-import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 import { canViewFinance } from "../../../lib/permissions";
 import FinanceCategoriesForm from "./FinanceCategoriesForm";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -28,8 +29,7 @@ export default async function TreasuryPage(props: TreasuryPageProps) {
   } = await supabase.auth.getUser();
   const userId = user?.id;
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   if (!userId) {
     const loginHref = orgSlug ? `/${orgSlug}/login` : "/";

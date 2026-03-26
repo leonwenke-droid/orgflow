@@ -699,6 +699,88 @@ export const translations: Record<Locale, Record<string, string>> = {
     "events.tasks_count": "Tasks",
     "events.shifts_count": "Shifts",
     "shifts.auto_assign_label": "Include in auto-assignment",
+    "landing.nav_features": "Features",
+    "landing.nav_pricing": "Pricing",
+    "landing.nav_sign_in": "Sign in",
+    "landing.cta_start_org": "Start your organisation",
+    "landing.hero_title": "Organise your team, tasks and events in one place.",
+    "landing.hero_subtitle":
+      "OrgFlow helps clubs, schools, volunteer groups and companies assign responsibilities, plan shifts fairly, and keep finances transparent in one shared workspace — without spreadsheet chaos.",
+    "landing.hero_secondary": "See active organisations",
+    "landing.bullet_shifts": "Fair shift allocation and swap flow",
+    "landing.bullet_tasks": "Clear ownership for every task",
+    "landing.bullet_finance": "Transparent treasury with imports",
+    "landing.bullet_engagement": "Engagement scoring for fair workload",
+    "landing.trust_rbac": "Role-based access control",
+    "landing.trust_audit": "Audit-friendly finance records",
+    "landing.trust_privacy": "Privacy pages and consent handling",
+    "landing.problem_title": "Coordination is hard",
+    "landing.problem_subtitle":
+      "Schools, sports clubs, volunteer groups and event crews struggle with spreadsheets, WhatsApp groups and scattered tools. OrgFlow brings everything together.",
+    "landing.problem_teams_title": "Scattered teams",
+    "landing.problem_teams_body": "Members in different groups, no single source of truth.",
+    "landing.problem_shifts_title": "Shift chaos",
+    "landing.problem_shifts_body": "Manual scheduling, unfair distribution, last-minute swaps.",
+    "landing.problem_finance_title": "Finance opacity",
+    "landing.problem_finance_body": "Excel files, unclear balances, audit headaches.",
+    "landing.features_title": "Core workflows that reduce coordination overhead",
+    "landing.features_subtitle":
+      "Focus on the three workflows that break first when teams coordinate without a single system of record.",
+    "landing.feature_tasks_title": "Task ownership and follow-through",
+    "landing.feature_tasks_body":
+      "Assign each task to a clear owner, track status transitions, and collect proof when needed.",
+    "landing.feature_shifts_title": "Shift planning that stays fair",
+    "landing.feature_shifts_body":
+      "Plan setup and teardown slots, support swaps, and avoid last-minute overload on the same people.",
+    "landing.feature_finance_title": "Keep finances transparent",
+    "landing.feature_finance_body":
+      "Keep balances and entries understandable for everyone involved, including imports and audit-friendly logs.",
+    "landing.how_title": "How it works",
+    "landing.how_subtitle": "Get started in minutes.",
+    "landing.step1_title": "Create organisation",
+    "landing.step1_body": "Name your org, choose type (school, club, etc.)",
+    "landing.step2_title": "Add teams",
+    "landing.step2_body": "Create teams (e.g. Finance, Events, Logistics)",
+    "landing.step3_title": "Invite members",
+    "landing.step3_body": "Send invite links or email invites",
+    "landing.step4_title": "Start coordinating",
+    "landing.step4_body": "Create tasks, plan shifts, track engagement",
+    "landing.pricing_title": "Pricing",
+    "landing.pricing_subtitle": "Simple plans for every organisation.",
+    "landing.plan_free": "Free",
+    "landing.plan_team": "Team",
+    "landing.plan_pro": "Pro",
+    "landing.plan_popular": "Popular",
+    "landing.price_free_value": "€0",
+    "landing.price_team_value": "€19",
+    "landing.price_pro_value": "€49",
+    "landing.price_period": "/mo",
+    "landing.free_limit_members": "Up to 10 members",
+    "landing.free_tasks_shifts": "Basic tasks & shifts",
+    "landing.free_one_team": "1 team",
+    "landing.team_limit_members": "Up to 50 members",
+    "landing.team_all_features": "All features",
+    "landing.team_unlimited_teams": "Unlimited teams",
+    "landing.team_email_support": "Email support",
+    "landing.pro_unlimited_members": "Unlimited members",
+    "landing.pro_all_team": "All Team features",
+    "landing.pro_priority_support": "Priority support",
+    "landing.pro_custom_subdomain": "Custom subdomain",
+    "landing.btn_get_started": "Get started",
+    "landing.btn_start_trial": "Start free trial",
+    "landing.btn_contact_sales": "Contact sales",
+    "landing.bottom_cta_title": "Ready to organise your team?",
+    "landing.bottom_cta_subtitle":
+      "Join schools, sports clubs, volunteer groups and event crews already using OrgFlow.",
+    "landing.orgs_title": "Active organisations",
+    "landing.orgs_subtitle":
+      "Live organisations already run their planning through one flow for tasks, shifts and treasury updates.",
+    "landing.orgs_empty": "No organisations yet — be the first to create one.",
+    "landing.org_badge_active": "Active",
+    "landing.footer_copyright": "© {year} OrgFlow. All rights reserved.",
+    "landing.footer_privacy": "Privacy",
+    "landing.footer_terms": "Terms",
+    "landing.footer_imprint": "Imprint",
   },
   de: {
     "dashboard.title": "Dashboard",
@@ -1395,6 +1477,88 @@ export const translations: Record<Locale, Record<string, string>> = {
     "events.tasks_count": "Aufgaben",
     "events.shifts_count": "Schichten",
     "shifts.auto_assign_label": "In Auto-Zuteilung einbeziehen",
+    "landing.nav_features": "Funktionen",
+    "landing.nav_pricing": "Preise",
+    "landing.nav_sign_in": "Anmelden",
+    "landing.cta_start_org": "Organisation starten",
+    "landing.hero_title": "Team, Aufgaben und Events an einem Ort organisieren.",
+    "landing.hero_subtitle":
+      "OrgFlow hilft Vereinen, Schulen, Ehrenamtsgruppen und Unternehmen, Verantwortung klar zuzuweisen, Schichten fair zu planen und Finanzen transparent zu halten – in einem gemeinsamen Arbeitsraum, ohne Tabellenchaos.",
+    "landing.hero_secondary": "Aktive Organisationen ansehen",
+    "landing.bullet_shifts": "Faire Schichtverteilung und Tausch",
+    "landing.bullet_tasks": "Klare Verantwortung für jede Aufgabe",
+    "landing.bullet_finance": "Kasse & Finanzen mit Import",
+    "landing.bullet_engagement": "Engagement-Score für faire Lastverteilung",
+    "landing.trust_rbac": "Rollenbasierte Zugriffsrechte",
+    "landing.trust_audit": "Nachvollziehbare Kassenbuchungen",
+    "landing.trust_privacy": "Datenschutzseiten und Einwilligung",
+    "landing.problem_title": "Koordination ist anstrengend",
+    "landing.problem_subtitle":
+      "Schulen, Sportvereine, Ehrenamt und Eventteams kämpfen mit Tabellen, WhatsApp-Gruppen und verstreuten Tools. OrgFlow bündelt alles.",
+    "landing.problem_teams_title": "Zersplitterte Teams",
+    "landing.problem_teams_body": "Mitglieder in verschiedenen Gruppen, keine gemeinsame Quelle der Wahrheit.",
+    "landing.problem_shifts_title": "Schicht-Chaos",
+    "landing.problem_shifts_body": "Manuelle Planung, unfaire Verteilung, kurzfristige Tausche.",
+    "landing.problem_finance_title": "Undurchsichtige Finanzen",
+    "landing.problem_finance_body": "Excel-Dateien, unklare Salden, Prüfungsstress.",
+    "landing.features_title": "Kernabläufe, die Koordinationsaufwand senken",
+    "landing.features_subtitle":
+      "Fokus auf die drei Abläufe, die zuerst knacksen, wenn Teams ohne ein gemeinsames System arbeiten.",
+    "landing.feature_tasks_title": "Aufgaben mit klarem Verantwortlichen",
+    "landing.feature_tasks_body":
+      "Jede Aufgabe einer Person zuweisen, Status nachverfolgen und bei Bedarf Nachweise einfordern.",
+    "landing.feature_shifts_title": "Schichtplanung, die fair bleibt",
+    "landing.feature_shifts_body":
+      "Auf- und Abbau-Slots planen, Tausch ermöglichen und Last-Minuten-Überlast bei denselben Personen vermeiden.",
+    "landing.feature_finance_title": "Finanzen transparent halten",
+    "landing.feature_finance_body":
+      "Salden und Buchungen für alle Beteiligten verständlich – inklusive Import und nachvollziehbaren Protokollen.",
+    "landing.how_title": "So funktioniert’s",
+    "landing.how_subtitle": "In wenigen Minuten startklar.",
+    "landing.step1_title": "Organisation anlegen",
+    "landing.step1_body": "Namen wählen, Typ festlegen (Schule, Verein, …)",
+    "landing.step2_title": "Teams anlegen",
+    "landing.step2_body": "z. B. Kasse, Events, Logistik",
+    "landing.step3_title": "Mitglieder einladen",
+    "landing.step3_body": "Einladungslinks oder E-Mail-Einladungen",
+    "landing.step4_title": "Loslegen",
+    "landing.step4_body": "Aufgaben erstellen, Schichten planen, Engagement tracken",
+    "landing.pricing_title": "Preise",
+    "landing.pricing_subtitle": "Einfache Pläne für jede Organisation.",
+    "landing.plan_free": "Kostenlos",
+    "landing.plan_team": "Team",
+    "landing.plan_pro": "Pro",
+    "landing.plan_popular": "Beliebt",
+    "landing.price_free_value": "0 €",
+    "landing.price_team_value": "19 €",
+    "landing.price_pro_value": "49 €",
+    "landing.price_period": "/Monat",
+    "landing.free_limit_members": "Bis zu 10 Mitglieder",
+    "landing.free_tasks_shifts": "Basis-Aufgaben & Schichten",
+    "landing.free_one_team": "1 Team",
+    "landing.team_limit_members": "Bis zu 50 Mitglieder",
+    "landing.team_all_features": "Alle Funktionen",
+    "landing.team_unlimited_teams": "Unbegrenzt Teams",
+    "landing.team_email_support": "E-Mail-Support",
+    "landing.pro_unlimited_members": "Unbegrenzt Mitglieder",
+    "landing.pro_all_team": "Alle Team-Funktionen",
+    "landing.pro_priority_support": "Prioritäts-Support",
+    "landing.pro_custom_subdomain": "Eigene Subdomain",
+    "landing.btn_get_started": "Jetzt starten",
+    "landing.btn_start_trial": "Kostenlos testen",
+    "landing.btn_contact_sales": "Vertrieb kontaktieren",
+    "landing.bottom_cta_title": "Bereit, euer Team zu organisieren?",
+    "landing.bottom_cta_subtitle":
+      "Schulen, Vereine, Ehrenamt und Eventteams nutzen OrgFlow schon für die tägliche Koordination.",
+    "landing.orgs_title": "Aktive Organisationen",
+    "landing.orgs_subtitle":
+      "Live-Organisationen steuern Aufgaben, Schichten und Kassen-Updates in einem durchgängigen Ablauf.",
+    "landing.orgs_empty": "Noch keine Organisation – sei die erste.",
+    "landing.org_badge_active": "Aktiv",
+    "landing.footer_copyright": "© {year} OrgFlow. Alle Rechte vorbehalten.",
+    "landing.footer_privacy": "Datenschutz",
+    "landing.footer_terms": "AGB",
+    "landing.footer_imprint": "Impressum",
     "invite.title": "Konto aktivieren",
     "invite.subtitle": "Tritt {orgName} bei und setze dein Passwort.",
     "invite.already_signed_in": "Du bist bereits angemeldet. Bitte unten die Aktivierung abschließen.",
@@ -1432,4 +1596,31 @@ export const LOCALE_COOKIE_NAME = "orgflow-locale";
 export function localeFromCookie(cookieValue: string | undefined): Locale {
   if (cookieValue === "de" || cookieValue === "en") return cookieValue;
   return defaultLocale;
+}
+
+/**
+ * Infer UI locale from the browser's Accept-Language header (no geo/location).
+ * First language tag wins among supported locales (de, en); otherwise defaultLocale.
+ */
+export function localeFromAcceptLanguage(header: string | null | undefined): Locale {
+  if (!header || typeof header !== "string") return defaultLocale;
+  const segments = header.split(",").map((part) => part.trim().split(";")[0]?.toLowerCase() ?? "");
+  for (const tag of segments) {
+    if (!tag) continue;
+    const base = tag.split("-")[0];
+    if (base === "de") return "de";
+    if (base === "en") return "en";
+  }
+  return defaultLocale;
+}
+
+/**
+ * Server: explicit cookie wins; otherwise Accept-Language; otherwise defaultLocale.
+ */
+export function resolveLocale(
+  cookieValue: string | undefined,
+  acceptLanguageHeader: string | null | undefined
+): Locale {
+  if (cookieValue === "de" || cookieValue === "en") return cookieValue;
+  return localeFromAcceptLanguage(acceptLanguageHeader);
 }

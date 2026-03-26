@@ -1,4 +1,5 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getRequestLocale } from "../../lib/localeServer";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -13,7 +14,7 @@ import {
   getAllOrganizations
 } from "../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../lib/supabaseServer";
-import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../lib/i18n";
+import { t } from "../../lib/i18n";
 import DeleteOrgButton from "./DeleteOrgButton";
 import SetupLinkBlock from "./SetupLinkBlock";
 
@@ -30,8 +31,7 @@ export default async function SuperAdminDashboard() {
   }
 
   if (!(await isSuperAdmin())) {
-    const cookieStore = await cookies();
-    const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+    const locale = await getRequestLocale();
     return (
       <div className="mx-auto max-w-md p-6 text-center">
         <h1 className="text-xl font-bold text-blue-100 dark:text-gray-100">{t("super_admin.forbidden_title", locale)}</h1>

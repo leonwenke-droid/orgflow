@@ -1,4 +1,5 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getRequestLocale } from "../../../../lib/localeServer";
 import { cookies } from "next/headers";
 import {
   getCurrentOrganization,
@@ -14,7 +15,7 @@ import AddMemberForm from "./AddMemberForm";
 import MemberRow from "./MemberRow";
 import EmptyState from "../../../../components/EmptyState";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../../lib/i18n";
+import { t } from "../../../../lib/i18n";
 
 const PAGE_SIZE = 25;
 
@@ -46,8 +47,7 @@ export default async function AdminMembersPage({
   const qLower = qRaw.toLowerCase();
   const pageNum = Math.max(1, parseInt(String(statusParams.page ?? "1"), 10) || 1);
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   const authClient = createServerComponentClient({ cookies });
   const {

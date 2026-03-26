@@ -1,10 +1,9 @@
-import { cookies } from "next/headers";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../lib/i18n";
+import { getRequestLocale } from "../../lib/localeServer";
+import { t } from "../../lib/i18n";
 
 /** Skeleton-style loading for /admin/* while server components fetch data. */
 export default async function AdminRouteLoading() {
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   return (
     <div

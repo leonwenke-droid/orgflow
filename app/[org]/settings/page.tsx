@@ -1,4 +1,5 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getRequestLocale } from "../../../lib/localeServer";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { getCurrentOrganization, getEffectiveUserRoleForOrg } from "../../../lib/getOrganization";
@@ -10,7 +11,7 @@ import LanguageToggle from "../../../components/LanguageToggle";
 import EditOrgForm from "./EditOrgForm";
 import ModuleToggles from "./ModuleToggles";
 import PrivacyActions from "./PrivacyActions";
-import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 import BillingSection from "./BillingSection";
 
 export default async function OrgSettingsPage({
@@ -29,8 +30,7 @@ export default async function OrgSettingsPage({
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   return (
     <div className="mx-auto max-w-2xl p-6">

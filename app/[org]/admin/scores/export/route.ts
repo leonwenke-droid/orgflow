@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getRequestLocale } from "../../../../../lib/localeServer";
 import * as XLSX from "xlsx";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
-import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../../lib/i18n";
+import { t } from "../../../../../lib/i18n";
 
 const TASK_EVENTS = ["task_done", "task_late", "task_missed"];
 const SHIFT_EVENTS = ["shift_done", "shift_missed"];
@@ -125,8 +125,7 @@ export async function GET(
     })
     .sort((a, b) => (b[5] as number) - (a[5] as number));
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
   const header = [
     t("engagement.export_rank", locale),
     t("engagement.export_name", locale),

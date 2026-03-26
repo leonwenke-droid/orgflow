@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getRequestLocale } from "../../../lib/localeServer";
 import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -8,7 +9,7 @@ import { revalidatePath } from "next/cache";
 import EmptyState from "../../../components/EmptyState";
 import DeleteMaterialButton from "../../../components/DeleteMaterialButton";
 import MaterialsWizard from "./MaterialsWizard";
-import { LOCALE_COOKIE_NAME, localeFromCookie, t } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 import { formatLocaleDateFromIso } from "../../../lib/formatDate";
 import { requireOrgAdminAction } from "../../../lib/permissionsServer";
 import { writeAuditLog } from "../../../lib/audit";
@@ -176,8 +177,7 @@ async function deleteMaterialProcurement(formData: FormData) {
 type MaterialsPageProps = { searchParams?: Promise<{ org?: string; event?: string }> | { org?: string; event?: string } };
 
 export default async function MaterialsPage(props: MaterialsPageProps) {
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
@@ -298,7 +298,6 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
         });
 
   const eventNameById = new Map((events ?? []).map((e: any) => [e.id as string, e.name as string]));
-
 
   return (
     <div className="space-y-6">

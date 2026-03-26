@@ -1,10 +1,11 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getRequestLocale } from "../../../../../lib/localeServer";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../../AdminForbidden";
-import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../../lib/i18n";
+import { t } from "../../../../../lib/i18n";
 import { formatCalendarDateYmd } from "../../../../../lib/formatDate";
 
 export const dynamic = "force-dynamic";
@@ -29,8 +30,7 @@ export default async function EventDetailPage(props: {
     .single();
 
   if (eventError || !event) {
-    const cookieStore = await cookies();
-    const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+    const locale = await getRequestLocale();
     return (
       <div className="mx-auto max-w-4xl p-6">
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("events.title", locale)} />
@@ -52,8 +52,7 @@ export default async function EventDetailPage(props: {
     supabase.from("material_procurements").select("id", { count: "exact", head: true }).eq("event_id", eventId)
   ]);
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   return (
     <div className="mx-auto max-w-4xl p-6">

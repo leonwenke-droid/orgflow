@@ -1,7 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import AppShell from "../components/AppShell";
 import ToastContainer from "../components/Toast";
@@ -11,6 +11,7 @@ import EmailVerificationBanner from "../components/EmailVerificationBanner";
 import CookieNotice from "../components/CookieNotice";
 import ConsentSync from "../components/ConsentSync";
 import FooterLinks from "../components/FooterLinks";
+import { LOCALE_COOKIE_NAME, resolveLocale } from "../lib/i18n";
 
 export const metadata: Metadata = {
   title: "OrgFlow",
@@ -57,13 +58,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   }
 
   const cookieStore = await cookies();
-  const localeCookie = cookieStore.get("orgflow-locale")?.value;
-  const locale = (localeCookie === "de" || localeCookie === "en") ? localeCookie : "en";
+  const headerList = await headers();
+  const locale = resolveLocale(
+    cookieStore.get(LOCALE_COOKIE_NAME)?.value,
+    headerList.get("accept-language")
+  );
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark">
         <script
           dangerouslySetInnerHTML={{
@@ -71,7 +75,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           }}
         />
         <ThemeProvider>
-          <LocaleProvider>
+          <LocaleProvider initialLocale={locale}>
           <div className="mx-auto flex min-h-screen max-w-6xl flex-col bg-background px-4 py-6 dark:bg-background-dark">
             <EmailVerificationBanner />
             <AppShell user={user}>

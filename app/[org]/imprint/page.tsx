@@ -1,6 +1,6 @@
-import { cookies } from "next/headers";
+import { getRequestLocale } from "../../../lib/localeServer";
 import Link from "next/link";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -13,8 +13,7 @@ export default async function OrgImprintPage({
     typeof (params as Promise<{ org: string }>).then === "function"
       ? (await (params as Promise<{ org: string }>)).org
       : (params as { org: string }).org;
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
   const isDe = locale === "de";
 
   return (

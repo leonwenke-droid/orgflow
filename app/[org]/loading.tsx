@@ -1,9 +1,8 @@
-import { cookies } from "next/headers";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../lib/i18n";
+import { getRequestLocale } from "../../lib/localeServer";
+import { t } from "../../lib/i18n";
 
 export default async function OrgRouteLoading() {
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   return (
     <div

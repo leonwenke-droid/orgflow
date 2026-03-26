@@ -1,11 +1,9 @@
-import { cookies } from "next/headers";
-import { localeFromCookie, LOCALE_COOKIE_NAME } from "../../lib/i18n";
+import { getRequestLocale } from "../../lib/localeServer";
 import TermsContent from "../../components/legal/TermsContent";
 
 export const dynamic = "force-dynamic";
 
 export default async function TermsPage() {
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
   return <TermsContent locale={locale} />;
 }

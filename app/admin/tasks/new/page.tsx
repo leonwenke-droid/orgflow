@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getRequestLocale } from "../../../../lib/localeServer";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -6,7 +7,7 @@ import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer"
 import { getCurrentUserOrganization, isOrgAdmin } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import NewTaskForm from "./NewTaskForm";
-import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../../lib/i18n";
+import { t } from "../../../../lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -115,8 +116,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
   const userId = user?.id;
 
   if (!userId) {
-    const cookieStore = await cookies();
-    const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+    const locale = await getRequestLocale();
     return (
       <p className="text-sm text-amber-300 dark:text-amber-200">
         {t("tasks.session_sign_in", locale)} <a href="/" className="underline">{t("common.sign_in", locale)}</a>.
@@ -183,8 +183,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
   }
 
   if (!profile || !["admin", "lead", "super_admin", "owner"].includes(profile.role)) {
-    const cookieStore = await cookies();
-    const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+    const locale = await getRequestLocale();
     return (
       <p className="text-sm text-red-300 dark:text-red-200">
         {t("tasks.access_admin_only", locale)}
@@ -200,8 +199,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
     name: String(c.name ?? "")
   }));
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   return (
     <div className="space-y-4">

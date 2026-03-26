@@ -1,9 +1,10 @@
 import type { ElementType } from "react";
+import { getRequestLocale } from "../../../lib/localeServer";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import type { Locale } from "../../../lib/i18n";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 import {
   Users,
   UsersRound,
@@ -113,8 +114,7 @@ export default async function AdminDashboard({
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   const authClient = createServerComponentClient({ cookies });
   const {

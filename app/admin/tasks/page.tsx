@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getRequestLocale } from "../../../lib/localeServer";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
@@ -10,7 +11,7 @@ import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import CommitteeFilter from "../../../components/CommitteeFilter";
 import EmptyState from "../../../components/EmptyState";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t as tr } from "../../../lib/i18n";
+import { t as tr } from "../../../lib/i18n";
 import { formatLocaleDateTime } from "../../../lib/formatDate";
 import { isMissingSoftDeleteColumnError } from "../../../lib/supabaseSoftDelete";
 import AdminTasksKanban from "./AdminTasksKanban";
@@ -130,8 +131,7 @@ type PageProps = {
 };
 
 export default async function AdminTasksPage(props: PageProps) {
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
     ? await (raw as Promise<{ committee?: string; org?: string; event?: string; q?: string }>)

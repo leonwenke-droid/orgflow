@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import type { Locale } from "../lib/i18n";
+import { defaultLocale } from "../lib/i18n";
 
 const STORAGE_KEY = "orgflow-locale";
 const COOKIE_NAME = "orgflow-locale";
@@ -11,8 +12,14 @@ const LocaleContext = createContext<{
   setLocale: (l: Locale) => void;
 } | null>(null);
 
-export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("en");
+type Props = {
+  children: React.ReactNode;
+  /** From server: cookie or Accept-Language (see resolveLocale). */
+  initialLocale?: Locale;
+};
+
+export function LocaleProvider({ children, initialLocale = defaultLocale }: Props) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -21,12 +28,14 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       if (stored === "en" || stored === "de") {
         setLocaleState(stored);
         document.cookie = `${COOKIE_NAME}=${stored}; path=/; max-age=31536000; SameSite=Lax`;
+      } else {
+        document.cookie = `${COOKIE_NAME}=${initialLocale}; path=/; max-age=31536000; SameSite=Lax`;
       }
     } catch {
       // ignore
     }
     setMounted(true);
-  }, []);
+  }, [initialLocale]);
 
   const setLocale = (l: Locale) => {
     setLocaleState(l);
@@ -38,8 +47,10 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const effective = mounted ? locale : initialLocale;
+
   return (
-    <LocaleContext.Provider value={{ locale: mounted ? locale : "en", setLocale }}>
+    <LocaleContext.Provider value={{ locale: effective, setLocale }}>
       {children}
     </LocaleContext.Provider>
   );
@@ -47,5 +58,5 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
 export function useLocale() {
   const ctx = useContext(LocaleContext);
-  return ctx ?? { locale: "en" as Locale, setLocale: () => {} };
+  return ctx ?? { locale: defaultLocale as Locale, setLocale: () => {} };
 }

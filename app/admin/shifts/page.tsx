@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getRequestLocale } from "../../../lib/localeServer";
 import Link from "next/link";
 import { revalidatePath, unstable_noStore } from "next/cache";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -11,7 +12,7 @@ import ShiftPlanTableWithEdit from "../../../components/ShiftPlanTableWithEdit";
 import ShiftAttendancePdfExport, { type ShiftForPdf } from "../../../components/ShiftAttendancePdfExport";
 import EmptyState from "../../../components/EmptyState";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
-import { t, localeFromCookie, LOCALE_COOKIE_NAME } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 import { getTodayDateString } from "../../../lib/dateFormat";
 import { isMissingSoftDeleteColumnError } from "../../../lib/supabaseSoftDelete";
 import { requireOrgAdminAction } from "../../../lib/permissionsServer";
@@ -886,8 +887,7 @@ type ShiftsPageProps = {
 
 export default async function ShiftsPage(props: ShiftsPageProps) {
   unstable_noStore();
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
     ? await (raw as Promise<{ org?: string; event?: string; success?: string }>)

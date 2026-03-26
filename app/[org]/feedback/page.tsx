@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getRequestLocale } from "../../../lib/localeServer";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import {
@@ -6,7 +7,7 @@ import {
   isSuperAdmin,
   resolveMemberProfileForOrganization
 } from "../../../lib/getOrganization";
-import { localeFromCookie, LOCALE_COOKIE_NAME, t } from "../../../lib/i18n";
+import { t } from "../../../lib/i18n";
 import { formatLocaleDateTime } from "../../../lib/formatDate";
 import FeedbackForm from "./FeedbackForm";
 
@@ -21,8 +22,7 @@ export default async function OrgFeedbackPage(props: {
   const orgSlug = params.org;
   const org = await getCurrentOrganization(orgSlug);
 
-  const cookieStore = await cookies();
-  const locale = localeFromCookie(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
+  const locale = await getRequestLocale();
 
   const supabase = createServerComponentClient({ cookies });
   const {
