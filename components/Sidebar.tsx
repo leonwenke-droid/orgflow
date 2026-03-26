@@ -22,7 +22,6 @@ import {
   BarChart3,
   MessageSquare,
   UserCircle,
-  ShieldCheck,
   Settings2,
   PanelsTopLeft,
 } from "lucide-react";
@@ -64,7 +63,11 @@ type OrgModules = {
   events?: boolean;
 };
 
-function getNavSections(org: string, modules?: OrgModules, role?: DbRole | null): { titleKey: string; items: NavItem[] }[] {
+function getNavSections(
+  org: string,
+  modules?: OrgModules,
+  role?: DbRole | null
+): { titleKey: string; items: NavItem[] }[] {
   const m = modules ?? {};
   const eventsVisible = m.events !== false;
   const financeModuleOn = m.finance !== false;
@@ -85,10 +88,6 @@ function getNavSections(org: string, modules?: OrgModules, role?: DbRole | null)
     { href: `/${org}/account`, labelKey: "nav.my_account", icon: UserCircle },
   ];
 
-  if (financeOk && !operational) {
-    myArea.push({ href: treasuryHref, labelKey: "dashboard.finance", icon: Wallet });
-  }
-
   const sections: { titleKey: string; items: NavItem[] }[] = [{ titleKey: "nav.my_area", items: myArea }];
 
   if (operational) {
@@ -104,13 +103,11 @@ function getNavSections(org: string, modules?: OrgModules, role?: DbRole | null)
     if (m.resources !== false) adminItems.push({ href: `/${org}/admin/materials`, labelKey: "dashboard.resources", icon: Package });
     if (eventsVisible) adminItems.push({ href: `/${org}/admin/events`, labelKey: "events.title", icon: CalendarRange });
     if (financeOk) adminItems.push({ href: treasuryHref, labelKey: "dashboard.finance", icon: Wallet });
-    if (m.engagement !== false) {
-      adminItems.push({ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy });
-    }
-    if (fullControl) {
-      adminItems.push({ href: `/${org}/settings`, labelKey: "dashboard.settings", icon: Settings2 });
-    }
+    if (m.engagement !== false) adminItems.push({ href: `/${org}/admin/scores/assign`, labelKey: "dashboard.engagement", icon: Trophy });
+    if (fullControl) adminItems.push({ href: `/${org}/settings`, labelKey: "dashboard.settings", icon: Settings2 });
     sections.push({ titleKey: "nav.manage_org", items: adminItems });
+  } else if (financeOk) {
+    sections[0].items.push({ href: treasuryHref, labelKey: "dashboard.finance", icon: Wallet });
   }
 
   sections.push({
@@ -139,12 +136,14 @@ export default function Sidebar({
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [modules, setModules] = useState<OrgModules | null>(null);
   const [role, setRole] = useState<DbRole | null>(null);
+  const [openTaskCount, setOpenTaskCount] = useState<number>(0);
 
   useEffect(() => {
     if (!orgSlug) {
       setOrgName(null);
       setLogoUrl(null);
       setModules(null);
+      setOpenTaskCount(0);
       return;
     }
     let cancelled = false;
@@ -156,6 +155,7 @@ export default function Sidebar({
           setLogoUrl(typeof data.logoUrl === "string" && data.logoUrl.trim() ? data.logoUrl.trim() : null);
           if (data.modules) setModules(data.modules);
           setRole((data.role as DbRole | undefined) ?? null);
+          setOpenTaskCount(typeof data.openTaskCount === "number" ? data.openTaskCount : 0);
         }
       })
       .catch(() => {});
@@ -198,64 +198,63 @@ export default function Sidebar({
   };
 
   const linkClassName = (href: string) =>
-    `flex items-center gap-3 rounded-lg border-l-2 px-3 py-2 text-sm font-medium transition-colors ${
+    `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
       isActive(href)
-        ? "border-blue-600 bg-blue-50 text-blue-600 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-400"
-        : "border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+        ? "bg-white text-gray-900 font-medium dark:bg-gray-900/60 dark:text-gray-100"
+        : "text-gray-500 hover:bg-white/60 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-900/40 dark:hover:text-gray-100"
     }`;
+
+  const initials = (orgName ?? orgSlug).slice(0, 2).toUpperCase();
 
   const sidebarContent = (
     <>
-      <div className="flex h-14 items-center border-b border-gray-200 px-5 dark:border-gray-700">
-        <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-gray-100">OrgFlow</span>
-      </div>
-      {orgName && (
-        <div className="border-b border-gray-200 px-3 py-3 dark:border-gray-700">
-          <div className="flex items-center gap-2 rounded-lg px-2 py-2">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- user-supplied org logo URL
-              <img
-                src={logoUrl}
-                alt=""
-                className="h-7 w-7 shrink-0 rounded-md border border-gray-200 object-cover dark:border-gray-600"
-              />
-            ) : (
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
-                {orgName.substring(0, 2).toUpperCase()}
-              </div>
-            )}
-            <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900 dark:text-gray-100" title={orgName}>
-              {orgName}
-            </span>
+      <div className="px-4 py-4">
+        <div className="flex items-center gap-2">
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- user-supplied org logo URL
+            <img
+              src={logoUrl}
+              alt=""
+              className="h-7 w-7 shrink-0 rounded-[7px] border border-gray-200 object-cover dark:border-gray-700"
+            />
+          ) : (
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] bg-brand-light text-xs font-semibold text-brand-dark">
+              {initials}
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100" title={orgName ?? orgSlug}>
+              {orgName ?? orgSlug}
+            </div>
           </div>
         </div>
-      )}
-      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-3 pb-4">
         {getNavSections(orgSlug, modules ?? undefined, role).map((section, idx) => (
-          <div key={`${section.titleKey}-${idx}`}>
-            {idx > 0 ? (
-              <div className="my-3 border-t border-gray-200 dark:border-gray-800" aria-hidden />
-            ) : null}
-            {section.titleKey ? (
-              <div className="mb-1 flex items-center gap-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {section.titleKey === "nav.manage_org" ? (
-                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-                ) : null}
-                <span>{t(section.titleKey, locale)}</span>
-              </div>
-            ) : null}
-            <div className="space-y-0.5">
-              {section.items.map(({ href, labelKey, icon: Icon }) => (
-                <Link key={href} href={href} prefetch className={linkClassName(href)}>
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="min-w-0 truncate">{t(labelKey, locale)}</span>
-                </Link>
-              ))}
+          <div key={`${section.titleKey}-${idx}`} className={idx === 0 ? "" : "mt-6"}>
+            {section.titleKey ? <div className="section-label px-3">{t(section.titleKey, locale)}</div> : null}
+            <div className="mt-2 space-y-1">
+              {section.items.map(({ href, labelKey, icon: Icon }) => {
+                const showTaskBadge = labelKey === "dashboard.tasks" && openTaskCount > 0;
+                return (
+                  <Link key={href} href={href} prefetch className={linkClassName(href)} onClick={onClose}>
+                    <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+                    <span className="min-w-0 truncate">{t(labelKey, locale)}</span>
+                    {showTaskBadge && (
+                      <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 font-medium">
+                        {openTaskCount}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         ))}
       </nav>
-      <div className="shrink-0 border-t border-gray-200 px-3 py-3 dark:border-gray-700">
+
+      <div className="mt-auto px-3 pb-4">
         <LogoutButton returnTo={`/${orgSlug}/login`} />
       </div>
     </>
@@ -263,7 +262,7 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-gray-50/80 backdrop-blur dark:bg-gray-950/40 lg:flex">
         {sidebarContent}
       </aside>
       {mobileOpen && (
@@ -273,7 +272,7 @@ export default function Sidebar({
             onClick={onClose}
             aria-hidden
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 lg:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-gray-50/95 shadow-xl backdrop-blur dark:bg-gray-950/60 lg:hidden">
             {sidebarContent}
           </aside>
         </>

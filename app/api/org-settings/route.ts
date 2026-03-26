@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
   const orgIdForData = getOrgIdForData(slug, o.id);
 
   let role: DbRole | null = null;
+  let profileId: string | null = null;
   if (user) {
     // Use service role for reliable role lookup (prevents UI flipping to admin modules on role=null)
     try {
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest) {
 
       const { data: profilePrimary } = await service
         .from("profiles")
-        .select("role")
+        .select("id, role")
         .eq("auth_user_id", user.id)
         .eq("organization_id", orgIdForData)
         .maybeSingle();
@@ -56,17 +57,19 @@ export async function GET(req: NextRequest) {
       const { data: profileFallback } = shouldFallbackToRawOrg
         ? await service
             .from("profiles")
-            .select("role")
+          .select("id, role")
             .eq("auth_user_id", user.id)
             .eq("organization_id", o.id)
             .maybeSingle()
         : { data: null };
 
-      role = ((profilePrimary ?? profileFallback) as { role?: DbRole } | null)?.role ?? null;
+      const prof = (profilePrimary ?? profileFallback) as { id?: string; role?: DbRole } | null;
+      role = prof?.role ?? null;
+      profileId = prof?.id ?? null;
     } catch {
       const { data: profilePrimary } = await supabase
         .from("profiles")
-        .select("role")
+        .select("id, role")
         .eq("auth_user_id", user.id)
         .eq("organization_id", orgIdForData)
         .maybeSingle();
@@ -75,13 +78,31 @@ export async function GET(req: NextRequest) {
       const { data: profileFallback } = shouldFallbackToRawOrg
         ? await supabase
             .from("profiles")
-            .select("role")
+          .select("id, role")
             .eq("auth_user_id", user.id)
             .eq("organization_id", o.id)
             .maybeSingle()
         : { data: null };
 
-      role = ((profilePrimary ?? profileFallback) as { role?: DbRole } | null)?.role ?? null;
+      const prof = (profilePrimary ?? profileFallback) as { id?: string; role?: DbRole } | null;
+      role = prof?.role ?? null;
+      profileId = prof?.id ?? null;
+    }
+  }
+
+  let openTaskCount = 0;
+  if (user && profileId && orgIdForData) {
+    try {
+      const service = createSupabaseServiceRoleClient();
+      const { count } = await service
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", orgIdForData)
+        .eq("owner_id", profileId)
+        .neq("status", "erledigt");
+      openTaskCount = count ?? 0;
+    } catch {
+      openTaskCount = 0;
     }
   }
 
@@ -101,5 +122,6 @@ export async function GET(req: NextRequest) {
     canManageOrg: role != null ? canManageOrg(role) : false,
     isReadOnly: role != null ? isReadOnly(role) : false,
     canViewFinance: role != null ? canViewFinance(role) : false,
+    openTaskCount,
   });
 }

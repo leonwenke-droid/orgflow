@@ -9,6 +9,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        brand: { DEFAULT: "#185FA5", light: "#E6F1FB", dark: "#0C447C" },
+        success: { DEFAULT: "#3B6D11", light: "#EAF3DE", dark: "#27500A" },
+        warning: { DEFAULT: "#854F0B", light: "#FAEEDA", dark: "#633806" },
+        danger: { DEFAULT: "#A32D2D", light: "#FCEBEB", dark: "#791F1F" },
         background: {
           DEFAULT: "#ffffff",
           dark: "#0f172a"
