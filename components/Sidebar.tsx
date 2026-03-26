@@ -74,7 +74,7 @@ function getNavSections(org: string, modules?: OrgModules, role?: DbRole | null)
 
   const tasksHref = `/${org}/tasks`;
   const shiftsHref = `/${org}/shifts`;
-  const treasuryHref = `/admin/treasury?org=${encodeURIComponent(org)}`;
+  const treasuryHref = `/${org}/admin/finanzen`;
 
   const myArea: NavItem[] = [
     { href: `/${org}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
@@ -186,9 +186,8 @@ export default function Sidebar({
     }
     if (href.includes("/admin/materials"))
       return (pathname === "/admin/materials" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/materials`);
-    if (href.includes("/admin/treasury")) {
-      const qOrg = searchParams?.get("org")?.trim() || currentOrg;
-      return pathname === "/admin/treasury" && qOrg === orgSlug;
+    if (href.includes("/admin/finanzen")) {
+      return pathname === `/${orgSlug}/admin/finanzen`;
     }
     if (href.includes("/admin/tasks"))
       return (pathname === "/admin/tasks" && currentOrg === orgSlug) || pathname.startsWith(`/${orgSlug}/admin/tasks`);

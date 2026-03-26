@@ -58,10 +58,7 @@ export default function TreasuryUploadForm({
   };
 
   const isSubmitDisabled =
-    loading ||
-    (mode === "excel" &&
-      (!file || (!cellRef.trim() && !defaultCellRef.trim()))) ||
-    (mode === "manual" && !manualAmount.trim());
+    loading || (mode === "excel" && (!file || !cellRef.trim())) || (mode === "manual" && !manualAmount.trim());
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 text-sm">
@@ -75,7 +72,7 @@ export default function TreasuryUploadForm({
             onChange={() => setMode("excel")}
             className="border-gray-400"
           />
-          {t("finance.excel_upload", locale)}
+          {t("finance.excel_import_button", locale)}
         </label>
         <label className="flex items-center gap-1 cursor-pointer">
           <input
@@ -94,11 +91,11 @@ export default function TreasuryUploadForm({
         <>
           <div>
             <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {t("finance.excel_upload", locale)}
-            </label>
-            <input
-              type="file"
-              accept=".xlsx"
+          {t("finance.excel_import_button", locale)}
+        </label>
+        <input
+          type="file"
+          accept=".xlsx"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               className="block w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
@@ -134,7 +131,7 @@ export default function TreasuryUploadForm({
                     <span className="sr-only">{t("finance.cell_help", locale)}</span>
                   </span>
                 </div>
-                <p className="mt-1 w-full text-[11px] text-gray-500 dark:text-gray-400">{t("finance.cell_hint", locale)}</p>
+                <p className="mt-1 w-full text-[11px] text-gray-500 dark:text-gray-400">{t("finance.cell_hint_long", locale)}</p>
               </div>
             </div>
           </details>

@@ -177,7 +177,7 @@ export default async function AdminDashboard({
       priority: "secondary"
     },
     {
-      href: `/${orgSlug}/admin/treasury`,
+      href: `/${orgSlug}/admin/finanzen`,
       icon: Wallet,
       titleKey: "dashboard.finance",
       descKey: "admin.card.finance_desc",

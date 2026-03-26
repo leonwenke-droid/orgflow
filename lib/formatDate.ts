@@ -7,6 +7,19 @@ import type { Locale } from "./i18n";
 
 export type AppLocale = "en" | "de";
 
+/** Finance table: DD.MM.YYYY from DB date YYYY-MM-DD. */
+export function formatFinanceEntryDateYmd(ymd: string | null | undefined, locale: Locale): string {
+  const s = String(ymd ?? "").trim().slice(0, 10);
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || "–";
+  const [y, m, d] = s.split("-").map(Number);
+  const loc = locale === "en" ? "en-GB" : "de-DE";
+  return new Intl.DateTimeFormat(loc, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(new Date(y, m - 1, d));
+}
+
 /** Treasury balance timestamp: date only, no time (PHASE 8). */
 export function formatTreasuryBalanceDate(iso: string | null | undefined, locale: Locale): string {
   const d = iso ? new Date(iso) : null;
