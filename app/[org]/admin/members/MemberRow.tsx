@@ -53,6 +53,7 @@ export default function MemberRow({
   const [showLeadEmailForm, setShowLeadEmailForm] = useState(false);
   const [leadEmail, setLeadEmail] = useState(member.email ?? "");
   const [currentInvite, setCurrentInvite] = useState<{ inviteUrl: string; whatsappText: string } | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -153,15 +154,21 @@ export default function MemberRow({
     window.location.reload();
   }
 
+  function showCopied(msg: string) {
+    setCopied(msg);
+    setTimeout(() => setCopied(null), 2500);
+  }
+
   async function ensureInvite() {
     setLoading(true);
     setError(null);
-    const { error, inviteUrl, whatsappText } = await resendLeadInviteAction(orgSlug, member.id);
+    const res = await resendLeadInviteAction(orgSlug, member.id);
     setLoading(false);
-    if (error || !inviteUrl || !whatsappText) {
-      throw new Error(error || "Invite link could not be generated.");
+    if (res.error || res.errorKey || !res.inviteUrl || !res.whatsappText) {
+      const msg = res.error || (res.errorKey ? t(res.errorKey, locale) : null) || (locale === "de" ? "Einladungslink konnte nicht erstellt werden." : "Invite link could not be generated.");
+      throw new Error(msg);
     }
-    const invite = { inviteUrl, whatsappText };
+    const invite = { inviteUrl: res.inviteUrl, whatsappText: res.whatsappText };
     setCurrentInvite(invite);
     return invite;
   }
@@ -171,9 +178,9 @@ export default function MemberRow({
       const invite = currentInvite ?? await ensureInvite();
       if (!invite) return;
       await navigator.clipboard.writeText(invite.inviteUrl);
-      window.alert(t("members.invite_link_copied", locale));
+      showCopied(locale === "de" ? "Link kopiert!" : "Link copied!");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invite link could not be generated.");
+      setError(err instanceof Error ? err.message : (locale === "de" ? "Einladungslink konnte nicht erstellt werden." : "Invite link could not be generated."));
     }
   }
 
@@ -182,9 +189,9 @@ export default function MemberRow({
       const invite = currentInvite ?? await ensureInvite();
       if (!invite) return;
       await navigator.clipboard.writeText(invite.whatsappText);
-      window.alert(t("members.whatsapp_copied", locale));
+      showCopied(locale === "de" ? "WhatsApp-Text kopiert!" : "WhatsApp text copied!");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "WhatsApp text could not be generated.");
+      setError(err instanceof Error ? err.message : (locale === "de" ? "WhatsApp-Text konnte nicht erstellt werden." : "WhatsApp text could not be generated."));
     }
   }
 
@@ -337,6 +344,7 @@ export default function MemberRow({
                 </div>
               )}
 
+              {copied ? <div className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">{copied}</div> : null}
               {error ? <div className="text-xs text-danger">{error}</div> : null}
             </div>
           </div>

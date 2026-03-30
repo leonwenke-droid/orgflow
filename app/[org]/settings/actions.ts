@@ -87,17 +87,17 @@ export async function uploadOrgLogoAction(
   if (!allowed.includes(file.type)) return { error: "Only JPEG, PNG, or WebP." };
 
   const ext = file.name.split(".").pop() ?? "png";
-  const path = `org-logos/${org.id}/logo.${ext}`;
+  const path = `${org.id}/logo.${ext}`;
 
   const service = createSupabaseServiceRoleClient();
 
   const { error: uploadErr } = await service.storage
-    .from("public")
+    .from("orga_picture")
     .upload(path, file, { upsert: true, contentType: file.type });
 
   if (uploadErr) return { error: uploadErr.message };
 
-  const { data: urlData } = service.storage.from("public").getPublicUrl(path);
+  const { data: urlData } = service.storage.from("orga_picture").getPublicUrl(path);
   const publicUrl = urlData?.publicUrl;
 
   if (publicUrl) {

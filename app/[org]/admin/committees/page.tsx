@@ -115,28 +115,23 @@ export default async function AdminCommitteesPage(props: {
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-6">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />
-          <h1 className="page-title">Teams</h1>
-          <p className="page-sub">{org.name}</p>
-        </div>
-        <a href="#create-team" className="btn-primary shrink-0">
-          + Neues Team
-        </a>
+      <header>
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />
+        <h1 className="page-title">Teams</h1>
+        <p className="page-sub">{org.name}</p>
       </header>
 
-      {committeesWithCounts.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {committeesWithCounts.map((c: any) => (
-            <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
-          ))}
-        </div>
-      ) : (
-        <div className="card p-4">
-          <EmptyState messageKey="empty.teams" actionHref="#create-team" actionLabelKey="cta.create_team" />
-        </div>
-      )}
+      <div className="grid gap-4 md:grid-cols-2">
+        {committeesWithCounts.map((c: any) => (
+          <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
+        ))}
+        <a
+          href="#create-team"
+          className="flex min-h-[120px] items-center justify-center rounded-xl border-2 border-dashed border-gray-300 text-sm font-medium text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-gray-600 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-300"
+        >
+          + Neues Team anlegen
+        </a>
+      </div>
 
       <div id="create-team" className="card p-4">
         <div className="section-label">Neues Team</div>

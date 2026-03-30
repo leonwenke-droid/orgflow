@@ -19,7 +19,10 @@ export async function getPublicBaseUrl(): Promise<string> {
   if (rootHost) return `https://${rootHost}`;
 
   const vercel = (process.env.VERCEL_URL || "").trim().replace(/\/$/, "");
-  if (vercel) return `https://${vercel}`;
+  if (vercel) {
+    if (vercel.includes(".vercel.app")) return "https://orgflow.de";
+    return `https://${vercel}`;
+  }
 
   const h = await headers();
   const host = (h.get("x-forwarded-host") || h.get("host") || "").trim();

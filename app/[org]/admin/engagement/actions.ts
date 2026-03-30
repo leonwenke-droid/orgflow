@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentOrganization } from "../../../../lib/getOrganization";
+import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
 import { assertCanChangeOrgSettings } from "../../../../lib/permissionsServer";
+import { requireOrgAdminAction } from "../../../../lib/permissionsServer";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
 export async function updateEngagementWeightsAction(
@@ -35,6 +36,48 @@ export async function updateEngagementWeightsAction(
   revalidatePath(`/${orgSlug}/admin/engagement`);
   revalidatePath(`/${orgSlug}/me`);
   revalidatePath(`/${orgSlug}/dashboard`);
+  return {};
+}
+
+export async function awardExtraPointsAction(
+  orgSlug: string,
+  userId: string,
+  points: number,
+  reason: string
+): Promise<{ error?: string }> {
+  const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const actor = await requireOrgAdminAction(orgIdForData);
+  if (!actor) return { error: "Not authorized." };
+
+  if (!Number.isFinite(points) || points === 0) return { error: "Invalid points value." };
+
+  const service = createSupabaseServiceRoleClient();
+
+  const { error: eventErr } = await service.from("engagement_events").insert({
+    user_id: userId,
+    organization_id: orgIdForData,
+    event_type: "extra_points",
+    points,
+    metadata: { reason: reason || "Extra points" },
+  });
+  if (eventErr) return { error: eventErr.message };
+
+  const { data: existing } = await service
+    .from("engagement_scores")
+    .select("score")
+    .eq("user_id", userId)
+    .eq("organization_id", orgIdForData)
+    .maybeSingle();
+
+  const current = (existing as { score?: number } | null)?.score ?? 0;
+  const { error: scoreErr } = await service.from("engagement_scores").upsert(
+    { user_id: userId, organization_id: orgIdForData, score: current + points },
+    { onConflict: "user_id,organization_id" }
+  );
+  if (scoreErr) return { error: scoreErr.message };
+
+  revalidatePath(`/${orgSlug}/admin/engagement`);
   return {};
 }
 

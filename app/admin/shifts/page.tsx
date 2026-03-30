@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { getRequestLocale } from "../../../lib/localeServer";
 import Link from "next/link";
@@ -313,9 +314,7 @@ async function createShifts(
     if (!date) {
       return { error: "Date required.", errorKey: "shifts.date_required" };
     }
-    if (!eventName) {
-      return { error: "Title required.", errorKey: "shifts.title_required" };
-    }
+    const generatedTitle = eventName || `${date} ${startTime}${endTime ? "–" + endTime : ""}`.trim();
 
     if (!organizationId) return { errorKey: "common.unauthorized" };
     const actor = await requireOrgAdminAction(organizationId);
@@ -343,8 +342,8 @@ async function createShifts(
 
     if (type === "pausenverkauf") {
       const rows = [
-        baseRow({ event_name: `${eventName} – 1. Pause`, start_time: "09:15", end_time: "09:35" }),
-        baseRow({ event_name: `${eventName} – 2. Pause`, start_time: "11:05", end_time: "11:30" })
+        baseRow({ event_name: `${generatedTitle} – 1. Pause`, start_time: "09:15", end_time: "09:35" }),
+        baseRow({ event_name: `${generatedTitle} – 2. Pause`, start_time: "11:05", end_time: "11:30" })
       ];
       const { data: created, error } = await service
         .from("shifts")
@@ -414,7 +413,7 @@ async function createShifts(
         const hasAbbau = addSetupTeardown && isLast && lastSlotEnd > end;
 
         rows.push({
-          event_name: eventName,
+          event_name: generatedTitle,
           date,
           start_time: toHHMM(effectiveStart),
           end_time: toHHMM(effectiveEnd),
@@ -885,7 +884,7 @@ async function restoreShift(formData: FormData) {
 }
 
 type ShiftsPageProps = {
-  searchParams?: Promise<{ org?: string; event?: string; success?: string }> | { org?: string; event?: string; success?: string };
+  searchParams?: Promise<{ org?: string; event?: string; success?: string; time?: string }> | { org?: string; event?: string; success?: string; time?: string };
 };
 
 export default async function ShiftsPage(props: ShiftsPageProps) {
@@ -893,12 +892,12 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   const locale = await getRequestLocale();
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ org?: string; event?: string; success?: string }>)
-    : (raw ?? {}) as { org?: string; event?: string; success?: string };
+    ? await (raw as Promise<{ org?: string; event?: string; success?: string; time?: string }>)
+    : (raw ?? {}) as { org?: string; event?: string; success?: string; time?: string };
   const orgSlug = searchParams?.org?.trim() || null;
   const eventIdFilter = searchParams?.event?.trim() || null;
   const shiftsCreatedSuccess = searchParams?.success === "1";
-  const timeFilter = ((searchParams as Record<string, string | undefined>)?.time ?? "all") as ShiftTimeFilter;
+  const timeFilter = (searchParams?.time ?? "all") as ShiftTimeFilter;
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -1075,7 +1074,9 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         </p>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        <ShiftTabFilter />
+        <Suspense fallback={null}>
+          <ShiftTabFilter />
+        </Suspense>
       </div>
       {events.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-sm">

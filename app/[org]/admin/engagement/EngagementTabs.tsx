@@ -4,21 +4,13 @@ import { useMemo, useState } from "react";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
 import EngagementRulesClient from "./EngagementRulesClient";
-import { formatLocaleDateTime } from "../../../../lib/formatDate";
+import { awardExtraPointsAction } from "./actions";
 
 type ScoreEntry = {
   user_id: string;
   score: number;
   name: string;
   team: string | null;
-};
-
-type EventEntry = {
-  id: string;
-  user_id: string;
-  event_type: string;
-  points: number | null;
-  created_at: string;
 };
 
 type MemberEntry = {
@@ -42,248 +34,250 @@ type Props = {
   };
   scores: ScoreEntry[];
   members: MemberEntry[];
-  events: EventEntry[];
+  events: { id: string; user_id: string; event_type: string; points: number | null; created_at: string }[];
   weights: Record<string, number>;
   nameById: Record<string, string>;
+  totalMembers: number;
 };
 
-const TABS = [
-  { key: "overview", de: "Übersicht", en: "Overview" },
-  { key: "ranking", de: "Rangliste", en: "Ranking" },
-  { key: "members", de: "Mitglieder", en: "Members" },
-  { key: "rules", de: "Punkteregeln", en: "Point rules" },
-] as const;
+const AVATAR_COLORS = [
+  "bg-blue-600 text-white",
+  "bg-green-600 text-white",
+  "bg-blue-400 text-white",
+  "bg-gray-500 text-white",
+  "bg-purple-600 text-white",
+  "bg-rose-600 text-white",
+  "bg-teal-600 text-white",
+  "bg-orange-500 text-white",
+];
+
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+}
 
 export default function EngagementTabs({
   orgSlug,
   stats,
   scores,
   members,
-  events,
   weights,
-  nameById,
+  totalMembers,
 }: Props) {
   const { locale } = useLocale();
-  const [tab, setTab] = useState<string>("overview");
-  const [expandedMember, setExpandedMember] = useState<string | null>(null);
+  const topScore = scores.length > 0 ? scores[0].score : 1;
 
-  const topScore = scores.length > 0 ? scores[0].score : 0;
+  const [showAwardForm, setShowAwardForm] = useState(false);
+  const [awardUserId, setAwardUserId] = useState("");
+  const [awardPoints, setAwardPoints] = useState("");
+  const [awardReason, setAwardReason] = useState("");
+  const [awarding, setAwarding] = useState(false);
+  const [awardError, setAwardError] = useState<string | null>(null);
+  const [awardSuccess, setAwardSuccess] = useState(false);
 
-  const memberEvents = useMemo(() => {
-    if (!expandedMember) return [];
-    return events
-      .filter((e) => e.user_id === expandedMember)
-      .slice(0, 50);
-  }, [expandedMember, events]);
+  async function handleAward() {
+    if (!awardUserId || !awardPoints) return;
+    setAwarding(true);
+    setAwardError(null);
+    setAwardSuccess(false);
+    const res = await awardExtraPointsAction(orgSlug, awardUserId, Number(awardPoints), awardReason);
+    setAwarding(false);
+    if (res.error) {
+      setAwardError(res.error);
+    } else {
+      setAwardSuccess(true);
+      setAwardPoints("");
+      setAwardReason("");
+      setTimeout(() => setAwardSuccess(false), 3000);
+    }
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap gap-1">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
-              tab === t.key
-                ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
-            }`}
-          >
-            {locale === "de" ? t.de : t.en}
-          </button>
-        ))}
-      </div>
-
-      {tab === "overview" && (
-        <div className="space-y-4">
-          <section className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            <div className="stat-card">
-              <div className="section-label">
-                {locale === "de" ? "Aktive Mitglieder" : "Active members"}
-              </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
-                {stats.activeMembers}
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="section-label">
-                {locale === "de" ? "Durchschnittsscore" : "Avg. score"}
-              </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
-                {stats.avgScore}
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="section-label">
-                {locale === "de" ? "Aufgaben (30d)" : "Tasks (30d)"}
-              </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
-                {stats.tasksDone30d}
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="section-label">
-                {locale === "de" ? "Schichten (30d)" : "Shifts (30d)"}
-              </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
-                {stats.shiftsDone30d}
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="section-label">
-                {locale === "de" ? "Inaktiv (30d)" : "Inactive (30d)"}
-              </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
-                {stats.inactiveMembers}
-              </div>
-            </div>
-          </section>
-          <div className="card p-4">
-            <div className="section-label">
-              {locale === "de" ? "Top 10" : "Top 10"}
-            </div>
-            <ul className="mt-2 space-y-2">
-              {scores.slice(0, 10).map((r, idx) => {
-                const pct = topScore > 0 ? Math.round((r.score / topScore) * 100) : 0;
-                return (
-                  <li
-                    key={r.user_id}
-                    className={`rounded-lg px-3 py-2 ${idx === 0 ? "bg-warning-light text-warning-dark dark:bg-amber-900/30 dark:text-amber-300" : "bg-gray-50 dark:bg-gray-800/60"}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 text-xs font-medium">#{idx + 1}</div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-medium">{r.name}</div>
-                        <div className="mt-1 h-1.5 w-full rounded-full bg-white/70 dark:bg-gray-700">
-                          <div className="h-1.5 rounded-full bg-brand" style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-sm font-medium tabular-nums">{r.score}</div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+    <div className="space-y-6">
+      {/* KPI cards */}
+      <section className="grid gap-4 sm:grid-cols-3">
+        <div className="stat-card">
+          <div className="section-label">
+            {locale === "de" ? "Aktive Mitglieder" : "Active members"}
+          </div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+            {stats.activeMembers}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {locale === "de" ? `von ${totalMembers}` : `of ${totalMembers}`}
           </div>
         </div>
-      )}
-
-      {tab === "ranking" && (
-        <div className="card overflow-hidden">
-          <div className="-mx-0 overflow-x-auto">
-            <table className="w-full min-w-[600px] text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
-                  <th className="w-12 px-4 py-3 text-xs font-medium text-gray-500">#</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">Name</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">Team</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 text-right">Score</th>
-                  <th className="w-40 px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {scores.map((r, idx) => {
-                  const pct = topScore > 0 ? Math.round((r.score / topScore) * 100) : 0;
-                  return (
-                    <tr key={r.user_id} className="border-b border-gray-100 dark:border-gray-700/50 last:border-0">
-                      <td className="px-4 py-2 text-xs text-gray-500">{idx + 1}</td>
-                      <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{r.name}</td>
-                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{r.team || "—"}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{r.score}</td>
-                      <td className="px-4 py-2">
-                        <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                          <div className="h-1.5 rounded-full bg-brand" style={{ width: `${pct}%` }} />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <div className="stat-card">
+          <div className="section-label">
+            {locale === "de" ? "Ø Score" : "Avg. score"}
+          </div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+            {stats.avgScore.toLocaleString(locale === "de" ? "de-DE" : "en-US", { maximumFractionDigits: 1 })}
           </div>
         </div>
-      )}
-
-      {tab === "members" && (
-        <div className="card overflow-hidden">
-          <div className="-mx-0 overflow-x-auto">
-            <table className="w-full min-w-[700px] text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">Name</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">Team</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 text-right">Score</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 text-right">
-                    {locale === "de" ? "Aufgaben" : "Tasks"}
-                  </th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 text-right">
-                    {locale === "de" ? "Schichten" : "Shifts"}
-                  </th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">
-                    {locale === "de" ? "Letzte Aktivität" : "Last activity"}
-                  </th>
-                  <th className="w-10 px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {members.map((m) => (
-                  <>
-                    <tr
-                      key={m.id}
-                      className="border-b border-gray-100 dark:border-gray-700/50 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/40"
-                      onClick={() => setExpandedMember(expandedMember === m.id ? null : m.id)}
-                    >
-                      <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{m.full_name}</td>
-                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{m.team || "—"}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{m.score}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{m.tasksDone}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{m.shiftsDone}</td>
-                      <td className="px-4 py-2 text-xs text-gray-500">
-                        {m.lastActivity ? formatLocaleDateTime(m.lastActivity, locale) : "—"}
-                      </td>
-                      <td className="px-4 py-2 text-xs text-gray-400">
-                        {expandedMember === m.id ? "▲" : "▼"}
-                      </td>
-                    </tr>
-                    {expandedMember === m.id && (
-                      <tr key={`${m.id}-log`}>
-                        <td colSpan={7} className="bg-gray-50 px-8 py-3 dark:bg-gray-800/30">
-                          <div className="section-label">
-                            {locale === "de" ? "Aktivitätslog" : "Activity log"}
-                          </div>
-                          {memberEvents.length === 0 ? (
-                            <p className="text-xs text-gray-500">—</p>
-                          ) : (
-                            <ul className="mt-1 space-y-1">
-                              {memberEvents.map((e) => (
-                                <li key={e.id} className="flex items-center gap-3 text-xs">
-                                  <span className="text-gray-400">
-                                    {formatLocaleDateTime(e.created_at, locale)}
-                                  </span>
-                                  <span className="tag tag-neutral">{e.event_type}</span>
-                                  {e.points != null && (
-                                    <span className={e.points >= 0 ? "text-green-600" : "text-red-600"}>
-                                      {e.points >= 0 ? "+" : ""}{e.points}
-                                    </span>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </td>
-                      </tr>
-                    )}
-                  </>
-                ))}
-              </tbody>
-            </table>
+        <div className="stat-card">
+          <div className="section-label">
+            {locale === "de" ? "Aufgaben erledigt" : "Tasks completed"}
+          </div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+            {stats.tasksDone30d}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {locale === "de" ? "diesen Monat" : "this month"}
           </div>
         </div>
-      )}
+      </section>
 
-      {tab === "rules" && (
-        <EngagementRulesClient orgSlug={orgSlug} initialWeights={weights} />
-      )}
+      {/* Rangliste */}
+      <section className="card overflow-hidden">
+        <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-foreground-dark">
+            {locale === "de" ? "Rangliste" : "Leaderboard"}
+          </h2>
+        </div>
+        <div className="divide-y divide-gray-100 dark:divide-gray-700/50">
+          {scores.map((entry, idx) => {
+            const pct = topScore > 0 ? Math.round((entry.score / topScore) * 100) : 0;
+            const isFirst = idx === 0;
+            const colorClass = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+            return (
+              <div
+                key={entry.user_id}
+                className={`flex items-center gap-3 px-4 py-3 ${
+                  isFirst
+                    ? "bg-amber-900/20 dark:bg-amber-900/30"
+                    : ""
+                }`}
+              >
+                <span className={`w-6 text-center text-sm font-semibold ${isFirst ? "text-amber-400" : "text-gray-500 dark:text-gray-400"}`}>
+                  {idx + 1}
+                </span>
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${colorClass}`}>
+                  {getInitials(entry.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-gray-900 dark:text-foreground-dark">
+                    {entry.name}
+                  </div>
+                </div>
+                <div className="hidden w-32 sm:block">
+                  <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                    <div
+                      className="h-1.5 rounded-full bg-blue-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900 dark:text-foreground-dark">
+                  {entry.score} Pts
+                </span>
+              </div>
+            );
+          })}
+          {scores.length === 0 && (
+            <div className="px-4 py-6 text-center text-sm text-gray-500">
+              {locale === "de" ? "Noch keine Punktedaten vorhanden." : "No score data yet."}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Punkteregeln */}
+      <EngagementRulesClient orgSlug={orgSlug} initialWeights={weights} />
+
+      {/* Extra Punkte vergeben */}
+      <section className="card overflow-hidden">
+        <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-foreground-dark">
+              {locale === "de" ? "Extra Punkte vergeben" : "Award extra points"}
+            </h2>
+            {!showAwardForm && (
+              <button type="button" className="btn-secondary" onClick={() => setShowAwardForm(true)}>
+                {locale === "de" ? "+ Punkte vergeben" : "+ Award points"}
+              </button>
+            )}
+          </div>
+        </div>
+        {showAwardForm && (
+          <div className="space-y-3 p-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  {locale === "de" ? "Mitglied" : "Member"}
+                </label>
+                <select
+                  value={awardUserId}
+                  onChange={(e) => setAwardUserId(e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                >
+                  <option value="">{locale === "de" ? "Auswählen…" : "Select…"}</option>
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>{m.full_name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  {locale === "de" ? "Punkte" : "Points"}
+                </label>
+                <input
+                  type="number"
+                  value={awardPoints}
+                  onChange={(e) => setAwardPoints(e.target.value)}
+                  placeholder="z. B. 5"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                  {locale === "de" ? "Grund (optional)" : "Reason (optional)"}
+                </label>
+                <input
+                  type="text"
+                  value={awardReason}
+                  onChange={(e) => setAwardReason(e.target.value)}
+                  placeholder={locale === "de" ? "z. B. Sondereinsatz" : "e.g. Special effort"}
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                disabled={awarding || !awardUserId || !awardPoints}
+                onClick={handleAward}
+                className="btn-primary"
+              >
+                {awarding ? "…" : locale === "de" ? "Punkte vergeben" : "Award points"}
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  setShowAwardForm(false);
+                  setAwardError(null);
+                  setAwardSuccess(false);
+                }}
+              >
+                {locale === "de" ? "Abbrechen" : "Cancel"}
+              </button>
+              {awardSuccess && (
+                <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                  {locale === "de" ? "Punkte vergeben!" : "Points awarded!"}
+                </span>
+              )}
+              {awardError && (
+                <span className="text-xs text-red-600 dark:text-red-400">{awardError}</span>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
