@@ -75,8 +75,14 @@ export async function middleware(req: NextRequest) {
     if (!session) {
       const redirectUrl = req.nextUrl.clone();
       const segments = pathname.split("/").filter(Boolean);
-      // Org-Admin: zu [org]/login weiterleiten
-      if (segments.length >= 2 && (segments[1] === "admin" || segments[1] === "settings" || segments[1] === "onboarding")) {
+      // Org-Bereiche: zu [org]/login weiterleiten (nicht globales /login — dort ist redirectTo eingeschränkt)
+      if (
+        segments.length >= 2 &&
+        (segments[1] === "admin" ||
+          segments[1] === "settings" ||
+          segments[1] === "onboarding" ||
+          segments[1] === "dashboard")
+      ) {
         redirectUrl.pathname = `/${segments[0]}/login`;
       } else {
         redirectUrl.pathname = "/login";
