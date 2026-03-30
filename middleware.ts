@@ -75,6 +75,8 @@ export async function middleware(req: NextRequest) {
     if (!session) {
       const redirectUrl = req.nextUrl.clone();
       const segments = pathname.split("/").filter(Boolean);
+      const orgSlug = segments[0] ?? "";
+      const orgArea = segments[1] ?? "";
       // Org-Bereiche: zu [org]/login weiterleiten (nicht globales /login — dort ist redirectTo eingeschränkt)
       if (
         segments.length >= 2 &&
@@ -83,12 +85,41 @@ export async function middleware(req: NextRequest) {
           segments[1] === "onboarding" ||
           segments[1] === "dashboard")
       ) {
-        redirectUrl.pathname = `/${segments[0]}/login`;
+        redirectUrl.pathname = `/${orgSlug}/login`;
       } else {
         redirectUrl.pathname = "/login";
       }
       redirectUrl.searchParams.set("redirectTo", pathname + req.nextUrl.search);
-      return NextResponse.redirect(redirectUrl);
+      const resp = NextResponse.redirect(redirectUrl);
+      // Debug headers (safe, no secrets): helps diagnose prod redirect loops.
+      resp.headers.set("x-orgflow-mw", "auth-redirect");
+      resp.headers.set("x-orgflow-path", pathname);
+      resp.headers.set("x-orgflow-host", host);
+      resp.headers.set("x-orgflow-org", orgSlug || "-");
+      resp.headers.set("x-orgflow-area", orgArea || "-");
+      resp.headers.set("x-orgflow-login", redirectUrl.pathname);
+      // #region agent log
+      fetch("http://127.0.0.1:7660/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "fa0047" },
+        body: JSON.stringify({
+          sessionId: "fa0047",
+          runId: "pre-fix-prod",
+          hypothesisId: "H3",
+          location: "middleware.ts:auth-redirect",
+          message: "no session; redirecting",
+          data: {
+            pathname,
+            host,
+            orgSlug: orgSlug || null,
+            orgArea: orgArea || null,
+            loginPath: redirectUrl.pathname,
+          },
+          timestamp: Date.now()
+        })
+      }).catch(() => {});
+      // #endregion
+      return resp;
     }
   }
 
