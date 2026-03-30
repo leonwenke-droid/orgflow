@@ -40,11 +40,30 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   const host = req.headers.get("host") ?? "";
   const res = NextResponse.next();
+  const hostNoPort = host.split(":")[0].toLowerCase();
+  const rootLower = (ROOT_HOST || "").trim().toLowerCase();
+
+  // ----- Kanonischer Host (Apex vs. www): eine Quelle für Cookies + /_next-Assets -----
+  if (rootLower && !hostNoPort.includes("localhost") && !hostNoPort.startsWith("127.") && !hostNoPort.endsWith(".vercel.app")) {
+    const apex = rootLower.startsWith("www.") ? rootLower.slice(4) : rootLower;
+    const withWww = rootLower.startsWith("www.") ? rootLower : `www.${rootLower}`;
+    let canonicalHost: string | null = null;
+    if (rootLower.startsWith("www.")) {
+      if (hostNoPort === apex) canonicalHost = rootLower;
+    } else {
+      if (hostNoPort === withWww) canonicalHost = rootLower;
+    }
+    if (canonicalHost && hostNoPort !== canonicalHost) {
+      const dest = new URL(req.nextUrl.pathname + req.nextUrl.search, `https://${canonicalHost}`);
+      return NextResponse.redirect(dest, 308);
+    }
+  }
 
   // ----- Subdomain → Hauptdomain mit Slug-Redirect (nur wenn ROOT_HOST gesetzt; auf localhost weglassen) -----
   if (ROOT_HOST && SUPABASE_URL && SUPABASE_ANON_KEY && host.endsWith(ROOT_HOST) && host !== ROOT_HOST) {
     const subdomain = host.slice(0, -ROOT_HOST.length).replace(/\.$/, "");
-    if (subdomain) {
+    // "www" ist kein Organisations-Subdomain
+    if (subdomain && subdomain.toLowerCase() !== "www") {
       try {
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const { data: org } = await supabase
@@ -76,7 +95,6 @@ export async function middleware(req: NextRequest) {
       const redirectUrl = req.nextUrl.clone();
       const segments = pathname.split("/").filter(Boolean);
       const orgSlug = segments[0] ?? "";
-      const orgArea = segments[1] ?? "";
       // Org-Bereiche: zu [org]/login weiterleiten (nicht globales /login — dort ist redirectTo eingeschränkt)
       if (
         segments.length >= 2 &&
@@ -90,36 +108,7 @@ export async function middleware(req: NextRequest) {
         redirectUrl.pathname = "/login";
       }
       redirectUrl.searchParams.set("redirectTo", pathname + req.nextUrl.search);
-      const resp = NextResponse.redirect(redirectUrl);
-      // Debug headers (safe, no secrets): helps diagnose prod redirect loops.
-      resp.headers.set("x-orgflow-mw", "auth-redirect");
-      resp.headers.set("x-orgflow-path", pathname);
-      resp.headers.set("x-orgflow-host", host);
-      resp.headers.set("x-orgflow-org", orgSlug || "-");
-      resp.headers.set("x-orgflow-area", orgArea || "-");
-      resp.headers.set("x-orgflow-login", redirectUrl.pathname);
-      // #region agent log
-      fetch("http://127.0.0.1:7660/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "fa0047" },
-        body: JSON.stringify({
-          sessionId: "fa0047",
-          runId: "pre-fix-prod",
-          hypothesisId: "H3",
-          location: "middleware.ts:auth-redirect",
-          message: "no session; redirecting",
-          data: {
-            pathname,
-            host,
-            orgSlug: orgSlug || null,
-            orgArea: orgArea || null,
-            loginPath: redirectUrl.pathname,
-          },
-          timestamp: Date.now()
-        })
-      }).catch(() => {});
-      // #endregion
-      return resp;
+      return NextResponse.redirect(redirectUrl);
     }
   }
 
@@ -128,6 +117,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/_next/:path*", // damit Apex/www-Kanonik auch für JS/CSS-Chunks gilt (sonst Host-Split + leere Requests)
     "/", // für Subdomain-Redirect (z. B. my-org.orgflow.app/ → /my-org/dashboard)
     "/admin",
     "/admin/:path*",
