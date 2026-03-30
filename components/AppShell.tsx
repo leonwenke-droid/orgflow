@@ -3,10 +3,17 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { Menu } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
 import Sidebar from "./Sidebar";
 import AppHeader from "./AppHeader";
 import MobileNav from "./layout/MobileNav";
+
+export type AppShellUser =
+  | {
+      id: string;
+      email?: string | null;
+      user_metadata?: Record<string, unknown> | null;
+    }
+  | null;
 
 const RESERVED = [
   "admin",
@@ -42,7 +49,7 @@ function AppShellInner({
   user,
   children,
 }: {
-  user: User | null;
+  user: AppShellUser;
   children: React.ReactNode;
 }) {
   const orgSlug = useOrgSlug();
@@ -71,7 +78,7 @@ export default function AppShell({
   user,
   children,
 }: {
-  user: User | null;
+  user: AppShellUser;
   children: React.ReactNode;
 }) {
   return (

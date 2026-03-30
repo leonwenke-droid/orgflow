@@ -129,6 +129,7 @@ export default async function OrgDashboardPage(props: {
 
   const myScoreRow = (engagementRows ?? []).find((row: any) => row.user_id === myProfileId);
   const myEngagementScore = typeof myScoreRow?.score === "number" ? myScoreRow.score : 0;
+  const myEngagementScoreDisplay = Math.max(0, Number(myEngagementScore) || 0);
   const myEngagementRank =
     myScoreRow && engagementRows
       ? 1 + (engagementRows ?? []).filter((row: any) => (row.score ?? 0) > myEngagementScore).length
@@ -162,18 +163,23 @@ export default async function OrgDashboardPage(props: {
       <section className="grid gap-4 md:grid-cols-3">
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Your score" : "Dein Score"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{myEngagementScore} Pkt.</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{myEngagementScoreDisplay} Pkt.</div>
           <div className="mt-3 h-2 w-full rounded-full bg-gray-200">
             {(() => {
-              const next = nextEngagementMilestone(myEngagementScore);
-              const pct = Math.max(0, Math.min(100, Math.round((myEngagementScore / Math.max(1, next)) * 100)));
+              const next = nextEngagementMilestone(myEngagementScoreDisplay);
+              const pct = Math.max(0, Math.min(100, Math.round((myEngagementScoreDisplay / Math.max(1, next)) * 100)));
               return <div className="h-2 rounded-full bg-brand" style={{ width: `${pct}%` }} />;
             })()}
           </div>
           <div className="mt-2 text-xs text-gray-500">
             {locale === "en"
-              ? `Next milestone: ${nextEngagementMilestone(myEngagementScore)} pts.`
-              : `Nächster Meilenstein: ${nextEngagementMilestone(myEngagementScore)} Pkt.`}
+              ? `Next milestone: ${nextEngagementMilestone(myEngagementScoreDisplay)} pts.`
+              : `Nächster Meilenstein: ${nextEngagementMilestone(myEngagementScoreDisplay)} Pkt.`}
+          </div>
+          <div className="mt-2 text-[11px] text-gray-500">
+            {locale === "en"
+              ? "Your score increases when you complete tasks or shifts. The ranking compares scores within your organisation."
+              : "Dein Score steigt, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
           </div>
         </div>
 
@@ -184,6 +190,11 @@ export default async function OrgDashboardPage(props: {
             {myEngagementRank != null ? <span className="text-sm font-medium text-gray-500"> / {engagementTotal}</span> : null}
           </div>
           <div className="mt-2 text-xs text-gray-500">{org.name}</div>
+          <div className="mt-2 text-[11px] text-gray-500">
+            {locale === "en"
+              ? "Tip: If you just joined, your rank may take a moment to reflect new activity."
+              : "Tipp: Wenn du gerade erst beigetreten bist, kann es kurz dauern, bis neue Aktivität im Rang sichtbar wird."}
+          </div>
         </div>
 
         <div className="stat-card">

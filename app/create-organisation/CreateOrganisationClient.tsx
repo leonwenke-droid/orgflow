@@ -30,7 +30,7 @@ const PENDING_KEY = "create-org-pending";
 
 export default function CreateOrganisationClient() {
   const router = useRouter();
-  const TOTAL_STEPS = 6;
+  const TOTAL_STEPS = 4;
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,7 +154,7 @@ export default function CreateOrganisationClient() {
   const nextDisabledReason =
     step === 1 && !formData.name.trim()
       ? "Enter an organisation name to continue."
-      : step === 3 && formData.modules.length === 0
+      : step === 2 && formData.modules.length === 0
         ? "Select at least one module to continue."
         : null;
 
@@ -234,10 +234,10 @@ export default function CreateOrganisationClient() {
           {step === 2 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">
-                Organisation type
+                Setup basics
               </h2>
               <p className="text-sm text-gray-600">
-                Choose the type that best describes your organisation.
+                Choose an organisation type and the modules you want to start with. You can change this later in settings.
               </p>
               <div className="space-y-2">
                 {ORG_TYPES.map((t) => (
@@ -259,53 +259,49 @@ export default function CreateOrganisationClient() {
                   </label>
                 ))}
               </div>
+
+              <div className="pt-2">
+                <div className="text-sm font-medium text-gray-900">Modules</div>
+                <p className="mt-1 text-xs text-gray-600">
+                  Start lean. You can enable/disable modules any time.
+                </p>
+                <div className="mt-3 space-y-3">
+                  {MODULES.map((m) => (
+                    <label
+                      key={m.key}
+                      className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-4 hover:border-blue-200"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.modules.includes(m.key)}
+                        onChange={() => {
+                          setFormData((d) => ({
+                            ...d,
+                            modules: d.modules.includes(m.key)
+                              ? d.modules.filter((x) => x !== m.key)
+                              : [...d.modules, m.key],
+                          }));
+                        }}
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600"
+                      />
+                      <div>
+                        <span className="font-medium text-gray-900">{m.label}</span>
+                        <p className="text-xs text-gray-500">{m.description}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
           {step === 3 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">
-                Select modules
+                Teams and invites (optional)
               </h2>
               <p className="text-sm text-gray-600">
-                Choose which features your organisation needs. You can change this later in settings.
-              </p>
-              <div className="space-y-3">
-                {MODULES.map((m) => (
-                  <label
-                    key={m.key}
-                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-4 hover:border-blue-200"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={formData.modules.includes(m.key)}
-                      onChange={() => {
-                        setFormData((d) => ({
-                          ...d,
-                          modules: d.modules.includes(m.key)
-                            ? d.modules.filter((x) => x !== m.key)
-                            : [...d.modules, m.key],
-                        }));
-                      }}
-                      className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600"
-                    />
-                    <div>
-                      <span className="font-medium text-gray-900">{m.label}</span>
-                      <p className="text-xs text-gray-500">{m.description}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Optional: create teams
-              </h2>
-              <p className="text-sm text-gray-600">
-                Teams are optional. Add them now to organise members (e.g. Finance, Events, Logistics), or skip and set them up later.
+                Add a few teams and invite members now — or skip and do it later from the admin area.
               </p>
               <div className="space-y-3">
                 {formData.teams.map((t, i) => (
@@ -337,46 +333,28 @@ export default function CreateOrganisationClient() {
                   Empty rows are ignored. Team names should be at least 2 characters.
                 </p>
               </div>
-            </div>
-          )}
 
-          {step === 5 && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Invite members
-              </h2>
-              <p className="text-sm text-gray-600">
-                You can invite members now or later from the admin area.
-              </p>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Email addresses (optional)
-                </label>
-                <textarea
-                  value={formData.inviteEmails}
-                  onChange={(e) =>
-                    setFormData((d) => ({ ...d, inviteEmails: e.target.value }))
-                  }
-                  placeholder="one@email.com, two@email.com"
-                  rows={4}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Comma- or newline-separated. Invites will be sent after
-                  creation.
+              <div className="border-t border-gray-200 pt-6">
+                <div className="text-sm font-medium text-gray-900">Invite members</div>
+                <p className="mt-1 text-xs text-gray-600">
+                  Comma- or newline-separated. You can always invite later.
                 </p>
+                <div className="mt-3">
+                  <textarea
+                    value={formData.inviteEmails}
+                    onChange={(e) =>
+                      setFormData((d) => ({ ...d, inviteEmails: e.target.value }))
+                    }
+                    placeholder="one@email.com, two@email.com"
+                    rows={4}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setStep(6)}
-                className="text-xs font-medium text-blue-600 hover:text-blue-700"
-              >
-                Skip for now and finish setup
-              </button>
             </div>
           )}
 
-          {step === 6 && (
+          {step === 4 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-gray-900">Finish</h2>
               <p className="text-sm text-gray-600">
@@ -408,7 +386,7 @@ export default function CreateOrganisationClient() {
                 <p className="text-sm text-red-600">{error}</p>
               )}
               <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-                Next step after creation: open your dashboard and create your first task or shift.
+                After creation you’ll land in onboarding. From there, invite members and start with your first tasks or shifts.
               </p>
             </div>
           )}
@@ -423,18 +401,18 @@ export default function CreateOrganisationClient() {
               <ChevronLeft className="h-4 w-4" />
               Back
             </button>
-            {step < 6 ? (
+            {step < TOTAL_STEPS ? (
               <button
                 type="button"
                 onClick={() => {
-                  if (step === 4) {
+                  if (step === 3) {
                     setFormData((d) => ({ ...d, teams: normalizeTeams(d.teams).length > 0 ? normalizeTeams(d.teams) : [""] }));
                   }
-                  setStep((s) => Math.min(6, s + 1));
+                  setStep((s) => Math.min(TOTAL_STEPS, s + 1));
                 }}
                 disabled={
                   (step === 1 && !formData.name.trim()) ||
-                  (step === 3 && formData.modules.length === 0)
+                  (step === 2 && formData.modules.length === 0)
                 }
                 className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 title={nextDisabledReason ?? undefined}

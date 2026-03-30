@@ -3,12 +3,12 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Suspense } from "react";
-import type { User } from "@supabase/supabase-js";
 import { Menu } from "lucide-react";
 import FullPageLink from "./FullPageLink";
 import LogoutButton from "./LogoutButton";
 import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./NotificationBell";
+import type { AppShellUser } from "./AppShell";
 
 const RESERVED = ["admin", "dashboard", "login", "super-admin", "task", "api", "claim-org", "auth", "create-organisation", "join"];
 // Public / non-organisation routes that must not be interpreted as orgSlug.
@@ -25,7 +25,7 @@ function useOrgSlug(): string | null {
   return orgFromPath || orgFromQuery;
 }
 
-export default function AppHeader({ user, onMenuOpen }: { user: User | null; onMenuOpen?: () => void }) {
+export default function AppHeader({ user, onMenuOpen }: { user: AppShellUser; onMenuOpen?: () => void }) {
   const pathname = usePathname() ?? "";
   const orgSlug = useOrgSlug();
   const [orgName, setOrgName] = useState<string | null>(null);

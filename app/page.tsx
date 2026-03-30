@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getAllOrganizations } from "../lib/getOrganization";
 import { getRequestLocale } from "../lib/localeServer";
 import { t } from "../lib/i18n";
@@ -23,6 +24,8 @@ export default async function LandingPage() {
   } catch {
     // Supabase not configured or unavailable – show empty list
   }
+
+  const showSocialProof = organizations.length >= 3;
 
   return (
     <div className="min-h-screen bg-white">
@@ -116,6 +119,38 @@ export default async function LandingPage() {
               <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
               {t("landing.trust_privacy", locale)}
             </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Product preview */}
+      <section className="pb-16 md:pb-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900">See OrgFlow in action</h3>
+                <p className="mt-1 text-sm text-gray-600">
+                  A quick look at the dashboard experience (placeholder preview, replaceable later).
+                </p>
+              </div>
+              <Link
+                href="/create-organisation"
+                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                {t("landing.cta_start_org", locale)}
+              </Link>
+            </div>
+            <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+              <Image
+                src="/screenshot-dashboard.svg"
+                alt="OrgFlow dashboard preview"
+                width={1200}
+                height={760}
+                className="h-auto w-full"
+                priority={false}
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -316,13 +351,18 @@ export default async function LandingPage() {
                 </li>
               </ul>
               <Link
-                href="/create-organisation"
+                href="mailto:hello@orgflow.de?subject=OrgFlow%20Pro%20-%20Demo%20request"
                 className="block w-full text-center rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
               >
                 {t("landing.btn_contact_sales", locale)}
               </Link>
             </div>
           </div>
+          <p className="mt-6 text-center text-xs text-gray-500">
+            {locale === "en"
+              ? "Team plan is self-serve. Pro is best for custom setups and priority onboarding."
+              : "Team ist Self‑Serve. Pro ist für individuelle Setups und priorisiertes Onboarding."}
+          </p>
         </div>
       </section>
 
@@ -343,20 +383,18 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Organisations */}
-      <section id="organisations" className="py-16 md:py-20 bg-gray-50">
-        <div className="mx-auto max-w-7xl px-6">
-          <h3 className="text-xl md:text-2xl font-semibold text-gray-900 text-center mb-8">
-            {t("landing.orgs_title", locale)}
-          </h3>
-          <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-gray-600">
-            {t("landing.orgs_subtitle", locale)}
-          </p>
-          {organizations.length === 0 ? (
-            <p className="text-center text-gray-500 text-sm">{t("landing.orgs_empty", locale)}</p>
-          ) : (
+      {/* Organisations (social proof) */}
+      {showSocialProof ? (
+        <section id="organisations" className="py-16 md:py-20 bg-gray-50">
+          <div className="mx-auto max-w-7xl px-6">
+            <h3 className="text-xl md:text-2xl font-semibold text-gray-900 text-center mb-8">
+              {t("landing.orgs_title", locale)}
+            </h3>
+            <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-gray-600">
+              {t("landing.orgs_subtitle", locale)}
+            </p>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {organizations.map((org) => (
+              {organizations.slice(0, 6).map((org) => (
                 <Link
                   key={org.id}
                   href={`/${org.slug}/login`}
@@ -381,9 +419,9 @@ export default async function LandingPage() {
                 </Link>
               ))}
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      ) : null}
 
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white">

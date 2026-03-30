@@ -288,7 +288,7 @@ export default async function AdminTasksPage(props: PageProps) {
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             {tr("tasks.kanban_title", locale)}
           </h2>
-          <Suspense fallback={<span className="text-[10px] text-gray-500">Team …</span>}>
+          <Suspense fallback={<span className="text-[10px] text-gray-500">Filter …</span>}>
             <CommitteeFilter committees={committeesForFilter} />
           </Suspense>
           {events.length > 0 && (

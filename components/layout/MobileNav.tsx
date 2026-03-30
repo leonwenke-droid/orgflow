@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, CalendarDays, CheckSquare, UserCircle } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
 import { useLocale } from "../LocaleProvider";
 import { t } from "../../lib/i18n";
+import type { AppShellUser } from "../AppShell";
 
 type NavItem = {
   href: string;
@@ -21,7 +21,7 @@ export default function MobileNav({
   user,
   orgSlug
 }: {
-  user: User | null;
+  user: AppShellUser;
   orgSlug: string | null;
 }) {
   const { locale } = useLocale();

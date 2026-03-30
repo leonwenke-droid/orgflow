@@ -1,7 +1,7 @@
 {
   "name": "OrgFlow",
   "short_name": "OrgFlow",
-  "description": "Organisation einfach gemacht — Aufgaben, Schichten und Finanzen an einem Ort.",
+  "description": "Tasks, shifts, and finance — in one place.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

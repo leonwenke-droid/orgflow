@@ -25,7 +25,7 @@ import {
   Settings2,
   PanelsTopLeft,
 } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
+import type { AppShellUser } from "./AppShell";
 import type { DbRole } from "../types";
 import {
   canAccessOperationalAdmin,
@@ -125,7 +125,7 @@ export default function Sidebar({
   mobileOpen,
   onClose,
 }: {
-  user: User | null;
+  user: AppShellUser;
   orgSlug: string | null;
   mobileOpen?: boolean;
   onClose?: () => void;

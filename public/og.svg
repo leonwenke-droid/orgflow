@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#1f2a44"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#60a5fa"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="96" y="96" width="1008" height="438" rx="28" fill="#0f172a" opacity="0.78" stroke="#334155"/>
+  <rect x="96" y="96" width="1008" height="6" fill="url(#acc)"/>
+
+  <text x="140" y="210" fill="#e2e8f0" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="64" font-weight="750">
+    OrgFlow
+  </text>
+  <text x="140" y="270" fill="#94a3b8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="28" font-weight="500">
+    Tasks, shifts, and finance  in one place.
+  </text>
+
+  <g transform="translate(140 330)">
+    <rect width="300" height="140" rx="18" fill="#0b1224" stroke="#243247"/>
+    <text x="22" y="46" fill="#93c5fd" font-family="ui-sans-serif, system-ui" font-size="16" font-weight="650">Tasks</text>
+    <rect x="22" y="68" width="210" height="10" rx="5" fill="#334155"/>
+    <rect x="22" y="92" width="250" height="10" rx="5" fill="#334155"/>
+    <rect x="22" y="116" width="180" height="10" rx="5" fill="#334155"/>
+  </g>
+
+  <g transform="translate(470 330)">
+    <rect width="300" height="140" rx="18" fill="#0b1224" stroke="#243247"/>
+    <text x="22" y="46" fill="#86efac" font-family="ui-sans-serif, system-ui" font-size="16" font-weight="650">Shifts</text>
+    <rect x="22" y="68" width="250" height="10" rx="5" fill="#334155"/>
+    <rect x="22" y="92" width="190" height="10" rx="5" fill="#334155"/>
+    <rect x="22" y="116" width="220" height="10" rx="5" fill="#334155"/>
+  </g>
+
+  <g transform="translate(800 330)">
+    <rect width="300" height="140" rx="18" fill="#0b1224" stroke="#243247"/>
+    <text x="22" y="46" fill="#fbbf24" font-family="ui-sans-serif, system-ui" font-size="16" font-weight="650">Finance</text>
+    <rect x="22" y="68" width="230" height="10" rx="5" fill="#334155"/>
+    <rect x="22" y="92" width="260" height="10" rx="5" fill="#334155"/>
+    <rect x="22" y="116" width="200" height="10" rx="5" fill="#334155"/>
+  </g>
+
+  <text x="96" y="580" fill="#64748b" font-family="ui-sans-serif, system-ui" font-size="18">
+    orgflow.de
+  </text>
+</svg>
+

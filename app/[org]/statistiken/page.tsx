@@ -92,15 +92,16 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
       : Promise.resolve({ data: [] as { user_id: string; score: number }[] })
   ]);
 
-  const score = (scoreRow as any)?.score ?? 0;
-  const next = nextEngagementMilestone(Number(score) || 0);
-  const progressPct = next > 0 ? Math.max(0, Math.min(100, Math.round(((Number(score) || 0) / next) * 100))) : 0;
+  const rawScore = Number((scoreRow as any)?.score ?? 0) || 0;
+  const score = Math.max(0, rawScore);
+  const next = nextEngagementMilestone(score);
+  const progressPct = next > 0 ? Math.max(0, Math.min(100, Math.round((score / next) * 100))) : 0;
 
   const rankRows = (allOrgScores ?? []) as { user_id: string; score: number }[];
   const totalRanked = rankRows.length;
   const rank =
     engagementEnabled && totalRanked > 0
-      ? rankRows.filter((r) => Number(r.score) > Number(score)).length + 1
+      ? rankRows.filter((r) => Number(r.score) > Number(rawScore)).length + 1
       : null;
 
   const events = (myEvents ?? []) as any[];
@@ -145,6 +146,11 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
                 {locale === "en"
                   ? `${Number(score) || 0} / ${next} pts. until next milestone`
                   : `${Number(score) || 0} / ${next} Pkt. bis nächster Meilenstein`}
+              </div>
+              <div className="mt-2 text-[11px] text-gray-500">
+                {locale === "en"
+                  ? "Scores increase when you complete tasks or shifts. Ranking compares scores inside your organisation."
+                  : "Scores steigen, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
               </div>
             </div>
           </div>

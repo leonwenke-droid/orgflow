@@ -12,12 +12,30 @@ import CookieNotice from "../components/CookieNotice";
 import ConsentSync from "../components/ConsentSync";
 import FooterLinks from "../components/FooterLinks";
 import { LOCALE_COOKIE_NAME, resolveLocale } from "../lib/i18n";
+import { getPublicBaseUrl } from "../lib/publicBaseUrl";
 
 export const metadata: Metadata = {
   title: "OrgFlow",
   description:
     "OrgFlow helps teams and organisations coordinate tasks, shifts and finances in one place — without spreadsheet chaos.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.orgflow.de"),
   manifest: "/manifest.json",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
+  openGraph: {
+    title: "OrgFlow",
+    description:
+      "Tasks, shifts, and finance — in one place. Organize your team without spreadsheet chaos.",
+    images: [{ url: "/og.svg", width: 1200, height: 630, alt: "OrgFlow" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OrgFlow",
+    description: "Tasks, shifts, and finance — in one place.",
+    images: ["/og.svg"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -65,6 +83,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   );
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
   const { data: { user } } = await supabase.auth.getUser();
+  const appShellUser = user
+    ? ({ id: user.id, email: user.email ?? null, user_metadata: (user.user_metadata ?? null) } as const)
+    : null;
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -78,7 +99,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <LocaleProvider initialLocale={locale}>
           <div className="mx-auto flex min-h-screen max-w-6xl flex-col bg-background px-4 py-6 dark:bg-background-dark">
             <EmailVerificationBanner />
-            <AppShell user={user}>
+            <AppShell user={appShellUser}>
               <main className="flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">{children}</main>
             </AppShell>
             <ToastContainer />
