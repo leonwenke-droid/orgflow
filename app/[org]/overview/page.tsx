@@ -117,7 +117,8 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
       .eq("organization_id", orgIdForData)
       .gte("end_date", todayStr)
       .order("start_date", { ascending: true })
-      .limit(5),
+      .limit(5)
+      .then((r) => (r.error ? { data: [] } : r), () => ({ data: [] })),
     service
       .from("tasks")
       .select("id, title, status, event_id")
@@ -125,7 +126,8 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
       .neq("status", "erledigt")
       .not("event_id", "is", null)
       .order("due_at", { ascending: true })
-      .limit(20),
+      .limit(20)
+      .then((r) => (r.error ? { data: [] } : r), () => ({ data: [] })),
   ]);
 
   const shifts = (shifts7d ?? []) as Array<{
