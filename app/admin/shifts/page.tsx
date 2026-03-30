@@ -18,6 +18,7 @@ import { isMissingSoftDeleteColumnError } from "../../../lib/supabaseSoftDelete"
 import { requireOrgAdminAction } from "../../../lib/permissionsServer";
 import { writeAuditLog } from "../../../lib/audit";
 import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
+import ShiftTabFilter, { filterShiftsByTime, type ShiftTimeFilter } from "../../../components/shifts/ShiftTabFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -101,8 +102,8 @@ async function autoAssignForShifts(
   service: ReturnType<typeof createSupabaseServiceRoleClient>,
   shifts: SimpleShift[],
   orgId: string | null
-) {
-  if (!shifts.length) return;
+): Promise<{ assigned: number; total: number }> {
+  if (!shifts.length) return { assigned: 0, total: 0 };
 
   const profilesQuery = service.from("profiles").select("id").order("full_name");
   if (orgId) profilesQuery.eq("organization_id", orgId);
@@ -163,6 +164,8 @@ async function autoAssignForShifts(
       toAssign.forEach((m) => globallyUsed.add(m.id));
     }
   }
+
+  return { assigned: globallyUsed.size, total: shifts.reduce((s, sh) => s + (sh.required_slots ?? 0), 0) };
 }
 
 async function runAutoAssignForExistingShifts(formData: FormData) {
@@ -895,6 +898,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   const orgSlug = searchParams?.org?.trim() || null;
   const eventIdFilter = searchParams?.event?.trim() || null;
   const shiftsCreatedSuccess = searchParams?.success === "1";
+  const timeFilter = ((searchParams as Record<string, string | undefined>)?.time ?? "all") as ShiftTimeFilter;
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -1058,6 +1062,8 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     (profiles ?? []).map((p) => [p.id, p.full_name])
   );
 
+  const filteredShifts = filterShiftsByTime(shifts, timeFilter, todayStr);
+
   return (
     <div className="space-y-4">
       {effectiveOrgSlug && (
@@ -1068,6 +1074,9 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
           {t("shifts.created_success", locale)}
         </p>
       )}
+      <div className="flex flex-wrap items-center gap-3">
+        <ShiftTabFilter />
+      </div>
       {events.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-medium text-gray-600 dark:text-gray-400">{t("shifts.event_optional", locale)}:</span>
@@ -1126,12 +1135,12 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         <div className="p-4">
         {shiftsError ? (
           <p className="text-xs text-red-300">{shiftsError.message}</p>
-        ) : (!shifts || shifts.length === 0) ? (
+        ) : (!filteredShifts || filteredShifts.length === 0) ? (
           <EmptyState messageKey="empty.shifts" actionHref={effectiveOrgSlug ? `/${effectiveOrgSlug}/admin/shifts` : "/admin/shifts"} actionLabelKey="cta.create_shift" />
         ) : (
           <ShiftPlanTableWithEdit
             orgSlug={effectiveOrgSlug ?? undefined}
-            shifts={shifts}
+            shifts={filteredShifts}
             todayStr={todayStr}
             profileNames={profileNames}
             membersSortedByLoad={membersSortedByLoad}

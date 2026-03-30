@@ -18,6 +18,14 @@ export async function updateTaskKanbanStatus(formData: FormData) {
   if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
+
+  const { data: taskRow } = await service
+    .from("tasks")
+    .select("event_id")
+    .eq("id", taskId)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+
   await service.from("tasks").update({ status }).eq("id", taskId).eq("organization_id", organizationId);
   await writeAuditLog({
     organizationId,
@@ -29,7 +37,13 @@ export async function updateTaskKanbanStatus(formData: FormData) {
   });
 
   revalidatePath("/admin/tasks");
-  if (orgSlug) revalidatePath(`/admin/tasks?org=${encodeURIComponent(orgSlug)}`);
+  if (orgSlug) {
+    revalidatePath(`/admin/tasks?org=${encodeURIComponent(orgSlug)}`);
+    revalidatePath(`/${orgSlug}/tasks`);
+    if ((taskRow as any)?.event_id) {
+      revalidatePath(`/${orgSlug}/admin/events/${(taskRow as any).event_id}`);
+    }
+  }
 }
 
 export async function deleteTask(formData: FormData) {

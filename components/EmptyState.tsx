@@ -7,11 +7,13 @@ import { t } from "../lib/i18n";
 type Props = {
   messageKey: string;
   actionHref?: string;
-  /** Translation key for button (e.g. cta.create_task). Used when actionHref is set. */
   actionLabelKey?: string;
-  /** Optional second action (e.g. member overview while primary opens admin). */
   secondaryActionHref?: string;
   secondaryActionLabelKey?: string;
+  /** "admin" shows CTAs; "member" hides actions and uses passive copy. */
+  variant?: "admin" | "member";
+  /** Optional icon displayed above the message (React node or emoji string). */
+  icon?: React.ReactNode;
   className?: string;
 };
 
@@ -21,6 +23,8 @@ export default function EmptyState({
   actionLabelKey,
   secondaryActionHref,
   secondaryActionLabelKey,
+  variant = "admin",
+  icon,
   className = ""
 }: Props) {
   const { locale } = useLocale();
@@ -29,26 +33,23 @@ export default function EmptyState({
   const secondaryLabel =
     secondaryActionLabelKey && secondaryActionHref ? t(secondaryActionLabelKey, locale) : null;
 
+  const showActions = variant !== "member";
+
   return (
     <div
       className={`rounded-xl border border-dashed border-gray-300 bg-gray-50/80 py-8 text-center dark:border-gray-600 dark:bg-gray-800/50 ${className}`}
     >
+      {icon ? <div className="mb-3 text-3xl">{icon}</div> : null}
       <p className="mx-auto max-w-sm text-sm text-gray-600 dark:text-gray-400">{message}</p>
-      {(actionHref && actionLabel) || (secondaryActionHref && secondaryLabel) ? (
+      {showActions && ((actionHref && actionLabel) || (secondaryActionHref && secondaryLabel)) ? (
         <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row sm:flex-wrap">
           {actionHref && actionLabel && (
-            <Link
-              href={actionHref}
-              className="btn-primary"
-            >
+            <Link href={actionHref} className="btn-primary">
               {actionLabel}
             </Link>
           )}
           {secondaryActionHref && secondaryLabel && (
-            <Link
-              href={secondaryActionHref}
-              className="btn-secondary"
-            >
+            <Link href={secondaryActionHref} className="btn-secondary">
               {secondaryLabel}
             </Link>
           )}

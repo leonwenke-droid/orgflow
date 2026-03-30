@@ -115,7 +115,7 @@ export default function MemberShiftsClient({
       <section className="card">
         <div className="p-4">
           {grouped.length === 0 ? (
-            <p className="text-sm text-gray-500">—</p>
+            <p className="text-sm text-gray-500">{t("empty.member.shifts", locale)}</p>
           ) : (
             <div className="space-y-4">
               {grouped.map(([dateKey, rows]) => (

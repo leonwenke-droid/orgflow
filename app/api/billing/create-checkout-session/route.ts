@@ -4,18 +4,9 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { getStripe } from "../../../../lib/stripe";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
+import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
 
 export const runtime = "nodejs";
-
-function getBaseUrl(req: NextRequest): string {
-  const fromEnv = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
-  try {
-    return new URL(req.url).origin;
-  } catch {
-    return "http://localhost:3000";
-  }
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -65,7 +56,7 @@ export async function POST(req: NextRequest) {
       await service.from("organizations").update({ stripe_customer_id: customerId }).eq("id", orgRow.id);
     }
 
-    const baseUrl = getBaseUrl(req);
+    const baseUrl = await getPublicBaseUrl();
     const successUrl = `${baseUrl}/${encodeURIComponent(orgSlug)}/settings?billing=success`;
     const cancelUrl = `${baseUrl}/${encodeURIComponent(orgSlug)}/settings?billing=cancel`;
 

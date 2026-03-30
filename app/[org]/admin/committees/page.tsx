@@ -73,46 +73,75 @@ export default async function AdminCommitteesPage(props: {
     }
   }
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const [{ data: openTaskRows }, { data: upcomingShiftRows }] = await Promise.all([
+    committeeIds.length > 0
+      ? service
+          .from("tasks")
+          .select("id, committee_id")
+          .eq("organization_id", orgIdForData)
+          .neq("status", "erledigt")
+          .in("committee_id", committeeIds)
+      : Promise.resolve({ data: [] as any[] }),
+    committeeIds.length > 0
+      ? service
+          .from("shifts")
+          .select("id, committee_id")
+          .eq("organization_id", orgIdForData)
+          .gte("date", todayStr)
+          .in("committee_id", committeeIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+
+  const openTasksByTeam: Record<string, number> = {};
+  for (const t of openTaskRows ?? []) {
+    const cid = (t as any).committee_id as string;
+    if (cid) openTasksByTeam[cid] = (openTasksByTeam[cid] ?? 0) + 1;
+  }
+  const upcomingShiftsByTeam: Record<string, number> = {};
+  for (const s of upcomingShiftRows ?? []) {
+    const cid = (s as any).committee_id as string;
+    if (cid) upcomingShiftsByTeam[cid] = (upcomingShiftsByTeam[cid] ?? 0) + 1;
+  }
+
   const committeesWithCounts = committeeList.map(
     (c: { id: string; name: string; description?: string | null; is_active?: boolean | null }) => ({
       ...c,
-      memberCount: memberCountByCommittee[c.id] ?? 0
+      memberCount: memberCountByCommittee[c.id] ?? 0,
+      openTasks: openTasksByTeam[c.id] ?? 0,
+      upcomingShifts: upcomingShiftsByTeam[c.id] ?? 0,
     })
   );
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-6">
-      <header>
-        <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />
-        <h1 className="page-title">Teams</h1>
-        <p className="page-sub">{org.name}</p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />
+          <h1 className="page-title">Teams</h1>
+          <p className="page-sub">{org.name}</p>
+        </div>
+        <a href="#create-team" className="btn-primary shrink-0">
+          + Neues Team
+        </a>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {committeesWithCounts.map((c: any) => (
-          <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
-        ))}
-
-        <div className="card border border-dashed border-gray-200">
-          <div className="flex h-full min-h-[160px] flex-col items-center justify-center gap-2 p-6 text-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 text-lg font-medium text-gray-700">+</div>
-            <div className="text-sm font-medium text-gray-900">Neues Team anlegen</div>
-            <div className="text-xs text-gray-500">Erstellt ein neues Team für Aufgaben & Schichten.</div>
-            <a href="#create-team" className="btn-primary mt-2">Team erstellen</a>
-          </div>
+      {committeesWithCounts.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {committeesWithCounts.map((c: any) => (
+            <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
+          ))}
         </div>
-      </div>
+      ) : (
+        <div className="card p-4">
+          <EmptyState messageKey="empty.teams" actionHref="#create-team" actionLabelKey="cta.create_team" />
+        </div>
+      )}
 
       <div id="create-team" className="card p-4">
         <div className="section-label">Neues Team</div>
         <CreateCommitteeForm orgSlug={orgSlug} orgId={org.id} committees={committeeList} />
       </div>
-
-      {(!committees || committees.length === 0) ? (
-        <div className="card p-4">
-          <EmptyState messageKey="empty.teams" actionHref={`/${orgSlug}/admin/committees`} actionLabelKey="cta.create_team" />
-        </div>
-      ) : null}
     </div>
   );
 }

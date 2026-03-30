@@ -162,7 +162,7 @@ export default async function OrgDashboardPage(props: {
       <section className="grid gap-4 md:grid-cols-3">
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Your score" : "Dein Score"}</div>
-          <div className="text-2xl font-semibold text-gray-900">{myEngagementScore} Pkt.</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{myEngagementScore} Pkt.</div>
           <div className="mt-3 h-2 w-full rounded-full bg-gray-200">
             {(() => {
               const next = nextEngagementMilestone(myEngagementScore);
@@ -179,7 +179,7 @@ export default async function OrgDashboardPage(props: {
 
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Org rank" : "Rang in der Org"}</div>
-          <div className="text-2xl font-semibold text-gray-900">
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
             {myEngagementRank != null ? `#${myEngagementRank}` : "—"}
             {myEngagementRank != null ? <span className="text-sm font-medium text-gray-500"> / {engagementTotal}</span> : null}
           </div>

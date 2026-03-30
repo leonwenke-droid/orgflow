@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import CopyTaskLinkButton from "../../../components/CopyTaskLinkButton";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import { useLocale } from "../../../components/LocaleProvider";
@@ -28,7 +28,6 @@ type TaskRow = {
   proof_required: boolean;
   proof_url: string | null;
   access_token?: string | null;
-  /** Supabase may return object or array for nested select */
   committees?: { name?: string } | { name?: string }[] | null;
 };
 
@@ -39,7 +38,7 @@ function committeeLabel(c: TaskRow["committees"]): string {
 }
 
 export default function AdminTasksKanban({
-  tasks,
+  tasks: serverTasks,
   orgId,
   orgSlug,
   profileNames
@@ -53,29 +52,56 @@ export default function AdminTasksKanban({
   const { locale } = useLocale();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const touchStart = useRef<{ id: string; x: number; y: number } | null>(null);
+
+  const tasks = serverTasks.map((tk) =>
+    statusOverrides[tk.id] ? { ...tk, status: statusOverrides[tk.id] } : tk
+  );
 
   const handleDrop = useCallback(
     async (taskId: string, newStatus: string) => {
       if (!orgId) return;
-      const fd = new FormData();
-      fd.set("taskId", taskId);
-      fd.set("status", newStatus);
-      fd.set("organization_id", orgId);
-      fd.set("org_slug", orgSlug ?? "");
-      await updateTaskKanbanStatus(fd);
-      router.refresh();
+      const prev = serverTasks.find((tk) => tk.id === taskId)?.status;
+      if (prev === newStatus) return;
+
+      setStatusOverrides((o) => ({ ...o, [taskId]: newStatus }));
+      setSavingIds((s) => new Set(s).add(taskId));
       setDraggingId(null);
       setDropTarget(null);
+
+      try {
+        const fd = new FormData();
+        fd.set("taskId", taskId);
+        fd.set("status", newStatus);
+        fd.set("organization_id", orgId);
+        fd.set("org_slug", orgSlug ?? "");
+        await updateTaskKanbanStatus(fd);
+        router.refresh();
+      } catch {
+        setStatusOverrides((o) => {
+          const copy = { ...o };
+          delete copy[taskId];
+          return copy;
+        });
+      } finally {
+        setSavingIds((s) => {
+          const copy = new Set(s);
+          copy.delete(taskId);
+          return copy;
+        });
+      }
     },
-    [orgId, orgSlug, router]
+    [orgId, orgSlug, router, serverTasks]
   );
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
       {STATUS_COLUMNS.map((col) => (
         <div
           key={col.key}
-          className={`flex min-h-[min(40vh,12rem)] flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors dark:border-gray-700 dark:bg-card-dark ${
+          className={`flex min-h-[min(40vh,12rem)] min-w-[280px] flex-shrink-0 snap-start flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors md:min-w-0 md:flex-shrink dark:border-gray-700 dark:bg-card-dark ${
             dropTarget === col.key ? "ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-gray-900" : ""
           }`}
           onDragEnter={(e) => {
@@ -131,7 +157,7 @@ export default function AdminTasksKanban({
                     onDragEnd={() => setDraggingId(null)}
                     className={`cursor-grab rounded-lg border bg-gray-50 p-2 shadow-sm active:cursor-grabbing dark:bg-gray-900/40 ${
                       overdue ? "border-red-300 dark:border-red-700" : "border-gray-200 dark:border-gray-700"
-                    } ${draggingId === task.id ? "opacity-60" : ""}`}
+                    } ${draggingId === task.id ? "opacity-60" : ""} ${savingIds.has(task.id) ? "animate-pulse" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">

@@ -232,7 +232,7 @@ export default async function OrgOverviewPage(props: {
                 </p>
               </li>
             ))}
-            {(tasks ?? []).length === 0 && <li className="text-xs text-gray-500">{t("empty.tasks", locale)}</li>}
+            {(tasks ?? []).length === 0 && <li className="text-xs text-gray-500">{t(operational ? "empty.tasks" : "empty.member.tasks", locale)}</li>}
           </ul>
         </div>
 
@@ -259,7 +259,7 @@ export default async function OrgOverviewPage(props: {
                 </li>
               );
             })}
-            {(shifts ?? []).length === 0 && <li className="text-xs text-gray-500">{t("empty.shifts", locale)}</li>}
+            {(shifts ?? []).length === 0 && <li className="text-xs text-gray-500">{t(operational ? "empty.shifts" : "empty.member.shifts", locale)}</li>}
           </ul>
         </div>
 

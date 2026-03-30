@@ -3,6 +3,7 @@ import { getRequestLocale } from "../../../../../lib/localeServer";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../../lib/getOrganization";
+import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
 import AdminBreadcrumb from "../../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../../AdminForbidden";
 import { t } from "../../../../../lib/i18n";
@@ -42,64 +43,147 @@ export default async function EventDetailPage(props: {
     );
   }
 
+  const locale = await getRequestLocale();
+  const service = createSupabaseServiceRoleClient();
+
   const [
-    { count: tasksCount },
-    { count: shiftsCount },
+    { data: eventTasks },
+    { data: eventShifts },
     { count: resourcesCount }
   ] = await Promise.all([
-    supabase.from("tasks").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData).eq("event_id", eventId),
-    supabase.from("shifts").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData).eq("event_id", eventId),
-    supabase.from("material_procurements").select("id", { count: "exact", head: true }).eq("event_id", eventId)
+    service
+      .from("tasks")
+      .select("id, title, status")
+      .eq("organization_id", orgIdForData)
+      .eq("event_id", eventId)
+      .order("due_at", { ascending: true })
+      .limit(20),
+    service
+      .from("shifts")
+      .select("id, event_name, date, start_time, end_time")
+      .eq("organization_id", orgIdForData)
+      .eq("event_id", eventId)
+      .order("date", { ascending: true })
+      .limit(20),
+    service
+      .from("material_procurements")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", eventId)
+      .then((r) => ({ count: r.count }))
   ]);
 
-  const locale = await getRequestLocale();
+  const tasks = (eventTasks ?? []) as { id: string; title: string; status: string }[];
+  const shifts = (eventShifts ?? []) as { id: string; event_name: string; date: string; start_time: string | null; end_time: string | null }[];
+  const openTasks = tasks.filter((tk) => tk.status !== "erledigt" && tk.status !== "abgebrochen");
+  const doneTasks = tasks.filter((tk) => tk.status === "erledigt");
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
       <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("events.detail_title", locale).replace("{name}", event.name)} />
-      <h1 className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
-        {t("events.detail_title", locale).replace("{name}", event.name)}
-      </h1>
-      {(event.start_date || event.end_date) && (
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          {event.start_date && formatCalendarDateYmd(event.start_date, locale)}
-          {event.end_date && event.end_date !== event.start_date && ` – ${formatCalendarDateYmd(event.end_date, locale)}`}
-        </p>
-      )}
+      <header>
+        <h1 className="page-title">
+          {t("events.detail_title", locale).replace("{name}", event.name)}
+        </h1>
+        {(event.start_date || event.end_date) && (
+          <p className="page-sub">
+            {event.start_date && formatCalendarDateYmd(event.start_date, locale)}
+            {event.end_date && event.end_date !== event.start_date && ` – ${formatCalendarDateYmd(event.end_date, locale)}`}
+          </p>
+        )}
+      </header>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <Link
-          href={`/admin/tasks?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
-          className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow dark:border-gray-700 dark:bg-card-dark dark:hover:border-blue-600"
-        >
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("events.tasks_count", locale)}</h2>
-          <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">{tasksCount ?? 0}</p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("events.view_tasks", locale)}</p>
-        </Link>
-        <Link
-          href={`/admin/shifts?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
-          className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow dark:border-gray-700 dark:bg-card-dark dark:hover:border-blue-600"
-        >
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("events.shifts_count", locale)}</h2>
-          <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">{shiftsCount ?? 0}</p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("events.view_shifts", locale)}</p>
-        </Link>
-        <Link
-          href={`/admin/materials?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
-          className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow dark:border-gray-700 dark:bg-card-dark dark:hover:border-blue-600"
-        >
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("events.resources_count", locale)}</h2>
-          <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">{resourcesCount ?? 0}</p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t("events.view_resources", locale)}</p>
-        </Link>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="stat-card">
+          <p className="text-xs text-gray-500">{locale === "de" ? "Aufgaben" : "Tasks"}</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-foreground-dark">{tasks.length}</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            {openTasks.length} {locale === "de" ? "offen" : "open"} · {doneTasks.length} {locale === "de" ? "erledigt" : "done"}
+          </p>
+        </div>
+        <div className="stat-card">
+          <p className="text-xs text-gray-500">{locale === "de" ? "Schichten" : "Shifts"}</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-foreground-dark">{shifts.length}</p>
+        </div>
+        <div className="stat-card">
+          <p className="text-xs text-gray-500">{locale === "de" ? "Ressourcen" : "Resources"}</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-foreground-dark">{resourcesCount ?? 0}</p>
+        </div>
       </div>
 
-      <Link
-        href={`/${orgSlug}/admin/events`}
-        className="mt-6 inline-block text-sm text-gray-600 hover:underline dark:text-gray-400"
-      >
-        ← {t("events.back_to_events", locale)}
-      </Link>
+      {tasks.length > 0 && (
+        <section className="card overflow-hidden">
+          <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+            <div className="section-label">{locale === "de" ? "Aufgaben" : "Tasks"}</div>
+          </div>
+          <ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
+            {tasks.map((tk) => {
+              const statusTag =
+                tk.status === "erledigt" ? "tag tag-green" :
+                tk.status === "in_arbeit" ? "tag tag-amber" :
+                "tag tag-neutral";
+              return (
+                <li key={tk.id} className="flex items-center justify-between gap-3 px-4 py-2">
+                  <span className="min-w-0 truncate text-sm text-gray-900 dark:text-gray-100">
+                    {tk.title}
+                  </span>
+                  <span className={statusTag}>{tk.status}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="border-t border-gray-100 px-4 py-2 dark:border-gray-700">
+            <Link
+              href={`/admin/tasks?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
+              className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+            >
+              {t("events.view_tasks", locale)} →
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {shifts.length > 0 && (
+        <section className="card overflow-hidden">
+          <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+            <div className="section-label">{locale === "de" ? "Schichten" : "Shifts"}</div>
+          </div>
+          <ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
+            {shifts.map((sh) => (
+              <li key={sh.id} className="flex items-center justify-between gap-3 px-4 py-2">
+                <span className="min-w-0 truncate text-sm text-gray-900 dark:text-gray-100">
+                  {sh.event_name || sh.date}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {sh.date}{sh.start_time ? ` ${sh.start_time}` : ""}{sh.end_time ? `–${sh.end_time}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="border-t border-gray-100 px-4 py-2 dark:border-gray-700">
+            <Link
+              href={`/admin/shifts?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
+              className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+            >
+              {t("events.view_shifts", locale)} →
+            </Link>
+          </div>
+        </section>
+      )}
+
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href={`/admin/materials?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
+          className="btn-secondary"
+        >
+          {t("events.view_resources", locale)} ({resourcesCount ?? 0})
+        </Link>
+        <Link
+          href={`/${orgSlug}/admin/events`}
+          className="btn-secondary"
+        >
+          ← {t("events.back_to_events", locale)}
+        </Link>
+      </div>
     </div>
   );
 }

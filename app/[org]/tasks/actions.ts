@@ -36,11 +36,15 @@ export async function offerTaskAction(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  const { error } = await supabase.rpc("offer_task", { task_id: taskId });
+  const { error } = await supabase.rpc("request_task_transfer", {
+    p_task_id: taskId,
+    p_to_user_id: null
+  });
   if (error) {
     serverRedirect(`/${orgSlug}/tasks?taskAction=error`);
   }
   revalidatePath(`/${orgSlug}/tasks`);
   revalidatePath(`/${orgSlug}/dashboard`);
+  revalidatePath(`/${orgSlug}/admin/transfers`);
   serverRedirect(`/${orgSlug}/tasks?taskAction=offered`);
 }

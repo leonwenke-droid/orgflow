@@ -248,7 +248,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
         <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shifts.my_shifts", locale)}</h2>
         {shiftsUpcoming.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("empty.shifts", locale)}</p>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("empty.member.shifts", locale)}</p>
         ) : (
           <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
             {shiftsUpcoming.map((s: any, idx: number) => (

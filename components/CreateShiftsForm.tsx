@@ -115,39 +115,41 @@ export default function CreateShiftsForm({
         </div>
       )}
       <div className="space-y-1 md:col-span-2">
+        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+          {t("shifts.time_frame", locale)}
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="time"
+            name="start_time"
+            defaultValue="09:00"
+            required
+            className="min-h-[44px] rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
+          />
+          <span className="text-xs text-gray-500 dark:text-gray-400">{t("shifts.until", locale)}</span>
+          <input
+            type="time"
+            name="end_time"
+            defaultValue="12:00"
+            required
+            className="min-h-[44px] rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
+          />
+        </div>
+      </div>
+      <div className="space-y-1 md:col-span-2">
         <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.title", locale)}</label>
         <input
           type="text"
           name="event_name"
-          required
           placeholder={type === "recurring" ? t("shifts.placeholder_title_recurring", locale) : t("shifts.placeholder_title_event", locale)}
           className="min-h-[44px] w-full rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
         />
+        <p className="text-[10px] text-gray-500 dark:text-gray-400">
+          {locale === "de" ? "Optional — wird automatisch aus Datum/Zeit generiert, falls leer." : "Optional — auto-generated from date/time if left blank."}
+        </p>
       </div>
       {type === "event" && (
         <>
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
-              {t("shifts.time_frame", locale)}
-            </label>
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                type="time"
-                name="start_time"
-                defaultValue="09:00"
-                required={type === "event"}
-                className="min-h-[44px] rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
-              />
-              <span className="text-xs text-gray-500 dark:text-gray-400">{t("shifts.until", locale)}</span>
-              <input
-                type="time"
-                name="end_time"
-                defaultValue="12:00"
-                required={type === "event"}
-                className="min-h-[44px] rounded border border-gray-300 bg-white p-2.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:min-h-0 sm:p-2"
-              />
-            </div>
-          </div>
           <div className="space-y-1 md:col-span-2">
             <label className="inline-flex items-center gap-2 cursor-pointer">
               <input

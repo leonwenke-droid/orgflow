@@ -3,7 +3,6 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { t } from "../../../lib/i18n";
-import { Users, ClipboardList, CalendarClock, AlertTriangle } from "lucide-react";
 import {
   getCurrentOrganization,
   getCurrentUserRoleInOrg,
@@ -54,7 +53,8 @@ export default async function AdminDashboard({
     { count: overdueTasksCount },
     { count: activeMembersCount },
     { data: shifts7d },
-    { data: committees }
+    { data: committees },
+    { count: pendingTransfersCount }
   ] = await Promise.all([
     service.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData),
     service
@@ -79,7 +79,12 @@ export default async function AdminDashboard({
       .eq("organization_id", orgIdForData)
       .gte("date", todayStr)
       .lte("date", in7Str),
-    service.from("committees").select("id, name").eq("organization_id", orgIdForData).order("name")
+    service.from("committees").select("id, name").eq("organization_id", orgIdForData).order("name"),
+    service
+      .from("task_transfer_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgIdForData)
+      .eq("status", "pending")
   ]);
 
   const shiftsSlots7d = (shifts7d ?? []).reduce((sum, s: any) => sum + (Number(s.required_slots ?? 0) || 0), 0);
@@ -101,9 +106,9 @@ export default async function AdminDashboard({
       </header>
 
       {typeof overdueTasksCount === "number" && overdueTasksCount > 0 ? (
-        <div className="card border border-warning-light bg-warning-light/40 p-4">
+        <div className="card border border-warning-light bg-warning-light/40 p-4 dark:border-amber-700 dark:bg-amber-900/20">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 text-warning-dark" aria-hidden />
+            <span className="mt-0.5 text-warning-dark" aria-hidden>⚠</span>
             <div className="min-w-0">
               <div className="text-sm font-medium text-warning-dark">
                 {locale === "en"
@@ -118,7 +123,7 @@ export default async function AdminDashboard({
       <section className="grid gap-4 md:grid-cols-4">
         <div className="stat-card">
           <div className="section-label">{t("dashboard.members", locale)}</div>
-          <div className="text-2xl font-semibold text-gray-900">{memberCount ?? 0}</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{memberCount ?? 0}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Open tasks" : "Aufgaben offen"}</div>
@@ -126,35 +131,45 @@ export default async function AdminDashboard({
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Shift slots (7d)" : "Schichten (7d)"}</div>
-          <div className="text-2xl font-semibold text-gray-900">{shiftsSlots7d}</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{shiftsSlots7d}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Active members" : "Aktive Mitglieder"}</div>
-          <div className="text-2xl font-semibold text-gray-900">{activeMembersCount ?? 0}</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{activeMembersCount ?? 0}</div>
         </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="card">
           <div className="p-4">
-            <div className="section-label">{locale === "en" ? "Teams by workload" : "Teams nach Auslastung"}</div>
+            <div className="section-label">
+              {locale === "en" ? "Team workload (7 days)" : "Team-Belastung (7 Tage)"}
+            </div>
+            <p className="mb-3 text-[10px] text-gray-500">
+              {locale === "en"
+                ? "Filled vs. required shift slots in the next 7 days"
+                : "Besetzte vs. benötigte Schicht-Slots in den nächsten 7 Tagen"}
+            </p>
             {committeeUtil.length === 0 ? (
               <p className="text-sm text-gray-500">—</p>
             ) : (
               <ul className="space-y-3">
-                {committeeUtil.map((c) => (
-                  <li key={c.id}>
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0 text-sm font-medium text-gray-900">{c.name}</div>
-                      <div className="shrink-0 text-xs text-gray-500">
-                        {c.taken}/{c.required}
+                {committeeUtil.map((c) => {
+                  const barColor = c.pct >= 75 ? "bg-green-500" : c.pct >= 25 ? "bg-amber-500" : "bg-red-500";
+                  return (
+                    <li key={c.id}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 text-sm font-medium text-gray-900 dark:text-gray-100">{c.name}</div>
+                        <div className="shrink-0 text-xs text-gray-500">
+                          {c.taken}/{c.required} ({c.pct}%)
+                        </div>
                       </div>
-                    </div>
-                    <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
-                      <div className="h-2 rounded-full bg-brand" style={{ width: `${Math.max(0, Math.min(100, c.pct))}%` }} />
-                    </div>
-                  </li>
-                ))}
+                      <div className="mt-2 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div className={`h-2 rounded-full ${barColor}`} style={{ width: `${Math.max(0, Math.min(100, c.pct))}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -164,20 +179,28 @@ export default async function AdminDashboard({
           <div className="p-4">
             <div className="section-label">{locale === "en" ? "Quick actions" : "Schnellaktionen"}</div>
             <div className="space-y-2">
-              <Link href={`/${orgSlug}/admin/shifts`} className="btn-primary inline-flex w-full items-center justify-center gap-2">
-                <CalendarClock className="h-4 w-4" aria-hidden />
-                {locale === "en" ? "New shift" : "Neue Schicht"}
+              <Link href={`/admin/shifts?org=${encodeURIComponent(orgSlug)}`} className="btn-primary inline-flex w-full items-center justify-center gap-2">
+                {locale === "en" ? "New shift" : "Neue Schicht anlegen"}
               </Link>
-              <Link href={`/${orgSlug}/admin/tasks`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
-                <ClipboardList className="h-4 w-4" aria-hidden />
-                {locale === "en" ? "Auto-assign" : "Auto-zuweisen"}
+              <Link href={`/admin/tasks?org=${encodeURIComponent(orgSlug)}`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                {locale === "en" ? "New task" : "Neue Aufgabe erstellen"}
               </Link>
               {fullOrgControl ? (
-                <Link href={`/${orgSlug}/admin/members`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
-                  <Users className="h-4 w-4" aria-hidden />
-                  {locale === "en" ? "Invite members" : "Mitglieder einladen"}
-                </Link>
+                <>
+                  <Link href={`/${orgSlug}/admin/members`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                    {locale === "en" ? "Invite member" : "Mitglied einladen"}
+                  </Link>
+                  <Link href={`/${orgSlug}/admin/committees`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                    {locale === "en" ? "New team" : "Neues Team anlegen"}
+                  </Link>
+                </>
               ) : null}
+              <Link href={`/${orgSlug}/admin/transfers`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                {locale === "en" ? "Pending transfers" : "Offene Übergaben"}
+                {(pendingTransfersCount ?? 0) > 0 ? (
+                  <span className="tag tag-amber ml-1">{pendingTransfersCount}</span>
+                ) : null}
+              </Link>
               {showFinanceCard ? (
                 <Link href={`/${orgSlug}/admin/finanzen`} className="btn-secondary inline-flex w-full items-center justify-center">
                   {locale === "en" ? "Finance" : "Finanzen"}

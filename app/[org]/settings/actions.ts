@@ -70,6 +70,51 @@ export async function updateOrganizationAction(
   return {};
 }
 
+export async function uploadOrgLogoAction(
+  orgSlug: string,
+  formData: FormData
+): Promise<{ url?: string; error?: string }> {
+  const org = await getCurrentOrganization(orgSlug);
+  if (!(await assertCanChangeOrgSettings(orgSlug, org))) {
+    return { error: "Not authorized." };
+  }
+
+  const file = formData.get("logo") as File | null;
+  if (!file || file.size === 0) return { error: "No file provided." };
+  if (file.size > 2 * 1024 * 1024) return { error: "File too large (max 2 MB)." };
+
+  const allowed = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowed.includes(file.type)) return { error: "Only JPEG, PNG, or WebP." };
+
+  const ext = file.name.split(".").pop() ?? "png";
+  const path = `org-logos/${org.id}/logo.${ext}`;
+
+  const service = createSupabaseServiceRoleClient();
+
+  const { error: uploadErr } = await service.storage
+    .from("public")
+    .upload(path, file, { upsert: true, contentType: file.type });
+
+  if (uploadErr) return { error: uploadErr.message };
+
+  const { data: urlData } = service.storage.from("public").getPublicUrl(path);
+  const publicUrl = urlData?.publicUrl;
+
+  if (publicUrl) {
+    const prev = { ...(org.settings as Record<string, unknown>) };
+    const branding = { ...((prev.branding as Record<string, unknown>) ?? {}) };
+    branding.logo_url = publicUrl;
+    await service
+      .from("organizations")
+      .update({ settings: { ...prev, branding } })
+      .eq("id", org.id);
+
+    revalidatePath(`/${orgSlug}/settings`);
+  }
+
+  return { url: publicUrl };
+}
+
 export type FeaturesMap = Record<string, boolean>;
 
 export async function updateOrgFeaturesAction(

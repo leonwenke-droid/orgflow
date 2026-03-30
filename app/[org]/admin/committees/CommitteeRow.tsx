@@ -12,6 +12,8 @@ type Committee = {
   description?: string | null;
   is_active?: boolean | null;
   memberCount?: number;
+  openTasks?: number;
+  upcomingShifts?: number;
 };
 
 export default function CommitteeRow({
@@ -101,6 +103,14 @@ export default function CommitteeRow({
                 ) : null}
               </div>
               {committee.description ? <div className="mt-1 line-clamp-2 text-sm text-gray-500">{committee.description}</div> : null}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {typeof committee.openTasks === "number" && committee.openTasks > 0 ? (
+                  <span className="tag tag-amber">{committee.openTasks} {locale === "de" ? "Aufgaben offen" : "tasks open"}</span>
+                ) : null}
+                {typeof committee.upcomingShifts === "number" && committee.upcomingShifts > 0 ? (
+                  <span className="tag tag-blue">{committee.upcomingShifts} {locale === "de" ? "Schichten" : "shifts"}</span>
+                ) : null}
+              </div>
             </div>
           </div>
 

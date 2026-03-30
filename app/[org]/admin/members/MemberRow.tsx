@@ -298,6 +298,41 @@ export default function MemberRow({
                     <button type="button" onClick={handleCopyWhatsAppText} disabled={loading} className="btn-secondary">
                       {t("members.copy_whatsapp_invite", locale)}
                     </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      className="btn-secondary"
+                      onClick={async () => {
+                        const invite = currentInvite ?? await ensureInvite();
+                        if (!invite) return;
+                        window.open(
+                          `https://wa.me/?text=${encodeURIComponent(invite.whatsappText)}`,
+                          "_blank"
+                        );
+                      }}
+                    >
+                      WhatsApp
+                    </button>
+                    {typeof navigator !== "undefined" && "share" in navigator && (
+                      <button
+                        type="button"
+                        disabled={loading}
+                        className="btn-secondary"
+                        onClick={async () => {
+                          const invite = currentInvite ?? await ensureInvite();
+                          if (!invite) return;
+                          try {
+                            await navigator.share({
+                              title: "OrgFlow Invite",
+                              text: invite.whatsappText,
+                              url: invite.inviteUrl,
+                            });
+                          } catch {}
+                        }}
+                      >
+                        {locale === "de" ? "Teilen" : "Share"}
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

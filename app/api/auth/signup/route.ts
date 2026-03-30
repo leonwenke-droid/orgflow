@@ -45,8 +45,13 @@ export async function POST(req: NextRequest) {
     const userMetadata: Record<string, string> = fullName ? { full_name: fullName } : {};
     if (organizationId) userMetadata.organization_id = organizationId;
 
-    let baseUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
-    if (!baseUrl && req.url) try { baseUrl = new URL(req.url).origin; } catch { /* ignore */ }
+    let baseUrl: string;
+    try {
+      const { getPublicBaseUrl } = await import("../../../../lib/publicBaseUrl");
+      baseUrl = await getPublicBaseUrl();
+    } catch {
+      baseUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/$/, "");
+    }
     const nextPath = claimToken
       ? `/claim-org?token=${encodeURIComponent(claimToken)}`
       : "/";

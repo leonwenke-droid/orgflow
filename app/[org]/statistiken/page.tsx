@@ -154,15 +154,15 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
       <section className="grid gap-4 md:grid-cols-3">
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Shifts (30d)" : "Schichten (30d)"}</div>
-          <div className="text-2xl font-semibold text-gray-900">{shifts30d}</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{shifts30d}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Tasks (30d)" : "Aufgaben (30d)"}</div>
-          <div className="text-2xl font-semibold text-gray-900">{tasks30d}</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{tasks30d}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Resources" : "Ressourcen"}</div>
-          <div className="text-2xl font-semibold text-gray-900">{resources30d}</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{resources30d}</div>
         </div>
       </section>
 
@@ -172,7 +172,7 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="stat-card">
               <div className="section-label">{t("tasks.status_open", locale)}</div>
-              <div className="text-2xl font-semibold text-gray-900">{taskStats.open}</div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{taskStats.open}</div>
             </div>
             <div className="stat-card">
               <div className="section-label">{t("tasks.status_in_progress", locale)}</div>

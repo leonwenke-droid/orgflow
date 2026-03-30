@@ -75,7 +75,7 @@ export default async function TasksViewerPage(props: {
   const canClaim = myRole !== "viewer";
   const effectiveOrgIdForData = mePrimary ? orgIdForData : org.id;
 
-  const [{ data: tasksAll }, { data: tasksDone }] = await Promise.all([
+  const [{ data: tasksAll }, { data: tasksDone }, { data: pendingTransfers }] = await Promise.all([
     service
       .from("tasks")
       .select(TASK_SELECT)
@@ -88,8 +88,17 @@ export default async function TasksViewerPage(props: {
       .eq("organization_id", effectiveOrgIdForData)
       .eq("status", "erledigt")
       .order("due_at", { ascending: false })
-      .limit(200)
+      .limit(200),
+    service
+      .from("task_transfer_requests")
+      .select("task_id")
+      .eq("organization_id", effectiveOrgIdForData)
+      .eq("status", "pending")
   ]);
+
+  const pendingTaskIds = new Set(
+    (pendingTransfers ?? []).map((r: { task_id: string }) => r.task_id)
+  );
 
   const { data: profiles } = await service
     .from("profiles")
@@ -99,7 +108,10 @@ export default async function TasksViewerPage(props: {
     (profiles ?? []).map((p: { id: string; full_name: string | null }) => [p.id, p.full_name ?? "–"])
   );
 
-  const tasks = tasksAll ?? [];
+  const tasks = (tasksAll ?? []).map((tk: any) => ({
+    ...tk,
+    transferPending: pendingTaskIds.has(tk.id),
+  }));
   const doneList = tasksDone ?? [];
 
   const openClaimable = tasks.filter(

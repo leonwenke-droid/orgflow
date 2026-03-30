@@ -140,7 +140,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
       <section className="grid gap-4 md:grid-cols-4">
         <div className="stat-card">
           <div className="section-label">{t("dashboard.members", locale)}</div>
-          <div className="text-2xl font-semibold text-gray-900">{membersCount ?? 0}</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{membersCount ?? 0}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Open tasks" : "Offene Aufgaben"}</div>
@@ -148,11 +148,11 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Shift slots (7d)" : "Schicht-Slots 7d"}</div>
-          <div className="text-2xl font-semibold text-gray-900">{shiftSlots7d}</div>
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{shiftSlots7d}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Balance" : "Kontostand"}</div>
-          <div className="text-2xl font-semibold text-gray-900">
+          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
             {showBalance && latestTreasury
               ? formatCurrency(Number((latestTreasury as any).amount ?? 0), localeForMoney, currencyCode)
               : "—"}

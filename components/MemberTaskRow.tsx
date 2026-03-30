@@ -21,8 +21,9 @@ export type MemberTaskRowTask = {
   claimable: boolean;
   proof_required: boolean;
   proof_url: string | null;
-  /** Supabase join: single object or one-element array depending on query */
   committees?: { name?: string | null } | { name?: string | null }[] | null;
+  /** When true, a transfer request is pending admin approval for this task. */
+  transferPending?: boolean;
 };
 
 type Props = {
@@ -136,7 +137,9 @@ export default function MemberTaskRow({
             {ownerLabel() ? ` · ${ownerLabel()}` : ""}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {!isCompleted && ownedByMe && canClaim ? (
+            {task.transferPending ? (
+              <span className="tag tag-amber">{t("transfers.badge_pending", locale)}</span>
+            ) : !isCompleted && ownedByMe && canClaim ? (
               <form action={offerTaskAction} className="inline">
                 <input type="hidden" name="orgSlug" value={orgSlug} />
                 <input type="hidden" name="taskId" value={task.id} />

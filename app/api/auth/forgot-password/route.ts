@@ -22,7 +22,13 @@ export async function POST(req: Request) {
 
     const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (req.headers.get("origin") ?? "");
+    let baseUrl: string;
+    try {
+      const { getPublicBaseUrl } = await import("../../../../lib/publicBaseUrl");
+      baseUrl = await getPublicBaseUrl();
+    } catch {
+      baseUrl = process.env.NEXT_PUBLIC_APP_URL || (req.headers.get("origin") ?? "");
+    }
     const redirectTo = `${baseUrl.replace(/\/$/, "")}/auth/callback?next=${encodeURIComponent("/auth/reset-password?next=/login")}`;
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
