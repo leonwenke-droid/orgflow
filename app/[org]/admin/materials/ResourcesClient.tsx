@@ -28,18 +28,9 @@ type Props = {
   nameById: Record<string, string>;
   profiles: { id: string; full_name: string }[];
   events: { id: string; name: string }[];
-  initialRules?: SizeRule[];
 };
 
 const STATUS_FILTERS = ["alle", "offen", "beschafft", "geliehen"] as const;
-
-type SizeRule = { key: string; name: string; points: number };
-
-const DEFAULT_RULES: SizeRule[] = [
-  { key: "small", name: "Klein", points: 1 },
-  { key: "medium", name: "Mittel", points: 2 },
-  { key: "large", name: "Groß", points: 3 },
-];
 
 function statusTag(status: string) {
   if (status === "beschafft") return "tag tag-green";
@@ -54,17 +45,12 @@ export default function ResourcesClient({
   nameById,
   profiles,
   events,
-  initialRules,
 }: Props) {
   const { locale } = useLocale();
   const [filter, setFilter] = useState<string>("alle");
   const [showForm, setShowForm] = useState(false);
   const [resources, setResources] = useState(initial);
   const [formMsg, setFormMsg] = useState<string | null>(null);
-  const [showRules, setShowRules] = useState(false);
-  const [rules, setRules] = useState<SizeRule[]>(initialRules ?? DEFAULT_RULES);
-  const [rulesSaving, setRulesSaving] = useState(false);
-  const [rulesMsg, setRulesMsg] = useState<string | null>(null);
 
   const filtered = useMemo(
     () =>
@@ -86,28 +72,6 @@ export default function ResourcesClient({
       setShowForm(false);
       window.location.reload();
     }
-  }
-
-  async function handleSaveRules() {
-    setRulesSaving(true);
-    setRulesMsg(null);
-    try {
-      const res = await fetch("/api/resource-categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ organizationId: orgId, categories: rules }),
-      });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        setRulesMsg(d.message || "Speichern fehlgeschlagen");
-      } else {
-        setRulesMsg(locale === "de" ? "Gespeichert!" : "Saved!");
-        setTimeout(() => setRulesMsg(null), 3000);
-      }
-    } catch {
-      setRulesMsg("Netzwerkfehler");
-    }
-    setRulesSaving(false);
   }
 
   async function handleStatusChange(id: string, newStatus: string) {
@@ -349,76 +313,6 @@ export default function ResourcesClient({
           </div>
         </div>
       )}
-
-      {/* Size rules editing */}
-      <div className="card overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setShowRules((v) => !v)}
-          className="flex w-full items-center justify-between px-4 py-3 text-left"
-        >
-          <span className="text-sm font-semibold text-gray-900 dark:text-foreground-dark">
-            {locale === "de" ? "Größenregeln & Punkte" : "Size rules & points"}
-          </span>
-          <span className="text-xs text-gray-400">{showRules ? "▲" : "▼"}</span>
-        </button>
-        {showRules && (
-          <div className="border-t border-gray-100 p-4 dark:border-gray-700">
-            <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-              {locale === "de"
-                ? "Lege fest, wie viele Punkte pro Größenkategorie vergeben werden."
-                : "Define how many points each size category awards."}
-            </p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {rules.map((r, idx) => (
-                <div key={r.key} className="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase">
-                    {r.key}
-                  </div>
-                  <label className="block text-[11px] text-gray-500 dark:text-gray-400">
-                    {locale === "de" ? "Name" : "Name"}
-                  </label>
-                  <input
-                    value={r.name}
-                    onChange={(e) => {
-                      const next = [...rules];
-                      next[idx] = { ...r, name: e.target.value };
-                      setRules(next);
-                    }}
-                    className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                  />
-                  <label className="mt-2 block text-[11px] text-gray-500 dark:text-gray-400">
-                    {locale === "de" ? "Punkte" : "Points"}
-                  </label>
-                  <input
-                    type="number"
-                    value={r.points}
-                    onChange={(e) => {
-                      const next = [...rules];
-                      next[idx] = { ...r, points: Number(e.target.value) || 0 };
-                      setRules(next);
-                    }}
-                    className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleSaveRules}
-                disabled={rulesSaving}
-                className="btn-primary"
-              >
-                {rulesSaving ? "…" : locale === "de" ? "Speichern" : "Save"}
-              </button>
-              {rulesMsg && (
-                <span className="text-xs text-gray-600 dark:text-gray-400">{rulesMsg}</span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
     </>
   );
 }

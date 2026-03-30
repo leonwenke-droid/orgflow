@@ -148,7 +148,7 @@ export default async function AdminEngagementPage(props: { params: Promise<{ org
       <header>
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Engagement" />
         <h1 className="page-title">Engagement</h1>
-        <p className="page-sub">{locale === "de" ? "Punkteverteilung und Rangliste" : "Points and leaderboard"}</p>
+        <p className="page-sub">{org.name}</p>
       </header>
 
       <EngagementTabs
@@ -165,7 +165,6 @@ export default async function AdminEngagementPage(props: { params: Promise<{ org
         events={events}
         weights={weights}
         nameById={nameById}
-        totalMembers={profiles.length}
       />
     </div>
   );

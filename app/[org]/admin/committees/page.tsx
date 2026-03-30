@@ -11,8 +11,8 @@ import {
 import { canManageMembersAndTeams } from "../../../../lib/permissions";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
+import CreateCommitteeForm from "./CreateCommitteeForm";
 import CommitteeRow from "./CommitteeRow";
-import NewTeamCard from "./NewTeamCard";
 import EmptyState from "../../../../components/EmptyState";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
@@ -115,17 +115,32 @@ export default async function AdminCommitteesPage(props: {
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-6">
-      <header>
-        <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />
-        <h1 className="page-title">Teams</h1>
-        <p className="page-sub">{org.name}</p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />
+          <h1 className="page-title">Teams</h1>
+          <p className="page-sub">{org.name}</p>
+        </div>
+        <a href="#create-team" className="btn-primary shrink-0">
+          + Neues Team
+        </a>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {committeesWithCounts.map((c: any) => (
-          <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
-        ))}
-        <NewTeamCard orgSlug={orgSlug} orgId={org.id} committees={committeeList} />
+      {committeesWithCounts.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {committeesWithCounts.map((c: any) => (
+            <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
+          ))}
+        </div>
+      ) : (
+        <div className="card p-4">
+          <EmptyState messageKey="empty.teams" actionHref="#create-team" actionLabelKey="cta.create_team" />
+        </div>
+      )}
+
+      <div id="create-team" className="card p-4">
+        <div className="section-label">Neues Team</div>
+        <CreateCommitteeForm orgSlug={orgSlug} orgId={org.id} committees={committeeList} />
       </div>
     </div>
   );

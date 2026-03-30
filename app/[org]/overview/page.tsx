@@ -66,9 +66,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
     { data: shifts7d },
     { data: latestTreasury },
     { data: myNextTask },
-    { data: activityRows },
-    { data: upcomingEvents },
-    { data: eventTasks }
+    { data: activityRows }
   ] = await Promise.all([
     service.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData),
     service
@@ -110,24 +108,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
       .select("id, user_id, event_type, created_at")
       .eq("organization_id", orgIdForData)
       .order("created_at", { ascending: false })
-      .limit(5),
-    service
-      .from("events")
-      .select("id, name, start_date, end_date")
-      .eq("organization_id", orgIdForData)
-      .gte("end_date", todayStr)
-      .order("start_date", { ascending: true })
       .limit(5)
-      .then((r) => (r.error ? { data: [] } : r), () => ({ data: [] })),
-    service
-      .from("tasks")
-      .select("id, title, status, event_id")
-      .eq("organization_id", orgIdForData)
-      .neq("status", "erledigt")
-      .not("event_id", "is", null)
-      .order("due_at", { ascending: true })
-      .limit(20)
-      .then((r) => (r.error ? { data: [] } : r), () => ({ data: [] })),
   ]);
 
   const shifts = (shifts7d ?? []) as Array<{
@@ -178,47 +159,6 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
           </div>
         </div>
       </section>
-
-      {(upcomingEvents ?? []).length > 0 && (
-        <section className="space-y-3">
-          <div className="section-label">{locale === "de" ? "Aktuelle Veranstaltungen" : "Upcoming events"}</div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {(upcomingEvents ?? []).map((ev: any) => {
-              const evTasks = (eventTasks ?? []).filter((tk: any) => tk.event_id === ev.id);
-              const openCount = evTasks.filter((tk: any) => tk.status !== "erledigt").length;
-              return (
-                <Link key={ev.id} href={`/${orgSlug}/admin/events/${ev.id}`} className="card p-4 hover:shadow-md transition-shadow">
-                  <div className="text-sm font-medium text-gray-900 dark:text-foreground-dark">{ev.name}</div>
-                  {(ev.start_date || ev.end_date) && (
-                    <div className="mt-1 text-xs text-gray-500">
-                      {ev.start_date && dateOnly(ev.start_date)}
-                      {ev.end_date && ev.end_date !== ev.start_date && ` – ${dateOnly(ev.end_date)}`}
-                    </div>
-                  )}
-                  {openCount > 0 && (
-                    <div className="mt-2">
-                      <span className="tag tag-amber">{openCount} {locale === "de" ? "Aufgaben offen" : "tasks open"}</span>
-                    </div>
-                  )}
-                  {evTasks.length > 0 && (
-                    <ul className="mt-2 space-y-1">
-                      {evTasks.slice(0, 3).map((tk: any) => (
-                        <li key={tk.id} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                          <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${tk.status === "erledigt" ? "bg-green-500" : tk.status === "in_arbeit" ? "bg-amber-500" : "bg-gray-400"}`} />
-                          <span className="truncate">{tk.title}</span>
-                        </li>
-                      ))}
-                      {evTasks.length > 3 && (
-                        <li className="text-xs text-gray-400">+{evTasks.length - 3} {locale === "de" ? "weitere" : "more"}</li>
-                      )}
-                    </ul>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="space-y-4">

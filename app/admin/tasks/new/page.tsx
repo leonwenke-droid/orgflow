@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { getRequestLocale } from "../../../../lib/localeServer";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { getCurrentUserOrganization, isOrgAdmin } from "../../../../lib/getOrganization";
@@ -96,10 +95,6 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
   if (error) {
     console.error(error);
     return { errorKey: "tasks.create_error" };
-  }
-
-  if (eventId && formOrgSlug) {
-    revalidatePath(`/${formOrgSlug}/admin/events/${eventId}`);
   }
 
   if (formOrgSlug) {

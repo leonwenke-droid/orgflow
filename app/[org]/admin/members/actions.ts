@@ -241,8 +241,7 @@ export async function resendLeadInviteAction(
 ): Promise<{ error: string | null; errorKey?: string; inviteUrl?: string; whatsappText?: string; expiresAt?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const actor = await import("../../../../lib/permissionsServer").then((m) => m.requireOrgAdminAction(orgIdForData));
-  if (!actor) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData, org.id))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = createSupabaseServiceRoleClient();
   const { data: profile, error: fetchErr } = await supabase

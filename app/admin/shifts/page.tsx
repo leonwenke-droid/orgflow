@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { getRequestLocale } from "../../../lib/localeServer";
 import Link from "next/link";
@@ -314,7 +313,9 @@ async function createShifts(
     if (!date) {
       return { error: "Date required.", errorKey: "shifts.date_required" };
     }
-    const generatedTitle = eventName || `${date} ${startTime}${endTime ? "–" + endTime : ""}`.trim();
+    if (!eventName) {
+      return { error: "Title required.", errorKey: "shifts.title_required" };
+    }
 
     if (!organizationId) return { errorKey: "common.unauthorized" };
     const actor = await requireOrgAdminAction(organizationId);
@@ -342,8 +343,8 @@ async function createShifts(
 
     if (type === "pausenverkauf") {
       const rows = [
-        baseRow({ event_name: `${generatedTitle} – 1. Pause`, start_time: "09:15", end_time: "09:35" }),
-        baseRow({ event_name: `${generatedTitle} – 2. Pause`, start_time: "11:05", end_time: "11:30" })
+        baseRow({ event_name: `${eventName} – 1. Pause`, start_time: "09:15", end_time: "09:35" }),
+        baseRow({ event_name: `${eventName} – 2. Pause`, start_time: "11:05", end_time: "11:30" })
       ];
       const { data: created, error } = await service
         .from("shifts")
@@ -413,7 +414,7 @@ async function createShifts(
         const hasAbbau = addSetupTeardown && isLast && lastSlotEnd > end;
 
         rows.push({
-          event_name: generatedTitle,
+          event_name: eventName,
           date,
           start_time: toHHMM(effectiveStart),
           end_time: toHHMM(effectiveEnd),
@@ -884,7 +885,7 @@ async function restoreShift(formData: FormData) {
 }
 
 type ShiftsPageProps = {
-  searchParams?: Promise<{ org?: string; event?: string; success?: string; time?: string }> | { org?: string; event?: string; success?: string; time?: string };
+  searchParams?: Promise<{ org?: string; event?: string; success?: string }> | { org?: string; event?: string; success?: string };
 };
 
 export default async function ShiftsPage(props: ShiftsPageProps) {
@@ -892,12 +893,12 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   const locale = await getRequestLocale();
   const raw = props.searchParams;
   const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ org?: string; event?: string; success?: string; time?: string }>)
-    : (raw ?? {}) as { org?: string; event?: string; success?: string; time?: string };
+    ? await (raw as Promise<{ org?: string; event?: string; success?: string }>)
+    : (raw ?? {}) as { org?: string; event?: string; success?: string };
   const orgSlug = searchParams?.org?.trim() || null;
   const eventIdFilter = searchParams?.event?.trim() || null;
   const shiftsCreatedSuccess = searchParams?.success === "1";
-  const timeFilter = (searchParams?.time ?? "all") as ShiftTimeFilter;
+  const timeFilter = ((searchParams as Record<string, string | undefined>)?.time ?? "all") as ShiftTimeFilter;
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -1004,31 +1005,27 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     profilesQuery.eq("organization_id", orgId);
   }
 
-  const [assignmentsRes, profilesRes, countersRes, eventsRes] = await Promise.all([
-    service.from("shift_assignments").select("id, shift_id, status, user_id, replacement_user_id").then((r) => r, () => ({ data: null })),
-    profilesQuery.then((r: any) => r, () => ({ data: null })),
-    service.from("user_counters").select("user_id, load_index, responsibility_malus").then((r) => r, () => ({ data: null })),
-    eventsQuery.then((r: any) => r, () => ({ data: null }))
+  const [{ data: assignmentsRaw }, { data: profiles }, { data: counters }, { data: eventsList }] = await Promise.all([
+    service.from("shift_assignments").select("id, shift_id, status, user_id, replacement_user_id"),
+    profilesQuery,
+    service.from("user_counters").select("user_id, load_index, responsibility_malus"),
+    eventsQuery
   ]);
-  const assignmentsRaw = (assignmentsRes?.data ?? []) as { id: string; shift_id: string; status: string; user_id: string; replacement_user_id?: string | null }[];
-  const profiles = (profilesRes?.data ?? []) as { id: string; full_name: string }[];
-  const counters = (countersRes?.data ?? []) as { user_id: string; load_index: number; responsibility_malus: number }[];
-  const eventsList = (eventsRes?.data ?? []) as { id: string; name: string }[];
-  const events = eventsList.map((e) => ({ id: e.id, name: e.name }));
+  const events = (eventsList ?? []).map((e: { id: string; name: string }) => ({ id: e.id, name: e.name }));
 
   const assignmentsByShift = new Map<
     string,
     { id: string; status: string; user_id: string; replacement_user_id: string | null }[]
   >();
-  for (const a of assignmentsRaw) {
-    const sid = a.shift_id;
+  for (const a of assignmentsRaw ?? []) {
+    const sid = (a as { shift_id: string }).shift_id;
     if (!sid) continue;
     if (!assignmentsByShift.has(sid)) assignmentsByShift.set(sid, []);
     assignmentsByShift.get(sid)!.push({
-      id: a.id,
-      status: a.status ?? "zugewiesen",
-      user_id: a.user_id ?? "",
-      replacement_user_id: a.replacement_user_id ?? null
+      id: (a as { id: string }).id,
+      status: (a as { status: string }).status ?? "zugewiesen",
+      user_id: (a as { user_id: string }).user_id ?? "",
+      replacement_user_id: (a as { replacement_user_id?: string }).replacement_user_id ?? null
     });
   }
   const shifts: ShiftForPdf[] = (shiftsRaw ?? []).map((s: Record<string, unknown>) => ({
@@ -1044,12 +1041,12 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   }));
 
   const loadMap = new Map(
-    counters.map((c) => [
-      c.user_id,
+    (counters ?? []).map((c) => [
+      c.user_id as string,
       { load: Number(c.load_index) ?? 0, malus: Number(c.responsibility_malus) ?? 0 }
     ])
   );
-  const membersSortedByLoad = profiles
+  const membersSortedByLoad = (profiles ?? [])
     .map((p) => {
       const c = loadMap.get(p.id) ?? { load: 0, malus: 0 };
       return {
@@ -1061,8 +1058,8 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     })
     .sort((a, b) => a.load_index - b.load_index);
 
-  const profileNames = new Map<string, string>(
-    profiles.map((p) => [p.id, p.full_name])
+  const profileNames = new Map(
+    (profiles ?? []).map((p) => [p.id, p.full_name])
   );
 
   const filteredShifts = filterShiftsByTime(shifts, timeFilter, todayStr);
@@ -1078,9 +1075,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         </p>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        <Suspense fallback={null}>
-          <ShiftTabFilter />
-        </Suspense>
+        <ShiftTabFilter />
       </div>
       {events.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-sm">

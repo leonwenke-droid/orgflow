@@ -61,32 +61,18 @@ export default async function AdminDashboard({
       .from("tasks")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
-      .neq("status", "erledigt")
-      .is("deleted_at", null)
-      .then((r) => r.error ? service
-        .from("tasks")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", orgIdForData)
-        .neq("status", "erledigt") : r),
+      .neq("status", "erledigt"),
     service
       .from("tasks")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
       .neq("status", "erledigt")
-      .is("deleted_at", null)
-      .lt("due_at", new Date().toISOString())
-      .then((r) => r.error ? service
-        .from("tasks")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", orgIdForData)
-        .neq("status", "erledigt")
-        .lt("due_at", new Date().toISOString()) : r),
+      .lt("due_at", new Date().toISOString()),
     service
       .from("engagement_scores")
       .select("user_id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
-      .gt("score", 0)
-      .then((r) => r.error ? { count: 0 } : r),
+      .gt("score", 0),
     service
       .from("shifts")
       .select("id, committee_id, required_slots, shift_assignments(id)")
@@ -99,7 +85,6 @@ export default async function AdminDashboard({
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
       .eq("status", "pending")
-      .then((r) => r.error ? { count: 0 } : r)
   ]);
 
   const shiftsSlots7d = (shifts7d ?? []).reduce((sum, s: any) => sum + (Number(s.required_slots ?? 0) || 0), 0);
