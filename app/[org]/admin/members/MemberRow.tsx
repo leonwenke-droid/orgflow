@@ -295,9 +295,8 @@ export default function MemberRow({
                 </button>
               </div>
 
-              {(effectiveStatus !== "active") && (
-                <div className="border-t border-gray-100 pt-3">
-                  <div className="text-xs font-medium text-gray-700">{t("members.invite_pending", locale)}</div>
+              <div className="border-t border-gray-100 pt-3 dark:border-gray-700">
+                  <div className="text-xs font-medium text-gray-700 dark:text-gray-300">{locale === "de" ? "Einladungslink" : "Invite link"}</div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button type="button" onClick={handleCopyInviteLink} disabled={loading} className="btn-secondary">
                       {t("members.copy_invite_link", locale)}
@@ -342,7 +341,6 @@ export default function MemberRow({
                     )}
                   </div>
                 </div>
-              )}
 
               {copied ? <div className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">{copied}</div> : null}
               {error ? <div className="text-xs text-danger">{error}</div> : null}

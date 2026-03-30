@@ -172,7 +172,7 @@ export default async function EventDetailPage(props: {
 
       <div className="flex flex-wrap gap-3">
         <Link
-          href={`/admin/materials?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
+          href={`/${orgSlug}/admin/materials?event=${eventId}`}
           className="btn-secondary"
         >
           {t("events.view_resources", locale)} ({resourcesCount ?? 0})

@@ -80,7 +80,7 @@ export default function CommitteeRow({
   const showInactive = committee.is_active === false;
 
   return (
-    <div className="card">
+    <div className="card min-h-[120px]">
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
@@ -115,10 +115,10 @@ export default function CommitteeRow({
           </div>
 
           <details className="relative">
-            <summary className="cursor-pointer select-none rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+            <summary className="cursor-pointer select-none rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
               ···
             </summary>
-            <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-lg">
+            <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
               {!editing ? (
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => setEditing(true)} className="btn-secondary">
@@ -141,7 +141,7 @@ export default function CommitteeRow({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               autoFocus
             />
             <textarea
@@ -149,9 +149,9 @@ export default function CommitteeRow({
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               placeholder={t("teams.description_placeholder", locale)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded border-gray-300" />
               {t("teams.active", locale)}
             </label>

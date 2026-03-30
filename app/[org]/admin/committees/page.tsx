@@ -11,8 +11,8 @@ import {
 import { canManageMembersAndTeams } from "../../../../lib/permissions";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
-import CreateCommitteeForm from "./CreateCommitteeForm";
 import CommitteeRow from "./CommitteeRow";
+import NewTeamCard from "./NewTeamCard";
 import EmptyState from "../../../../components/EmptyState";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
@@ -125,17 +125,7 @@ export default async function AdminCommitteesPage(props: {
         {committeesWithCounts.map((c: any) => (
           <CommitteeRow key={c.id} orgSlug={orgSlug} committee={c} />
         ))}
-        <a
-          href="#create-team"
-          className="flex min-h-[120px] items-center justify-center rounded-xl border-2 border-dashed border-gray-300 text-sm font-medium text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-700 dark:border-gray-600 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-300"
-        >
-          + Neues Team anlegen
-        </a>
-      </div>
-
-      <div id="create-team" className="card p-4">
-        <div className="section-label">Neues Team</div>
-        <CreateCommitteeForm orgSlug={orgSlug} orgId={org.id} committees={committeeList} />
+        <NewTeamCard orgSlug={orgSlug} orgId={org.id} committees={committeeList} />
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ export default async function AdminMaterialsPage(props: {
   const locale = await getRequestLocale();
   const service = createSupabaseServiceRoleClient();
 
-  const [{ data: resources }, { data: profiles }, { data: events }] =
+  const [{ data: resources }, { data: profiles }, { data: events }, categoriesRes] =
     await Promise.all([
       service
         .from("material_procurements")
@@ -51,7 +51,15 @@ export default async function AdminMaterialsPage(props: {
         .select("id, name")
         .eq("organization_id", orgIdForData)
         .order("name"),
+      service
+        .from("resource_categories")
+        .select("key, name, points")
+        .eq("organization_id", orgIdForData)
+        .order("key")
+        .then((r) => r, () => ({ data: null })),
     ]);
+
+  const sizeRules = (categoriesRes?.data ?? null) as { key: string; name: string; points: number }[] | null;
 
   const nameById: Record<string, string> = Object.fromEntries(
     (profiles ?? []).map((p: any) => [p.id, p.full_name ?? "—"])
@@ -75,6 +83,7 @@ export default async function AdminMaterialsPage(props: {
         nameById={nameById}
         profiles={(profiles ?? []) as any}
         events={(events ?? []) as any}
+        initialRules={sizeRules && sizeRules.length > 0 ? sizeRules : undefined}
       />
     </div>
   );

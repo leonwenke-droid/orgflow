@@ -1004,27 +1004,31 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     profilesQuery.eq("organization_id", orgId);
   }
 
-  const [{ data: assignmentsRaw }, { data: profiles }, { data: counters }, { data: eventsList }] = await Promise.all([
-    service.from("shift_assignments").select("id, shift_id, status, user_id, replacement_user_id"),
-    profilesQuery,
-    service.from("user_counters").select("user_id, load_index, responsibility_malus"),
-    eventsQuery
+  const [assignmentsRes, profilesRes, countersRes, eventsRes] = await Promise.all([
+    service.from("shift_assignments").select("id, shift_id, status, user_id, replacement_user_id").then((r) => r, () => ({ data: null })),
+    profilesQuery.then((r: any) => r, () => ({ data: null })),
+    service.from("user_counters").select("user_id, load_index, responsibility_malus").then((r) => r, () => ({ data: null })),
+    eventsQuery.then((r: any) => r, () => ({ data: null }))
   ]);
-  const events = (eventsList ?? []).map((e: { id: string; name: string }) => ({ id: e.id, name: e.name }));
+  const assignmentsRaw = (assignmentsRes?.data ?? []) as { id: string; shift_id: string; status: string; user_id: string; replacement_user_id?: string | null }[];
+  const profiles = (profilesRes?.data ?? []) as { id: string; full_name: string }[];
+  const counters = (countersRes?.data ?? []) as { user_id: string; load_index: number; responsibility_malus: number }[];
+  const eventsList = (eventsRes?.data ?? []) as { id: string; name: string }[];
+  const events = eventsList.map((e) => ({ id: e.id, name: e.name }));
 
   const assignmentsByShift = new Map<
     string,
     { id: string; status: string; user_id: string; replacement_user_id: string | null }[]
   >();
-  for (const a of assignmentsRaw ?? []) {
-    const sid = (a as { shift_id: string }).shift_id;
+  for (const a of assignmentsRaw) {
+    const sid = a.shift_id;
     if (!sid) continue;
     if (!assignmentsByShift.has(sid)) assignmentsByShift.set(sid, []);
     assignmentsByShift.get(sid)!.push({
-      id: (a as { id: string }).id,
-      status: (a as { status: string }).status ?? "zugewiesen",
-      user_id: (a as { user_id: string }).user_id ?? "",
-      replacement_user_id: (a as { replacement_user_id?: string }).replacement_user_id ?? null
+      id: a.id,
+      status: a.status ?? "zugewiesen",
+      user_id: a.user_id ?? "",
+      replacement_user_id: a.replacement_user_id ?? null
     });
   }
   const shifts: ShiftForPdf[] = (shiftsRaw ?? []).map((s: Record<string, unknown>) => ({
@@ -1040,12 +1044,12 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   }));
 
   const loadMap = new Map(
-    (counters ?? []).map((c) => [
-      c.user_id as string,
+    counters.map((c) => [
+      c.user_id,
       { load: Number(c.load_index) ?? 0, malus: Number(c.responsibility_malus) ?? 0 }
     ])
   );
-  const membersSortedByLoad = (profiles ?? [])
+  const membersSortedByLoad = profiles
     .map((p) => {
       const c = loadMap.get(p.id) ?? { load: 0, malus: 0 };
       return {
@@ -1057,8 +1061,8 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     })
     .sort((a, b) => a.load_index - b.load_index);
 
-  const profileNames = new Map(
-    (profiles ?? []).map((p) => [p.id, p.full_name])
+  const profileNames = new Map<string, string>(
+    profiles.map((p) => [p.id, p.full_name])
   );
 
   const filteredShifts = filterShiftsByTime(shifts, timeFilter, todayStr);
