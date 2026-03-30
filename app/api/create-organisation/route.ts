@@ -3,6 +3,8 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { randomUUID } from "crypto";
+import { asTrimmedString, readJson } from "../../../lib/validation";
+import { checkRateLimit } from "../../../lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
@@ -19,9 +21,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json();
-    const name = (body.name as string)?.trim();
-    const orgType = (body.orgType as string) || "other";
+    const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() || "unknown";
+    const rl = checkRateLimit(`org:create:${ip}:${user.id}`, 5);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { message: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      );
+    }
+
+    const parsed = await readJson<any>(req);
+    if (!parsed.ok) {
+      return NextResponse.json({ message: "Invalid JSON body." }, { status: 400 });
+    }
+    const body = parsed.data ?? {};
+    const name = asTrimmedString(body.name);
+    const orgType = asTrimmedString(body.orgType) || "other";
     const modules = Array.isArray(body.modules)
       ? (body.modules as string[]).map((m: string) => String(m).trim()).filter(Boolean)
       : ["tasks", "shifts", "finance", "resources", "engagement"];
@@ -52,6 +67,16 @@ export async function POST(req: Request) {
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
       .slice(0, 50) || `org-${Date.now()}`;
+
+    const RESERVED = new Set([
+      "api","admin","auth","login","signup","dashboard","tasks","shifts","events","materials","engagement","finance","treasury","settings","onboarding","super-admin","me","account","feedback","_next"
+    ]);
+    if (RESERVED.has(slug)) {
+      return NextResponse.json(
+        { message: "Organisation name results in a reserved URL slug. Please choose a different name." },
+        { status: 400 }
+      );
+    }
 
     const serviceClient = createSupabaseServiceRoleClient();
     const { data: existing } = await serviceClient

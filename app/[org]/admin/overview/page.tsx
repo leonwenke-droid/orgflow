@@ -15,6 +15,7 @@ import { canAccessOperationalAdmin } from "../../../../lib/permissions";
 import { t } from "../../../../lib/i18n";
 import { formatShiftSlot, type AppLocale } from "../../../../lib/formatDate";
 import { DEFAULT_CURRENCY, formatCurrency } from "../../../../lib/currency";
+import AdminForbidden from "../AdminForbidden";
 
 function dateOnly(value: string | null | undefined) {
   return String(value ?? "").slice(0, 10);
@@ -95,6 +96,9 @@ export default async function OrgOverviewPage(props: {
 
   const userRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
   const operational = canAccessOperationalAdmin(userRole);
+  if (!operational) {
+    return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  }
 
   const service = createSupabaseServiceRoleClient();
   const start = new Date();

@@ -2,22 +2,29 @@ import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { checkRateLimit } from "../../../../lib/rateLimit";
+import { asTrimmedString, isValidEmail, readJson } from "../../../../lib/validation";
+import { getClientIp, getRequestId, log } from "../../../../lib/log";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const email = (body.email as string)?.trim();
-    if (!email) {
-      return NextResponse.json({ message: "Email is required." }, { status: 400 });
-    }
+    const parsed = await readJson<{ email?: unknown }>(req);
+    const email = parsed.ok ? asTrimmedString(parsed.data.email) : "";
+    const normalizedEmail = email.toLowerCase();
 
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("x-real-ip") ?? "unknown";
-    const limit = checkRateLimit(`forgot-password:${ip}:${email.toLowerCase()}`, 5);
+    const ip = getClientIp(req);
+    const requestId = getRequestId(req);
+    const limit = checkRateLimit(`forgot-password:${ip}:${normalizedEmail || "unknown"}`, 5);
     if (!limit.ok) {
+      log("warn", "rate_limit", { requestId, route: "auth/forgot-password", ip, key: "forgot-password" });
       return NextResponse.json({ message: "Too many reset requests. Please try again later." }, {
         status: 429,
         headers: { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) }
       });
+    }
+
+    // Avoid user enumeration: always return 200 for syntactically invalid/missing emails.
+    if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
+      return NextResponse.json({ message: "If an account exists for this email, you'll receive a reset link shortly." });
     }
 
     const cookieStore = await cookies();
@@ -31,21 +38,18 @@ export async function POST(req: Request) {
     }
     const redirectTo = `${baseUrl.replace(/\/$/, "")}/auth/callback?next=${encodeURIComponent("/auth/reset-password?next=/login")}`;
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo,
     });
 
     if (error) {
-      console.error("[forgot-password]", error);
-      return NextResponse.json(
-        { message: error.message || "Failed to send reset email." },
-        { status: 400 }
-      );
+      log("warn", "forgot_password_error", { requestId, route: "auth/forgot-password", ip });
+      return NextResponse.json({ message: "If an account exists for this email, you'll receive a reset link shortly." });
     }
 
-    return NextResponse.json({ message: "Check your email for the reset link." });
+    return NextResponse.json({ message: "If an account exists for this email, you'll receive a reset link shortly." });
   } catch (e) {
-    console.error("[forgot-password]", e);
+    log("error", "forgot_password_unexpected", { requestId: getRequestId(req), route: "auth/forgot-password", error: String(e) });
     return NextResponse.json({ message: "An error occurred." }, { status: 500 });
   }
 }

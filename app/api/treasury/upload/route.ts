@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { canViewFinance } from "../../../../lib/permissions";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { checkRateLimit } from "../../../../lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,15 @@ export async function POST(req: NextRequest) {
     const organizationId = formData.get("organization_id")?.toString() || null;
     if (!organizationId) {
       return NextResponse.json({ message: "organization_id required." }, { status: 400 });
+    }
+
+    const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() || "unknown";
+    const rl = checkRateLimit(`treasury:upload:${ip}:${user.id}:${organizationId}`, 10);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { message: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      );
     }
 
     const service = createSupabaseServiceRoleClient();

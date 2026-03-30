@@ -78,10 +78,11 @@ function getNavSections(
   const tasksHref = `/${org}/tasks`;
   const shiftsHref = `/${org}/shifts`;
   const treasuryHref = `/${org}/admin/finanzen`;
+  const overviewHref = operational ? `/${org}/admin/overview` : `/${org}/overview`;
 
   const myArea: NavItem[] = [
     { href: `/${org}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
-    { href: `/${org}/admin/overview`, labelKey: "nav.org_overview", icon: PanelsTopLeft },
+    { href: overviewHref, labelKey: "nav.org_overview", icon: PanelsTopLeft },
     ...(m.tasks !== false ? [{ href: tasksHref, labelKey: "dashboard.tasks", icon: CheckSquare }] : []),
     ...(m.shifts !== false ? [{ href: shiftsHref, labelKey: "dashboard.shifts", icon: CalendarDays }] : []),
     { href: `/${org}/me`, labelKey: "nav.my_stats", icon: BarChart3 },

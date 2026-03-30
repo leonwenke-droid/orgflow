@@ -5,9 +5,13 @@ import { getCurrentOrganization, isOrgAdmin } from "../../../lib/getOrganization
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { generateInviteToken } from "../../../services/inviteService";
 import { getPublicBaseUrl } from "../../../lib/publicBaseUrl";
+import { asInt, asTrimmedString, clampInt, readJson } from "../../../lib/validation";
+import { checkRateLimit } from "../../../lib/rateLimit";
+import { getClientIp, getRequestId, log } from "../../../lib/log";
 
 export async function POST(req: Request) {
   try {
+    const requestId = getRequestId(req);
     const cookieStore = await cookies();
     const supabase = createServerComponentClient({ cookies: () => cookieStore });
     const { data: { user } } = await supabase.auth.getUser();
@@ -15,12 +19,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Sign in required." }, { status: 401 });
     }
 
-    const body = await req.json();
-    const orgSlug = (body.orgSlug as string)?.trim();
-    const expiresInDays = typeof body.expiresInDays === "number" ? body.expiresInDays : 7;
+    const parsed = await readJson<{ orgSlug?: unknown; expiresInDays?: unknown }>(req);
+    if (!parsed.ok) {
+      return NextResponse.json({ message: "Invalid JSON body." }, { status: 400 });
+    }
+    const orgSlug = asTrimmedString(parsed.data.orgSlug);
+    const expiresInDays = clampInt(asInt(parsed.data.expiresInDays, 7), 1, 30);
 
     if (!orgSlug) {
       return NextResponse.json({ message: "orgSlug required." }, { status: 400 });
+    }
+
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`invite_links:create:${ip}:${orgSlug.toLowerCase()}`, 10);
+    if (!rl.ok) {
+      log("warn", "rate_limit", { requestId, route: "invite-links", ip, key: "invite-links" });
+      return NextResponse.json(
+        { message: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      );
     }
 
     const org = await getCurrentOrganization(orgSlug);
@@ -58,7 +75,7 @@ export async function POST(req: Request) {
     const url = `${await getPublicBaseUrl()}/join/${orgSlug}?token=${encodeURIComponent(link.token)}`;
     return NextResponse.json({ url, token: link.token, expiresAt: link.expires_at });
   } catch (e) {
-    console.error("invite-links error:", e);
+    log("error", "invite_links_error", { requestId: getRequestId(req), route: "invite-links", error: String(e) });
     return NextResponse.json({ message: "An error occurred." }, { status: 500 });
   }
 }

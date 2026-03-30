@@ -5,11 +5,15 @@ import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer"
 import { getStripe } from "../../../../lib/stripe";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
 import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
+import { getClientIp, getRequestId, log } from "../../../../lib/log";
+import { asTrimmedString, readJson } from "../../../../lib/validation";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
+    const requestId = getRequestId(req);
+    const ip = getClientIp(req);
     const cookieStore = await cookies();
     const supabaseAuth = createRouteHandlerClient({ cookies: () => cookieStore });
     const {
@@ -17,9 +21,9 @@ export async function POST(req: NextRequest) {
     } = await supabaseAuth.auth.getUser();
     if (!user) return NextResponse.json({ message: "Sign in required." }, { status: 401 });
 
-    const body = await req.json().catch(() => ({}));
-    const orgSlug = String(body.orgSlug ?? "").trim();
-    const requestedPlan = String(body.plan ?? "").trim() as "team" | "pro";
+    const parsed = await readJson<{ orgSlug?: unknown; plan?: unknown }>(req);
+    const orgSlug = parsed.ok ? asTrimmedString(parsed.data.orgSlug) : "";
+    const requestedPlan = (parsed.ok ? asTrimmedString(parsed.data.plan) : "") as "team" | "pro";
     if (!orgSlug || (requestedPlan !== "team" && requestedPlan !== "pro")) {
       return NextResponse.json({ message: "orgSlug and valid plan required." }, { status: 400 });
     }
@@ -73,7 +77,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (e) {
-    console.error("[billing/create-checkout-session]", e);
+    log("error", "stripe_checkout_session_error", {
+      requestId: getRequestId(req),
+      route: "billing/create-checkout-session",
+      ip: getClientIp(req),
+      error: String(e)
+    });
     return NextResponse.json({ message: "An error occurred." }, { status: 500 });
   }
 }

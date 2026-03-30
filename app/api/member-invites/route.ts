@@ -13,6 +13,8 @@ import {
 import { sendEmail as sendEmailMessage } from "../../../lib/email";
 import { writeAuditLog } from "../../../lib/audit";
 import { getPublicBaseUrl } from "../../../lib/publicBaseUrl";
+import { checkRateLimit } from "../../../lib/rateLimit";
+import { asTrimmedString, readJson } from "../../../lib/validation";
 
 async function getRequesterProfileId(orgId: string, authUserId: string) {
   const service = createSupabaseServiceRoleClient();
@@ -31,13 +33,25 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ message: "Sign in required." }, { status: 401 });
 
-  const body = await req.json().catch(() => ({}));
-  const orgSlug = String(body.orgSlug ?? "").trim();
-  const profileId = String(body.profileId ?? "").trim();
-  const sendEmail = body.sendEmail === true;
+  const parsed = await readJson<{ orgSlug?: unknown; profileId?: unknown; sendEmail?: unknown }>(req);
+  if (!parsed.ok) {
+    return NextResponse.json({ message: "Invalid JSON body." }, { status: 400 });
+  }
+  const orgSlug = asTrimmedString(parsed.data.orgSlug);
+  const profileId = asTrimmedString(parsed.data.profileId);
+  const sendEmail = parsed.data.sendEmail === true;
 
   if (!orgSlug || !profileId) {
     return NextResponse.json({ message: "orgSlug and profileId required." }, { status: 400 });
+  }
+
+  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() || "unknown";
+  const rl = checkRateLimit(`member_invites:send:${ip}:${orgSlug.toLowerCase()}`, 20);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { message: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+    );
   }
 
   const org = await getCurrentOrganization(orgSlug);

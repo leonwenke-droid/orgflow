@@ -3,28 +3,58 @@ import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { checkRateLimit } from "../../../../lib/rateLimit";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { getClientIp, getRequestId, log } from "../../../../lib/log";
 
 export const runtime = "nodejs";
 
 const LOGIN_RATE_LIMIT = 10; // per minute per IP
 
+function hardenAuthCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
+  const maxAge = 60 * 60 * 24 * 30; // 30 days
+  for (const c of cookieStore.getAll()) {
+    if (!c.name.startsWith("sb-")) continue;
+    if (!c.name.includes("-auth-token")) continue;
+    cookieStore.set({
+      name: c.name,
+      value: c.value,
+      path: "/",
+      sameSite: "lax",
+      secure: true,
+      httpOnly: true,
+      maxAge,
+    });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("x-real-ip") ?? "unknown";
-    const limit = checkRateLimit(`login:${ip}`, LOGIN_RATE_LIMIT);
-    if (!limit.ok) {
+    const ip = getClientIp(req);
+    const requestId = getRequestId(req);
+    let body: any = null;
+    try {
+      body = await req.json();
+    } catch {
       return NextResponse.json(
-        { message: "Too many login attempts. Please try again later." },
-        { status: 429, headers: { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) } }
+        { message: "Email and password are required." },
+        { status: 400 }
       );
     }
 
-    const { email, password } = await req.json();
-
+    const email = String(body?.email ?? "").trim();
+    const password = String(body?.password ?? "");
     if (!email || !password) {
       return NextResponse.json(
-        { message: "E-Mail und Passwort sind erforderlich." },
+        { message: "Email and password are required." },
         { status: 400 }
+      );
+    }
+
+    const limit = checkRateLimit(`login:${ip}:${email.toLowerCase()}`, LOGIN_RATE_LIMIT);
+    if (!limit.ok) {
+      log("warn", "rate_limit", { requestId, route: "auth/login", ip, key: "login" });
+      return NextResponse.json(
+        { message: "Too many login attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(limit.retryAfterMs / 1000)) } }
       );
     }
 
@@ -39,13 +69,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
+      log("warn", "auth_login_failed", { requestId, route: "auth/login", ip, email: email.toLowerCase() });
       const needsVerification =
         /email not confirmed|confirm your email|bestätig/i.test(error.message ?? "") ||
         (error as { status?: string }).status === "email_not_confirmed";
       if (needsVerification) {
         return NextResponse.json(
           {
-            message: "E-Mail noch nicht bestätigt. Bitte Postfach prüfen und Link in der E-Mail klicken.",
+            message: "Email not confirmed. Please check your inbox and click the confirmation link.",
             needsVerification: true
           },
           { status: 403 }
@@ -53,7 +84,7 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json(
         {
-          message: "Login fehlgeschlagen. Bitte Zugangsdaten prüfen."
+          message: "Login failed. Please check your credentials."
         },
         { status: 400 }
       );
@@ -68,6 +99,7 @@ export async function POST(req: NextRequest) {
 
     if (profile?.status === "disabled") {
       await supabase.auth.signOut();
+      log("warn", "auth_login_disabled", { requestId, route: "auth/login", ip });
       return NextResponse.json(
         {
           message: "This account has been disabled. Please contact an administrator.",
@@ -78,11 +110,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Cookies werden vom Auth-Helper gesetzt
+    hardenAuthCookies(cookieStore);
     return NextResponse.json({ message: "ok" });
   } catch (e) {
-    console.error(e);
+    log("error", "auth_login_unexpected", { requestId: getRequestId(req), route: "auth/login", error: String(e) });
     return NextResponse.json(
-      { message: "Unerwarteter Fehler beim Login." },
+      { message: "Unexpected login error." },
       { status: 500 }
     );
   }

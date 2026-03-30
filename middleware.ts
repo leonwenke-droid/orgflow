@@ -8,6 +8,64 @@ const ROOT_HOST = process.env.NEXT_PUBLIC_ROOT_HOST; // z. B. "orgflow.app" (nur
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+const RESERVED_ORG_SLUGS = new Set([
+  "api",
+  "admin",
+  "auth",
+  "login",
+  "signup",
+  "dashboard",
+  "tasks",
+  "shifts",
+  "events",
+  "materials",
+  "engagement",
+  "finance",
+  "treasury",
+  "settings",
+  "onboarding",
+  "super-admin",
+  "me",
+  "account",
+  "feedback",
+  "_next",
+]);
+
+const ORG_SCOPED_SEGMENTS = new Set([
+  "dashboard",
+  "overview",
+  "tasks",
+  "shifts",
+  "me",
+  "account",
+  "feedback",
+  "admin",
+  "settings",
+  "onboarding",
+]);
+
+function hardenAuthCookiesOnResponse(res: NextResponse) {
+  const maxAge = 60 * 60 * 24 * 30; // 30 days
+  try {
+    const all = res.cookies.getAll();
+    for (const c of all) {
+      if (!c.name.startsWith("sb-")) continue;
+      if (!c.name.includes("-auth-token")) continue;
+      res.cookies.set({
+        name: c.name,
+        value: c.value,
+        path: "/",
+        sameSite: "lax",
+        secure: true,
+        httpOnly: true,
+        maxAge,
+      });
+    }
+  } catch {
+    // ignore
+  }
+}
+
 const PUBLIC_PREFIXES = [
   "/login",
   "/task",
@@ -15,7 +73,6 @@ const PUBLIC_PREFIXES = [
   "/privacy",
   "/terms",
   "/imprint",
-  "/api",
   "/_next",
   "/create-organisation",
   "/join"
@@ -41,6 +98,11 @@ export async function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
   const res = NextResponse.next();
 
+  // Real API routes are handled by route handlers. Do not treat `/api/*` as org pages.
+  if (pathname === "/api" || pathname.startsWith("/api/")) {
+    return res;
+  }
+
   // ----- Subdomain → Hauptdomain mit Slug-Redirect (nur wenn ROOT_HOST gesetzt; auf localhost weglassen) -----
   if (ROOT_HOST && SUPABASE_URL && SUPABASE_ANON_KEY && host.endsWith(ROOT_HOST) && host !== ROOT_HOST) {
     const subdomain = host.slice(0, -ROOT_HOST.length).replace(/\.$/, "");
@@ -61,6 +123,33 @@ export async function middleware(req: NextRequest) {
         }
       } catch (_) {
         // bei Fehler normal weiter
+      }
+    }
+  }
+
+  // ----- Reserved / unknown org slugs: avoid route collisions and phantom org shells -----
+  const segments = pathname.split("/").filter(Boolean);
+  const orgSlug = segments[0] ?? null;
+  const maybeOrgScoped = !!orgSlug && (segments.length === 1 || ORG_SCOPED_SEGMENTS.has(segments[1] ?? ""));
+  if (orgSlug && maybeOrgScoped) {
+    if (RESERVED_ORG_SLUGS.has(orgSlug)) {
+      return NextResponse.rewrite(new URL("/404", req.url));
+    }
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data: org } = await supabase
+          .from("organizations")
+          .select("id")
+          .eq("slug", orgSlug)
+          .eq("is_active", true)
+          .maybeSingle();
+        if (!org) {
+          return NextResponse.rewrite(new URL("/404", req.url));
+        }
+      } catch {
+        // If org validation fails, don't accidentally grant access; show not found for org-scoped routes.
+        return NextResponse.rewrite(new URL("/404", req.url));
       }
     }
   }
@@ -86,6 +175,7 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  hardenAuthCookiesOnResponse(res);
   return res;
 }
 

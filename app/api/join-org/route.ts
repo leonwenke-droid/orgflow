@@ -4,6 +4,8 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getCurrentOrganization } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { checkRateLimit } from "../../../lib/rateLimit";
+import { asTrimmedString, readJson } from "../../../lib/validation";
 
 export async function POST(req: Request) {
   try {
@@ -14,12 +16,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Sign in required." }, { status: 401 });
     }
 
-    const body = await req.json();
-    const orgSlug = (body.orgSlug as string)?.trim();
-    const token = (body.token as string)?.trim();
+    const parsed = await readJson<{ orgSlug?: unknown; token?: unknown }>(req);
+    if (!parsed.ok) {
+      return NextResponse.json({ message: "Invalid JSON body." }, { status: 400 });
+    }
+    const orgSlug = asTrimmedString(parsed.data.orgSlug);
+    const token = asTrimmedString(parsed.data.token);
 
     if (!orgSlug || !token) {
       return NextResponse.json({ message: "orgSlug and token required." }, { status: 400 });
+    }
+
+    const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() || "unknown";
+    const rl = checkRateLimit(`invite_links:join:${ip}:${orgSlug.toLowerCase()}`, 30);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { message: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      );
     }
 
     const org = await getCurrentOrganization(orgSlug);
