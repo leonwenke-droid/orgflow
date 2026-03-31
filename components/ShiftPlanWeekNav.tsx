@@ -179,7 +179,7 @@ export default function ShiftPlanWeekNav({
     }
     const timer = setTimeout(() => {
       html2canvas(el, {
-        backgroundColor: "#1e293b",
+        backgroundColor: "#222220",
         scale: 2,
         logging: false
       })
@@ -195,7 +195,7 @@ export default function ShiftPlanWeekNav({
   const captureOverlayAsImage = (format: "png" | "jpeg") => {
     if (!overlayCardRef.current) return;
     html2canvas(overlayCardRef.current, {
-      backgroundColor: "#1e293b",
+      backgroundColor: "#222220",
       scale: 2,
       logging: false
     }).then((canvas) => {
@@ -559,8 +559,8 @@ export default function ShiftPlanWeekNav({
       {exportDay && (
         <div
           ref={exportDivRef}
-          className="fixed left-[-9999px] top-0 w-[400px] rounded-xl border border-blue-500/30 bg-slate-800 p-4 text-left"
-          style={{ color: "rgb(207 250 254)", fontFamily: "inherit" }}
+          className="fixed left-[-9999px] top-0 w-[400px] rounded-xl border border-blue-500/30 bg-card-dark p-4 text-left text-blue-100"
+          style={{ fontFamily: "inherit" }}
         >
           <h3 className="text-base font-semibold text-blue-400 border-b border-blue-500/20 pb-2 mb-3">
             {formatDateLabel(exportDay.dateStr, { weekday: "long" })}
@@ -582,7 +582,7 @@ export default function ShiftPlanWeekNav({
               {exportDay.shifts.map((s) => (
                 <li
                   key={s.id}
-                  className="rounded border border-blue-500/20 bg-slate-700/50 px-3 py-2 text-xs"
+                  className="rounded border border-blue-500/20 bg-background-dark/80 px-3 py-2 text-xs"
                 >
                   <span className="font-medium text-blue-300">{slotLabelDetail(s, appLocale)}</span>
                   <p className="mt-1 text-blue-200/90">

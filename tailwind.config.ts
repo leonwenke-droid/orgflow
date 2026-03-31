@@ -1,9 +1,25 @@
 import type { Config } from "tailwindcss";
 
+/** Brand Blue ramp (OrgFlow brand guide) — replaces default Tailwind blue. */
+const brandBlue = {
+  50: "#E6F1FB",
+  100: "#B5D4F4",
+  200: "#85B7EB",
+  300: "#6B9FDF",
+  400: "#378ADD",
+  500: "#2E7BC4",
+  600: "#185FA5",
+  700: "#0F5289",
+  800: "#0C447C",
+  900: "#042C53",
+  950: "#021829",
+  DEFAULT: "#185FA5",
+} as const;
+
 const config: Config = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}"
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   darkMode: "class",
   theme: {
@@ -18,7 +34,7 @@ const config: Config = {
         "ink-3": "var(--ink-3)",
         paper: "var(--paper)",
         surface: "var(--surface)",
-        blue: "var(--blue)",
+        blue: brandBlue,
         green: "var(--green)",
         brand: { DEFAULT: "#185FA5", light: "#E6F1FB", dark: "#0C447C" },
         success: { DEFAULT: "#3B6D11", light: "#EAF3DE", dark: "#27500A" },
@@ -26,37 +42,36 @@ const config: Config = {
         danger: { DEFAULT: "#A32D2D", light: "#FCEBEB", dark: "#791F1F" },
         background: {
           DEFAULT: "#ffffff",
-          dark: "#0f172a"
+          dark: "#111110",
         },
         foreground: {
-          DEFAULT: "#1f2937",
-          dark: "#e2e8f0"
+          DEFAULT: "#0c0c0b",
+          dark: "#f0efe9",
         },
         card: {
-          DEFAULT: "#f9fafb",
-          dark: "#1e293b"
+          DEFAULT: "#fafaf8",
+          dark: "#222220",
         },
         "card-border": {
-          DEFAULT: "#e5e7eb",
-          dark: "#334155"
+          DEFAULT: "#e8e7e3",
+          dark: "#3d3d3a",
         },
         muted: {
-          DEFAULT: "#6b7280",
-          dark: "#94a3b8"
+          DEFAULT: "#888780",
+          dark: "#6b6a64",
         },
         accent: {
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb"
-        }
+          ...brandBlue,
+          DEFAULT: "#185FA5",
+        },
       },
       boxShadow: {
-        glow: "0 0 30px rgba(59,130,246,0.35)",
-        soft: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)"
-      }
-    }
+        glow: "0 0 30px rgba(24,95,165,0.35)",
+        soft: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };
 
 export default config;

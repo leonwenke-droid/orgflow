@@ -1,9 +1,9 @@
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-[#0b1020] text-slate-100">
+    <div className="min-h-screen bg-background-dark text-foreground-dark">
       <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-12">
         <h1 className="text-2xl font-semibold tracking-tight">Page not found</h1>
-        <p className="mt-2 text-sm text-slate-300">
+        <p className="mt-2 text-sm text-muted-dark">
           The page you’re looking for doesn’t exist, or you may not have access.
         </p>
         <div className="mt-6">

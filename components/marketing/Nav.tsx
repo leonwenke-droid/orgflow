@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { OrgFlowLogoMark } from "../brand/OrgFlowLogoMark";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -17,13 +18,8 @@ export function Nav() {
       <div className="container">
         <div className="nav-inner">
           <Link href="/" className="logo" aria-label="OrgFlow">
-            <div className="logo-mark" aria-hidden>
-              <svg viewBox="0 0 14 14" fill="none">
-                <rect x="1" y="1" width="5" height="5" rx="1.5" fill="white" />
-                <rect x="8" y="1" width="5" height="5" rx="1.5" fill="white" opacity=".5" />
-                <rect x="1" y="8" width="5" height="5" rx="1.5" fill="white" opacity=".5" />
-                <rect x="8" y="8" width="5" height="5" rx="1.5" fill="white" opacity=".3" />
-              </svg>
+            <div className="logo-mark text-white" aria-hidden>
+              <OrgFlowLogoMark className="h-[14px] w-[14px]" />
             </div>
             OrgFlow
           </Link>

@@ -24,7 +24,7 @@ export const TASK_STATUS_COLORS: Record<string, string> = {
   offen: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200",
   erledigt: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-100",
   ueberfaellig: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-100",
-  abgebrochen: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+  abgebrochen: "bg-surface text-muted dark:bg-card-dark dark:text-muted-dark"
 };
 
 export type AppLocale = "en" | "de";

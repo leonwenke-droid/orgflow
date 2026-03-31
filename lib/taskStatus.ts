@@ -6,7 +6,7 @@ export const STATUS_BORDER: Record<string, string> = {
   ueberfaellig: "border-l-[3px] border-l-[#A32D2D]",
   offen: "border-l-[3px] border-l-gray-200 dark:border-l-gray-700",
   erledigt: "border-l-[3px] border-l-[#3B6D11] opacity-60",
-  abgebrochen: "border-l-[3px] border-l-slate-400 opacity-80"
+  abgebrochen: "border-l-[3px] border-l-muted opacity-80 dark:border-l-muted-dark"
 };
 
 export function taskRowBorderClass(status: string | null | undefined, dueAt: string | null | undefined): string {

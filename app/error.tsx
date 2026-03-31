@@ -9,10 +9,10 @@ export default function GlobalError({
 }) {
   return (
     <html>
-      <body className="min-h-screen bg-[#0b1020] text-slate-100">
+      <body className="min-h-screen bg-background-dark text-foreground-dark">
         <div className="mx-auto flex min-h-screen max-w-xl flex-col justify-center px-6 py-12">
           <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm text-muted-dark">
             Please try again. If the problem persists, contact support.
           </p>
           <div className="mt-6 flex gap-3">
@@ -30,7 +30,7 @@ export default function GlobalError({
             </a>
           </div>
           {process.env.NODE_ENV !== "production" ? (
-            <pre className="mt-6 whitespace-pre-wrap rounded-lg border border-white/10 bg-black/40 p-4 text-xs text-slate-200">
+            <pre className="mt-6 whitespace-pre-wrap rounded-lg border border-white/10 bg-black/40 p-4 text-xs text-foreground-dark/90">
               {String(error?.message || error)}
               {"\n"}
               {error?.stack ? String(error.stack) : ""}
