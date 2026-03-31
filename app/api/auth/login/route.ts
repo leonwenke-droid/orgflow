@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { checkRateLimit } from "../../../../lib/rateLimit";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { getSingleOrgDashboardPathForUserId } from "../../../../lib/getOrganization";
 import { getClientIp, getRequestId, log } from "../../../../lib/log";
 
 export const runtime = "nodejs";
@@ -111,7 +112,14 @@ export async function POST(req: NextRequest) {
 
     // Cookies werden vom Auth-Helper gesetzt
     hardenAuthCookies(cookieStore);
-    return NextResponse.json({ message: "ok" });
+
+    const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
+    const defaultOrgDashboard = uid ? await getSingleOrgDashboardPathForUserId(uid) : null;
+
+    return NextResponse.json({
+      message: "ok",
+      ...(defaultOrgDashboard ? { defaultOrgDashboard } : {})
+    });
   } catch (e) {
     log("error", "auth_login_unexpected", { requestId: getRequestId(req), route: "auth/login", error: String(e) });
     return NextResponse.json(

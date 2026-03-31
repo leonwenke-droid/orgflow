@@ -24,8 +24,9 @@ export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
 
     setLoading(false);
 
+    const data = await res.json().catch(() => ({} as Record<string, unknown>));
+
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
       if (data.needsVerification) {
         const next = redirectTo || "/";
         window.location.href = `/claim-org/check-email?next=${encodeURIComponent(next)}`;
@@ -37,7 +38,14 @@ export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
       return;
     }
 
-    window.location.href = redirectTo || "/dashboard";
+    const fallback = redirectTo || "/dashboard";
+    const directOrg =
+      typeof data.defaultOrgDashboard === "string" && data.defaultOrgDashboard.startsWith("/")
+        ? data.defaultOrgDashboard
+        : null;
+    const useHub =
+      fallback === "/dashboard" || fallback.startsWith("/dashboard/");
+    window.location.href = directOrg && useHub ? directOrg : fallback;
   };
 
   return (

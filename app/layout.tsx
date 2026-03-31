@@ -11,7 +11,7 @@ import { LocaleProvider } from "../components/LocaleProvider";
 import EmailVerificationBanner from "../components/EmailVerificationBanner";
 import CookieNotice from "../components/CookieNotice";
 import ConsentSync from "../components/ConsentSync";
-import FooterLinks from "../components/FooterLinks";
+import ConditionalRootFooter from "../components/ConditionalRootFooter";
 import { LOCALE_COOKIE_NAME, resolveLocale } from "../lib/i18n";
 import { getPublicBaseUrl } from "../lib/publicBaseUrl";
 
@@ -126,19 +126,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <ToastContainer />
             <CookieNotice />
             <ConsentSync />
-            <footer className="mt-8 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <a
-                href="https://lyniqmedia.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 transition-colors hover:text-gray-700 dark:hover:text-gray-300"
-              >
-                powered by LYNIQ Media
-              </a>
-              <FooterLinks />
-            </div>
-          </footer>
+            <ConditionalRootFooter />
         </div>
         </LocaleProvider>
         </ThemeProvider>

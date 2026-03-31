@@ -52,8 +52,13 @@ function AppShellInner({
   user: AppShellUser;
   children: React.ReactNode;
 }) {
+  const pathname = usePathname() ?? "";
   const orgSlug = useOrgSlug();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (pathname === "/") {
+    return <>{children}</>;
+  }
 
   const showSidebar = !!(orgSlug && user);
 

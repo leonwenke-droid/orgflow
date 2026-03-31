@@ -333,6 +333,37 @@ export async function getEffectiveUserRoleForOrg(orgSlug: string, org: Organizat
 }
 
 /**
+ * Wenn der Nutzer genau eine aktive Mitgliedschaft hat: Pfad ins Org-Dashboard.
+ * Sonst null (Hub / Auswahl). Nutzung nach Passwort-Login, damit kein Zwischenstop auf /dashboard nötig ist.
+ */
+export async function getSingleOrgDashboardPathForUserId(userId: string): Promise<string | null> {
+  const uid = String(userId ?? "").trim();
+  if (!uid) return null;
+
+  const service = createSupabaseServiceRoleClient();
+  const { data: profiles } = await service
+    .from("profiles")
+    .select("organization_id, status")
+    .eq("auth_user_id", uid)
+    .neq("status", "disabled");
+
+  const rows = (profiles ?? []).filter((p) => p.organization_id);
+  const orgIds = [...new Set(rows.map((p) => String(p.organization_id)))];
+  if (orgIds.length !== 1) return null;
+
+  const { data: org } = await service
+    .from("organizations")
+    .select("slug")
+    .eq("id", orgIds[0])
+    .eq("is_active", true)
+    .maybeSingle();
+
+  const slug = String((org as { slug?: string } | null)?.slug ?? "").trim();
+  if (!slug) return null;
+  return `/${slug}/dashboard`;
+}
+
+/**
  * All active organisations the signed-in user has a non-disabled profile in.
  */
 export async function getOrganizationsForCurrentUser(): Promise<UserOrgMembership[]> {
