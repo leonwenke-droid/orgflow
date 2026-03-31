@@ -297,6 +297,17 @@
 .marketing .p-card { border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px; background: var(--surface-raised); transition: var(--t); }
 .marketing .p-card:hover { border-color: var(--border-mid); }
 .marketing .p-card.featured { background: var(--ink); color: #fff; border-color: transparent; position: relative; }
+/* Light OS: featured card = ink panel + light text (rules below, scoped to light only). */
+@media (prefers-color-scheme: light) {
+  .marketing .p-card.featured .p-tier { color: rgba(255,255,255,.5); }
+  .marketing .p-card.featured .p-period { color: rgba(255,255,255,.4); }
+  .marketing .p-card.featured .p-desc { color: rgba(255,255,255,.6); }
+  .marketing .p-card.featured .p-feature { color: rgba(255,255,255,.75); }
+  .marketing .p-card.featured .p-divider { background: rgba(255,255,255,.12); }
+  .marketing .p-card.featured .p-price { color: #fff; }
+  .marketing .p-card.featured .p-check-white { color: rgba(255,255,255,.65); }
+}
+/* Dark OS: featured card inverts to white panel + ink text (must not be overridden by light-only rules above). */
 @media (prefers-color-scheme: dark) {
   .marketing .p-card.featured { background: #fff; color: #0c0c0b; }
   .marketing .p-card.featured .p-tier { color: rgba(0,0,0,.5); }
@@ -304,7 +315,8 @@
   .marketing .p-card.featured .p-desc { color: rgba(0,0,0,.6); }
   .marketing .p-card.featured .p-feature { color: rgba(0,0,0,.75); }
   .marketing .p-card.featured .p-divider { background: rgba(0,0,0,.1); }
-  .marketing .p-check-white { color: rgba(0,0,0,.5) !important; }
+  .marketing .p-card.featured .p-price { color: #0c0c0b; }
+  .marketing .p-card.featured .p-check-white { color: rgba(0,0,0,.45); }
 }
 .marketing .p-popular { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 600; background: var(--blue-mid); color: #fff; padding: 4px 14px; border-radius: 20px; white-space: nowrap; }
 .marketing .p-tier { font-size: 13px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; transition: color .2s; }
@@ -314,12 +326,6 @@
 .marketing .p-divider { height: 1px; background: var(--border); margin-bottom: 24px; }
 .marketing .p-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
 .marketing .p-feature { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); transition: color .2s; }
-.marketing .p-card.featured .p-tier { color: rgba(255,255,255,.5); }
-.marketing .p-card.featured .p-period { color: rgba(255,255,255,.4); }
-.marketing .p-card.featured .p-desc { color: rgba(255,255,255,.6); }
-.marketing .p-card.featured .p-feature { color: rgba(255,255,255,.75); }
-.marketing .p-card.featured .p-divider { background: rgba(255,255,255,.12); }
-.marketing .p-card.featured .p-price { color: #fff; }
 .marketing .p-check { width: 16px; height: 16px; flex-shrink: 0; }
 .marketing .p-check-green { color: var(--green); }
 .marketing .p-check-white { color: rgba(255,255,255,.6); }
