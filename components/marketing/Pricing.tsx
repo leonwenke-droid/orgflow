@@ -22,7 +22,7 @@ export function Pricing() {
                 <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                Bis zu 25 Mitglieder
+                5 Personen in einem Team
               </div>
               <div className="p-feature">
                 <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
@@ -57,7 +57,7 @@ export function Pricing() {
           <div className="p-card featured reveal">
             <div className="p-popular">Empfohlen</div>
             <div className="p-tier">Pro</div>
-            <div className="p-price">12 €</div>
+            <div className="p-price">29 €</div>
             <div className="p-period">pro Monat · jährlich</div>
             <div className="p-desc">Für aktive Organisationen, die alles brauchen.</div>
             <div className="p-divider" />
@@ -66,7 +66,13 @@ export function Pricing() {
                 <svg className="p-check p-check-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                Bis zu 200 Mitglieder
+                2-wöchige kostenlose Testphase
+              </div>
+              <div className="p-feature">
+                <svg className="p-check p-check-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="3,8 7,12 13,4" />
+                </svg>
+                Bis zu 50 Mitglieder
               </div>
               <div className="p-feature">
                 <svg className="p-check p-check-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">

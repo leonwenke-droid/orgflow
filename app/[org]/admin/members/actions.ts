@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
 import { assertCanManageMembersAndTeams } from "../../../../lib/permissionsServer";
 import { canAddMember } from "../../../../lib/planLimits";
@@ -165,17 +167,94 @@ export async function updateMemberCommitteesAction(
   return { error: null };
 }
 
+export type AssignableOrgRole = "member" | "lead" | "admin" | "owner" | "finance" | "viewer";
+
+const ASSIGNABLE: AssignableOrgRole[] = ["member", "lead", "admin", "owner", "finance", "viewer"];
+
+/**
+ * Org roles: only organisation admins/owners (not team leads) — see assertCanManageMembersAndTeams.
+ * Promoted admins can assign roles; team leads cannot access this action.
+ */
 export async function updateMemberRoleAction(
   orgSlug: string,
   profileId: string,
-  role: "member" | "lead"
+  role: AssignableOrgRole,
+  options?: { leadEmail?: string | null }
 ): Promise<{ error: string | null; errorKey?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await assertCanManageMembersAndTeams(orgIdForData, org.id))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await assertCanManageMembersAndTeams(orgIdForData, org.id)))
+    return { error: null, errorKey: "common.unauthorized" };
 
-  const supabase = createSupabaseServiceRoleClient();
-  const { error } = await supabase
+  if (!ASSIGNABLE.includes(role)) return { error: null, errorKey: "common.unauthorized" };
+
+  const authClient = createServerComponentClient({ cookies });
+  const {
+    data: { user }
+  } = await authClient.auth.getUser();
+  if (!user?.id) return { error: null, errorKey: "common.unauthorized" };
+
+  const service = createSupabaseServiceRoleClient();
+
+  const { data: actorProfile } = await service
+    .from("profiles")
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .eq("organization_id", orgIdForData)
+    .maybeSingle();
+  if (!actorProfile?.id) return { error: null, errorKey: "common.unauthorized" };
+
+  const { data: target, error: targetErr } = await service
+    .from("profiles")
+    .select("id, role, email, auth_user_id, status, full_name")
+    .eq("id", profileId)
+    .eq("organization_id", orgIdForData)
+    .single();
+
+  if (targetErr || !target) return { error: null, errorKey: "members.error_profile_not_found" };
+
+  if (target.role === "super_admin")
+    return { error: null, errorKey: "members.error_super_role" };
+
+  const oldRole = String(target.role ?? "member");
+  const isSelf = actorProfile.id === profileId;
+  const wasOrgManager = oldRole === "admin" || oldRole === "owner";
+  const willBeOrgManager = role === "admin" || role === "owner";
+
+  if (isSelf && wasOrgManager && !willBeOrgManager) {
+    const { count, error: cErr } = await service
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgIdForData)
+      .in("role", ["admin", "owner"])
+      .neq("id", profileId)
+      .neq("status", "disabled");
+    if (cErr) return mapMemberDbError(cErr);
+    if ((count ?? 0) < 1) return { error: null, errorKey: "members.error_last_admin" };
+  }
+
+  if (role === "lead") {
+    const emailResolved = String(options?.leadEmail ?? target.email ?? "").trim();
+    if (!emailResolved) return { error: null, errorKey: "members.error_email_required_lead" };
+
+    const hasLogin = !!target.auth_user_id;
+    const isActive = target.status === "active";
+
+    if (hasLogin && isActive) {
+      const { error } = await service
+        .from("profiles")
+        .update({ role: "lead", email: emailResolved })
+        .eq("id", profileId)
+        .eq("organization_id", orgIdForData);
+      if (error) return mapMemberDbError(error);
+      revalidatePath(`/${orgSlug}/admin/members`);
+      return { error: null };
+    }
+
+    return setMemberAsLeadAction(orgSlug, profileId, emailResolved);
+  }
+
+  const { error } = await service
     .from("profiles")
     .update({ role })
     .eq("id", profileId)

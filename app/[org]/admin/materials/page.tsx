@@ -18,12 +18,19 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminMaterialsPage(props: {
   params: Promise<{ org: string }> | { org: string };
+  searchParams?: Promise<{ event?: string }> | { event?: string };
 }) {
   const params =
     typeof (props.params as Promise<{ org: string }>).then === "function"
       ? await (props.params as Promise<{ org: string }>)
       : (props.params as { org: string });
   const orgSlug = params.org;
+  const spRaw = props.searchParams;
+  const sp =
+    spRaw && typeof (spRaw as Promise<{ event?: string }>).then === "function"
+      ? await (spRaw as Promise<{ event?: string }>)
+      : ((spRaw as { event?: string } | undefined) ?? {});
+  const eventParam = (sp?.event ?? "").trim() || null;
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData)))
@@ -57,6 +64,12 @@ export default async function AdminMaterialsPage(props: {
     (profiles ?? []).map((p: any) => [p.id, p.full_name ?? "—"])
   );
 
+  const eventsList = (events ?? []) as { id: string; name: string }[];
+  const eventFilter =
+    eventParam && eventsList.some((e) => e.id === eventParam)
+      ? { id: eventParam, name: eventsList.find((e) => e.id === eventParam)!.name }
+      : null;
+
   return (
     <div className="mx-auto max-w-6xl space-y-5 p-6">
       <header>
@@ -74,7 +87,8 @@ export default async function AdminMaterialsPage(props: {
         resources={(resources ?? []) as any}
         nameById={nameById}
         profiles={(profiles ?? []) as any}
-        events={(events ?? []) as any}
+        events={eventsList}
+        eventFilter={eventFilter}
       />
     </div>
   );

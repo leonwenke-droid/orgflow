@@ -118,10 +118,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         />
         <ThemeProvider>
           <LocaleProvider initialLocale={locale}>
-          <div className="mx-auto flex min-h-screen max-w-6xl flex-col bg-background px-4 py-6 dark:bg-background-dark">
+          <div className="shell-root mx-auto flex min-h-screen max-w-6xl flex-col bg-background px-4 py-6 dark:bg-background-dark">
             <EmailVerificationBanner />
             <AppShell user={appShellUser}>
-              <main className="flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">{children}</main>
+              <main className="shell-main flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">{children}</main>
             </AppShell>
             <ToastContainer />
             <CookieNotice />

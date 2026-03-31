@@ -16,6 +16,8 @@ import { writeAuditLog } from "../../../lib/audit";
 
 export const dynamic = "force-dynamic";
 
+/** Prefer `/{orgSlug}/admin/materials` from the org sidebar or event links; this route stays for legacy ?org= bookmarks. */
+
 async function addMaterialProcurement(
   _prev: { error?: string; success?: boolean } | null,
   formData: FormData

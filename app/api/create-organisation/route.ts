@@ -161,17 +161,20 @@ export async function POST(req: Request) {
       .eq("auth_user_id", user.id)
       .single();
 
+    let creatorProfileId: string;
     if (profile) {
+      creatorProfileId = profile.id as string;
       await serviceClient
         .from("profiles")
         .update({
           organization_id: org.id,
           role: "admin"
         })
-        .eq("id", profile.id);
+        .eq("id", creatorProfileId);
     } else {
+      creatorProfileId = randomUUID();
       await serviceClient.from("profiles").insert({
-        id: randomUUID(),
+        id: creatorProfileId,
         auth_user_id: user.id,
         full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
         email: user.email,
@@ -179,6 +182,11 @@ export async function POST(req: Request) {
         organization_id: org.id
       });
     }
+
+    await serviceClient
+      .from("organizations")
+      .update({ created_by_profile_id: creatorProfileId })
+      .eq("id", org.id);
 
     return NextResponse.json({ slug: org.slug, orgId: org.id });
   } catch (e) {

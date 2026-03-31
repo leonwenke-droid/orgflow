@@ -8,6 +8,7 @@ import AdminBreadcrumb from "../../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../../AdminForbidden";
 import { t } from "../../../../../lib/i18n";
 import { formatCalendarDateYmd } from "../../../../../lib/formatDate";
+import { formatTaskStatus, type AppLocale } from "../../../../../lib/formatters";
 
 export const dynamic = "force-dynamic";
 
@@ -120,13 +121,16 @@ export default async function EventDetailPage(props: {
               const statusTag =
                 tk.status === "erledigt" ? "tag tag-green" :
                 tk.status === "in_arbeit" ? "tag tag-amber" :
+                tk.status === "ueberfaellig" ? "tag tag-red" :
+                tk.status === "abgebrochen" ? "tag tag-neutral" :
                 "tag tag-neutral";
+              const loc = locale === "en" ? "en" : "de";
               return (
                 <li key={tk.id} className="flex items-center justify-between gap-3 px-4 py-2">
                   <span className="min-w-0 truncate text-sm text-gray-900 dark:text-gray-100">
                     {tk.title}
                   </span>
-                  <span className={statusTag}>{tk.status}</span>
+                  <span className={statusTag}>{formatTaskStatus(tk.status, loc as AppLocale)}</span>
                 </li>
               );
             })}
@@ -172,7 +176,7 @@ export default async function EventDetailPage(props: {
 
       <div className="flex flex-wrap gap-3">
         <Link
-          href={`/admin/materials?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
+          href={`/${orgSlug}/admin/materials?event=${encodeURIComponent(eventId)}`}
           className="btn-secondary"
         >
           {t("events.view_resources", locale)} ({resourcesCount ?? 0})

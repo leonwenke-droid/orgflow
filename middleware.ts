@@ -128,28 +128,32 @@ export async function middleware(req: NextRequest) {
   }
 
   // ----- Reserved / unknown org slugs: avoid route collisions and phantom org shells -----
-  const segments = pathname.split("/").filter(Boolean);
-  const orgSlug = segments[0] ?? null;
-  const maybeOrgScoped = !!orgSlug && (segments.length === 1 || ORG_SCOPED_SEGMENTS.has(segments[1] ?? ""));
-  if (orgSlug && maybeOrgScoped) {
-    if (RESERVED_ORG_SLUGS.has(orgSlug)) {
-      return NextResponse.rewrite(new URL("/404", req.url));
-    }
-    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-      try {
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const { data: org } = await supabase
-          .from("organizations")
-          .select("id")
-          .eq("slug", orgSlug)
-          .eq("is_active", true)
-          .maybeSingle();
-        if (!org) {
+  // Global App Router admin lives at /admin/* (not an organisation whose slug is "admin").
+  const isGlobalAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
+  if (!isGlobalAdminPath) {
+    const segments = pathname.split("/").filter(Boolean);
+    const orgSlug = segments[0] ?? null;
+    const maybeOrgScoped = !!orgSlug && (segments.length === 1 || ORG_SCOPED_SEGMENTS.has(segments[1] ?? ""));
+    if (orgSlug && maybeOrgScoped) {
+      if (RESERVED_ORG_SLUGS.has(orgSlug)) {
+        return NextResponse.rewrite(new URL("/404", req.url));
+      }
+      if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          const { data: org } = await supabase
+            .from("organizations")
+            .select("id")
+            .eq("slug", orgSlug)
+            .eq("is_active", true)
+            .maybeSingle();
+          if (!org) {
+            return NextResponse.rewrite(new URL("/404", req.url));
+          }
+        } catch {
+          // If org validation fails, don't accidentally grant access; show not found for org-scoped routes.
           return NextResponse.rewrite(new URL("/404", req.url));
         }
-      } catch {
-        // If org validation fails, don't accidentally grant access; show not found for org-scoped routes.
-        return NextResponse.rewrite(new URL("/404", req.url));
       }
     }
   }

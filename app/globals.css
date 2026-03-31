@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Landing (route group with .marketing): no app-shell gutters or mobile-nav bottom pad */
+body:has(.marketing) .shell-root {
+  padding: 0;
+  max-width: none;
+}
+body:has(.marketing) .shell-main {
+  padding-bottom: 0 !important;
+}
+
 /* ════════════════════════════════════════════════
    DESIGN TOKENS — LIGHT MODE (default)
    (copied 1:1 from orgflow-landingpage-darkmode.html)
@@ -229,12 +238,91 @@
 .marketing .fc-dark .fc-label { color: rgba(255,255,255,.35); }
 .marketing .fc-dark .fc-name { color: rgba(255,255,255,.75); }
 
-.marketing .logos { padding: 44px 0; border-bottom: 1px solid var(--border); transition: var(--t); }
-.marketing .logos-inner { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.marketing .logos-label { font-size: 13px; color: var(--ink-3); white-space: nowrap; flex-shrink: 0; }
-.marketing .logos-list { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; flex: 1; }
-.marketing .org-pill { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-3); }
-.marketing .org-icon { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; flex-shrink: 0; }
+.marketing .logos { padding: 40px 0 48px; border-bottom: 1px solid var(--border); transition: var(--t); }
+.marketing .logos-intro { margin-bottom: 20px; }
+.marketing .logos-label { font-size: 14px; line-height: 1.55; color: var(--ink-2); font-weight: 300; max-width: 52ch; }
+.marketing .logos-label strong { font-weight: 500; color: var(--ink); }
+.marketing .logos-marquee {
+  position: relative;
+  width: 100vw;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.marketing .logos-track {
+  display: flex;
+  width: max-content;
+  animation: logos-marquee 55s linear infinite;
+  will-change: transform;
+}
+.marketing .logos-set {
+  display: flex;
+  align-items: stretch;
+  gap: 36px;
+  padding-right: 36px;
+  flex-shrink: 0;
+}
+.marketing .logos-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.marketing .logos-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+.marketing .logos-mark .logos-svg { width: 22px; height: 22px; }
+.marketing .logos-mark--blue { background: linear-gradient(145deg, #e6f1fb, #cfe4f7); color: #0c447c; border-color: rgba(24,95,165,.15); }
+.marketing .logos-mark--green { background: linear-gradient(145deg, #eaf3de, #dcecc8); color: #27500a; border-color: rgba(59,109,17,.12); }
+.marketing .logos-mark--amber { background: linear-gradient(145deg, #faeeda, #f5e4c8); color: #633806; border-color: rgba(133,79,11,.15); }
+.marketing .logos-mark--red { background: linear-gradient(145deg, #fcebeb, #f8dede); color: #791f1f; border-color: rgba(163,45,45,.12); }
+.marketing .logos-mark--violet { background: linear-gradient(145deg, #ede9f7, #e0daf3); color: #4c3d7a; border-color: rgba(100,80,160,.12); }
+.marketing .logos-mark--teal { background: linear-gradient(145deg, #e0f4f1, #cdeae5); color: #0d5c52; border-color: rgba(13,92,82,.12); }
+.marketing .logos-mark--rose { background: linear-gradient(145deg, #fce8ec, #f8dce3); color: #7a2d3d; border-color: rgba(180,60,80,.1); }
+.marketing .logos-mark--slate { background: linear-gradient(145deg, #f2f1ed, #e8e6df); color: #3d3d3a; border-color: rgba(0,0,0,.06); }
+.marketing .logos-mark--navy { background: linear-gradient(145deg, #e8ecf4, #d8e0f0); color: #1a2f4d; border-color: rgba(26,47,77,.12); }
+.marketing .logos-mark--orange { background: linear-gradient(145deg, #fff0e0, #ffe4cc); color: #854f0b; border-color: rgba(133,79,11,.12); }
+.marketing .logos-mark--brown { background: linear-gradient(145deg, #f3ebe5, #eaddd4); color: #5c4033; border-color: rgba(92,64,51,.12); }
+.marketing .logos-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.marketing .logos-name { font-size: 14px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
+.marketing .logos-tag { font-size: 12px; color: var(--ink-3); font-weight: 400; }
+
+@keyframes logos-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-color-scheme: dark) {
+  .marketing .logos-mark--blue { background: linear-gradient(145deg, rgba(24,95,165,.25), rgba(24,95,165,.12)); color: #b5d4f4; border-color: rgba(133,183,235,.2); }
+  .marketing .logos-mark--green { background: linear-gradient(145deg, rgba(59,109,17,.3), rgba(59,109,17,.12)); color: #c5e49a; border-color: rgba(151,196,89,.2); }
+  .marketing .logos-mark--amber { background: linear-gradient(145deg, rgba(239,159,39,.2), rgba(239,159,39,.08)); color: #f5d08a; border-color: rgba(239,159,39,.2); }
+  .marketing .logos-mark--red { background: linear-gradient(145deg, rgba(240,149,149,.2), rgba(240,149,149,.08)); color: #f0b0b0; border-color: rgba(240,149,149,.2); }
+  .marketing .logos-mark--violet { background: linear-gradient(145deg, rgba(160,140,220,.22), rgba(160,140,220,.08)); color: #d4c8f0; border-color: rgba(180,160,230,.2); }
+  .marketing .logos-mark--teal { background: linear-gradient(145deg, rgba(80,180,160,.22), rgba(80,180,160,.08)); color: #9ee0d4; border-color: rgba(120,200,180,.2); }
+  .marketing .logos-mark--rose { background: linear-gradient(145deg, rgba(220,120,140,.2), rgba(220,120,140,.08)); color: #f0b8c4; border-color: rgba(220,120,140,.2); }
+  .marketing .logos-mark--slate { background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); color: #d4d2cc; border-color: rgba(255,255,255,.1); }
+  .marketing .logos-mark--navy { background: linear-gradient(145deg, rgba(100,140,200,.25), rgba(100,140,200,.1)); color: #b8cce8; border-color: rgba(140,170,220,.2); }
+  .marketing .logos-mark--orange { background: linear-gradient(145deg, rgba(239,159,39,.22), rgba(239,159,39,.08)); color: #f0c878; border-color: rgba(239,159,39,.2); }
+  .marketing .logos-mark--brown { background: linear-gradient(145deg, rgba(200,160,130,.2), rgba(200,160,130,.08)); color: #e0c4b0; border-color: rgba(200,160,130,.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing .logos-track { animation: none; flex-wrap: wrap; width: 100%; max-width: 960px; margin-inline: auto; justify-content: center; row-gap: 16px; }
+  .marketing .logos-set--dup { display: none; }
+  .marketing .logos-marquee { mask-image: none; -webkit-mask-image: none; width: 100%; left: auto; right: auto; margin-left: 0; margin-right: 0; }
+}
 
 .marketing .problem { padding: 100px 0; transition: var(--t); }
 .marketing .problem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }

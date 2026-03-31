@@ -1,10 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { updateMemberNameAction, updateMemberCommitteesAction, updateMemberRoleAction, setMemberAsLeadAction, deleteMemberAction, resendLeadInviteAction, setMemberStatusAction } from "./actions";
+import {
+  updateMemberNameAction,
+  updateMemberCommitteesAction,
+  updateMemberRoleAction,
+  deleteMemberAction,
+  resendLeadInviteAction,
+  setMemberStatusAction,
+  type AssignableOrgRole
+} from "./actions";
 import { useLocale } from "../../../../components/LocaleProvider";
-import { t } from "../../../../lib/i18n";
-import { Button } from "../../../../components/ui/Button";
+import { t, type Locale } from "../../../../lib/i18n";
 
 type Committee = { id: string; name: string };
 type Member = {
@@ -26,6 +33,23 @@ function committeeNamesForIds(ids: string[], committees: Committee[]): string {
   return ids.map((id) => byId.get(id) ?? "").filter(Boolean).join(", ");
 }
 
+const ASSIGNABLE_ROLES: AssignableOrgRole[] = ["member", "lead", "admin", "owner", "finance", "viewer"];
+
+function memberRoleLabel(role: string, locale: Locale): string {
+  const r = role || "member";
+  const keys: Record<string, string> = {
+    member: "members.role_member",
+    lead: "members.role_lead",
+    admin: "members.role_admin",
+    owner: "members.role_owner",
+    finance: "members.role_finance",
+    viewer: "members.role_viewer",
+    super_admin: "members.role_super_readonly"
+  };
+  const key = keys[r];
+  return key ? t(key, locale) : r;
+}
+
 export default function MemberRow({
   orgSlug,
   member,
@@ -39,7 +63,6 @@ export default function MemberRow({
 }) {
   const { locale } = useLocale();
   const isCurrentUser = !!currentAuthUserId && member.auth_user_id === currentAuthUserId;
-  const hasLeadRole = member.role === "lead" || member.role === "admin";
   const effectiveStatus = member.status ?? null;
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(member.full_name ?? "");
@@ -49,11 +72,16 @@ export default function MemberRow({
     new Set(member.committee_ids ?? (member.committee_id ? [member.committee_id] : []))
   );
   const [showCommittees, setShowCommittees] = useState(false);
-  const [isLead, setIsLead] = useState(hasLeadRole);
-  const [showLeadEmailForm, setShowLeadEmailForm] = useState(false);
-  const [leadEmail, setLeadEmail] = useState(member.email ?? "");
+  const [selectRole, setSelectRole] = useState(String(member.role ?? "member"));
+  const [leadEmailDraft, setLeadEmailDraft] = useState(member.email ?? "");
+  const [pendingLeadEmail, setPendingLeadEmail] = useState(false);
   const [currentInvite, setCurrentInvite] = useState<{ inviteUrl: string; whatsappText: string } | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSelectRole(String(member.role ?? "member"));
+    setLeadEmailDraft(member.email ?? "");
+  }, [member.role, member.email]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -105,38 +133,25 @@ export default function MemberRow({
     }
   }
 
-  async function handleLeadChange(checked: boolean) {
+  async function applyRoleChange(next: AssignableOrgRole) {
     setError(null);
-    if (checked) {
-      setIsLead(true);
-      setShowLeadEmailForm(true);
-      setLeadEmail(member.email ?? "");
-      return;
-    }
-    setShowLeadEmailForm(false);
-    setIsLead(false);
-    const { error: err } = await updateMemberRoleAction(orgSlug, member.id, "member");
-    if (err) {
-      setError(err);
-      setIsLead(true);
-    } else window.location.reload();
-  }
-
-  async function handleSubmitLeadWithEmail(e: React.FormEvent) {
-    e.preventDefault();
-    const email = leadEmail.trim();
-    if (!email) {
-      setError("Email is required for team lead.");
+    const emailForLead = (leadEmailDraft || member.email || "").trim();
+    if (next === "lead" && !emailForLead) {
+      setPendingLeadEmail(true);
+      setError(t("members.lead_email_required", locale));
       return;
     }
     setLoading(true);
-    setError(null);
-    const { error: err } = await setMemberAsLeadAction(orgSlug, member.id, email);
+    const { error: err, errorKey } = await updateMemberRoleAction(orgSlug, member.id, next, {
+      leadEmail: next === "lead" ? emailForLead : undefined
+    });
     setLoading(false);
-    if (err) {
-      setError(err);
+    if (err || errorKey) {
+      setError(err || (errorKey ? t(errorKey, locale) : ""));
+      setSelectRole(String(member.role ?? "member"));
       return;
     }
+    setPendingLeadEmail(false);
     window.location.reload();
   }
 
@@ -225,15 +240,21 @@ export default function MemberRow({
 
   const avatarClass = invited
     ? "bg-warning-light text-warning-dark"
-    : role === "admin"
+    : role === "admin" || role === "owner"
       ? "bg-brand-light text-brand-dark"
-      : "bg-success-light text-success-dark";
+      : role === "lead"
+        ? "bg-success-light text-success-dark"
+        : "bg-gray-100 text-gray-700";
 
   const roleTag = invited
     ? "tag tag-amber"
-    : role === "admin"
+    : role === "admin" || role === "owner"
       ? "tag tag-blue"
-      : "tag tag-neutral";
+      : role === "lead"
+        ? "tag tag-green"
+        : role === "finance"
+          ? "tag tag-amber"
+          : "tag tag-neutral";
 
   return (
     <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
@@ -251,7 +272,7 @@ export default function MemberRow({
 
       <td className="px-4 py-3">
         <span className={roleTag}>
-          {invited ? t("members.filter_invited", locale) : role === "admin" ? "Admin" : t("members.filter_active", locale)}
+          {invited ? t("members.filter_invited", locale) : memberRoleLabel(role, locale)}
         </span>
         <div className="mt-1 text-[10px] text-gray-500">
           {effectiveStatus === "disabled"
@@ -273,6 +294,58 @@ export default function MemberRow({
           </summary>
           <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-lg">
             <div className="space-y-3">
+              {role !== "super_admin" ? (
+                <div className="border-b border-gray-100 pb-3">
+                  <div className="text-xs font-medium text-gray-700">{t("members.role_label", locale)}</div>
+                  <p className="mt-1 text-[10px] leading-snug text-gray-500">{t("members.role_hint", locale)}</p>
+                  <select
+                    className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-900"
+                    value={selectRole}
+                    disabled={loading}
+                    onChange={async (e) => {
+                      const v = e.target.value as AssignableOrgRole;
+                      setPendingLeadEmail(false);
+                      setSelectRole(v);
+                      if (v === "lead" && !(member.email?.trim()) && !leadEmailDraft.trim()) {
+                        setPendingLeadEmail(true);
+                        setSelectRole(String(member.role ?? "member"));
+                        return;
+                      }
+                      await applyRoleChange(v);
+                    }}
+                  >
+                    {ASSIGNABLE_ROLES.map((r) => (
+                      <option key={r} value={r}>
+                        {memberRoleLabel(r, locale)}
+                      </option>
+                    ))}
+                  </select>
+                  {pendingLeadEmail ? (
+                    <div className="mt-2 space-y-2">
+                      <input
+                        type="email"
+                        value={leadEmailDraft}
+                        onChange={(ev) => setLeadEmailDraft(ev.target.value)}
+                        placeholder={t("members.lead_email_label", locale)}
+                        className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs"
+                      />
+                      <button
+                        type="button"
+                        disabled={loading}
+                        className="btn-primary text-xs"
+                        onClick={() => applyRoleChange("lead")}
+                      >
+                        {t("common.save", locale)}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="border-b border-gray-100 pb-3 text-xs text-gray-600">
+                  {memberRoleLabel(role, locale)}
+                </p>
+              )}
+
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => setEditingName(true)} className="btn-secondary">
                   {t("common.edit", locale)}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
 import { createResourceAction, updateResourceStatusAction } from "./actions";
@@ -28,6 +29,8 @@ type Props = {
   nameById: Record<string, string>;
   profiles: { id: string; full_name: string }[];
   events: { id: string; name: string }[];
+  /** When set (e.g. deep-link from event detail), list is scoped to this event. */
+  eventFilter?: { id: string; name: string } | null;
 };
 
 const STATUS_FILTERS = ["alle", "offen", "beschafft", "geliehen"] as const;
@@ -45,6 +48,7 @@ export default function ResourcesClient({
   nameById,
   profiles,
   events,
+  eventFilter = null,
 }: Props) {
   const { locale } = useLocale();
   const [filter, setFilter] = useState<string>("alle");
@@ -52,12 +56,24 @@ export default function ResourcesClient({
   const [resources, setResources] = useState(initial);
   const [formMsg, setFormMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    setResources(initial);
+  }, [initial]);
+
+  const scopedResources = useMemo(
+    () =>
+      eventFilter?.id
+        ? resources.filter((r) => r.event_id === eventFilter.id)
+        : resources,
+    [resources, eventFilter?.id]
+  );
+
   const filtered = useMemo(
     () =>
       filter === "alle"
-        ? resources
-        : resources.filter((r) => r.status === filter),
-    [resources, filter]
+        ? scopedResources
+        : scopedResources.filter((r) => r.status === filter),
+    [scopedResources, filter]
   );
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
@@ -85,6 +101,21 @@ export default function ResourcesClient({
 
   return (
     <>
+      {eventFilter ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-light bg-brand-light/30 px-3 py-2 text-sm">
+          <span className="text-gray-800 dark:text-gray-200">
+            {locale === "de" ? "Veranstaltung:" : "Event:"}{" "}
+            <strong>{eventFilter.name}</strong>
+          </span>
+          <Link
+            href={`/${orgSlug}/admin/materials`}
+            className="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+          >
+            {locale === "de" ? "Alle Ressourcen anzeigen" : "Show all resources"}
+          </Link>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-center gap-2">
         {STATUS_FILTERS.map((f) => (
           <button
@@ -179,6 +210,7 @@ export default function ResourcesClient({
             {events.length > 0 && (
               <select
                 name="event_id"
+                defaultValue={eventFilter?.id ?? ""}
                 className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
               >
                 <option value="">

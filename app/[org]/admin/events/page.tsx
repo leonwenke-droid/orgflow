@@ -3,6 +3,7 @@ import { getRequestLocale } from "../../../../lib/localeServer";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../lib/getOrganization";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
 import { t } from "../../../../lib/i18n";
@@ -46,12 +47,13 @@ export default async function AdminEventsPage(props: {
     .order("start_date", { ascending: false });
 
   const eventIds = (events ?? []).map((e: any) => e.id as string);
+  const service = createSupabaseServiceRoleClient();
   const [{ data: shiftRows }, { data: taskRows }] = await Promise.all([
     eventIds.length > 0
-      ? supabase.from("shifts").select("id, event_id").eq("organization_id", orgIdForData).in("event_id", eventIds)
+      ? service.from("shifts").select("id, event_id").eq("organization_id", orgIdForData).in("event_id", eventIds)
       : Promise.resolve({ data: [] as any[] }),
     eventIds.length > 0
-      ? supabase.from("tasks").select("id, event_id, status").eq("organization_id", orgIdForData).in("event_id", eventIds)
+      ? service.from("tasks").select("id, event_id, status").eq("organization_id", orgIdForData).in("event_id", eventIds)
       : Promise.resolve({ data: [] as any[] })
   ]);
 
@@ -67,7 +69,7 @@ export default async function AdminEventsPage(props: {
     const id = String((r as any).event_id ?? "");
     if (!id) continue;
     const st = String((r as any).status ?? "");
-    if (st === "erledigt") continue;
+    if (st === "erledigt" || st === "abgebrochen") continue;
     openTasksByEvent[id] = (openTasksByEvent[id] ?? 0) + 1;
   }
 

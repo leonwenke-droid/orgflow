@@ -26,7 +26,10 @@ export function canManageOrg(role: DbRole | null | undefined): boolean {
   return role != null && ADMIN_ROLES.includes(role);
 }
 
-/** Owner / Admin / Super-Admin: members, teams, org settings — not Leads. */
+/**
+ * Owner / Admin / Super-Admin: members, teams, org settings, and assigning org roles
+ * (member / lead / admin / owner / finance / viewer). Team leads are excluded.
+ */
 export function canManageMembersAndTeams(role: DbRole | null | undefined): boolean {
   return role === "super_admin" || role === "admin" || role === "owner";
 }

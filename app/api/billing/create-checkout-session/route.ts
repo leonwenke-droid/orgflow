@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
+    // `team` = landing „Pro“ (z. B. 29 €/mo, bis 50 Mitglieder); `pro` = Enterprise / unbegrenzt
     const priceId =
       requestedPlan === "team" ? process.env.STRIPE_PRICE_TEAM : process.env.STRIPE_PRICE_PRO;
     if (!priceId) {
@@ -64,6 +65,10 @@ export async function POST(req: NextRequest) {
     const successUrl = `${baseUrl}/${encodeURIComponent(orgSlug)}/settings?billing=success`;
     const cancelUrl = `${baseUrl}/${encodeURIComponent(orgSlug)}/settings?billing=cancel`;
 
+    // Landing „Pro“ = `team`: 14 Tage Testphase im Checkout (Stripe).
+    const subscriptionData =
+      requestedPlan === "team" ? { trial_period_days: 14 } : undefined;
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
@@ -72,7 +77,8 @@ export async function POST(req: NextRequest) {
       success_url: successUrl,
       cancel_url: cancelUrl,
       client_reference_id: orgRow.id,
-      metadata: { org_id: orgRow.id, plan: requestedPlan }
+      metadata: { org_id: orgRow.id, plan: requestedPlan },
+      ...(subscriptionData ? { subscription_data: subscriptionData } : {})
     });
 
     return NextResponse.json({ url: session.url });

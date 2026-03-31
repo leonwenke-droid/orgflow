@@ -44,10 +44,16 @@ export default function BillingSection({
 
   const planLabel =
     currentPlan === "pro"
-      ? (locale === "de" ? "Pro" : "Pro")
+      ? locale === "de"
+        ? "Enterprise"
+        : "Enterprise"
       : currentPlan === "team"
-        ? (locale === "de" ? "Team" : "Team")
-        : (locale === "de" ? "Free" : "Free");
+        ? locale === "de"
+          ? "Pro"
+          : "Pro"
+        : locale === "de"
+          ? "Starter (Free)"
+          : "Starter (Free)";
 
   return (
     <div className="space-y-3">
@@ -56,8 +62,8 @@ export default function BillingSection({
       </p>
       <p className="text-xs text-gray-500 dark:text-muted">
         {locale === "de"
-          ? "Upgrade per Stripe Checkout. Planlimits werden serverseitig erzwungen."
-          : "Upgrade via Stripe Checkout. Plan limits are enforced server-side."}
+          ? "Upgrade per Stripe Checkout. Planlimits werden serverseitig erzwungen. Pro beinhaltet eine 2-wöchige kostenlose Testphase."
+          : "Upgrade via Stripe Checkout. Plan limits are enforced server-side. Pro includes a 2-week free trial."}
       </p>
       <div className="flex flex-wrap gap-2">
         <button
@@ -66,7 +72,13 @@ export default function BillingSection({
           disabled={loading !== null}
           className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
         >
-          {loading === "team" ? (locale === "de" ? "Weiter…" : "Redirecting…") : (locale === "de" ? "Upgrade: Team" : "Upgrade: Team")}
+          {loading === "team"
+            ? locale === "de"
+              ? "Weiter…"
+              : "Redirecting…"
+            : locale === "de"
+              ? "Upgrade: Pro (bis 50 Mitglieder)"
+              : "Upgrade: Pro (up to 50 members)"}
         </button>
         <button
           type="button"
@@ -74,7 +86,13 @@ export default function BillingSection({
           disabled={loading !== null}
           className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading === "pro" ? (locale === "de" ? "Weiter…" : "Redirecting…") : (locale === "de" ? "Upgrade: Pro" : "Upgrade: Pro")}
+          {loading === "pro"
+            ? locale === "de"
+              ? "Weiter…"
+              : "Redirecting…"
+            : locale === "de"
+              ? "Upgrade: Enterprise (unbegrenzt)"
+              : "Upgrade: Enterprise (unlimited)"}
         </button>
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}

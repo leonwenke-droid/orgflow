@@ -12,13 +12,13 @@ export function Testimonials() {
               <span className="t-star">★</span><span className="t-star">★</span><span className="t-star">★</span><span className="t-star">★</span><span className="t-star">★</span>
             </div>
             <div className="t-quote">
-              &quot;Wir haben unsere komplette Abifeier damit organisiert — 74 Leute, 30 Schichten, 8 Teams. Ohne OrgFlow wäre das nicht möglich gewesen.&quot;
+              &quot;Wir haben unsere komplette Abifestigkeiten damit organisiert — 73 Leute, über 70 Schichten, 8 Teams. Ohne OrgFlow wäre das nicht möglich gewesen.&quot;
             </div>
             <div className="t-author">
               <div className="t-avatar" style={{ background: "var(--blue-light)", color: "var(--blue)" }}>LW</div>
               <div>
                 <div className="t-name">Leon Wenke</div>
-                <div className="t-role">Abiturjahrgang 2026, TGG Leer</div>
+                <div className="t-role">Jahrgangssprecher, Abi 2026 - TGG Leer</div>
               </div>
             </div>
           </div>
