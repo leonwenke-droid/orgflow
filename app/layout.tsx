@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { cookies, headers } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Instrument_Serif, DM_Sans } from "next/font/google";
 import AppShell from "../components/AppShell";
 import ToastContainer from "../components/Toast";
 import ThemeProvider from "../components/ThemeProvider";
@@ -13,6 +14,22 @@ import ConsentSync from "../components/ConsentSync";
 import FooterLinks from "../components/FooterLinks";
 import { LOCALE_COOKIE_NAME, resolveLocale } from "../lib/i18n";
 import { getPublicBaseUrl } from "../lib/publicBaseUrl";
+
+const instrumentSerif = Instrument_Serif({
+  weight: ["400"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "OrgFlow",
@@ -88,7 +105,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     : null;
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html
+      lang={locale}
+      suppressHydrationWarning
+      className={`${instrumentSerif.variable} ${dmSans.variable}`}
+    >
       <body className="min-h-screen bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark">
         <script
           dangerouslySetInnerHTML={{

@@ -8,7 +8,18 @@ const config: Config = {
   darkMode: "class",
   theme: {
     extend: {
+      fontFamily: {
+        serif: ["Instrument Serif", "Georgia", "serif"],
+        sans: ["DM Sans", "system-ui", "sans-serif"],
+      },
       colors: {
+        ink: "var(--ink)",
+        "ink-2": "var(--ink-2)",
+        "ink-3": "var(--ink-3)",
+        paper: "var(--paper)",
+        surface: "var(--surface)",
+        blue: "var(--blue)",
+        green: "var(--green)",
         brand: { DEFAULT: "#185FA5", light: "#E6F1FB", dark: "#0C447C" },
         success: { DEFAULT: "#3B6D11", light: "#EAF3DE", dark: "#27500A" },
         warning: { DEFAULT: "#854F0B", light: "#FAEEDA", dark: "#633806" },

@@ -2,12 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ════════════════════════════════════════════════
+   DESIGN TOKENS — LIGHT MODE (default)
+   (copied 1:1 from orgflow-landingpage-darkmode.html)
+   ════════════════════════════════════════════════ */
 :root {
-  color-scheme: light;
+  /* Surfaces */
+  --paper:          #fafaf8;
+  --surface:        #f2f1ed;
+  --surface-raised: #ffffff;
+  --surface-sunken: #edecea;
+
+  /* Text */
+  --ink:   #0c0c0b;
+  --ink-2: #3d3d3a;
+  --ink-3: #888780;
+  --ink-4: #b4b2a9;
+
+  /* Brand */
+  --blue:       #185FA5;
+  --blue-mid:   #378ADD;
+  --blue-light: #e6f1fb;
+  --blue-dark:  #0c447c;
+  --green:      #3B6D11;
+  --green-light:#EAF3DE;
+
+  /* Accents */
+  --amber:      #854F0B;
+  --amber-light:#FAEEDA;
+  --red:        #A32D2D;
+  --red-light:  #FCEBEB;
+
+  /* Borders */
+  --border:       rgba(0,0,0,.08);
+  --border-mid:   rgba(0,0,0,.12);
+  --border-strong:rgba(0,0,0,.18);
+
+  /* Hero (dark regardless of mode) */
+  --hero-bg:        #0c0c0b;
+  --hero-surface:   #161614;
+  --hero-surface-2: #1e1e1c;
+  --hero-ink:       #ffffff;
+  --hero-ink-2:     rgba(255,255,255,.6);
+  --hero-ink-3:     rgba(255,255,255,.35);
+  --hero-border:    rgba(255,255,255,.1);
+  --hero-border-2:  rgba(255,255,255,.07);
+
+  /* Nav blur bg */
+  --nav-bg: rgba(250,250,248,.88);
+
+  /* Card floating */
+  --float-bg:  #ffffff;
+  --float-ink: #0c0c0b;
+
+  /* Features section (dark always) */
+  --feat-bg:       #0c0c0b;
+  --feat-surface:  #161614;
+  --feat-border:   rgba(255,255,255,.08);
+  --feat-ink:      #ffffff;
+  --feat-ink-2:    rgba(255,255,255,.45);
+
+  /* CTA section (dark always) */
+  --cta-bg:    #0c0c0b;
+
+  /* Transitions */
+  --t: color .2s, background-color .2s, border-color .2s;
+
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans:  'DM Sans', system-ui, sans-serif;
 }
 
-.dark {
-  color-scheme: dark;
+/* ════════════════════════════════════════════════
+   DESIGN TOKENS — DARK MODE
+   ════════════════════════════════════════════════ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Surfaces flip */
+    --paper:          #111110;
+    --surface:        #1a1a18;
+    --surface-raised: #222220;
+    --surface-sunken: #0d0d0c;
+
+    /* Text flip */
+    --ink:   #f0efe9;
+    --ink-2: #b4b2a9;
+    --ink-3: #6b6a64;
+    --ink-4: #3d3d3a;
+
+    /* Brand stays readable */
+    --blue:       #378ADD;
+    --blue-mid:   #85B7EB;
+    --blue-light: rgba(55,138,221,.15);
+    --blue-dark:  #B5D4F4;
+    --green:      #5DCAA5;
+    --green-light:rgba(93,202,165,.12);
+
+    /* Accents */
+    --amber:       #EF9F27;
+    --amber-light: rgba(239,159,39,.12);
+    --red:         #F09595;
+    --red-light:   rgba(240,149,149,.12);
+
+    /* Borders flip */
+    --border:       rgba(255,255,255,.08);
+    --border-mid:   rgba(255,255,255,.12);
+    --border-strong:rgba(255,255,255,.2);
+
+    /* Nav blur */
+    --nav-bg: rgba(17,17,16,.88);
+
+    /* Floating cards — dark in dark mode */
+    --float-bg:  #222220;
+    --float-ink: #f0efe9;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   BASE (landing tokens)
+   ════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: var(--t);
 }
 
 /* Typography & spacing */
@@ -35,10 +158,10 @@ a {
 }
 
 .tag          { @apply inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full; }
-.tag-blue     { @apply bg-brand-light text-brand-dark dark:bg-blue-900/40 dark:text-blue-300; }
-.tag-green    { @apply bg-success-light text-success-dark dark:bg-green-900/40 dark:text-green-300; }
-.tag-amber    { @apply bg-warning-light text-warning-dark dark:bg-amber-900/40 dark:text-amber-300; }
-.tag-red      { @apply bg-danger-light text-danger-dark dark:bg-red-900/40 dark:text-red-300; }
+.tag-blue     { background: var(--blue-light); color: var(--blue); border: 1px solid var(--border); }
+.tag-green    { background: var(--green-light); color: var(--green); border: 1px solid var(--border); }
+.tag-amber    { background: var(--amber-light); color: var(--amber); border: 1px solid var(--border); }
+.tag-red      { background: var(--red-light); color: var(--red); border: 1px solid var(--border); }
 .tag-neutral  { @apply bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700; }
 
 .btn-primary  { @apply bg-gray-900 text-white text-sm px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-gray-200; }
