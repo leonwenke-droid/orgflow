@@ -8,9 +8,7 @@ import type { Locale } from "../lib/i18n";
 import { t } from "../lib/i18n";
 
 function pill(active: boolean) {
-  return `rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-    active ? "bg-white text-gray-900 shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-white/60 hover:text-gray-900"
-  }`;
+  return `ui-pill text-xs ${active ? "" : ""}`;
 }
 
 export default function AppearanceControls({
@@ -54,7 +52,7 @@ export default function AppearanceControls({
               {locale === "en" ? "System" : "System"}
             </button>
           </div>
-          <div className="mt-2 text-xs text-gray-500">
+          <div className="mt-2 text-xs text-[var(--ink-3)] dark:text-white/45">
             {locale === "en"
               ? `Currently: ${activeResolved}`
               : `Aktiv: ${activeResolved === "dark" ? "dunkel" : "hell"}`}
@@ -71,7 +69,7 @@ export default function AppearanceControls({
               English
             </button>
           </div>
-          <div className="mt-2 text-xs text-gray-500">{t("settings.language_note", locale)}</div>
+          <div className="mt-2 text-xs text-[var(--ink-3)] dark:text-white/45">{t("settings.language_note", locale)}</div>
         </div>
       </div>
     </div>

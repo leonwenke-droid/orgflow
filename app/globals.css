@@ -719,7 +719,7 @@ a:hover {
   color: #fff;
 }
 .btn-primary:hover { background: var(--blue-800); }
-.dark .btn-primary:hover { background: #85b7eb; color: #042c53; }
+.dark .btn-primary:hover { background: #185fa5; color: #fff; }
 .btn-primary:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.22);

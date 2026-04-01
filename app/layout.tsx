@@ -114,7 +114,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="min-h-screen bg-background text-foreground dark:bg-background-dark dark:text-foreground-dark">
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var t=localStorage.getItem('orgflow-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}})();`
+            __html: `(function(){var t=localStorage.getItem('orgflow-theme');var sys=window.matchMedia('(prefers-color-scheme: dark)').matches;var useDark=(t==='dark')||((t==='system'||!t)&&sys);if(useDark){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}})();`
           }}
         />
         <ThemeProvider>
