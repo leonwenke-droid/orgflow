@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { OrgFlowLogoMark } from "../brand/OrgFlowLogoMark";
+import { OrgFlowLogoLockup } from "../brand/OrgFlowLogoLockup";
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -17,12 +17,7 @@ export function Nav() {
     <nav style={scrolled ? { borderBottomColor: "var(--border-mid)" } : undefined}>
       <div className="container">
         <div className="nav-inner">
-          <Link href="/" className="logo" aria-label="OrgFlow">
-            <div className="logo-mark text-white" aria-hidden>
-              <OrgFlowLogoMark className="h-[14px] w-[14px]" />
-            </div>
-            OrgFlow
-          </Link>
+          <OrgFlowLogoLockup href="/" size="sm" className="logo" />
 
           <div className="nav-links">
             <a href="#features">Features</a>

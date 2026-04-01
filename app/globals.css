@@ -11,6 +11,15 @@ body:has(.marketing) .shell-main {
   padding-bottom: 0 !important;
 }
 
+/* Auth pages: no app-shell gutters or mobile-nav bottom pad */
+body:has(.auth-shell) .shell-root {
+  padding: 0;
+  max-width: none;
+}
+body:has(.auth-shell) .shell-main {
+  padding-bottom: 0 !important;
+}
+
 /* ════════════════════════════════════════════════
    DESIGN TOKENS — LIGHT MODE (default)
    Aligned with docs/brand/orgflow_brand_guide.html

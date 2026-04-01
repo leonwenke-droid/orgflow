@@ -56,7 +56,18 @@ function AppShellInner({
   const orgSlug = useOrgSlug();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (pathname === "/") {
+  const segments = pathname.split("/").filter(Boolean);
+  const isOrgLogin = segments.length === 2 && segments[1] === "login";
+  const isAuthLikeRoute =
+    pathname === "/" ||
+    pathname === "/login" ||
+    isOrgLogin ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/claim-org") ||
+    pathname.startsWith("/create-organisation") ||
+    pathname.startsWith("/join");
+
+  if (isAuthLikeRoute) {
     return <>{children}</>;
   }
 
