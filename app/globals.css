@@ -20,6 +20,61 @@ body:has(.auth-shell) .shell-main {
   padding-bottom: 0 !important;
 }
 
+/* App UI primitives (Brand Guide tokens) */
+.ui-input {
+  width: 100%;
+  border-radius: var(--radius-input);
+  border: 0.5px solid var(--border-strong);
+  background: var(--surface-raised);
+  padding: 0.5rem 0.625rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.ui-input::placeholder { color: var(--ink-4); }
+.ui-input:focus {
+  outline: none;
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.18);
+}
+.dark .ui-input {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #f0efe9;
+}
+.dark .ui-input:focus {
+  border-color: #378add;
+  box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.22);
+}
+
+.ui-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  border: 0.5px solid var(--border-mid);
+  background: var(--surface-raised);
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: var(--t);
+}
+.ui-pill:hover { background: var(--surface); color: var(--ink); text-decoration: none; }
+.ui-pill[aria-current="page"] {
+  background: var(--blue-light);
+  border-color: rgba(24, 95, 165, 0.18);
+  color: var(--blue-800);
+  font-weight: 500;
+}
+.dark .ui-pill[aria-current="page"] {
+  background: rgba(24, 95, 165, 0.22);
+  border-color: rgba(133, 183, 235, 0.18);
+  color: #b5d4f4;
+}
+
 /* ════════════════════════════════════════════════
    DESIGN TOKENS — LIGHT MODE (default)
    Aligned with docs/brand/orgflow_brand_guide.html
@@ -574,9 +629,10 @@ body {
 }
 
 /* App headings: näher an Guide (H2 = DM Sans 500, engerer Tracking) */
-h1 { @apply text-2xl font-semibold tracking-tight text-gray-900 dark:text-foreground-dark; }
-h2 { @apply text-lg font-medium tracking-tight text-gray-900 dark:text-foreground-dark; }
-h3 { @apply text-base font-medium text-gray-900 dark:text-foreground-dark; }
+h1 { @apply text-2xl font-semibold tracking-tight; color: var(--ink); }
+h2 { @apply text-lg font-medium tracking-tight; color: var(--ink); }
+h3 { @apply text-base font-medium; color: var(--ink); }
+.dark h1, .dark h2, .dark h3 { color: #f0efe9; }
 
 a {
   color: var(--blue-600);
@@ -652,42 +708,80 @@ a:hover {
 }
 
 .btn-primary  {
-  @apply text-sm font-medium px-3 py-1.5 transition-opacity hover:opacity-90;
-  background: var(--ink);
+  @apply text-sm font-medium px-3 py-1.5 transition-colors;
+  background: var(--blue-600);
   color: #fff;
   border-radius: var(--radius-button);
   text-decoration: none;
 }
 .dark .btn-primary {
-  background: #f0efe9;
-  color: #0c0c0b;
+  background: var(--blue-mid);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--blue-800); }
+.dark .btn-primary:hover { background: #85b7eb; color: #042c53; }
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.22);
+}
+.dark .btn-primary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.28);
 }
 .btn-primary:hover,
 .btn-secondary:hover,
 .btn-danger:hover { text-decoration: none; }
 
 .btn-secondary{
-  @apply text-sm font-medium px-3 py-1.5 hover:bg-gray-50 transition-colors dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800;
+  @apply text-sm font-medium px-3 py-1.5 transition-colors;
   border-radius: var(--radius-button);
   border: 0.5px solid var(--border-strong);
   color: var(--ink);
+  background: transparent;
   text-decoration: none;
 }
 .dark .btn-secondary {
-  border-color: var(--border-mid);
+  border-color: rgba(255,255,255,.14);
+  color: rgba(255,255,255,.75);
+}
+.btn-secondary:hover { background: var(--surface); }
+.dark .btn-secondary:hover { background: rgba(255,255,255,.06); }
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.14);
+}
+.dark .btn-secondary:focus-visible {
+  box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.18);
 }
 .btn-danger   {
-  @apply text-sm font-medium px-3 py-1.5 hover:bg-red-50 transition-colors dark:text-red-400 dark:hover:bg-red-950;
+  @apply text-sm font-medium px-3 py-1.5 transition-colors;
   border-radius: var(--radius-button);
-  border: 0.5px solid rgba(163, 45, 45, 0.3);
-  color: var(--red);
+  border: 0.5px solid rgba(163, 45, 45, 0.35);
+  color: var(--red-dark);
+  background: transparent;
   text-decoration: none;
 }
+.btn-danger:hover { background: var(--red-light); }
+.dark .btn-danger {
+  border-color: rgba(240,149,149,.22);
+  color: #f0b0b0;
+}
+.dark .btn-danger:hover { background: rgba(240,149,149,.10); }
+.btn-danger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(163, 45, 45, 0.16);
+}
+.dark .btn-danger:focus-visible {
+  box-shadow: 0 0 0 3px rgba(240, 149, 149, 0.18);
+}
 
-.card         { @apply bg-white border border-gray-100 overflow-hidden dark:bg-card-dark dark:border-card-border-dark; border-radius: var(--radius-card); }
-.stat-card    { @apply bg-gray-50 p-4 dark:bg-gray-800/60; border-radius: var(--radius-card); }
-.page-title   { @apply text-xl font-medium tracking-tight text-gray-900 dark:text-foreground-dark; }
-.page-sub     { @apply text-sm text-gray-500 mt-0.5 mb-5 dark:text-muted-dark; }
+.card         { background: var(--surface-raised); border: 0.5px solid var(--border); overflow: hidden; border-radius: var(--radius-card); }
+.dark .card   { background: #161614; border-color: rgba(255,255,255,.10); }
+.stat-card    { background: var(--surface); padding: 1rem; border-radius: var(--radius-card); border: 0.5px solid var(--border); }
+.dark .stat-card { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.10); }
+.page-title   { @apply text-xl font-medium tracking-tight; color: var(--ink); }
+.dark .page-title { color: #f0efe9; }
+.page-sub     { @apply text-sm mt-0.5 mb-5; color: var(--ink-3); }
+.dark .page-sub { color: rgba(255,255,255,.45); }
 .section-label{
   @apply text-[11px] font-medium uppercase mb-2;
   letter-spacing: 0.06em;

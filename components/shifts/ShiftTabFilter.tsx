@@ -41,11 +41,8 @@ export default function ShiftTabFilter() {
         <button
           key={tab.key}
           onClick={() => setTab(tab.key)}
-          className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
-            current === tab.key
-              ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-          }`}
+          className="ui-pill text-xs"
+          aria-current={current === tab.key ? "page" : undefined}
         >
           {locale === "de" ? tab.de : tab.en}
         </button>

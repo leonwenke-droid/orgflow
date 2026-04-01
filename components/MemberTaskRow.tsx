@@ -94,7 +94,7 @@ export default function MemberTaskRow({
   return (
     <li
       id={`task-${task.id}`}
-      className={`scroll-mt-24 rounded-lg border border-gray-200 bg-white pl-0 dark:border-gray-700 dark:bg-card-dark ${borderClass} ${
+      className={`scroll-mt-24 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface-raised)] pl-0 dark:border-white/10 dark:bg-[#161614] ${borderClass} ${
         isCompleted || task.status === "erledigt" ? "opacity-90" : ""
       }`}
     >
@@ -104,7 +104,7 @@ export default function MemberTaskRow({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <p className="min-w-0 flex-1 font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
+            <p className="min-w-0 flex-1 font-medium text-[var(--ink)] dark:text-white">{task.title}</p>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
               {!isCompleted && claimableHere && canClaim ? (
                 <form action={claimTaskAction} className="inline">
@@ -126,10 +126,10 @@ export default function MemberTaskRow({
           </div>
           <p
             className={`mt-1 text-xs ${
-              overdue && task.status !== "erledigt" ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"
+              overdue && task.status !== "erledigt" ? "text-[var(--red)] dark:text-red-200" : "text-[var(--ink-3)] dark:text-white/55"
             }`}
           >
-            <span className="font-medium text-gray-600 dark:text-gray-300">{t("tasks.due_label", locale)}:</span>{" "}
+            <span className="font-medium text-[var(--ink-2)] dark:text-white/70">{t("tasks.due_label", locale)}:</span>{" "}
             {task.due_at ? formatLocaleDateTime(task.due_at, locale) : "–"}
             {" · "}
             {formatTaskStatus(task.status, fl)}
@@ -154,7 +154,7 @@ export default function MemberTaskRow({
             ) : null}
             {task.proof_url ? (
               <a
-                className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                className="text-xs text-[var(--blue-600)] hover:underline dark:text-[var(--blue-400)]"
                 href={task.proof_url}
                 target="_blank"
                 rel="noreferrer"

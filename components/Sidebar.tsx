@@ -201,8 +201,8 @@ export default function Sidebar({
   const linkClassName = (href: string) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
       isActive(href)
-        ? "bg-white text-gray-900 font-medium dark:bg-gray-900/60 dark:text-gray-100"
-        : "text-gray-500 hover:bg-white/60 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-900/40 dark:hover:text-gray-100"
+        ? "bg-[var(--surface-raised)] text-[var(--ink)] font-medium dark:bg-white/8 dark:text-white"
+        : "text-[var(--ink-3)] hover:bg-[var(--surface)] hover:text-[var(--ink)] dark:text-white/55 dark:hover:bg-white/6 dark:hover:text-white"
     }`;
 
   const initials = (orgName ?? orgSlug).slice(0, 2).toUpperCase();
@@ -216,7 +216,7 @@ export default function Sidebar({
             <img
               src={logoUrl}
               alt=""
-              className="h-7 w-7 shrink-0 rounded-[7px] border border-gray-200 object-cover dark:border-gray-700"
+              className="h-7 w-7 shrink-0 rounded-[7px] border border-[var(--border)] object-cover dark:border-white/10"
             />
           ) : (
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] bg-brand-light text-xs font-semibold text-brand-dark">
@@ -224,7 +224,7 @@ export default function Sidebar({
             </div>
           )}
           <div className="min-w-0">
-            <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100" title={orgName ?? orgSlug}>
+            <div className="truncate text-sm font-medium text-[var(--ink)] dark:text-white" title={orgName ?? orgSlug}>
               {orgName ?? orgSlug}
             </div>
           </div>
@@ -263,7 +263,7 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-gray-50/80 backdrop-blur dark:bg-gray-950/40 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[var(--border)] bg-[var(--paper)]/70 backdrop-blur dark:border-white/10 dark:bg-black/25 lg:flex">
         {sidebarContent}
       </aside>
       {mobileOpen && (
@@ -273,7 +273,7 @@ export default function Sidebar({
             onClick={onClose}
             aria-hidden
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-gray-50/95 shadow-xl backdrop-blur dark:bg-gray-950/60 lg:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[var(--border)] bg-[var(--paper)]/92 shadow-xl backdrop-blur dark:border-white/10 dark:bg-black/40 lg:hidden">
             {sidebarContent}
           </aside>
         </>

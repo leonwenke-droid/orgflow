@@ -49,6 +49,10 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
   }
 
   const role = await getEffectiveUserRoleForOrg(orgSlug, org);
+  // Gesamtübersicht: ab Rolle "member" (Viewer ausgeschlossen)
+  if (!superUser && role === "viewer") {
+    redirect(`/${orgSlug}/dashboard`);
+  }
   const showBalance = canViewFinance(role);
 
   const service = createSupabaseServiceRoleClient();
@@ -140,7 +144,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
       <section className="grid gap-4 md:grid-cols-4">
         <div className="stat-card">
           <div className="section-label">{t("dashboard.members", locale)}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{membersCount ?? 0}</div>
+          <div className="text-2xl font-semibold text-[var(--ink)] dark:text-white">{membersCount ?? 0}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Open tasks" : "Offene Aufgaben"}</div>
@@ -148,11 +152,11 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Shift slots (7d)" : "Schicht-Slots 7d"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{shiftSlots7d}</div>
+          <div className="text-2xl font-semibold text-[var(--ink)] dark:text-white">{shiftSlots7d}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Balance" : "Kontostand"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+          <div className="text-2xl font-semibold text-[var(--ink)] dark:text-white">
             {showBalance && latestTreasury
               ? formatCurrency(Number((latestTreasury as any).amount ?? 0), localeForMoney, currencyCode)
               : "—"}
@@ -169,8 +173,8 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
                 <div className={`border-l pl-3 ${taskRowBorderClass((myNextTask as any).status, (myNextTask as any).due_at)}`}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-gray-900">{(myNextTask as any).title ?? "—"}</div>
-                      <div className="mt-1 text-xs text-gray-500">
+                      <div className="truncate text-sm font-medium text-[var(--ink)] dark:text-white">{(myNextTask as any).title ?? "—"}</div>
+                      <div className="mt-1 text-xs text-[var(--ink-3)] dark:text-white/45">
                         {(myNextTask as any).due_at ? `${locale === "en" ? "Due" : "Fällig"} ${dateOnly((myNextTask as any).due_at)}` : "—"}
                       </div>
                     </div>
@@ -180,7 +184,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
                   </div>
                 </div>
               ) : (
-                <div className="text-sm text-gray-500">—</div>
+                <div className="text-sm text-[var(--ink-3)] dark:text-white/45">—</div>
               )}
             </div>
           </div>
@@ -189,13 +193,13 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
             <div className="p-4">
               <div className="section-label">{locale === "en" ? "Last activity" : "Letzte Aktivität"}</div>
               {(activityRows ?? []).length === 0 ? (
-                <div className="text-sm text-gray-500">—</div>
+                <div className="text-sm text-[var(--ink-3)] dark:text-white/45">—</div>
               ) : (
                 <ul className="space-y-2">
                   {(activityRows ?? []).slice(0, 5).map((row: any) => {
                     const who = nameById.get(String(row.user_id ?? "")) ?? "—";
                     return (
-                      <li key={row.id} className="flex items-center gap-3 rounded-lg bg-gray-50 px-3 py-2">
+                      <li key={row.id} className="flex items-center gap-3 rounded-[var(--radius-input)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 dark:border-white/10 dark:bg-white/5">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-light text-xs font-semibold text-brand-dark">
                           {who
                             .split(/\s+/)
@@ -205,8 +209,8 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
                             .join("") || "—"}
                         </div>
                         <div className="min-w-0">
-                          <div className="truncate text-sm text-gray-900">{who}</div>
-                          <div className="truncate text-xs text-gray-500">
+                          <div className="truncate text-sm text-[var(--ink)] dark:text-white">{who}</div>
+                          <div className="truncate text-xs text-[var(--ink-3)] dark:text-white/45">
                             {String(row.event_type ?? "").replace(/_/g, " ")} · {dateOnly(String(row.created_at ?? ""))}
                           </div>
                         </div>
@@ -223,7 +227,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
           <div className="p-4">
             <div className="section-label">{locale === "en" ? "Shift utilization" : "Schicht-Auslastung"}</div>
             {shifts.length === 0 ? (
-              <div className="text-sm text-gray-500">—</div>
+              <div className="text-sm text-[var(--ink-3)] dark:text-white/45">—</div>
             ) : (
               <ul className="space-y-3">
                 {shifts.slice(0, 10).map((s) => {
@@ -234,16 +238,16 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
                     <li key={s.id}>
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="truncate text-sm font-medium text-gray-900">{s.event_name ?? "—"}</div>
-                          <div className="mt-1 text-xs text-gray-500">
+                          <div className="truncate text-sm font-medium text-[var(--ink)] dark:text-white">{s.event_name ?? "—"}</div>
+                          <div className="mt-1 text-xs text-[var(--ink-3)] dark:text-white/45">
                             {formatShiftSlot(dateOnly(s.date), s.start_time, s.end_time, locale as AppLocale)}
                           </div>
                         </div>
-                        <div className="shrink-0 text-xs text-gray-500">
+                        <div className="shrink-0 text-xs text-[var(--ink-3)] dark:text-white/45">
                           {taken}/{req}
                         </div>
                       </div>
-                      <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
+                      <div className="mt-2 h-2 w-full rounded-full bg-[var(--surface-sunken)] dark:bg-black/30">
                         <div className="h-2 rounded-full bg-brand" style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
                       </div>
                     </li>

@@ -101,8 +101,8 @@ export default function AdminTasksKanban({
       {STATUS_COLUMNS.map((col) => (
         <div
           key={col.key}
-          className={`flex min-h-[min(40vh,12rem)] min-w-[280px] flex-shrink-0 snap-start flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors md:min-w-0 md:flex-shrink dark:border-gray-700 dark:bg-card-dark ${
-            dropTarget === col.key ? "ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-gray-900" : ""
+          className={`flex min-h-[min(40vh,12rem)] min-w-[280px] flex-shrink-0 snap-start flex-col gap-2 rounded-[var(--radius-modal)] border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-sm transition-colors md:min-w-0 md:flex-shrink dark:border-white/10 dark:bg-white/5 ${
+            dropTarget === col.key ? "ring-2 ring-[var(--blue-mid)] ring-offset-2 dark:ring-offset-black/60" : ""
           }`}
           onDragEnter={(e) => {
             e.preventDefault();
@@ -127,10 +127,10 @@ export default function AdminTasksKanban({
           }}
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-3)] dark:text-white/55">
               {t(col.labelKey, locale)}
             </h3>
-            <span className="text-[10px] text-gray-500">
+            <span className="text-[10px] text-[var(--ink-3)] dark:text-white/45">
               {t("tasks.count_tasks", locale).replace(
                 "{count}",
                 String(tasks.filter((x) => x.status === col.key).length)
@@ -155,14 +155,14 @@ export default function AdminTasksKanban({
                       setDraggingId(task.id);
                     }}
                     onDragEnd={() => setDraggingId(null)}
-                    className={`cursor-grab rounded-lg border bg-gray-50 p-2 shadow-sm active:cursor-grabbing dark:bg-gray-900/40 ${
-                      overdue ? "border-red-300 dark:border-red-700" : "border-gray-200 dark:border-gray-700"
+                    className={`cursor-grab rounded-[var(--radius-input)] border bg-[var(--surface)] p-2 shadow-sm active:cursor-grabbing dark:bg-black/25 ${
+                      overdue ? "border-red-300 dark:border-red-900/60" : "border-[var(--border)] dark:border-white/10"
                     } ${draggingId === task.id ? "opacity-60" : ""} ${savingIds.has(task.id) ? "animate-pulse" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h4 className="text-[11px] font-semibold">{task.title}</h4>
-                        <p className="text-[10px] text-gray-600 dark:text-gray-400">
+                        <p className="text-[10px] text-[var(--ink-3)] dark:text-white/55">
                           {t("tasks.team_label", locale)}: {committeeLabel(task.committees)}
                         </p>
                       </div>
@@ -171,15 +171,15 @@ export default function AdminTasksKanban({
                           <span
                             className={`rounded px-1 py-0.5 ${
                               overdue
-                                ? "bg-red-100 font-semibold text-red-800 dark:bg-red-900/40 dark:text-red-100"
-                                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                                ? "bg-[var(--red-light)] font-semibold text-[var(--red-dark)] dark:bg-red-950/40 dark:text-red-200"
+                                : "bg-[var(--surface)] text-[var(--ink-2)] dark:bg-white/5 dark:text-white/70"
                             }`}
                           >
                             {formatLocaleDateFromIso(task.due_at, locale)}
                             {overdue ? ` · ${t("tasks.overdue_badge", locale)}` : ""}
                           </span>
                         )}
-                        <span className="text-gray-500">
+                        <span className="text-[var(--ink-3)] dark:text-white/45">
                           {task.proof_required
                             ? task.proof_url
                               ? t("tasks.proof_uploaded", locale)
@@ -188,7 +188,7 @@ export default function AdminTasksKanban({
                         </span>
                       </div>
                     </div>
-                    <div className="mt-1.5 space-y-0.5 text-[10px] text-gray-600 dark:text-gray-400">
+                    <div className="mt-1.5 space-y-0.5 text-[10px] text-[var(--ink-3)] dark:text-white/55">
                       <p>
                         {t("tasks.created_by", locale)}:{" "}
                         {task.created_by ? profileNames[task.created_by] ?? "–" : "–"}
@@ -199,7 +199,7 @@ export default function AdminTasksKanban({
                       </p>
                     </div>
                     {task.description && (
-                      <p className="mt-1 line-clamp-2 text-[10px] text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 line-clamp-2 text-[10px] text-[var(--ink-3)]/90 dark:text-white/45">
                         {task.description}
                       </p>
                     )}
@@ -207,7 +207,7 @@ export default function AdminTasksKanban({
                       {orgSlug && (
                         <Link
                           href={`/${orgSlug}/tasks#task-${task.id}`}
-                          className="rounded bg-slate-100 px-2 py-0.5 text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                          className="rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-0.5 text-[var(--ink-2)] hover:bg-[var(--surface)] dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/8"
                         >
                           {t("tasks.open_member_view", locale)}
                         </Link>
@@ -220,7 +220,7 @@ export default function AdminTasksKanban({
                               href={task.proof_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="rounded bg-blue-100 px-2 py-0.5 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-200"
+                              className="rounded-[var(--radius-pill)] bg-[var(--blue-light)] px-2 py-0.5 text-[var(--blue-800)] hover:opacity-90 dark:bg-[rgba(24,95,165,.22)] dark:text-[#b5d4f4]"
                             >
                               {t("tasks.view_proof", locale)}
                             </a>
@@ -229,7 +229,7 @@ export default function AdminTasksKanban({
                       )}
                     </div>
                     <div className="mt-1.5 flex items-center justify-between">
-                      <span className="rounded bg-gray-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                      <span className="tag tag-compact tag-neutral uppercase tracking-wide">
                         {t(col.labelKey, locale)}
                       </span>
                       <form action={deleteTask} className="inline">
@@ -250,7 +250,7 @@ export default function AdminTasksKanban({
                 );
               })}
             {!tasks.filter((x) => x.status === col.key).length && (
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">{t("tasks.no_tasks_in_column", locale)}</p>
+              <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">{t("tasks.no_tasks_in_column", locale)}</p>
             )}
           </div>
         </div>

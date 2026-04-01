@@ -285,7 +285,7 @@ export default async function AdminTasksPage(props: PageProps) {
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-4">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <h2 className="text-sm font-semibold text-[var(--ink-2)] dark:text-white/70">
             {tr("tasks.kanban_title", locale)}
           </h2>
           <Suspense fallback={<span className="text-[10px] text-gray-500">Filter …</span>}>
@@ -295,7 +295,8 @@ export default async function AdminTasksPage(props: PageProps) {
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
               <Link
                 href={baseTasksUrl}
-                className={`rounded px-2.5 py-1 ${!eventIdFilter ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"}`}
+                className="ui-pill"
+                aria-current={!eventIdFilter ? "page" : undefined}
               >
                 {tr("tasks.all_events", locale)}
               </Link>
@@ -303,7 +304,8 @@ export default async function AdminTasksPage(props: PageProps) {
                 <Link
                   key={ev.id}
                   href={`${baseTasksUrl}&event=${encodeURIComponent(ev.id)}`}
-                  className={`rounded px-2.5 py-1 ${eventIdFilter === ev.id ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200" : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"}`}
+                  className="ui-pill"
+                  aria-current={eventIdFilter === ev.id ? "page" : undefined}
                 >
                   {ev.name}
                 </Link>
@@ -315,14 +317,14 @@ export default async function AdminTasksPage(props: PageProps) {
           {effectiveOrgSlug && <input type="hidden" name="org" value={effectiveOrgSlug} />}
           {committeeId && <input type="hidden" name="committee" value={committeeId} />}
           {eventIdFilter && <input type="hidden" name="event" value={eventIdFilter} />}
-          <label className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+          <label className="flex items-center gap-1 text-[var(--ink-2)] dark:text-white/65">
             <span>{tr("tasks.filter_search", locale)}</span>
             <input
               type="search"
               name="q"
               defaultValue={qInput}
               placeholder={tr("tasks.filter_search_placeholder", locale)}
-              className="min-w-[140px] rounded border border-gray-300 bg-white px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="ui-input min-w-[160px] px-2 py-1 text-xs"
             />
           </label>
           <button

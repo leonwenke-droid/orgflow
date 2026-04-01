@@ -86,11 +86,6 @@ export default function MemberShiftsClient({
     return [...map.entries()];
   }, [filtered]);
 
-  const pillClass = (active: boolean) =>
-    `rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-      active ? "bg-white text-gray-900 shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-white/60 hover:text-gray-900"
-    }`;
-
   return (
     <div className="mx-auto max-w-5xl space-y-5 p-6">
       <header>
@@ -101,13 +96,13 @@ export default function MemberShiftsClient({
       </header>
 
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={pillClass(filter === "all")} onClick={() => setFilter("all")}>
+        <button type="button" className="ui-pill text-xs" aria-current={filter === "all" ? "page" : undefined} onClick={() => setFilter("all")}>
           {t("finance.filter_all", locale)}
         </button>
-        <button type="button" className={pillClass(filter === "free")} onClick={() => setFilter("free")}>
+        <button type="button" className="ui-pill text-xs" aria-current={filter === "free" ? "page" : undefined} onClick={() => setFilter("free")}>
           {t("dashboard.filter_free_shifts", locale)}
         </button>
-        <button type="button" className={pillClass(filter === "mine")} onClick={() => setFilter("mine")}>
+        <button type="button" className="ui-pill text-xs" aria-current={filter === "mine" ? "page" : undefined} onClick={() => setFilter("mine")}>
           {t("dashboard.my_assigned_shifts", locale)}
         </button>
       </div>
@@ -115,15 +110,15 @@ export default function MemberShiftsClient({
       <section className="card">
         <div className="p-4">
           {grouped.length === 0 ? (
-            <p className="text-sm text-gray-500">{t("empty.member.shifts", locale)}</p>
+            <p className="text-sm text-[var(--ink-3)] dark:text-white/45">{t("empty.member.shifts", locale)}</p>
           ) : (
             <div className="space-y-4">
               {grouped.map(([dateKey, rows]) => (
                 <div key={dateKey}>
-                  <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700">
+                  <div className="rounded-[var(--radius-input)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--ink-2)] dark:border-white/10 dark:bg-white/5 dark:text-white/70">
                     {dateKey === "—" ? "—" : formatDateSeparator(dateKey, locale)}
                   </div>
-                  <ul className="divide-y divide-gray-100">
+                  <ul className="divide-y divide-[var(--border)] dark:divide-white/10">
                     {rows.map((s) => {
                       const required = Number(s.required_slots ?? 1) || 1;
                       const taken = (s.shift_assignments ?? []).length;
@@ -138,13 +133,13 @@ export default function MemberShiftsClient({
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className={`h-2 w-2 rounded-full ${dotColor(free)}`} aria-hidden />
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-[var(--ink-3)] dark:text-white/45">
                                   {free} {locale === "en" ? "free" : "frei"}
                                 </span>
-                                <span className="font-medium text-gray-900">{s.event_name || t("dashboard.shifts", locale)}</span>
+                                <span className="font-medium text-[var(--ink)] dark:text-white">{s.event_name || t("dashboard.shifts", locale)}</span>
                                 {assigned ? <span className="tag tag-blue">{t("shifts.you_are_signed_up", locale)}</span> : null}
                               </div>
-                              <div className="mt-1 text-xs text-gray-500">
+                              <div className="mt-1 text-xs text-[var(--ink-3)] dark:text-white/45">
                                 {s.date ? formatShiftSlot(String(s.date), s.start_time, s.end_time, fl) : "–"}
                                 {s.location ? ` · ${s.location}` : ""}
                                 {` · ${Math.max(0, free)} von ${required} ${locale === "en" ? "free" : "frei"}`}
