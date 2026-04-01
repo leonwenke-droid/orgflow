@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -49,45 +49,51 @@ export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3 text-sm">
+    <form onSubmit={onSubmit} className="space-y-4">
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700">
+        <label htmlFor="auth-email" className="auth-label">
           Email
         </label>
         <input
+          id="auth-email"
           type="email"
           required
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
+          className="auth-input"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700">
+        <label htmlFor="auth-password" className="auth-label">
           Password
         </label>
         <input
+          id="auth-password"
           type="password"
           required
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
+          className="auth-input"
         />
       </div>
       {error && (
-        <p className="text-xs text-red-600">
+        <p className="rounded-[var(--radius-input)] border border-red-200/80 bg-[var(--red-light)] px-3 py-2 text-xs text-[var(--red-dark)] dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
           {error}
         </p>
       )}
-      <button type="submit" className="btn-primary text-xs" disabled={loading}>
+      <button type="submit" className="btn-primary inline-flex w-full justify-center py-2.5 text-sm" disabled={loading}>
         {loading ? "Signing in…" : "Sign in"}
       </button>
-      <p className="text-xs text-gray-500">
-        <Link href={redirectTo ? `/auth/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}` : "/auth/forgot-password"} className="text-blue-600 hover:underline">
+      <p className="text-center text-xs text-[var(--ink-3)] dark:text-white/45">
+        <Link
+          href={redirectTo ? `/auth/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}` : "/auth/forgot-password"}
+          className="font-medium text-[var(--blue-600)] hover:text-[var(--blue-800)] dark:text-[var(--blue-400)] dark:hover:text-[var(--blue-200)]"
+        >
           Forgot password?
         </Link>
       </p>
     </form>
   );
 }
-

@@ -260,7 +260,7 @@ export default function EngagementTabs({
                                   <span className="text-gray-400">
                                     {formatLocaleDateTime(e.created_at, locale)}
                                   </span>
-                                  <span className="tag tag-neutral">{e.event_type}</span>
+                                  <span className="tag tag-compact tag-neutral font-mono">{e.event_type}</span>
                                   {e.points != null && (
                                     <span className={e.points >= 0 ? "text-green-600" : "text-red-600"}>
                                       {e.points >= 0 ? "+" : ""}{e.points}

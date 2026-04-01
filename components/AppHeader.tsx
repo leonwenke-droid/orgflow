@@ -8,6 +8,7 @@ import FullPageLink from "./FullPageLink";
 import LogoutButton from "./LogoutButton";
 import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./NotificationBell";
+import { OrgFlowLogoLockup } from "./brand/OrgFlowLogoLockup";
 import type { AppShellUser } from "./AppShell";
 
 const RESERVED = ["admin", "dashboard", "login", "super-admin", "task", "api", "claim-org", "auth", "create-organisation", "join"];
@@ -65,9 +66,18 @@ export default function AppHeader({ user, onMenuOpen }: { user: AppShellUser; on
             <Menu className="h-5 w-5" />
           </button>
         )}
-        <h1 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-          {orgName ? `OrgFlow – ${orgName}` : "OrgFlow"}
-        </h1>
+        <div className="min-w-0">
+          <OrgFlowLogoLockup
+            href={orgSlug ? `/${orgSlug}/dashboard` : "/"}
+            size="sm"
+            className="max-w-full"
+          />
+          {orgName ? (
+            <p className="mt-1 truncate pl-[2.75rem] text-xs font-normal text-gray-500 dark:text-gray-400">
+              {orgName}
+            </p>
+          ) : null}
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />

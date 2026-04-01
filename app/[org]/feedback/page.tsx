@@ -103,7 +103,7 @@ export default async function OrgFeedbackPage(props: {
                   ) : null}
                   <p className="mt-2 text-xs text-gray-500">{formatLocaleDateTime(it.created_at, locale)}</p>
                 </div>
-                <span className="tag tag-neutral">{String(it.status ?? "").toUpperCase() || "—"}</span>
+                <span className="tag tag-compact tag-neutral">{String(it.status ?? "").toUpperCase() || "—"}</span>
               </div>
             </li>
           ))}

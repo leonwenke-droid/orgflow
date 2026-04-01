@@ -10,13 +10,13 @@
       <rect x="10" y="10" width="7" height="7" rx="2" opacity=".25"/>
     </g>
   </g>
-  <text x="164" y="118" fill="#ffffff" font-family="DM Sans, ui-sans-serif, system-ui" font-size="28" font-weight="500" letter-spacing="-0.02em">
+  <text x="164" y="118" fill="#ffffff" font-family="DM Sans, ui-sans-serif, system-ui, sans-serif" font-size="28" font-weight="500" letter-spacing="-0.02em">
     OrgFlow
   </text>
-  <text x="88" y="260" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="400" letter-spacing="-0.02em">
+  <text x="88" y="260" fill="#ffffff" font-family="Instrument Serif, Georgia, 'Times New Roman', serif" font-size="52" font-weight="400" letter-spacing="-0.02em">
     Organisation,
   </text>
-  <text x="88" y="330" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-weight="400" letter-spacing="-0.02em">
+  <text x="88" y="330" font-family="Instrument Serif, Georgia, 'Times New Roman', serif" font-size="52" font-weight="400" letter-spacing="-0.02em">
     <tspan fill="#ffffff">die </tspan>
     <tspan fill="rgba(255,255,255,.55)" font-style="italic">wirklich</tspan>
     <tspan fill="#ffffff"> funktioniert.</tspan>

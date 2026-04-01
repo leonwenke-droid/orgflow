@@ -335,7 +335,7 @@ export default function ResourcesClient({
                     </td>
                     <td className="px-4 py-3 text-right">
                       {r.source && (
-                        <span className="tag tag-neutral">{r.source}</span>
+                        <span className="tag tag-compact tag-neutral">{r.source}</span>
                       )}
                     </td>
                   </tr>

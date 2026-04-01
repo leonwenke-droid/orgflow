@@ -1,0 +1,599 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',var(--font-sans),sans-serif;color:var(--color-text-primary);background:transparent}
+.guide{padding:2rem 0 3rem}
+.section{margin-bottom:3rem}
+.label{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-secondary);margin-bottom:1rem}
+.sep{height:0.5px;background:var(--color-border-tertiary);margin:2.5rem 0}
+
+/* ── Logo area ── */
+.logo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.logo-box{border-radius:var(--border-radius-lg);padding:28px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border:0.5px solid var(--color-border-tertiary);min-height:120px}
+.logo-box-dark{background:#0c0c0b}
+.logo-box-light{background:#fafaf8;border-color:rgba(0,0,0,.1)}
+.logo-box-blue{background:#185FA5}
+.logo-box-surface{background:var(--color-background-secondary)}
+.logo-cap{font-size:10px;color:var(--color-text-secondary);letter-spacing:.05em}
+.logo-cap-light{color:rgba(255,255,255,.4)}
+
+/* Logo mark SVG-based */
+.lm{display:flex;align-items:center;gap:9px}
+.lm-mark{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lm-text{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:500;letter-spacing:-.01em}
+.lm-mark-dark .lm-mark{background:#0c0c0b}
+.lm-mark-white .lm-mark{background:#fff}
+.lm-mark-blue .lm-mark{background:rgba(255,255,255,.15)}
+.lm-text-white{color:#fff}
+.lm-text-dark{color:#0c0c0b}
+
+/* Wordmark standalone */
+.wordmark{font-family:'DM Sans',sans-serif;font-size:22px;font-weight:500;letter-spacing:-.015em}
+
+/* ── Color system ── */
+.color-row{display:flex;gap:0;border-radius:10px;overflow:hidden;margin-bottom:8px;height:52px}
+.color-swatch{flex:1;display:flex;align-items:flex-end;padding:5px 7px;font-size:9px;font-weight:500;letter-spacing:.03em;transition:flex .2s}
+.color-swatch:hover{flex:2}
+.color-pairs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.color-card{border-radius:var(--border-radius-md);overflow:hidden;border:0.5px solid var(--color-border-tertiary)}
+.color-main{height:72px;display:flex;align-items:flex-end;padding:10px 12px}
+.color-meta{background:var(--color-background-secondary);padding:10px 12px}
+.color-name{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.color-hex{font-size:11px;color:var(--color-text-secondary);font-family:var(--font-mono);margin-top:2px}
+.color-role{font-size:10px;color:var(--color-text-secondary);margin-top:1px;letter-spacing:.02em}
+
+/* ── Typography ── */
+.type-row{padding:14px 0;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:baseline;gap:16px}
+.type-row:last-child{border-bottom:none}
+.type-meta{width:120px;flex-shrink:0}
+.type-name{font-size:11px;font-weight:500;color:var(--color-text-secondary)}
+.type-spec{font-size:10px;color:var(--color-text-secondary);margin-top:2px;font-family:var(--font-mono)}
+.type-sample{flex:1;min-width:0}
+
+/* ── Spacing ── */
+.space-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.space-bar{height:20px;border-radius:3px;background:#185FA5;opacity:.8;flex-shrink:0}
+.space-label{font-size:11px;color:var(--color-text-secondary);font-family:var(--font-mono)}
+.space-name{font-size:12px;color:var(--color-text-primary)}
+
+/* ── Icon system ── */
+.icon-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+.icon-item{aspect-ratio:1;border-radius:var(--border-radius-md);background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;border:0.5px solid var(--color-border-tertiary)}
+.icon-item svg{width:18px;height:18px;color:var(--color-text-primary)}
+
+/* ── Motion ── */
+.motion-row{display:flex;gap:10px;margin-bottom:10px;align-items:center}
+.motion-bar{height:6px;border-radius:3px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);overflow:hidden;flex:1}
+.motion-fill{height:100%;border-radius:3px;background:#185FA5;width:0}
+.motion-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);cursor:pointer;flex-shrink:0}
+.motion-label{font-size:11px;color:var(--color-text-secondary);width:80px;font-family:var(--font-mono)}
+
+/* ── Brand voice ── */
+.voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.voice-card{border-radius:var(--border-radius-md);padding:14px 16px;border:0.5px solid var(--color-border-tertiary)}
+.voice-do{background:var(--color-background-success)}
+.voice-dont{background:var(--color-background-danger)}
+.voice-tag{font-size:10px;font-weight:500;letter-spacing:.05em;margin-bottom:8px}
+.voice-do .voice-tag{color:var(--color-text-success)}
+.voice-dont .voice-tag{color:var(--color-text-danger)}
+.voice-text{font-size:13px;line-height:1.5;color:var(--color-text-primary)}
+.voice-example{font-size:12px;color:var(--color-text-secondary);margin-top:6px;font-style:italic}
+
+/* ── Usage mockups ── */
+.usage-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.usage-card{border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);overflow:hidden}
+.usage-preview{padding:20px;display:flex;align-items:center;justify-content:center;min-height:100px}
+.usage-label{padding:10px 14px;background:var(--color-background-secondary);border-top:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-secondary)}
+
+/* ── Donts ── */
+.dont-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dont-card{border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-danger,rgba(220,50,50,.2));padding:14px;position:relative;overflow:hidden}
+.dont-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--color-text-danger)}
+.dont-title{font-size:11px;font-weight:500;color:var(--color-text-danger);margin-bottom:6px}
+.dont-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+
+.big-heading{font-family:'Instrument Serif','Georgia',serif;font-size:2rem;font-weight:400;line-height:1.1;letter-spacing:-.02em;color:var(--color-text-primary)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+</style>
+
+<div class="guide">
+
+<!-- ═══ LOGO SYSTEM ═══ -->
+<div class="section">
+  <div class="label">Logo-System</div>
+  <div class="logo-grid">
+    <!-- Primary: dark bg -->
+    <div class="logo-box logo-box-dark">
+      <div class="lm lm-mark-dark">
+        <div class="lm-mark">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <rect x="1" y="1" width="7" height="7" rx="2" fill="white"/>
+            <rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/>
+            <rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/>
+            <rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/>
+          </svg>
+        </div>
+        <span class="lm-text lm-text-white">OrgFlow</span>
+      </div>
+      <span class="logo-cap logo-cap-light">Primär · Dunkler Hintergrund</span>
+    </div>
+    <!-- Light bg -->
+    <div class="logo-box logo-box-light">
+      <div class="lm">
+        <div class="lm-mark" style="background:#0c0c0b">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <rect x="1" y="1" width="7" height="7" rx="2" fill="white"/>
+            <rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/>
+            <rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/>
+            <rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/>
+          </svg>
+        </div>
+        <span class="lm-text lm-text-dark">OrgFlow</span>
+      </div>
+      <span class="logo-cap">Primär · Heller Hintergrund</span>
+    </div>
+    <!-- Blue bg -->
+    <div class="logo-box logo-box-blue">
+      <div class="lm lm-mark-blue">
+        <div class="lm-mark">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <rect x="1" y="1" width="7" height="7" rx="2" fill="white"/>
+            <rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".6"/>
+            <rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".6"/>
+            <rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".3"/>
+          </svg>
+        </div>
+        <span class="lm-text lm-text-white">OrgFlow</span>
+      </div>
+      <span class="logo-cap logo-cap-light">Markenfarbe · Brand Blue</span>
+    </div>
+  </div>
+
+  <!-- Symbol only + Wordmark only -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+    <div class="logo-box logo-box-surface">
+      <div style="background:#0c0c0b;width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center">
+        <svg width="24" height="24" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="1" width="7" height="7" rx="2" fill="white"/>
+          <rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/>
+          <rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/>
+          <rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/>
+        </svg>
+      </div>
+      <span class="logo-cap">Symbol · App Icon / Favicon</span>
+    </div>
+    <div class="logo-box logo-box-surface">
+      <span class="wordmark" style="color:var(--color-text-primary)">OrgFlow</span>
+      <span class="logo-cap">Wordmark · Text only</span>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ LOGO MARK ANATOMY ═══ -->
+<div class="section">
+  <div class="label">Symbol-Anatomie</div>
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:28px;display:flex;align-items:center;gap:40px;border:0.5px solid var(--color-border-tertiary)">
+    <svg width="96" height="96" viewBox="0 0 96 96" fill="none">
+      <rect x="4" y="4" width="40" height="40" rx="10" fill="#0c0c0b"/>
+      <rect x="52" y="4" width="40" height="40" rx="10" fill="#0c0c0b" opacity=".45"/>
+      <rect x="4" y="52" width="40" height="40" rx="10" fill="#0c0c0b" opacity=".45"/>
+      <rect x="52" y="52" width="40" height="40" rx="10" fill="#0c0c0b" opacity=".2"/>
+    </svg>
+    <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:16px;height:16px;border-radius:3px;background:#0c0c0b;flex-shrink:0"></div>
+        <span style="font-size:12px;color:var(--color-text-secondary)">Primär — 100% Opazität · Aufgaben & Hauptfunktionen</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:16px;height:16px;border-radius:3px;background:#0c0c0b;opacity:.45;flex-shrink:0"></div>
+        <span style="font-size:12px;color:var(--color-text-secondary)">Sekundär — 45% · Schichten & Mitglieder</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:16px;height:16px;border-radius:3px;background:#0c0c0b;opacity:.2;flex-shrink:0"></div>
+        <span style="font-size:12px;color:var(--color-text-secondary)">Tertiär — 20% · Erweiterung, Zukunft</span>
+      </div>
+      <div style="padding-top:8px;border-top:0.5px solid var(--color-border-tertiary);font-size:12px;color:var(--color-text-secondary);line-height:1.6">
+        Vier Quadranten = vier Kernbereiche der App.<br>
+        Abnehmende Opazität = wachsende Organisation.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ FARBE ═══ -->
+<div class="section">
+  <div class="label">Primäre Farbpalette</div>
+
+  <!-- Brand Blue ramp -->
+  <div style="margin-bottom:6px;font-size:11px;color:var(--color-text-secondary)">Brand Blue — Primärfarbe, Interaktion, Links</div>
+  <div class="color-row" style="margin-bottom:16px">
+    <div class="color-swatch" style="background:#E6F1FB;color:#0C447C">50</div>
+    <div class="color-swatch" style="background:#B5D4F4;color:#0C447C">100</div>
+    <div class="color-swatch" style="background:#85B7EB;color:#0C447C">200</div>
+    <div class="color-swatch" style="background:#378ADD;color:#fff">400</div>
+    <div class="color-swatch" style="background:#185FA5;color:#fff">600 ★</div>
+    <div class="color-swatch" style="background:#0C447C;color:#fff">800</div>
+    <div class="color-swatch" style="background:#042C53;color:#fff">900</div>
+  </div>
+
+  <!-- Ink ramp -->
+  <div style="margin-bottom:6px;font-size:11px;color:var(--color-text-secondary)">Brand Ink — Text, Hintergründe, Logo</div>
+  <div class="color-row" style="margin-bottom:16px">
+    <div class="color-swatch" style="background:#fafaf8;color:#444441">50</div>
+    <div class="color-swatch" style="background:#f2f1ed;color:#444441">100</div>
+    <div class="color-swatch" style="background:#d3d1c7;color:#2C2C2A">200</div>
+    <div class="color-swatch" style="background:#888780;color:#fff">400</div>
+    <div class="color-swatch" style="background:#3d3d3a;color:#fff">600</div>
+    <div class="color-swatch" style="background:#1a1a18;color:#fff">800</div>
+    <div class="color-swatch" style="background:#0c0c0b;color:#fff">900 ★</div>
+  </div>
+
+  <!-- Semantic colors -->
+  <div style="margin-bottom:10px;font-size:11px;color:var(--color-text-secondary)">Semantische Farben — Status & Bedeutung</div>
+  <div class="color-pairs">
+    <div class="color-card">
+      <div class="color-main" style="background:#EAF3DE">
+        <div style="display:flex;gap:4px">
+          <div style="width:20px;height:20px;border-radius:4px;background:#639922"></div>
+          <div style="width:20px;height:20px;border-radius:4px;background:#3B6D11"></div>
+          <div style="width:20px;height:20px;border-radius:4px;background:#27500A"></div>
+        </div>
+      </div>
+      <div class="color-meta">
+        <div class="color-name">Success · Green</div>
+        <div class="color-hex">#3B6D11 → #EAF3DE</div>
+        <div class="color-role">Erledigt · Bestätigt · Frei</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-main" style="background:#FAEEDA">
+        <div style="display:flex;gap:4px">
+          <div style="width:20px;height:20px;border-radius:4px;background:#EF9F27"></div>
+          <div style="width:20px;height:20px;border-radius:4px;background:#854F0B"></div>
+          <div style="width:20px;height:20px;border-radius:4px;background:#633806"></div>
+        </div>
+      </div>
+      <div class="color-meta">
+        <div class="color-name">Warning · Amber</div>
+        <div class="color-hex">#854F0B → #FAEEDA</div>
+        <div class="color-role">In Arbeit · Fast voll · Achtung</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-main" style="background:#FCEBEB">
+        <div style="display:flex;gap:4px">
+          <div style="width:20px;height:20px;border-radius:4px;background:#E24B4A"></div>
+          <div style="width:20px;height:20px;border-radius:4px;background:#A32D2D"></div>
+          <div style="width:20px;height:20px;border-radius:4px;background:#791F1F"></div>
+        </div>
+      </div>
+      <div class="color-meta">
+        <div class="color-name">Danger · Red</div>
+        <div class="color-hex">#A32D2D → #FCEBEB</div>
+        <div class="color-role">Überfällig · Belegt · Löschen</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-main" style="background:#f2f1ed">
+        <div style="display:flex;gap:4px">
+          <div style="width:20px;height:20px;border-radius:4px;background:#888780"></div>
+          <div style="width:20px;height:20px;border-radius:4px;background:#5F5E5A"></div>
+          <div style="width:20px;height:20px;border-radius:4px;background:#2C2C2A"></div>
+        </div>
+      </div>
+      <div class="color-meta">
+        <div class="color-name">Neutral · Ink</div>
+        <div class="color-hex">#888780 → #f2f1ed</div>
+        <div class="color-role">Sekundär · Offen · Inaktiv</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ TYPOGRAFIE ═══ -->
+<div class="section">
+  <div class="label">Typografie-System</div>
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:20px;border:0.5px solid var(--color-border-tertiary)">
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-name">Display</div>
+        <div class="type-spec">Instrument Serif<br>400 / 52–68px</div>
+      </div>
+      <div class="type-sample">
+        <span style="font-family:'Instrument Serif',Georgia,serif;font-size:clamp(28px,4vw,52px);font-weight:400;letter-spacing:-.02em;line-height:1.1;color:var(--color-text-primary)">Organisation,<br>die <em style="color:var(--color-text-secondary);font-style:italic">wirklich</em> funktioniert.</span>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-name">Heading 1</div>
+        <div class="type-spec">Instrument Serif<br>400 / 36–48px</div>
+      </div>
+      <div class="type-sample">
+        <span style="font-family:'Instrument Serif',Georgia,serif;font-size:clamp(22px,3vw,38px);font-weight:400;letter-spacing:-.02em;color:var(--color-text-primary)">Alle Features auf einen Blick</span>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-name">Heading 2</div>
+        <div class="type-spec">DM Sans<br>500 / 20–24px</div>
+      </div>
+      <div class="type-sample">
+        <span style="font-family:'DM Sans',sans-serif;font-size:20px;font-weight:500;color:var(--color-text-primary)">Schichten & Schichtplanung</span>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-name">Body</div>
+        <div class="type-spec">DM Sans<br>300–400 / 15–17px</div>
+      </div>
+      <div class="type-sample">
+        <span style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:300;color:var(--color-text-secondary);line-height:1.65">Aufgaben, Schichten, Mitglieder und Finanzen — alles an einem Ort. Für Vereine, Schulen, NGOs und jede Organisation.</span>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-name">Label</div>
+        <div class="type-spec">DM Sans<br>500 / 11px / +0.06em</div>
+      </div>
+      <div class="type-sample">
+        <span style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:#185FA5">Features</span>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-meta">
+        <div class="type-name">Mono</div>
+        <div class="type-spec">System mono<br>400 / 12px</div>
+      </div>
+      <div class="type-sample">
+        <span style="font-family:var(--font-mono,'Courier New',monospace);font-size:12px;color:var(--color-text-secondary)">#185FA5 · 14px/500 · border-radius: 10px</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ SPACING ═══ -->
+<div class="section">
+  <div class="label">Abstands-Skala</div>
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:20px;border:0.5px solid var(--color-border-tertiary)">
+    <div class="space-row"><div class="space-bar" style="width:4px"></div><span class="space-label">4px</span><span class="space-name">Micro — Icon-Abstände, Tags intern</span></div>
+    <div class="space-row"><div class="space-bar" style="width:8px"></div><span class="space-label">8px</span><span class="space-name">XS — Inline-Gaps, Badge-Padding</span></div>
+    <div class="space-row"><div class="space-bar" style="width:12px"></div><span class="space-label">12px</span><span class="space-name">SM — Card-interne Abstände</span></div>
+    <div class="space-row"><div class="space-bar" style="width:16px"></div><span class="space-label">16px</span><span class="space-name">MD — Standard-Gap, Card-Padding</span></div>
+    <div class="space-row"><div class="space-bar" style="width:24px"></div><span class="space-label">24px</span><span class="space-name">LG — Section-interne Abstände</span></div>
+    <div class="space-row"><div class="space-bar" style="width:40px"></div><span class="space-label">40px</span><span class="space-name">XL — Zwischen Komponenten</span></div>
+    <div class="space-row"><div class="space-bar" style="width:64px"></div><span class="space-label">64px</span><span class="space-name">2XL — Section-Padding vertikal</span></div>
+    <div class="space-row"><div class="space-bar" style="width:100px"></div><span class="space-label">100px</span><span class="space-name">3XL — Landing Page Sections</span></div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ BORDER RADIUS ═══ -->
+<div class="section">
+  <div class="label">Ecken-Radius</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:48px;height:48px;background:#185FA5;border-radius:4px"></div>
+      <span style="font-size:11px;color:var(--color-text-secondary)">4px<br>Tags</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:48px;height:48px;background:#185FA5;border-radius:8px"></div>
+      <span style="font-size:11px;color:var(--color-text-secondary)">8px<br>Inputs</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:48px;height:48px;background:#185FA5;border-radius:10px"></div>
+      <span style="font-size:11px;color:var(--color-text-secondary)">10px<br>Buttons</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:48px;height:48px;background:#185FA5;border-radius:12px"></div>
+      <span style="font-size:11px;color:var(--color-text-secondary)">12px<br>Cards</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:48px;height:48px;background:#185FA5;border-radius:14px"></div>
+      <span style="font-size:11px;color:var(--color-text-secondary)">14px<br>Modal</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:48px;height:48px;background:#185FA5;border-radius:24px"></div>
+      <span style="font-size:11px;color:var(--color-text-secondary)">24px<br>Pill-Btn</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:48px;height:48px;background:#185FA5;border-radius:50%"></div>
+      <span style="font-size:11px;color:var(--color-text-secondary)">50%<br>Avatar</span>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ KOMPONENTEN ═══ -->
+<div class="section">
+  <div class="label">UI-Komponenten</div>
+
+  <!-- Buttons -->
+  <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">Buttons</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding:16px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)">
+    <button style="background:#0c0c0b;color:#fff;font-size:14px;font-weight:500;padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-family:inherit">Primär</button>
+    <button style="background:#185FA5;color:#fff;font-size:14px;font-weight:500;padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-family:inherit">Brand Blue</button>
+    <button style="background:transparent;color:var(--color-text-primary);font-size:14px;font-weight:500;padding:10px 20px;border-radius:10px;border:0.5px solid var(--color-border-secondary);cursor:pointer;font-family:inherit">Sekundär</button>
+    <button style="background:transparent;color:var(--color-text-danger);font-size:14px;font-weight:500;padding:10px 20px;border-radius:10px;border:0.5px solid rgba(163,45,45,.3);cursor:pointer;font-family:inherit">Destruktiv</button>
+    <button style="background:transparent;color:var(--color-text-secondary);font-size:14px;font-weight:500;padding:10px 20px;border-radius:10px;border:none;cursor:pointer;font-family:inherit">Ghost</button>
+  </div>
+
+  <!-- Tags & Badges -->
+  <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">Status-Tags</div>
+  <div class="pill-row" style="margin-bottom:20px">
+    <span class="pill" style="background:#EAF3DE;color:#27500A">Erledigt</span>
+    <span class="pill" style="background:#FAEEDA;color:#633806">In Arbeit</span>
+    <span class="pill" style="background:#FCEBEB;color:#791F1F">Überfällig</span>
+    <span class="pill" style="background:#E6F1FB;color:#0C447C">Eingetragen</span>
+    <span class="pill" style="background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)">Offen</span>
+    <span class="pill" style="background:#FAEEDA;color:#633806">Eingeladen</span>
+    <span class="pill" style="background:#3B6D11;color:#fff">Neu</span>
+  </div>
+
+  <!-- Availability dots -->
+  <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">Verfügbarkeits-Ampel</div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;padding:14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md)">
+    <div style="display:flex;align-items:center;gap:6px"><div style="width:7px;height:7px;border-radius:50%;background:#3B6D11"></div><span style="font-size:12px;color:var(--color-text-secondary)">Plätze frei</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><div style="width:7px;height:7px;border-radius:50%;background:#854F0B"></div><span style="font-size:12px;color:var(--color-text-secondary)">Fast voll</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><div style="width:7px;height:7px;border-radius:50%;background:#A32D2D"></div><span style="font-size:12px;color:var(--color-text-secondary)">Belegt</span></div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ ICONS ═══ -->
+<div class="section">
+  <div class="label">Icon-Stil — Stroke 1.5px, rounded caps</div>
+  <div class="icon-grid">
+    <div class="icon-item"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg></div>
+    <div class="icon-item"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="3,8 7,12 13,4"/><rect x="1" y="1" width="14" height="14" rx="2"/></svg></div>
+    <div class="icon-item"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="3" width="14" height="12" rx="1.5"/><line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/><line x1="1" y1="7" x2="15" y2="7"/></svg></div>
+    <div class="icon-item"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6" cy="5" r="2.5"/><path d="M1 13c0-2.5 2-4 5-4s5 1.5 5 4"/><circle cx="12.5" cy="5" r="2"/><path d="M12.5 9c2 0 3.5 1 3.5 3.5"/></svg></div>
+    <div class="icon-item"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="1,12 5,7 8,9 11,5 15,8"/><line x1="1" y1="15" x2="15" y2="15"/></svg></div>
+    <div class="icon-item"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="5" width="14" height="9" rx="2"/><line x1="1" y1="9" x2="15" y2="9"/><path d="M5 5V3.5a3 3 0 0 1 6 0V5"/></svg></div>
+    <div class="icon-item"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polygon points="8,1 9.8,5.8 15,6.2 11,9.6 12.4,14.8 8,12 3.6,14.8 5,9.6 1,6.2 6.2,5.8"/></svg></div>
+    <div class="icon-item"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.2 3.2l1 1M11.8 11.8l1 1M12.8 3.2l-1 1M4.2 11.8l-1 1"/></svg></div>
+  </div>
+  <div style="margin-top:10px;font-size:11px;color:var(--color-text-secondary)">Stroke: 1.5px · Linecap: round · Größen: 14px (Nav), 18px (Listen), 20px (Features), 24px (Dekorativ)</div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ BRAND VOICE ═══ -->
+<div class="section">
+  <div class="label">Brand Voice — Wie wir sprechen</div>
+  <div class="voice-grid">
+    <div class="voice-card voice-do">
+      <div class="voice-tag">DO — So klingt OrgFlow</div>
+      <div class="voice-text">Direkt, klar, kein Fachjargon.</div>
+      <div class="voice-example">"Trag dich in offene Schichten ein."</div>
+      <div class="voice-text" style="margin-top:10px">Menschlich, nicht robotisch.</div>
+      <div class="voice-example">"Guten Abend, Leon — hier ist, was heute noch wichtig ist."</div>
+      <div class="voice-text" style="margin-top:10px">Motivierend, nicht bevormundend.</div>
+      <div class="voice-example">"Score #1 — du führst die Rangliste an."</div>
+    </div>
+    <div class="voice-card voice-dont">
+      <div class="voice-tag">DON'T — Das vermeiden wir</div>
+      <div class="voice-text">Technisch und abstrakt.</div>
+      <div class="voice-example">"Initiiere den Schicht-Claim-Prozess über das Interface."</div>
+      <div class="voice-text" style="margin-top:10px">Roh aus der Datenbank.</div>
+      <div class="voice-example">"Status: in_arbeit · assigned_at: 2026-03-23"</div>
+      <div class="voice-text" style="margin-top:10px">Unnötig förmlich.</div>
+      <div class="voice-example">"Sehr geehrte/r Nutzer/in, Ihre Aufgabe ist fällig."</div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ DONT'S ═══ -->
+<div class="section">
+  <div class="label">Logo — Was nicht erlaubt ist</div>
+  <div class="dont-grid">
+    <div class="dont-card">
+      <div class="dont-title">Nicht strecken</div>
+      <div style="display:flex;align-items:center;gap:6px;margin:10px 0;transform:scaleX(1.5);transform-origin:left">
+        <div style="background:#0c0c0b;width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/></svg></div>
+        <span style="font-size:13px;font-weight:500">OrgFlow</span>
+      </div>
+      <div class="dont-desc">Proportionen des Logos niemals verändern.</div>
+    </div>
+    <div class="dont-card">
+      <div class="dont-title">Nicht auf Muster</div>
+      <div style="background:repeating-linear-gradient(45deg,#185FA5,#185FA5 4px,#0C447C 4px,#0C447C 8px);border-radius:6px;padding:10px;margin:10px 0;display:flex;align-items:center;gap:6px">
+        <div style="background:rgba(255,255,255,.2);width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/></svg></div>
+        <span style="font-size:13px;font-weight:500;color:#fff">OrgFlow</span>
+      </div>
+      <div class="dont-desc">Kein Logo auf bunten Mustern oder Verläufen.</div>
+    </div>
+    <div class="dont-card">
+      <div class="dont-title">Nicht einfärben</div>
+      <div style="display:flex;align-items:center;gap:6px;margin:10px 0">
+        <div style="background:#185FA5;width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="12" height="12" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/></svg></div>
+        <span style="font-size:13px;font-weight:500;color:#185FA5">OrgFlow</span>
+      </div>
+      <div class="dont-desc">Logo-Mark nur in Schwarz/Weiß. Kein bunter Mark.</div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- ═══ ANWENDUNGEN ═══ -->
+<div class="section">
+  <div class="label">Markenanwendungen</div>
+  <div class="usage-grid">
+    <!-- Email signature -->
+    <div class="usage-card">
+      <div class="usage-preview" style="background:#fafaf8;flex-direction:column;align-items:flex-start;gap:8px;padding:20px 24px">
+        <div style="display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid #e8e7e3;width:100%">
+          <div style="background:#0c0c0b;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/></svg></div>
+          <span style="font-size:15px;font-weight:500;color:#0c0c0b">OrgFlow</span>
+        </div>
+        <div style="font-size:12px;font-weight:500;color:#0c0c0b">Leon Wenke</div>
+        <div style="font-size:11px;color:#888780">leon@orgflow.de · orgflow.de</div>
+      </div>
+      <div class="usage-label">E-Mail-Signatur</div>
+    </div>
+    <!-- App Icon -->
+    <div class="usage-card">
+      <div class="usage-preview" style="background:#f2f1ed;gap:12px">
+        <div style="background:#0c0c0b;width:64px;height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center">
+          <svg width="32" height="32" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/></svg>
+        </div>
+        <div style="background:#185FA5;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center">
+          <svg width="20" height="20" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".6"/><rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".6"/><rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".3"/></svg>
+        </div>
+      </div>
+      <div class="usage-label">App Icon · Favicon (64px + 32px)</div>
+    </div>
+    <!-- Social media -->
+    <div class="usage-card">
+      <div class="usage-preview" style="background:#0c0c0b;padding:16px">
+        <div style="width:100%;padding:18px;border-radius:10px;border:1px solid rgba(255,255,255,.1)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <div style="background:rgba(255,255,255,.1);width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/></svg></div>
+            <span style="font-size:12px;font-weight:500;color:#fff">OrgFlow</span>
+          </div>
+          <div style="font-family:'Instrument Serif',Georgia,serif;font-size:16px;color:#fff;line-height:1.3">Organisation, die <em style="color:rgba(255,255,255,.55)">wirklich</em> funktioniert.</div>
+        </div>
+      </div>
+      <div class="usage-label">Social Media Card · Open Graph</div>
+    </div>
+    <!-- Favicon row -->
+    <div class="usage-card">
+      <div class="usage-preview" style="background:var(--color-background-secondary);gap:16px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="background:#0c0c0b;width:16px;height:16px;border-radius:3px;display:flex;align-items:center;justify-content:center"><svg width="9" height="9" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/></svg></div>
+          <span style="font-size:11px;color:var(--color-text-secondary)">16px</span>
+          <div style="background:#0c0c0b;width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/></svg></div>
+          <span style="font-size:11px;color:var(--color-text-secondary)">32px</span>
+          <div style="background:#0c0c0b;width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="7" height="7" rx="2" fill="white"/><rect x="10" y="1" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="1" y="10" width="7" height="7" rx="2" fill="white" opacity=".5"/><rect x="10" y="10" width="7" height="7" rx="2" fill="white" opacity=".25"/></svg></div>
+          <span style="font-size:11px;color:var(--color-text-secondary)">48px</span>
+        </div>
+      </div>
+      <div class="usage-label">Favicon-Größen (16 / 32 / 48px)</div>
+    </div>
+  </div>
+</div>
+
+</div>

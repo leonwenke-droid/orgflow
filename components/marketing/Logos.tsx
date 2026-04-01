@@ -4,10 +4,19 @@
 
 import type { ReactNode } from "react";
 
+/** Nur Marken-Palette (Guide): Blau, Grün, Amber, Rot, Ink/Neutral — kein Dekor-Violett/Teal & Co. */
+const BRAND_MARK_ROTATION = [
+  "logos-mark--blue",
+  "logos-mark--green",
+  "logos-mark--amber",
+  "logos-mark--red",
+  "logos-mark--slate",
+] as const;
+
 type Org = {
   name: string;
   tag: string;
-  markClass: string;
+  markIndex: number;
   Mark: () => ReactNode;
 };
 
@@ -139,17 +148,17 @@ function MarkPaw() {
 }
 
 const ORGS: Org[] = [
-  { name: "TGG Leer", tag: "Showtanz & Auftritte", markClass: "logos-mark--blue", Mark: MarkWaves },
-  { name: "SV Frisia Weener", tag: "Fußball · Emsland", markClass: "logos-mark--green", Mark: MarkBall },
-  { name: "Feuerwehr LZ Stadtmitte", tag: "Leer 26789", markClass: "logos-mark--amber", Mark: MarkFlame },
-  { name: "DRK Ortsverein Leer", tag: "Bereitschaft & Hilfe", markClass: "logos-mark--red", Mark: MarkCross },
-  { name: "Musikzug Loga", tag: "Tradition & Umzüge", markClass: "logos-mark--violet", Mark: MarkNote },
-  { name: "Regatta-Club Ems-Jade", tag: "Training am Wasser", markClass: "logos-mark--teal", Mark: MarkSail },
-  { name: "Schützenverein Bingum", tag: "Festwirtschaft & mehr", markClass: "logos-mark--rose", Mark: MarkTarget },
-  { name: "Förderverein Gymnasium", tag: "Leer · Schulprojekte", markClass: "logos-mark--slate", Mark: MarkBook },
-  { name: "Hafen-Crew Leer", tag: "Markt & Kultur", markClass: "logos-mark--navy", Mark: MarkAnchor },
-  { name: "HSG Leer/Tinnen", tag: "Handball Jugend", markClass: "logos-mark--orange", Mark: MarkHandball },
-  { name: "Tierheim Leer e.V.", tag: "Ehrenamt & Spenden", markClass: "logos-mark--brown", Mark: MarkPaw },
+  { name: "TGG Leer", tag: "Showtanz & Auftritte", markIndex: 0, Mark: MarkWaves },
+  { name: "SV Frisia Weener", tag: "Fußball · Emsland", markIndex: 1, Mark: MarkBall },
+  { name: "Feuerwehr LZ Stadtmitte", tag: "Leer 26789", markIndex: 2, Mark: MarkFlame },
+  { name: "DRK Ortsverein Leer", tag: "Bereitschaft & Hilfe", markIndex: 3, Mark: MarkCross },
+  { name: "Musikzug Loga", tag: "Tradition & Umzüge", markIndex: 4, Mark: MarkNote },
+  { name: "Regatta-Club Ems-Jade", tag: "Training am Wasser", markIndex: 5, Mark: MarkSail },
+  { name: "Schützenverein Bingum", tag: "Festwirtschaft & mehr", markIndex: 6, Mark: MarkTarget },
+  { name: "Förderverein Gymnasium", tag: "Leer · Schulprojekte", markIndex: 7, Mark: MarkBook },
+  { name: "Hafen-Crew Leer", tag: "Markt & Kultur", markIndex: 8, Mark: MarkAnchor },
+  { name: "HSG Leer/Tinnen", tag: "Handball Jugend", markIndex: 9, Mark: MarkHandball },
+  { name: "Tierheim Leer e.V.", tag: "Ehrenamt & Spenden", markIndex: 10, Mark: MarkPaw },
 ];
 
 function LogoStrip({ dup }: { dup?: boolean }) {
@@ -157,7 +166,10 @@ function LogoStrip({ dup }: { dup?: boolean }) {
     <div className={`logos-set${dup ? " logos-set--dup" : ""}`} aria-hidden={dup}>
       {ORGS.map((org) => (
         <div key={`${org.name}-${dup ? "b" : "a"}`} className="logos-item">
-          <div className={`logos-mark ${org.markClass}`} aria-hidden>
+          <div
+            className={`logos-mark ${BRAND_MARK_ROTATION[org.markIndex % BRAND_MARK_ROTATION.length]}`}
+            aria-hidden
+          >
             <org.Mark />
           </div>
           <div className="logos-text">

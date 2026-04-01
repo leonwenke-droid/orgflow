@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 
-/** Brand Blue ramp (OrgFlow brand guide) — replaces default Tailwind blue. */
+/** Brand Blue ramp — docs/brand/orgflow_brand_guide.html */
 const brandBlue = {
   50: "#E6F1FB",
   100: "#B5D4F4",
@@ -24,9 +24,26 @@ const config: Config = {
   darkMode: "class",
   theme: {
     extend: {
+      borderRadius: {
+        "brand-tag": "4px",
+        "brand-input": "8px",
+        "brand-button": "10px",
+        "brand-card": "12px",
+        "brand-modal": "14px",
+        "brand-pill": "24px",
+      },
       fontFamily: {
-        serif: ["Instrument Serif", "Georgia", "serif"],
-        sans: ["DM Sans", "system-ui", "sans-serif"],
+        serif: ["var(--font-serif)", "Instrument Serif", "Georgia", "serif"],
+        sans: ["var(--font-sans)", "DM Sans", "system-ui", "sans-serif"],
+        mono: [
+          "ui-monospace",
+          "SFMono-Regular",
+          "SF Mono",
+          "Menlo",
+          "Consolas",
+          "Liberation Mono",
+          "monospace",
+        ],
       },
       colors: {
         ink: "var(--ink)",
@@ -37,9 +54,24 @@ const config: Config = {
         blue: brandBlue,
         green: "var(--green)",
         brand: { DEFAULT: "#185FA5", light: "#E6F1FB", dark: "#0C447C" },
-        success: { DEFAULT: "#3B6D11", light: "#EAF3DE", dark: "#27500A" },
-        warning: { DEFAULT: "#854F0B", light: "#FAEEDA", dark: "#633806" },
-        danger: { DEFAULT: "#A32D2D", light: "#FCEBEB", dark: "#791F1F" },
+        success: {
+          DEFAULT: "#3B6D11",
+          light: "#EAF3DE",
+          mid: "#639922",
+          dark: "#27500A",
+        },
+        warning: {
+          DEFAULT: "#854F0B",
+          light: "#FAEEDA",
+          bright: "#EF9F27",
+          dark: "#633806",
+        },
+        danger: {
+          DEFAULT: "#A32D2D",
+          light: "#FCEBEB",
+          bright: "#E24B4A",
+          dark: "#791F1F",
+        },
         background: {
           DEFAULT: "#ffffff",
           dark: "#111110",

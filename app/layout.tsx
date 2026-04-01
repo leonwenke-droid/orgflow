@@ -39,6 +39,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icon.svg", type: "image/svg+xml" }],
   },
   openGraph: {
     title: "OrgFlow",

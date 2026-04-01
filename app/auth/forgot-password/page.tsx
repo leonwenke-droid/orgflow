@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import AuthPageShell from "../../../components/auth/AuthPageShell";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -28,40 +29,50 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="mx-auto max-w-sm">
-      <div className="card space-y-4">
+    <AuthPageShell>
+      <div className="auth-card space-y-5">
         <div>
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Reset password</h2>
-          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          <h1 className="auth-title">Reset password</h1>
+          <p className="auth-sub">
             Enter your email and we&apos;ll send you a link to set a new password.
           </p>
         </div>
         {sent ? (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/30 dark:text-green-200">
+          <div className="rounded-[var(--radius-input)] border border-[var(--green)]/25 bg-[var(--green-light)] px-3 py-3 text-sm text-[var(--green-dark)] dark:border-emerald-800/40 dark:bg-emerald-950/35 dark:text-emerald-200">
             Check your email for the reset link. You can close this page.
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-3 text-sm">
+          <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">Email</label>
+              <label htmlFor="forgot-email" className="auth-label">
+                Email
+              </label>
               <input
+                id="forgot-email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                className="auth-input"
               />
             </div>
-            {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-            <button type="submit" className="btn-primary text-xs" disabled={loading}>
+            {error && (
+              <p className="rounded-[var(--radius-input)] border border-red-200/80 bg-[var(--red-light)] px-3 py-2 text-xs text-[var(--red-dark)] dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
+                {error}
+              </p>
+            )}
+            <button type="submit" className="btn-primary inline-flex w-full justify-center py-2.5 text-sm" disabled={loading}>
               {loading ? "Sending…" : "Send reset link"}
             </button>
           </form>
         )}
-        <p className="text-xs text-gray-500">
-          <Link href="/login" className="text-blue-600 hover:underline">Back to sign in</Link>
+        <p className="text-center text-xs text-[var(--ink-3)] dark:text-white/45">
+          <Link href="/login" className="font-medium text-[var(--blue-600)] dark:text-[var(--blue-400)]">
+            Back to sign in
+          </Link>
         </p>
       </div>
-    </div>
+    </AuthPageShell>
   );
 }

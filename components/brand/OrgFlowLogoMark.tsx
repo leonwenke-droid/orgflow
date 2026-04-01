@@ -1,5 +1,6 @@
 /**
- * OrgFlow symbol (brand guide): four quadrants on 18×18 viewBox, stroke-free.
+ * OrgFlow symbol — 18×18 viewBox, vier Quadranten (docs/brand/orgflow_brand_guide.html).
+ * Statische Varianten: /logo-mark.svg (auf hellem Grund), /logo-mark-on-dark.svg, /logo-mark-on-brand.svg
  * Use with `text-white` on dark marks or `text-[#0c0c0b]` on light containers.
  */
 export function OrgFlowLogoMark({ className }: { className?: string }) {

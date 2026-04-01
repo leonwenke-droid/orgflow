@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="132" height="32" viewBox="0 0 132 32" fill="none" aria-label="OrgFlow">
+  <rect width="28" height="28" x="0" y="2" rx="7" fill="#0c0c0b"/>
+  <g fill="#fff" transform="translate(5 7)">
+    <rect x="1" y="1" width="7" height="7" rx="2"/>
+    <rect x="10" y="1" width="7" height="7" rx="2" opacity=".5"/>
+    <rect x="1" y="10" width="7" height="7" rx="2" opacity=".5"/>
+    <rect x="10" y="10" width="7" height="7" rx="2" opacity=".25"/>
+  </g>
+  <text x="36" y="22" fill="#0c0c0b" font-family="DM Sans, ui-sans-serif, system-ui, sans-serif" font-size="18" font-weight="500" letter-spacing="-0.01em">OrgFlow</text>
+</svg>
