@@ -69,7 +69,7 @@ export default function CreateCommitteeForm({
       {limitError && (
         <div className="rounded-lg border border-[var(--color-warning)]/30 bg-[var(--bg-warning-subtle)] p-4 text-sm text-[var(--color-warning-text)]">
           <p className="font-medium">{limitError}</p>
-          <Link href="/#pricing" className="mt-2 inline-block text-blue-600 underline hover:text-blue-700 dark:text-blue-400">
+          <Link href="/preise" className="mt-2 inline-block text-blue-600 underline hover:text-blue-700 dark:text-blue-400">
             View pricing & upgrade →
           </Link>
         </div>

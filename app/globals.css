@@ -561,6 +561,178 @@ html.dark .marketing .p-card.featured .p-check-white { color: rgba(0,0,0,.45); }
 .marketing .footer-legal a { color: rgba(255,255,255,.28); text-decoration: none; transition: color .15s; }
 .marketing .footer-legal a:hover { color: rgba(255,255,255,.6); }
 
+/* Marketing Unterseiten (Footer-Links: Docs, Changelog, …) */
+.marketing .subpage-hero {
+  padding: 88px 0 40px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.marketing .subpage-hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+.marketing .subpage-hero .subpage-lead {
+  font-size: 17px;
+  color: var(--text-secondary);
+  max-width: 52ch;
+  line-height: 1.65;
+  font-weight: 300;
+}
+.marketing .subpage-body {
+  padding: 40px 0 100px;
+}
+.marketing .subpage-body.subpage-body--wide .subpage-inner {
+  max-width: 880px;
+}
+.marketing .subpage-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.marketing .subpage-back {
+  display: inline-block;
+  margin-bottom: 1.75rem;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.marketing .subpage-back:hover {
+  color: var(--text-primary);
+}
+.marketing .subpage-body h2 {
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 2.25rem 0 0.65rem;
+  letter-spacing: -0.01em;
+}
+.marketing .subpage-body h2:first-of-type {
+  margin-top: 0;
+}
+.marketing .subpage-body h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 1.5rem 0 0.5rem;
+}
+.marketing .subpage-body p,
+.marketing .subpage-body li {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-weight: 300;
+}
+.marketing .subpage-body ul,
+.marketing .subpage-body ol {
+  margin: 0.5rem 0 1rem 1.25rem;
+}
+.marketing .subpage-body ul {
+  list-style: disc;
+}
+.marketing .subpage-body ol {
+  list-style: decimal;
+}
+.marketing .subpage-body a:not(.subpage-back) {
+  color: var(--blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.marketing .subpage-body a:not(.subpage-back):hover {
+  opacity: 0.88;
+}
+.marketing .subpage-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+.marketing .subpage-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem;
+  margin: 1rem 0;
+}
+.marketing .subpage-changelog time {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 6px;
+}
+.marketing .subpage-changelog h2 {
+  margin-top: 2rem;
+}
+.marketing .subpage-changelog h2:first-of-type {
+  margin-top: 0;
+}
+.marketing .subpage-roadmap-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.marketing .subpage-roadmap-row:last-child {
+  border-bottom: none;
+}
+.marketing .subpage-roadmap-row strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.marketing .subpage-pill {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+}
+.marketing .subpage-pill--soon {
+  border-color: rgba(24, 95, 165, 0.2);
+  color: var(--blue);
+  background: var(--bg-brand-subtle);
+}
+.marketing .subpage-pill--live {
+  border-color: rgba(59, 109, 17, 0.2);
+  color: var(--green-dark);
+  background: var(--green-light);
+}
+.marketing .blog-card {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.marketing .blog-card:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.marketing .blog-card h2 {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 400;
+}
+.marketing .blog-card h2 a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.marketing .blog-card h2 a:hover {
+  color: var(--blue);
+}
+
 @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .marketing .anim-1 { animation: fadeUp .7s ease both; }

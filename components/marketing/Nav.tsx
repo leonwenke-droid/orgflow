@@ -20,9 +20,9 @@ export function Nav() {
           <OrgFlowLogoLockup href="/" size="sm" className="logo" />
 
           <div className="nav-links">
-            <a href="#features">Features</a>
-            <a href="#how">So funktioniert&apos;s</a>
-            <a href="#pricing">Preise</a>
+            <Link href="/features">Features</Link>
+            <Link href="/#how">So funktioniert&apos;s</Link>
+            <Link href="/preise">Preise</Link>
           </div>
 
           <div className="nav-cta">

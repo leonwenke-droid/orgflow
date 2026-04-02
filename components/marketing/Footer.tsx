@@ -20,22 +20,22 @@ export function Footer() {
 
           <div className="footer-col">
             <h4>Produkt</h4>
-            <a href="#features">Features</a>
-            <a href="#pricing">Preise</a>
-            <a href="#">Changelog</a>
-            <a href="#">Roadmap</a>
+            <Link href="/features">Features</Link>
+            <Link href="/preise">Preise</Link>
+            <Link href="/changelog">Changelog</Link>
+            <Link href="/roadmap">Roadmap</Link>
           </div>
           <div className="footer-col">
             <h4>Ressourcen</h4>
-            <a href="#">Dokumentation</a>
-            <a href="#">API</a>
-            <a href="#">Status</a>
-            <a href="#">Blog</a>
+            <Link href="/docs">Dokumentation</Link>
+            <Link href="/docs/api">API</Link>
+            <Link href="/status">Status</Link>
+            <Link href="/blog">Blog</Link>
           </div>
           <div className="footer-col">
             <h4>Unternehmen</h4>
-            <a href="#">Über uns</a>
-            <a href="#">Kontakt</a>
+            <Link href="/about">Über uns</Link>
+            <Link href="/contact">Kontakt</Link>
             <a href="mailto:hello@orgflow.de">hello@orgflow.de</a>
           </div>
         </div>
@@ -52,4 +52,3 @@ export function Footer() {
     </footer>
   );
 }
-
