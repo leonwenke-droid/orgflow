@@ -31,11 +31,11 @@ export default function PrivacyActions({ orgSlug }: { orgSlug: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
-        <p className="font-semibold text-gray-900 dark:text-gray-100">
+      <div className="rounded-lg border border-border-subtle bg-bg-secondary p-4 text-sm text-text-secondary dark:border-border-default dark:bg-bg-primary/50 dark:text-text-secondary">
+        <p className="font-semibold text-text-primary dark:text-text-primary">
           {locale === "de" ? "Auftragsverarbeitung (AVV)" : "Data processing (DPA)"}
         </p>
-        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        <p className="mt-1 text-xs text-text-secondary dark:text-text-muted">
           {locale === "de"
             ? "AVV nach Art. 28 DSGVO auf Anfrage."
             : "DPA under Art. 28 GDPR available on request."}
@@ -52,18 +52,18 @@ export default function PrivacyActions({ orgSlug }: { orgSlug: string }) {
         >
           {locale === "de" ? "Meine Daten exportieren" : "Export my data"}
         </a>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-text-secondary dark:text-text-muted">
           {locale === "de"
             ? "JSON-Export deiner Profildaten und Aktivitäten."
             : "JSON export of your profile and activity."}
         </span>
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+      <div className="rounded-lg border border-border-subtle bg-bg-secondary p-4 dark:border-border-default dark:bg-bg-primary/50">
+        <p className="text-sm font-semibold text-text-primary dark:text-text-primary">
           {locale === "de" ? "Löschanfrage" : "Deletion request"}
         </p>
-        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        <p className="mt-1 text-xs text-text-secondary dark:text-text-muted">
           {locale === "de"
             ? "Sende eine Anfrage zur Kontolöschung. Ein Admin prüft und bestätigt die Löschung."
             : "Submit a request to delete your account. An admin will review and confirm."}
@@ -72,14 +72,14 @@ export default function PrivacyActions({ orgSlug }: { orgSlug: string }) {
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
-          className="mt-3 w-full rounded border border-gray-300 bg-white p-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="mt-3 w-full rounded border border-border-default bg-bg-primary p-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           placeholder={locale === "de" ? "Optionaler Grund…" : "Optional reason…"}
         />
         <div className="mt-3 flex items-center gap-3">
           <Button type="button" variant="destructive" disabled={loading} onClick={submitDeletionRequest} className="text-sm font-semibold">
             {loading ? t("common.loading", locale) : locale === "de" ? "Anfrage senden" : "Submit request"}
           </Button>
-          {message && <span className="text-xs text-gray-600 dark:text-gray-400">{message}</span>}
+          {message && <span className="text-xs text-text-secondary dark:text-text-muted">{message}</span>}
         </div>
       </div>
     </div>

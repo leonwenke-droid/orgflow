@@ -86,11 +86,11 @@ export default function AddMaterialForm({
         <p className="text-xs text-green-600 dark:text-green-400">{t("resources.recorded_success", locale)}</p>
       )}
 
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs dark:border-gray-600 dark:bg-gray-800">
-        <span className="font-semibold text-gray-700 dark:text-gray-300">{t("resources.rating_title", locale)}</span>
+      <div className="rounded-lg border border-border-subtle bg-bg-secondary p-3 text-xs dark:border-border-default dark:bg-bg-primary">
+        <span className="font-semibold text-text-secondary dark:text-text-secondary">{t("resources.rating_title", locale)}</span>
         <table className="mt-1.5 w-full text-left">
           <thead>
-            <tr className="text-gray-500 dark:text-gray-400">
+            <tr className="text-text-secondary dark:text-text-muted">
               <th className="py-0.5">{t("resources.size", locale)}</th>
               <th className="py-0.5">{t("resources.points", locale)}</th>
               <th className="py-0.5">{t("resources.examples", locale)}</th>
@@ -98,10 +98,10 @@ export default function AddMaterialForm({
           </thead>
           <tbody>
             {options.map((s) => (
-              <tr key={s.value} className="border-t border-gray-100 dark:border-gray-700">
-                <td className="py-1 font-medium dark:text-gray-200">{s.label}</td>
-                <td className="py-1 text-gray-700 dark:text-gray-300">+{s.points}</td>
-                <td className="py-1 text-gray-500 dark:text-gray-400">{s.examples ?? "—"}</td>
+              <tr key={s.value} className="border-t border-border-subtle dark:border-border-default">
+                <td className="py-1 font-medium dark:text-text-primary">{s.label}</td>
+                <td className="py-1 text-text-secondary dark:text-text-secondary">+{s.points}</td>
+                <td className="py-1 text-text-secondary dark:text-text-muted">{s.examples ?? "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -110,7 +110,7 @@ export default function AddMaterialForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
-          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("resources.persons", locale)}
           </label>
           {personSlots.map((key, idx) => (
@@ -118,7 +118,7 @@ export default function AddMaterialForm({
               <select
                 name="user_ids"
                 required={idx === 0}
-                className="min-w-0 flex-1 rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                className="min-w-0 flex-1 rounded border border-border-default bg-bg-primary p-2 text-sm text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               >
                 <option value="">{t("resources.select", locale)}</option>
                 {profiles.map((p) => (
@@ -143,13 +143,13 @@ export default function AddMaterialForm({
           </button>
         </div>
         <div className="space-y-1">
-          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("resources.event", locale)}
           </label>
           {events && events.length > 0 ? (
             <select
               name="event_id"
-              className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="w-full rounded border border-border-default bg-bg-primary p-2 text-sm text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               defaultValue=""
             >
               <option value="">{t("shifts.event_none", locale)}</option>
@@ -165,17 +165,17 @@ export default function AddMaterialForm({
             name="event_name"
             placeholder={t("resources.event_placeholder", locale)}
             required={!events || events.length === 0}
-            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400"
+            className="w-full rounded border border-border-default bg-bg-primary p-2 text-sm text-text-primary placeholder:text-text-muted dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:placeholder:text-text-muted"
           />
         </div>
         <div className="space-y-1">
-          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("resources.size_points", locale)}
           </label>
           <select
             name="size"
             required
-            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded border border-border-default bg-bg-primary p-2 text-sm text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           >
             {options.map((s) => (
               <option key={s.value} value={s.value}>
@@ -185,7 +185,7 @@ export default function AddMaterialForm({
           </select>
         </div>
         <div className="space-y-1 sm:col-span-2">
-          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("resources.description", locale)}
           </label>
           <input
@@ -193,7 +193,7 @@ export default function AddMaterialForm({
             name="description"
             placeholder={t("resources.placeholder_description", locale)}
             required
-            className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400"
+            className="w-full rounded border border-border-default bg-bg-primary p-2 text-sm text-text-primary placeholder:text-text-muted dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:placeholder:text-text-muted"
           />
         </div>
       </div>

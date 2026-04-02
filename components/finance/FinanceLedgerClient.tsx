@@ -38,7 +38,7 @@ function FinanceArtBadge({ type, locale }: { type: string; locale: Locale }) {
 
 function CategoryPill({ label }: { label: string }) {
   return (
-    <span className="inline-flex rounded-full border border-zinc-400/50 bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-300">
+    <span className="inline-flex rounded-full border border-zinc-400/50 bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:border-border-default dark:bg-zinc-800/80 dark:text-text-secondary">
       {label}
     </span>
   );
@@ -141,14 +141,14 @@ export default function FinanceLedgerClient({
     `rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
       active
         ? "bg-blue-600 text-white dark:bg-blue-600"
-        : "bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+        : "bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-text-primary dark:hover:bg-zinc-700"
     }`;
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60 md:p-6">
+    <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default dark:bg-bg-primary/60 md:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-text-primary">
             {t("finance.section_bookings", locale)}
           </h2>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -208,9 +208,9 @@ export default function FinanceLedgerClient({
       {formOpen && (
         <form
           onSubmit={onSubmitBook}
-          className="mt-4 space-y-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/40"
+          className="mt-4 space-y-3 rounded-lg border border-border-subtle bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-950/40"
         >
-          <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{t("finance.form_title", locale)}</h3>
+          <h3 className="text-sm font-semibold text-zinc-800 dark:text-text-primary">{t("finance.form_title", locale)}</h3>
           <input type="hidden" name="organization_id" value={organizationId} />
           <input type="hidden" name="org_slug" value={orgSlug} />
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -221,7 +221,7 @@ export default function FinanceLedgerClient({
               <input
                 name="description"
                 required
-                className="w-full rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                className="w-full rounded-lg border border-border-default bg-bg-primary px-2 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               />
             </div>
             <div>
@@ -234,7 +234,7 @@ export default function FinanceLedgerClient({
                 inputMode="decimal"
                 required
                 placeholder={locale === "de" ? "0,00" : "0.00"}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                className="w-full rounded-lg border border-border-default bg-bg-primary px-2 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               />
             </div>
             <div>
@@ -244,7 +244,7 @@ export default function FinanceLedgerClient({
               <select
                 name="type"
                 required
-                className="w-full rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                className="w-full rounded-lg border border-border-default bg-bg-primary px-2 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               >
                 <option value="expense">{t("finance.entry_type_expense", locale)}</option>
                 <option value="income">{t("finance.entry_type_income", locale)}</option>
@@ -258,7 +258,7 @@ export default function FinanceLedgerClient({
                 name="category"
                 value={categorySelect}
                 onChange={(e) => setCategorySelect(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                className="w-full rounded-lg border border-border-default bg-bg-primary px-2 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               >
                 <option value="">—</option>
                 {categoryOptions.map((c) => (
@@ -276,7 +276,7 @@ export default function FinanceLedgerClient({
                 </label>
                 <input
                   name="category_new"
-                  className="w-full rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                  className="w-full rounded-lg border border-border-default bg-bg-primary px-2 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
                 />
               </div>
             )}
@@ -289,7 +289,7 @@ export default function FinanceLedgerClient({
                 type="date"
                 required
                 defaultValue={new Date().toISOString().slice(0, 10)}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                className="w-full rounded-lg border border-border-default bg-bg-primary px-2 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               />
             </div>
             <div className="sm:col-span-2">
@@ -300,7 +300,7 @@ export default function FinanceLedgerClient({
                 name="receipt"
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png"
-                className="block w-full text-sm text-zinc-600 file:mr-2 file:rounded file:border-0 file:bg-blue-600 file:px-2 file:py-1 file:text-white dark:text-zinc-300"
+                className="block w-full text-sm text-zinc-600 file:mr-2 file:rounded file:border-0 file:bg-blue-600 file:px-2 file:py-1 file:text-white dark:text-text-secondary"
               />
             </div>
           </div>
@@ -322,7 +322,7 @@ export default function FinanceLedgerClient({
         <div className="mt-6 overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="border-b border-zinc-200 text-left text-xs font-medium text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+              <tr className="border-b border-border-subtle text-left text-xs font-medium text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
                 <th className="pb-2 pr-3">{t("finance.entry_date", locale)}</th>
                 <th className="pb-2 pr-3">{t("finance.entry_description", locale)}</th>
                 <th className="pb-2 pr-3">{t("finance.entry_category", locale)}</th>
@@ -340,12 +340,12 @@ export default function FinanceLedgerClient({
                 return (
                   <tr
                     key={r.id}
-                    className="border-b border-zinc-100 dark:border-zinc-800/80"
+                    className="border-b border-zinc-100 dark:border-border-default/80"
                   >
                     <td className="py-2.5 pr-3 text-zinc-500 dark:text-zinc-400">
                       {formatFinanceEntryDateYmd(r.date, locale)}
                     </td>
-                    <td className="py-2.5 pr-3 font-medium text-zinc-900 dark:text-zinc-100">
+                    <td className="py-2.5 pr-3 font-medium text-zinc-900 dark:text-text-primary">
                       {r.description ?? "—"}
                     </td>
                     <td className="py-2.5 pr-3">

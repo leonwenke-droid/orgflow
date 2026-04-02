@@ -34,7 +34,7 @@ export default function LeadWeeklyBonusButton({ action }: { action: Action }) {
     <form action={formAction} className="space-y-2">
       <SubmitButton />
       {state?.message && (
-        <p className="text-xs text-gray-600">{state.message}</p>
+        <p className="text-xs text-text-secondary">{state.message}</p>
       )}
     </form>
   );

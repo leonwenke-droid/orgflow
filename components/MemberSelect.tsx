@@ -78,16 +78,16 @@ export default function MemberSelect({
           setQuery(selected ? "" : v);
         }}
         onFocus={() => setOpen(true)}
-        className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
       />
       {open && (
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded border border-gray-200 bg-white py-1 text-xs shadow-lg dark:border-gray-600 dark:bg-gray-800"
+          className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded border border-border-subtle bg-bg-primary py-1 text-xs shadow-lg dark:border-border-default dark:bg-bg-primary"
         >
           {filtered.length === 0 ? (
-            <li className="px-3 py-2 text-gray-500">
+            <li className="px-3 py-2 text-text-secondary">
               {options.length === 0 ? t("members.no_people_loaded", locale) : t("common.no_matches", locale)}
             </li>
           ) : (
@@ -96,7 +96,7 @@ export default function MemberSelect({
                 key={opt.id}
                 role="option"
                 aria-selected={selected?.id === opt.id}
-                className="cursor-pointer px-3 py-2 text-gray-900 hover:bg-gray-100"
+                className="cursor-pointer px-3 py-2 text-text-primary hover:bg-bg-secondary"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   setSelected(opt);

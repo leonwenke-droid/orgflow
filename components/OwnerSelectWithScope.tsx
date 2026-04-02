@@ -43,41 +43,41 @@ export default function OwnerSelectWithScope({
     <div className="space-y-3">
       <input type="hidden" name="committee_id" value={scope === "year" ? "" : committeeId} />
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700">
+        <label className="mb-1 block text-xs font-semibold text-text-secondary">
           Responsible person from
         </label>
         <div className="flex flex-wrap gap-3 mb-1.5">
-          <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+          <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
             <input
               type="radio"
               name="owner_scope"
               checked={scope === "committee"}
               onChange={() => setScope("committee")}
-              className="rounded border-gray-400"
+              className="rounded border-border-default"
             />
             Selected team only
           </label>
-          <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+          <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
             <input
               type="radio"
               name="owner_scope"
               checked={scope === "year"}
               onChange={() => setScope("year")}
-              className="rounded border-gray-400"
+              className="rounded border-border-default"
             />
             All members
           </label>
         </div>
         {scope === "committee" && (
           <div className="mt-2">
-            <label className="mb-1 block text-xs font-semibold text-gray-700">
+            <label className="mb-1 block text-xs font-semibold text-text-secondary">
               {committeeName} (required)
             </label>
             <select
               required={scope === "committee"}
               value={committeeId}
               onChange={(e) => setCommitteeId(e.target.value)}
-              className="w-full rounded border border-gray-300 bg-white p-2 text-xs"
+              className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs"
             >
               <option value="">Please select team…</option>
               {committees.map((c) => (
@@ -88,7 +88,7 @@ export default function OwnerSelectWithScope({
             </select>
           </div>
         )}
-        <p className="mb-1.5 text-[10px] text-gray-500">
+        <p className="mb-1.5 text-[10px] text-text-secondary">
           With &quot;Selected team only&quot;, only members assigned to that team are shown (primary or additional).
         </p>
         <MemberSelect

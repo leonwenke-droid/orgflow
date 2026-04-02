@@ -47,7 +47,7 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
   if (!prof) {
     return (
       <div className="mx-auto max-w-2xl p-6">
-        <p className="text-sm text-gray-600 dark:text-gray-400">{t("dashboard.use_invited_account", locale)}</p>
+        <p className="text-sm text-text-secondary dark:text-text-muted">{t("dashboard.use_invited_account", locale)}</p>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
         <div className="min-w-0">
           <h1 className="page-title">{locale === "en" ? "My account" : "Mein Konto"}</h1>
           <p className="page-sub">{org.name}</p>
-          <p className="mt-3 text-sm text-gray-700">{(prof as { full_name?: string }).full_name ?? user.email}</p>
+          <p className="mt-3 text-sm text-text-secondary">{(prof as { full_name?: string }).full_name ?? user.email}</p>
         </div>
         <Link href={`/${orgSlug}/dashboard`} className="btn-secondary">
           {t("common.back", locale)}
@@ -75,15 +75,15 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
       <section className="card">
         <div className="p-4 space-y-2">
           <div className="section-label">{locale === "en" ? "Email" : "E-Mail"}</div>
-          <div className="text-sm text-gray-800">{user.email}</div>
-          <div className="text-xs text-gray-500">{t("account.email_note", locale)}</div>
+          <div className="text-sm text-text-primary">{user.email}</div>
+          <div className="text-xs text-text-secondary">{t("account.email_note", locale)}</div>
         </div>
       </section>
 
       <section className="card">
         <div className="p-4 space-y-3">
           <div className="section-label">{locale === "en" ? "Security" : "Sicherheit"}</div>
-          <div className="text-sm text-gray-700">{t("security.2fa_hint", locale)}</div>
+          <div className="text-sm text-text-secondary">{t("security.2fa_hint", locale)}</div>
           <div className="flex flex-wrap gap-2">
             <Link href="/auth/forgot-password" className="btn-primary">
               {locale === "en" ? "Reset password" : "Passwort zurücksetzen"}
@@ -92,14 +92,14 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
               {locale === "en" ? "Send feedback" : "Feedback geben"}
             </Link>
           </div>
-          <div className="text-xs text-gray-500">{t("security.privacy_note", locale)}</div>
+          <div className="text-xs text-text-secondary">{t("security.privacy_note", locale)}</div>
         </div>
       </section>
 
       <section className="card">
         <div className="p-4 space-y-2">
           <div className="section-label">{locale === "en" ? "Realtime" : "Realtime"}</div>
-          <div className="text-xs text-gray-500">{t("realtime.optional_note", locale)}</div>
+          <div className="text-xs text-text-secondary">{t("realtime.optional_note", locale)}</div>
         </div>
       </section>
     </div>

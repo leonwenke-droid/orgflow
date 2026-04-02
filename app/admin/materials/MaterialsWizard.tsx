@@ -52,7 +52,7 @@ export default function MaterialsWizard({
 
   return (
     <section id="record-material" className="card">
-      <h2 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+      <h2 className="mb-3 text-sm font-semibold text-text-secondary dark:text-text-secondary">
         {t("materials.wizard_title", locale)}
       </h2>
 
@@ -65,7 +65,7 @@ export default function MaterialsWizard({
             className={`rounded-full px-3 py-1 text-xs font-medium transition ${
               step === s.n
                 ? "bg-blue-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                : "bg-bg-secondary text-text-secondary hover:bg-bg-tertiary dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-tertiary"
             }`}
           >
             {s.n}. {s.label}
@@ -98,7 +98,7 @@ export default function MaterialsWizard({
         <div className="mb-3 flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+            className="rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-secondary dark:border-border-default dark:text-text-primary dark:hover:bg-bg-primary"
             onClick={() => setStep(1)}
           >
             {t("materials.wizard_prev", locale)}
@@ -122,13 +122,13 @@ export default function MaterialsWizard({
       </div>
 
       <div className={step === 3 ? "block" : "hidden"}>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-text-secondary dark:text-text-muted">
           {t("materials.wizard_history_intro", locale)}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+            className="rounded-lg border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-secondary dark:border-border-default dark:text-text-primary dark:hover:bg-bg-primary"
             onClick={() => setStep(2)}
           >
             {t("materials.wizard_prev", locale)}

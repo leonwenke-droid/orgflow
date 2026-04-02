@@ -159,12 +159,12 @@ export default function CreateOrganisationClient() {
         : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-bg-secondary py-12">
       <div className="mx-auto max-w-xl px-6">
         <div className="mb-8">
           <Link
             href="/"
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-sm text-text-secondary hover:text-text-secondary"
           >
             ← Back to OrgFlow
           </Link>
@@ -175,27 +175,27 @@ export default function CreateOrganisationClient() {
             <div
               key={s}
               className={`h-2 flex-1 rounded-full ${
-                s <= step ? "bg-blue-600" : "bg-gray-200"
+                s <= step ? "bg-blue-600" : "bg-bg-tertiary"
               }`}
             />
           ))}
         </div>
-        <p className="mb-6 text-xs font-medium text-gray-500">
+        <p className="mb-6 text-xs font-medium text-text-secondary">
           Step {step} of {TOTAL_STEPS}
         </p>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-8 shadow-sm">
           {step === 1 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-text-primary">
                 Organisation name
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 Give your organisation a name (e.g. &quot;Class of 2027&quot; or
                 &quot;City FC Volunteers&quot;).
               </p>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="mb-2 block text-sm font-medium text-text-secondary">
                   Name *
                 </label>
                 <input
@@ -206,17 +206,17 @@ export default function CreateOrganisationClient() {
                   }
                   placeholder="My Organisation"
                   required
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-border-default px-4 py-2.5 text-text-primary focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
                 {formData.name && (
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-text-secondary">
                     URL: /{slugFromName(formData.name)}
                   </p>
                 )}
               </div>
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <p className="text-xs font-semibold text-gray-700">Quickstart</p>
-                <p className="mt-1 text-xs text-gray-600">
+              <div className="rounded-lg border border-border-subtle bg-bg-secondary p-3">
+                <p className="text-xs font-semibold text-text-secondary">Quickstart</p>
+                <p className="mt-1 text-xs text-text-secondary">
                   Create your organisation with recommended modules now, configure teams and invites later.
                 </p>
                 <button
@@ -233,17 +233,17 @@ export default function CreateOrganisationClient() {
 
           {step === 2 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-text-primary">
                 Setup basics
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 Choose an organisation type and the modules you want to start with. You can change this later in settings.
               </p>
               <div className="space-y-2">
                 {ORG_TYPES.map((t) => (
                   <label
                     key={t.value}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-blue-200"
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-border-subtle p-4 hover:border-blue-200"
                   >
                     <input
                       type="radio"
@@ -255,21 +255,21 @@ export default function CreateOrganisationClient() {
                       }
                       className="h-4 w-4 text-blue-600"
                     />
-                    <span className="font-medium text-gray-900">{t.label}</span>
+                    <span className="font-medium text-text-primary">{t.label}</span>
                   </label>
                 ))}
               </div>
 
               <div className="pt-2">
-                <div className="text-sm font-medium text-gray-900">Modules</div>
-                <p className="mt-1 text-xs text-gray-600">
+                <div className="text-sm font-medium text-text-primary">Modules</div>
+                <p className="mt-1 text-xs text-text-secondary">
                   Start lean. You can enable/disable modules any time.
                 </p>
                 <div className="mt-3 space-y-3">
                   {MODULES.map((m) => (
                     <label
                       key={m.key}
-                      className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-4 hover:border-blue-200"
+                      className="flex cursor-pointer items-start gap-3 rounded-lg border border-border-subtle p-4 hover:border-blue-200"
                     >
                       <input
                         type="checkbox"
@@ -282,11 +282,11 @@ export default function CreateOrganisationClient() {
                               : [...d.modules, m.key],
                           }));
                         }}
-                        className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600"
+                        className="mt-1 h-4 w-4 rounded border-border-default text-blue-600"
                       />
                       <div>
-                        <span className="font-medium text-gray-900">{m.label}</span>
-                        <p className="text-xs text-gray-500">{m.description}</p>
+                        <span className="font-medium text-text-primary">{m.label}</span>
+                        <p className="text-xs text-text-secondary">{m.description}</p>
                       </div>
                     </label>
                   ))}
@@ -297,10 +297,10 @@ export default function CreateOrganisationClient() {
 
           {step === 3 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-text-primary">
                 Teams and invites (optional)
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 Add a few teams and invite members now — or skip and do it later from the admin area.
               </p>
               <div className="space-y-3">
@@ -311,12 +311,12 @@ export default function CreateOrganisationClient() {
                       value={t}
                       onChange={(e) => updateTeam(i, e.target.value)}
                       placeholder={`Team ${i + 1}`}
-                      className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                      className="flex-1 rounded-lg border border-border-default px-4 py-2.5 text-text-primary focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     />
                     <button
                       type="button"
                       onClick={() => removeTeam(i)}
-                      className="rounded-lg border border-gray-300 px-3 text-sm text-gray-600 hover:bg-gray-50"
+                      className="rounded-lg border border-border-default px-3 text-sm text-text-secondary hover:bg-bg-secondary"
                     >
                       Remove
                     </button>
@@ -329,14 +329,14 @@ export default function CreateOrganisationClient() {
                 >
                   + Add team
                 </button>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-text-secondary">
                   Empty rows are ignored. Team names should be at least 2 characters.
                 </p>
               </div>
 
-              <div className="border-t border-gray-200 pt-6">
-                <div className="text-sm font-medium text-gray-900">Invite members</div>
-                <p className="mt-1 text-xs text-gray-600">
+              <div className="border-t border-border-subtle pt-6">
+                <div className="text-sm font-medium text-text-primary">Invite members</div>
+                <p className="mt-1 text-xs text-text-secondary">
                   Comma- or newline-separated. You can always invite later.
                 </p>
                 <div className="mt-3">
@@ -347,7 +347,7 @@ export default function CreateOrganisationClient() {
                     }
                     placeholder="one@email.com, two@email.com"
                     rows={4}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-border-default px-4 py-2.5 text-text-primary focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -356,11 +356,11 @@ export default function CreateOrganisationClient() {
 
           {step === 4 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">Finish</h2>
-              <p className="text-sm text-gray-600">
+              <h2 className="text-xl font-semibold text-text-primary">Finish</h2>
+              <p className="text-sm text-text-secondary">
                 Review and create your organisation.
               </p>
-              <div className="rounded-lg bg-gray-50 p-4 text-sm">
+              <div className="rounded-lg bg-bg-secondary p-4 text-sm">
                 <p>
                   <strong>Name:</strong> {formData.name || "–"}
                 </p>
@@ -396,7 +396,7 @@ export default function CreateOrganisationClient() {
               type="button"
               onClick={() => setStep((s) => Math.max(1, s - 1))}
               disabled={step === 1}
-              className="inline-flex items-center gap-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1 rounded-lg border border-border-default px-4 py-2 text-sm font-medium text-text-secondary hover:bg-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="h-4 w-4" />
               Back
@@ -435,15 +435,15 @@ export default function CreateOrganisationClient() {
         </div>
 
         {authWall ? (
-          <div className="mx-auto mt-8 max-w-xl rounded-xl border border-amber-200 bg-amber-50 p-6 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/40">
+          <div className="mx-auto mt-8 max-w-xl rounded-xl border border-[var(--color-warning)]/30 bg-[var(--bg-warning-subtle)] p-6 shadow-sm">
             <h2 className="text-base font-semibold text-amber-950 dark:text-amber-100">
               Sign in to finish
             </h2>
-            <p className="mt-2 text-sm text-amber-900/90 dark:text-amber-200/90">
+            <p className="mt-2 text-sm text-[var(--color-warning-text)]">
               Your setup is saved in this browser. Sign in or create an account, then tap{" "}
               <strong>Create organisation</strong> again on the step above.
             </p>
-            <div className="mt-4 rounded-lg border border-amber-200/80 bg-white p-4 dark:border-amber-800 dark:bg-gray-900">
+            <div className="mt-4 rounded-lg border border-[var(--color-warning)]/25 bg-bg-primary p-4">
               <AuthForm redirectTo="/create-organisation" />
             </div>
           </div>

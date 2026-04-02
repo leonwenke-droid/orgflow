@@ -54,11 +54,11 @@ export default function FinanceCategoriesForm({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+    <div className="rounded-lg border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("finance.categories_title", locale)}</p>
-          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{t("finance.categories_hint", locale)}</p>
+          <p className="text-sm font-semibold text-text-primary dark:text-text-primary">{t("finance.categories_title", locale)}</p>
+          <p className="mt-1 text-xs text-text-secondary dark:text-text-muted">{t("finance.categories_hint", locale)}</p>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export default function FinanceCategoriesForm({
         {cats.map((c) => (
           <span
             key={c.key}
-            className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-300"
+            className="inline-flex items-center gap-1 rounded-full border border-border-subtle px-3 py-1 text-xs text-text-secondary dark:border-border-default dark:text-text-secondary"
           >
             {c.name}
             <Button
@@ -82,7 +82,7 @@ export default function FinanceCategoriesForm({
             </Button>
           </span>
         ))}
-        {cats.length === 0 && <span className="text-xs text-gray-500 dark:text-gray-400">{t("finance.categories_empty", locale)}</span>}
+        {cats.length === 0 && <span className="text-xs text-text-secondary dark:text-text-muted">{t("finance.categories_empty", locale)}</span>}
       </div>
 
       <form
@@ -105,7 +105,7 @@ export default function FinanceCategoriesForm({
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder={t("finance.category_new_placeholder", locale)}
-          className="min-w-[220px] flex-1 rounded border border-gray-300 bg-white px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="min-w-[220px] flex-1 rounded border border-border-default bg-bg-primary px-3 py-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
         />
         <button
           type="submit"
@@ -116,7 +116,7 @@ export default function FinanceCategoriesForm({
         </button>
       </form>
 
-      {message && <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">{message}</p>}
+      {message && <p className="mt-2 text-xs text-text-secondary dark:text-text-muted">{message}</p>}
     </div>
   );
 }

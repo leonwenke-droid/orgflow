@@ -123,7 +123,7 @@ export default async function AdminDashboard({
       <section className="grid gap-4 md:grid-cols-4">
         <div className="stat-card">
           <div className="section-label">{t("dashboard.members", locale)}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{memberCount ?? 0}</div>
+          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{memberCount ?? 0}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Open tasks" : "Aufgaben offen"}</div>
@@ -131,11 +131,11 @@ export default async function AdminDashboard({
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Shift slots (7d)" : "Schichten (7d)"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{shiftsSlots7d}</div>
+          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{shiftsSlots7d}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Active members" : "Aktive Mitglieder"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{activeMembersCount ?? 0}</div>
+          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{activeMembersCount ?? 0}</div>
         </div>
       </section>
 
@@ -145,13 +145,13 @@ export default async function AdminDashboard({
             <div className="section-label">
               {locale === "en" ? "Team workload (7 days)" : "Team-Belastung (7 Tage)"}
             </div>
-            <p className="mb-3 text-[10px] text-gray-500">
+            <p className="mb-3 text-[10px] text-text-secondary">
               {locale === "en"
                 ? "Filled vs. required shift slots in the next 7 days"
                 : "Besetzte vs. benötigte Schicht-Slots in den nächsten 7 Tagen"}
             </p>
             {committeeUtil.length === 0 ? (
-              <p className="text-sm text-gray-500">—</p>
+              <p className="text-sm text-text-secondary">—</p>
             ) : (
               <ul className="space-y-3">
                 {committeeUtil.map((c) => {
@@ -159,12 +159,12 @@ export default async function AdminDashboard({
                   return (
                     <li key={c.id}>
                       <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0 text-sm font-medium text-gray-900 dark:text-gray-100">{c.name}</div>
-                        <div className="shrink-0 text-xs text-gray-500">
+                        <div className="min-w-0 text-sm font-medium text-text-primary dark:text-text-primary">{c.name}</div>
+                        <div className="shrink-0 text-xs text-text-secondary">
                           {c.taken}/{c.required} ({c.pct}%)
                         </div>
                       </div>
-                      <div className="mt-2 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                      <div className="mt-2 h-2 w-full rounded-full bg-bg-tertiary dark:bg-bg-tertiary">
                         <div className={`h-2 rounded-full ${barColor}`} style={{ width: `${Math.max(0, Math.min(100, c.pct))}%` }} />
                       </div>
                     </li>

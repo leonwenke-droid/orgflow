@@ -39,7 +39,7 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
     <div className={className}>
       <input type="hidden" name={name} value={dueAtValue} readOnly />
       <div className="space-y-2">
-        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.date", locale)}</label>
+        <label className="text-[11px] font-semibold text-text-secondary dark:text-text-secondary">{t("shifts.date", locale)}</label>
         <CalendarPicker
           defaultValue={date}
           min={minDate}
@@ -48,11 +48,11 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
         />
       </div>
       <div className="mt-2">
-        <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">{t("shifts.time_label", locale)}</label>
+        <label className="text-[11px] font-semibold text-text-secondary dark:text-text-secondary">{t("shifts.time_label", locale)}</label>
         <button
           type="button"
           onClick={() => setTimeOverlayOpen(true)}
-          className="mt-1 w-full rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+          className="mt-1 w-full rounded border border-border-default bg-bg-primary px-3 py-2 text-left text-sm text-text-primary hover:bg-bg-secondary dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-tertiary"
         >
           {time || "18:00"}
         </button>
@@ -67,21 +67,21 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
           aria-label={t("tasks.time_label", locale)}
         >
           <div
-            className="max-w-xs w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900"
+            className="max-w-xs w-full overflow-hidden rounded-xl border border-border-subtle bg-bg-primary shadow-xl dark:border-border-default dark:bg-bg-primary"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("tasks.time_deadline", locale)}</h3>
+            <div className="border-b border-border-subtle bg-bg-secondary px-4 py-3 dark:border-border-default dark:bg-bg-primary">
+              <h3 className="text-sm font-semibold text-text-primary dark:text-text-primary">{t("tasks.time_deadline", locale)}</h3>
             </div>
             <div className="p-4">
               <input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                className="w-full rounded border border-border-default bg-bg-primary p-2 text-sm text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               />
             </div>
-            <div className="flex justify-end border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex justify-end border-t border-border-subtle bg-bg-secondary px-4 py-3 dark:border-border-default dark:bg-bg-primary">
               <button
                 type="button"
                 onClick={() => setTimeOverlayOpen(false)}

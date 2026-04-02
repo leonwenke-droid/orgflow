@@ -85,7 +85,7 @@ export default async function AdminTransfersPage(props: {
 
       {rows.length === 0 ? (
         <div className="card p-6 text-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-text-secondary">
             {t("transfers.empty", locale)}
           </p>
         </div>
@@ -94,20 +94,20 @@ export default async function AdminTransfersPage(props: {
           <div className="-mx-0 overflow-x-auto">
             <table className="w-full min-w-[600px] text-sm">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                <tr className="border-b border-border-subtle dark:border-border-default">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">
                     {t("transfers.task", locale)}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">
                     {t("transfers.from", locale)}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">
                     {t("transfers.to", locale)}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">
                     {t("transfers.requested", locale)}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">
                     Status
                   </th>
                   <th className="w-40 px-4 py-3" />

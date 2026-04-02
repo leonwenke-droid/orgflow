@@ -64,9 +64,9 @@ export default async function TasksViewerPage(props: {
   if (!myProfileId) {
     return (
       <div className="mx-auto max-w-3xl space-y-4 p-6">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("common.access_denied", locale)}</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("dashboard.use_invited_account", locale)}</p>
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default bg-card">
+          <h1 className="text-lg font-semibold text-text-primary dark:text-text-primary">{t("common.access_denied", locale)}</h1>
+          <p className="mt-2 text-sm text-text-secondary dark:text-text-muted">{t("dashboard.use_invited_account", locale)}</p>
         </div>
       </div>
     );

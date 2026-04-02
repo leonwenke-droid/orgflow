@@ -12,13 +12,13 @@ export default async function AdminRouteLoading() {
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="h-8 w-48 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" />
+      <div className="h-8 w-48 animate-pulse rounded-lg bg-bg-tertiary dark:bg-bg-tertiary" />
       <div className="space-y-3">
-        <div className="h-4 w-full max-w-xl animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
-        <div className="h-4 w-full max-w-lg animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
-        <div className="h-32 w-full animate-pulse rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/40" />
+        <div className="h-4 w-full max-w-xl animate-pulse rounded bg-bg-secondary dark:bg-bg-primary" />
+        <div className="h-4 w-full max-w-lg animate-pulse rounded bg-bg-secondary dark:bg-bg-primary" />
+        <div className="h-32 w-full animate-pulse rounded-xl border border-border-subtle bg-bg-secondary dark:border-border-default dark:bg-bg-primary/40" />
       </div>
-      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t("common.loading", locale)}</p>
+      <p className="text-sm font-medium text-text-secondary dark:text-text-muted">{t("common.loading", locale)}</p>
     </div>
   );
 }

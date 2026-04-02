@@ -36,7 +36,7 @@ export default function NameVerificationForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
           {t("members.your_name", locale)}
         </label>
         <input
@@ -44,7 +44,7 @@ export default function NameVerificationForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t("members.placeholder_name", locale)}
-          className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           autoFocus
           required
           disabled={loading}

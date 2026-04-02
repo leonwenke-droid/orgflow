@@ -60,7 +60,7 @@ export default function AppHeader({ user, onMenuOpen }: { user: AppShellUser; on
           <button
             type="button"
             onClick={onMenuOpen}
-            className="lg:hidden rounded-[var(--radius-input)] p-2 text-[var(--ink-3)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--ink)] dark:text-white/55 dark:hover:bg-white/6 dark:hover:text-white"
+            className="lg:hidden rounded-[var(--radius-input)] p-2 text-text-muted transition-colors hover:bg-bg-secondary hover:text-text-primary dark:hover:bg-bg-primary/8 dark:hover:text-text-primary"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
@@ -73,7 +73,7 @@ export default function AppHeader({ user, onMenuOpen }: { user: AppShellUser; on
             className="max-w-full"
           />
           {orgName ? (
-            <p className="mt-1 truncate pl-[2.75rem] text-xs font-normal text-[var(--ink-3)] dark:text-white/45">
+            <p className="mt-1 truncate pl-[2.75rem] text-xs font-normal text-text-muted">
               {orgName}
             </p>
           ) : null}
@@ -85,7 +85,7 @@ export default function AppHeader({ user, onMenuOpen }: { user: AppShellUser; on
         {!user && orgSlug && (
           <FullPageLink
             href={`/${orgSlug}/login`}
-            className="inline-flex items-center gap-1.5 rounded-[var(--radius-input)] px-3 py-1.5 text-sm font-medium text-[var(--ink-2)] transition hover:bg-[var(--surface)] dark:text-white/65 dark:hover:bg-white/6"
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-input)] px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-bg-secondary dark:hover:bg-bg-primary/8"
           >
             Sign in
           </FullPageLink>

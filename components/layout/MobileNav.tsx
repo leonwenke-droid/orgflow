@@ -49,7 +49,7 @@ export default function MobileNav({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 flex items-stretch justify-around gap-0 border-t border-gray-200 bg-white/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/80 md:hidden dark:border-gray-700 dark:bg-gray-900/95 dark:supports-[backdrop-filter]:bg-gray-900/80"
+      className="fixed bottom-0 left-0 right-0 z-50 flex items-stretch justify-around gap-0 border-t border-border-subtle bg-bg-primary/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur supports-[backdrop-filter]:bg-bg-primary/80 md:hidden dark:border-border-default dark:bg-bg-primary/95 dark:supports-[backdrop-filter]:bg-bg-primary/80"
       aria-label={t("nav.mobile_nav", locale)}
     >
       {items.map(({ href, labelKey, icon: Icon }) => {
@@ -63,14 +63,14 @@ export default function MobileNav({
               "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-medium transition-colors sm:text-[11px] " +
               (active
                 ? "text-blue-600 dark:text-blue-400"
-                : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100")
+                : "text-text-secondary hover:text-text-primary dark:text-text-muted dark:hover:text-text-primary")
             }
             aria-current={active ? "page" : undefined}
           >
             <Icon
               className={
                 "h-5 w-5 shrink-0 " +
-                (active ? "text-blue-600 dark:text-blue-400" : "text-gray-400 dark:text-gray-500")
+                (active ? "text-blue-600 dark:text-blue-400" : "text-text-muted dark:text-text-secondary")
               }
               strokeWidth={active ? 2.25 : 2}
               aria-hidden

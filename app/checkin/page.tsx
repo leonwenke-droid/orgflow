@@ -99,13 +99,13 @@ export default function CheckinPage({ searchParams }: { searchParams?: Search })
 
   return (
     <div className="mx-auto max-w-md p-6 text-center">
-      <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="text-xl font-bold text-text-primary dark:text-text-primary">
         {t("checkin.title", locale)}
       </h1>
       {hasTarget && !autoPost && state === "idle" && (
-        <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">{intro}</p>
+        <p className="mt-3 text-sm text-text-secondary dark:text-text-muted">{intro}</p>
       )}
-      <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+      <p className="mt-3 text-sm text-text-secondary dark:text-text-muted">
         {state === "idle" && !autoPost ? "" : message}
       </p>
       {hasTarget && !autoPost && state === "idle" && (
@@ -117,7 +117,7 @@ export default function CheckinPage({ searchParams }: { searchParams?: Search })
           {t("checkin.cta", locale)}
         </button>
       )}
-      <p className="mt-6 text-left text-[11px] text-gray-500 dark:text-gray-400">
+      <p className="mt-6 text-left text-[11px] text-text-secondary dark:text-text-muted">
         {t("checkin.docs_hint", locale)}
       </p>
       {orgSlug && (

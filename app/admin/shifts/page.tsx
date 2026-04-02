@@ -1070,7 +1070,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel={t("dashboard.shifts", locale)} />
       )}
       {shiftsCreatedSuccess && (
-        <p className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900 dark:border-green-800 dark:bg-green-900/20 dark:text-green-100">
+        <p className="rounded-lg border border-[var(--color-success)]/30 bg-[var(--bg-success-subtle)] px-3 py-2 text-sm text-[var(--color-success-text)]">
           {t("shifts.created_success", locale)}
         </p>
       )}
@@ -1079,7 +1079,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
       </div>
       {events.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-medium text-[var(--ink-2)] dark:text-white/65">{t("shifts.event_optional", locale)}:</span>
+          <span className="font-medium text-text-secondary">{t("shifts.event_optional", locale)}:</span>
           <Link
             href={effectiveOrgSlug ? `/admin/shifts?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/shifts"}
             className="ui-pill"
@@ -1099,21 +1099,21 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
           ))}
         </div>
       )}
-      <h2 className="text-sm font-semibold text-[var(--ink-2)] dark:text-white/70">
+      <h2 className="text-sm font-semibold text-text-secondary">
         {t("shifts.auto_assignment_title", locale)}
       </h2>
       <section className="card space-y-2 text-xs sm:space-y-3">
-        <h3 className="text-xs font-semibold text-[var(--ink-2)] dark:text-white/70">{t("admin.new_shifts", locale)}</h3>
-        <p className="hidden text-[11px] text-[var(--ink-3)] dark:text-white/55 sm:block">
+        <h3 className="text-xs font-semibold text-text-secondary">{t("admin.new_shifts", locale)}</h3>
+        <p className="hidden text-[11px] text-text-muted sm:block">
           {t("shifts.help_text", locale)}
         </p>
         <CreateShiftsForm action={createShifts} organizationId={orgId ?? undefined} events={events} />
       </section>
-      <section className="overflow-hidden rounded-[var(--radius-modal)] border border-[var(--border)] bg-[var(--surface-raised)] shadow-sm dark:border-white/10 dark:bg-[#161614]">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-3 dark:border-white/10 dark:bg-white/5">
+      <section className="overflow-hidden rounded-[var(--radius-modal)] border border-[var(--border-subtle)] bg-[var(--bg-primary)] shadow-sm dark:border-white/10 dark:bg-[#161614]">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] px-4 py-3 dark:border-white/10 dark:bg-bg-primary/5">
           <div>
-            <h3 className="text-sm font-semibold text-[var(--ink)] dark:text-white">{t("admin.shift_plan", locale)}</h3>
-            <p className="mt-0.5 text-[11px] text-[var(--ink-3)] dark:text-white/55">{t("admin.shift_plan_hint", locale)}</p>
+            <h3 className="text-sm font-semibold text-text-primary">{t("admin.shift_plan", locale)}</h3>
+            <p className="mt-0.5 text-[11px] text-text-muted">{t("admin.shift_plan_hint", locale)}</p>
           </div>
           {orgId && (
             <form action={runAutoAssignForExistingShifts} className="flex items-center gap-2">
@@ -1162,13 +1162,13 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
       </section>
       {(deletedShifts?.length ?? 0) > 0 && (
         <section className="card">
-          <h3 className="mb-2 text-sm font-semibold text-[var(--ink-2)] dark:text-white/70">{t("shifts.trash_title", locale)}</h3>
+          <h3 className="mb-2 text-sm font-semibold text-text-secondary">{t("shifts.trash_title", locale)}</h3>
           <div className="space-y-2">
             {(deletedShifts ?? []).map((shift: { id: string; event_name?: string | null; date?: string | null; start_time?: string | null; deleted_at?: string | null }) => (
-              <form key={shift.id} action={restoreShift} className="flex items-center justify-between gap-2 rounded-[var(--radius-input)] border border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2 text-xs dark:border-white/10 dark:bg-white/5">
+              <form key={shift.id} action={restoreShift} className="flex items-center justify-between gap-2 rounded-[var(--radius-input)] border border-[var(--border-subtle)] bg-[var(--bg-primary)] px-3 py-2 text-xs dark:border-white/10 dark:bg-bg-primary/5">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{shift.event_name || "Untitled shift"}</p>
-                  <p className="text-[var(--ink-3)] dark:text-white/55">{shift.date || "—"} {shift.start_time || ""}</p>
+                  <p className="text-text-muted">{shift.date || "—"} {shift.start_time || ""}</p>
                 </div>
                 <input type="hidden" name="shiftId" value={shift.id} />
                 <SubmitButtonWithSpinner className="btn-secondary px-2 py-1 text-xs" loadingLabel="…">

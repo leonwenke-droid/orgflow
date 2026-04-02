@@ -49,7 +49,7 @@ export default function ModuleToggles({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-text-secondary">
         {locale === "de"
           ? "Aktive Module für diese Organisation. Deaktivierte Module werden in der Navigation und im Admin-Bereich ausgeblendet."
           : "Active modules for this organisation. Disabled modules are hidden in the navigation and admin area."}
@@ -60,9 +60,9 @@ export default function ModuleToggles({
           <li key={key} className="py-3">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
-                <div className="text-sm font-medium text-gray-900">{t(labelKey, locale)}</div>
+                <div className="text-sm font-medium text-text-primary">{t(labelKey, locale)}</div>
                 {key === "engagement_tracking" ? (
-                  <div className="mt-1 text-xs text-gray-500">{t("settings.engagement_tracking_help", locale)}</div>
+                  <div className="mt-1 text-xs text-text-secondary">{t("settings.engagement_tracking_help", locale)}</div>
                 ) : null}
               </div>
               <Switch

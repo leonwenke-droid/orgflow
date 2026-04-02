@@ -29,8 +29,8 @@ export default async function InvitePage({
   if (!member) {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Invalid invite</h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <h1 className="text-xl font-bold text-text-primary dark:text-text-primary">Invalid invite</h1>
+        <p className="mt-2 text-sm text-text-secondary dark:text-text-muted">
           This invite link is invalid, revoked or expired.
         </p>
       </div>
@@ -54,8 +54,8 @@ export default async function InvitePage({
   if (isExpired || isRevoked || isDisabled) {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Invite expired</h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <h1 className="text-xl font-bold text-text-primary dark:text-text-primary">Invite expired</h1>
+        <p className="mt-2 text-sm text-text-secondary dark:text-text-muted">
           Please ask an administrator for a new invitation.
         </p>
       </div>

@@ -163,20 +163,20 @@ export default async function OrgDashboardPage(props: {
       <section className="grid gap-4 md:grid-cols-3">
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Your score" : "Dein Score"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{myEngagementScoreDisplay} Pkt.</div>
-          <div className="mt-3 h-2 w-full rounded-full bg-gray-200">
+          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{myEngagementScoreDisplay} Pkt.</div>
+          <div className="mt-3 h-2 w-full rounded-full bg-bg-tertiary">
             {(() => {
               const next = nextEngagementMilestone(myEngagementScoreDisplay);
               const pct = Math.max(0, Math.min(100, Math.round((myEngagementScoreDisplay / Math.max(1, next)) * 100)));
               return <div className="h-2 rounded-full bg-brand" style={{ width: `${pct}%` }} />;
             })()}
           </div>
-          <div className="mt-2 text-xs text-gray-500">
+          <div className="mt-2 text-xs text-text-secondary">
             {locale === "en"
               ? `Next milestone: ${nextEngagementMilestone(myEngagementScoreDisplay)} pts.`
               : `Nächster Meilenstein: ${nextEngagementMilestone(myEngagementScoreDisplay)} Pkt.`}
           </div>
-          <div className="mt-2 text-[11px] text-gray-500">
+          <div className="mt-2 text-[11px] text-text-secondary">
             {locale === "en"
               ? "Your score increases when you complete tasks or shifts. The ranking compares scores within your organisation."
               : "Dein Score steigt, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
@@ -185,12 +185,12 @@ export default async function OrgDashboardPage(props: {
 
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Org rank" : "Rang in der Org"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">
             {myEngagementRank != null ? `#${myEngagementRank}` : "—"}
-            {myEngagementRank != null ? <span className="text-sm font-medium text-gray-500"> / {engagementTotal}</span> : null}
+            {myEngagementRank != null ? <span className="text-sm font-medium text-text-secondary"> / {engagementTotal}</span> : null}
           </div>
-          <div className="mt-2 text-xs text-gray-500">{org.name}</div>
-          <div className="mt-2 text-[11px] text-gray-500">
+          <div className="mt-2 text-xs text-text-secondary">{org.name}</div>
+          <div className="mt-2 text-[11px] text-text-secondary">
             {locale === "en"
               ? "Tip: If you just joined, your rank may take a moment to reflect new activity."
               : "Tipp: Wenn du gerade erst beigetreten bist, kann es kurz dauern, bis neue Aktivität im Rang sichtbar wird."}
@@ -200,7 +200,7 @@ export default async function OrgDashboardPage(props: {
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Open tasks" : "Offene Aufgaben"}</div>
           <div className="text-2xl font-semibold text-warning-dark">{openTaskCount ?? 0}</div>
-          <div className="mt-2 text-xs text-gray-500">{locale === "en" ? "Overdue shown in tasks" : "Überfällig in Aufgaben sichtbar"}</div>
+          <div className="mt-2 text-xs text-text-secondary">{locale === "en" ? "Overdue shown in tasks" : "Überfällig in Aufgaben sichtbar"}</div>
         </div>
       </section>
 
@@ -208,23 +208,23 @@ export default async function OrgDashboardPage(props: {
         <div className="p-4">
           <div className="section-label">{locale === "en" ? "Today" : "Heute zu tun"}</div>
           {freeCount === 0 && (openTaskCount ?? 0) === 0 ? (
-            <p className="text-sm text-gray-600">{locale === "en" ? "All done — no action needed." : "Alles erledigt — kein Handlungsbedarf."}</p>
+            <p className="text-sm text-text-secondary">{locale === "en" ? "All done — no action needed." : "Alles erledigt — kein Handlungsbedarf."}</p>
           ) : (
             <div className="space-y-2">
               {freeCount > 0 ? (
-                <div className="flex items-center justify-between gap-3 border-l-4 border-l-brand bg-white px-3 py-3">
+                <div className="flex items-center justify-between gap-3 border-l-4 border-l-brand bg-bg-primary px-3 py-3">
                   <div className="min-w-0">
-                    <div className="font-medium text-gray-900">{locale === "en" ? "Open shifts" : "Schichten mit freien Plätzen"}</div>
-                    <div className="text-xs text-gray-500">{freeCount} {locale === "en" ? "shift(s) available" : "Schicht(en) verfügbar"}</div>
+                    <div className="font-medium text-text-primary">{locale === "en" ? "Open shifts" : "Schichten mit freien Plätzen"}</div>
+                    <div className="text-xs text-text-secondary">{freeCount} {locale === "en" ? "shift(s) available" : "Schicht(en) verfügbar"}</div>
                   </div>
                   <Link href={`/${orgSlug}/shifts`} className="btn-secondary">{locale === "en" ? "View" : "Ansehen"}</Link>
                 </div>
               ) : null}
               {(openTaskCount ?? 0) > 0 ? (
-                <div className="flex items-center justify-between gap-3 border-l-4 border-l-warning bg-white px-3 py-3">
+                <div className="flex items-center justify-between gap-3 border-l-4 border-l-warning bg-bg-primary px-3 py-3">
                   <div className="min-w-0">
-                    <div className="font-medium text-gray-900">{locale === "en" ? "Open tasks" : "Offene Aufgaben"}</div>
-                    <div className="text-xs text-gray-500">{openTaskCount ?? 0} {locale === "en" ? "tasks" : "Aufgaben"}</div>
+                    <div className="font-medium text-text-primary">{locale === "en" ? "Open tasks" : "Offene Aufgaben"}</div>
+                    <div className="text-xs text-text-secondary">{openTaskCount ?? 0} {locale === "en" ? "tasks" : "Aufgaben"}</div>
                   </div>
                   <Link href={`/${orgSlug}/tasks`} className="btn-primary">{locale === "en" ? "Do now" : "Erledigen"}</Link>
                 </div>
@@ -242,12 +242,12 @@ export default async function OrgDashboardPage(props: {
           </div>
 
           {upcomingShifts.length === 0 ? (
-            <p className="text-sm text-gray-500">—</p>
+            <p className="text-sm text-text-secondary">—</p>
           ) : (
             <div className="space-y-4">
               {groupedEntries.map(([dateKey, rows]) => (
                 <div key={dateKey}>
-                  <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700">
+                  <div className="rounded-lg bg-bg-secondary px-3 py-2 text-sm font-medium text-text-secondary">
                     {dateKey === "—" ? "—" : formatDateSeparator(dateKey, locale)}
                   </div>
                   <ul className="divide-y divide-gray-100">
@@ -264,11 +264,11 @@ export default async function OrgDashboardPage(props: {
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className={`h-2 w-2 rounded-full ${dotClass(free)}`} aria-hidden />
-                                <span className="text-xs text-gray-500">{free} {locale === "en" ? "free" : "frei"}</span>
-                                <span className="font-medium text-gray-900">{s.event_name || t("dashboard.shifts", locale)}</span>
+                                <span className="text-xs text-text-secondary">{free} {locale === "en" ? "free" : "frei"}</span>
+                                <span className="font-medium text-text-primary">{s.event_name || t("dashboard.shifts", locale)}</span>
                                 {assigned ? <span className="tag tag-blue">{locale === "en" ? "Signed up" : "Eingetragen"}</span> : null}
                               </div>
-                              <div className="mt-1 text-xs text-gray-500">
+                              <div className="mt-1 text-xs text-text-secondary">
                                 {s.date ? formatShiftSlot(String(s.date), s.start_time, s.end_time, fl) : "–"}
                                 {s.location ? ` · ${s.location}` : ""}
                                 {` · ${free} von ${required} ${locale === "en" ? "free" : "frei"}`}

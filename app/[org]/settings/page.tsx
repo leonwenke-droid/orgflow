@@ -43,7 +43,7 @@ export default async function OrgSettingsPage({
         <div className="p-4 space-y-4">
           <div>
             <div className="section-label">{t("settings.organization", locale)}</div>
-            {org.subdomain ? <div className="mt-1 text-xs text-gray-500">Subdomain: {org.subdomain}</div> : null}
+            {org.subdomain ? <div className="mt-1 text-xs text-text-secondary">Subdomain: {org.subdomain}</div> : null}
           </div>
           <EditOrgForm
             orgSlug={orgSlug}

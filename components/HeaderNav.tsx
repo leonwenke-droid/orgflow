@@ -46,23 +46,23 @@ export default function HeaderNav({ user }: { user: User | null }) {
   return (
     <nav className="flex items-center gap-2">
       {user && orgSlug && (
-        <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-1 py-0.5">
+        <div className="flex items-center gap-1 rounded-lg border border-border-subtle bg-bg-secondary px-1 py-0.5">
           <FullPageLink
             href={`/${orgSlug}/dashboard`}
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-bg-secondary"
           >
             <LayoutDashboard className="h-4 w-4" aria-hidden />
             Dashboard
           </FullPageLink>
           <FullPageLink
             href={`/${orgSlug}/admin`}
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-bg-secondary"
           >
             Admin
           </FullPageLink>
           <FullPageLink
             href={`/${orgSlug}/settings`}
-            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-bg-secondary"
           >
             <Settings2 className="h-4 w-4" aria-hidden />
             Settings
@@ -72,7 +72,7 @@ export default function HeaderNav({ user }: { user: User | null }) {
       {!user && orgSlug && (
         <FullPageLink
           href={`/${orgSlug}/login`}
-          className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+          className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-bg-secondary"
         >
           Sign in
         </FullPageLink>

@@ -70,7 +70,7 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
     <>
       <div
         ref={containerRef}
-        className="max-h-[60vh] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50"
+        className="max-h-[60vh] overflow-y-auto rounded-lg border border-border-subtle bg-bg-secondary"
       >
         <div className="flex flex-col gap-3 p-3">
           {days.map((day) => {
@@ -80,7 +80,7 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
                 <div className="flex items-center gap-2 flex-wrap">
                   <p
                     className={`text-xs font-semibold shrink-0 ${
-                      day.isToday ? "text-blue-600" : "text-gray-700"
+                      day.isToday ? "text-blue-600" : "text-text-secondary"
                     }`}
                   >
                     {day.weekdayName}{" "}
@@ -90,26 +90,26 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
                       : ""}
                   </p>
                   {day.isToday && (
-                    <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                    <span className="rounded bg-[var(--bg-brand-subtle)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-brand)]">
                       Heute
                     </span>
                   )}
                 </div>
                 {!hasShifts ? (
-                  <p className="mt-1 text-[11px] text-gray-400">–</p>
+                  <p className="mt-1 text-[11px] text-text-muted">–</p>
                 ) : (
                   <>
-                    <div className="mt-1 border-t border-gray-200 pt-1.5 space-y-1">
+                    <div className="mt-1 border-t border-border-subtle pt-1.5 space-y-1">
                       {day.dayTitle && (
-                        <p className="text-[10px] font-medium text-gray-600 line-clamp-2">
+                        <p className="text-[10px] font-medium text-text-secondary line-clamp-2">
                           {day.dayTitle}
                         </p>
                       )}
                       {day.location && (
-                        <p className="text-[10px] text-gray-600">Ort: {day.location}</p>
+                        <p className="text-[10px] text-text-secondary">Ort: {day.location}</p>
                       )}
                       {day.notes && (
-                        <p className="text-[10px] text-gray-600 line-clamp-2" title={day.notes}>
+                        <p className="text-[10px] text-text-secondary line-clamp-2" title={day.notes}>
                           {day.notes}
                         </p>
                       )}
@@ -120,8 +120,8 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
                           key={s.id}
                           className="rounded bg-card/50 px-1.5 py-1 text-[10px]"
                         >
-                          <span className="text-gray-700">{slotLabel(s, appLocale)}</span>
-                          <span className="ml-1 text-gray-600">
+                          <span className="text-text-secondary">{slotLabel(s, appLocale)}</span>
+                          <span className="ml-1 text-text-secondary">
                             {s.assignmentUserIds?.length > 0
                               ? s.assignmentUserIds.map(getName).join(", ")
                               : "–"}
@@ -145,9 +145,9 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
                 }
                 className={`min-w-0 rounded border p-3 flex flex-col text-left transition-colors ${
                   day.isToday
-                    ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200"
-                    : "border-gray-200 bg-white"
-                } ${hasShifts ? "cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/50" : ""}`}
+                    ? "border-[var(--color-brand)]/40 bg-[var(--bg-brand-subtle)] ring-1 ring-[var(--color-brand)]/20"
+                    : "border-border-subtle bg-bg-primary"
+                } ${hasShifts ? "cursor-pointer hover:bg-bg-secondary focus:outline-none focus:ring-2 focus:ring-blue-500/50" : ""}`}
               >
                 {content}
               </div>
@@ -165,16 +165,16 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
           aria-label="Schichtdetails"
         >
           <div
-            className="rounded-xl border border-gray-200 bg-white shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
+            className="rounded-xl border border-border-subtle bg-bg-primary shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 flex justify-between items-center shrink-0">
+            <div className="border-b border-border-subtle bg-bg-secondary px-4 py-3 flex justify-between items-center shrink-0">
               <div>
-                <h3 className="text-sm font-semibold text-gray-700">
+                <h3 className="text-sm font-semibold text-text-secondary">
                   {formatDateLabel(overlayDay.dateStr, { weekday: "long" })}
                 </h3>
                 {overlayDay.isToday && (
-                  <span className="mt-1 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-700">
+                  <span className="mt-1 inline-block rounded bg-[var(--bg-brand-subtle)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--color-brand-text)]">
                     Heute
                   </span>
                 )}
@@ -182,7 +182,7 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
               <button
                 type="button"
                 onClick={() => setOverlayDay(null)}
-                className="rounded p-1 text-gray-600 hover:bg-gray-100 focus:outline-none"
+                className="rounded p-1 text-text-secondary hover:bg-bg-secondary focus:outline-none"
                 aria-label="Close"
               >
                 ✕
@@ -190,28 +190,28 @@ export default function ShiftPlanDayCarousel({ days, profileNames }: Props) {
             </div>
             <div className="p-4 overflow-y-auto space-y-3">
               {overlayDay.dayTitle && (
-                <p className="text-sm font-medium text-gray-700">{overlayDay.dayTitle}</p>
+                <p className="text-sm font-medium text-text-secondary">{overlayDay.dayTitle}</p>
               )}
               {overlayDay.location && (
-                <p className="text-xs text-gray-600">Ort: {overlayDay.location}</p>
+                <p className="text-xs text-text-secondary">Ort: {overlayDay.location}</p>
               )}
               {overlayDay.notes && (
-                <p className="text-xs text-gray-600 whitespace-pre-wrap">{overlayDay.notes}</p>
+                <p className="text-xs text-text-secondary whitespace-pre-wrap">{overlayDay.notes}</p>
               )}
-              <div className="pt-2 border-t border-gray-200">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700 mb-2">
+              <div className="pt-2 border-t border-border-subtle">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary mb-2">
                   Zeitfenster
                 </p>
                 <ul className="space-y-2">
                   {overlayDay.shifts.map((s) => (
                     <li
                       key={s.id}
-                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs"
+                      className="rounded border border-border-subtle bg-bg-secondary px-3 py-2 text-xs"
                     >
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-text-secondary">
                         {slotLabelDetail(s, appLocale)}
                       </span>
-                      <p className="mt-1 text-gray-600">
+                      <p className="mt-1 text-text-secondary">
                         {s.assignmentUserIds?.length > 0
                           ? (s.assignmentUserIds ?? []).map((id) => profileNames[id] ?? id).join(", ")
                           : "–"}

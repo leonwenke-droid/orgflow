@@ -9,7 +9,7 @@ export interface StatusBadgeProps {
 
 export function StatusBadge({ status, size = "sm", locale = "de", className = "" }: StatusBadgeProps) {
   const label = formatTaskStatus(status, locale);
-  const colors = TASK_STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200";
+  const colors = TASK_STATUS_COLORS[status] ?? "bg-bg-secondary text-text-secondary dark:bg-bg-primary dark:text-text-primary";
   const sizeClass = size === "sm" ? "text-xs px-2 py-0.5" : "text-sm px-3 py-1";
 
   return (

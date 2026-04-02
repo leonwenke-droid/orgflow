@@ -6,19 +6,19 @@ export default function PrivacyContent({ locale }: { locale: Locale }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary">
         {t("legal.privacy_title", locale)}
       </h1>
-      <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="space-y-3 text-sm text-text-secondary dark:text-text-secondary">
+        <p className="text-xs text-text-secondary dark:text-text-muted">
           {isDe ? "Stand: 18.03.2026" : "Last updated: 2026-03-18"}
         </p>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "1. Verantwortlicher" : "1. Controller"}
           </h2>
-          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-card-dark">
+          <div className="rounded-lg border border-border-subtle bg-bg-primary p-4 dark:border-border-default bg-card">
             <p className="font-semibold">LYNIQ Media</p>
             <p>{isDe ? "Inhaber" : "Owner"}: Leon Wenke</p>
             <p>Alte Poststraße 17a, 26835 Holtland, {isDe ? "Deutschland" : "Germany"}</p>
@@ -38,10 +38,10 @@ export default function PrivacyContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "2. Welche Daten verarbeitet OrgFlow?" : "2. What data does OrgFlow process?"}
           </h2>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-gray-700 dark:text-gray-300">
+          <ul className="list-disc space-y-1 pl-5 text-sm text-text-secondary dark:text-text-secondary">
             <li>
               {isDe
                 ? "Account- und Authentifizierungsdaten (E-Mail, Login-Sessions)."
@@ -66,10 +66,10 @@ export default function PrivacyContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "3. Zwecke und Rechtsgrundlagen" : "3. Purposes and legal bases"}
           </h2>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-gray-700 dark:text-gray-300">
+          <ul className="list-disc space-y-1 pl-5 text-sm text-text-secondary dark:text-text-secondary">
             <li>
               {isDe
                 ? "Bereitstellung der Plattform (Art. 6 Abs. 1 lit. b DSGVO – Vertrag/Vorvertrag)."
@@ -89,7 +89,7 @@ export default function PrivacyContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "4. Cookies" : "4. Cookies"}
           </h2>
           <p>
@@ -100,7 +100,7 @@ export default function PrivacyContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "5. Empfänger / Auftragsverarbeiter" : "5. Recipients / processors"}
           </h2>
           <p>
@@ -112,7 +112,7 @@ export default function PrivacyContent({ locale }: { locale: Locale }) {
             <li>{isDe ? "Supabase (Auth & Datenbank)" : "Supabase (auth & database)"}</li>
             <li>{isDe ? "Hosting/Deployment (z. B. Vercel)" : "Hosting/deployment (e.g., Vercel)"}</li>
           </ul>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-text-secondary dark:text-text-muted">
             {isDe
               ? "Hinweis: Je nach Konfiguration kann eine Verarbeitung außerhalb der EU/des EWR stattfinden. In diesem Fall werden geeignete Garantien (z. B. Standardvertragsklauseln) genutzt."
               : "Note: Depending on configuration, processing may occur outside the EU/EEA. In such cases, appropriate safeguards (e.g., SCCs) are used."}
@@ -120,7 +120,7 @@ export default function PrivacyContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "6. Speicherdauer und Löschkonzept" : "6. Retention and deletion"}
           </h2>
           <p>
@@ -136,7 +136,7 @@ export default function PrivacyContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "7. Ihre Rechte" : "7. Your rights"}
           </h2>
           <p>
@@ -153,7 +153,7 @@ export default function PrivacyContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "8. Änderungen" : "8. Changes"}
           </h2>
           <p>

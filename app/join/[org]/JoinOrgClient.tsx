@@ -24,7 +24,7 @@ export default function JoinOrgClient({
   if (user) {
     return (
       <div className="mt-6 space-y-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-text-secondary">
           You&apos;re signed in. Click below to join the organisation.
         </p>
         <form
@@ -66,16 +66,16 @@ export default function JoinOrgClient({
 
   return (
     <div className="mt-6 space-y-6">
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <h2 className="text-sm font-semibold text-gray-900">Anmelden, um beizutreten</h2>
-        <p className="mt-1 text-xs text-gray-600">
+      <div className="rounded-lg border border-border-subtle bg-bg-secondary p-4">
+        <h2 className="text-sm font-semibold text-text-primary">Anmelden, um beizutreten</h2>
+        <p className="mt-1 text-xs text-text-secondary">
           Melde dich mit deinem Account an (oder erstelle einen), um {orgName} beizutreten.
         </p>
         <div className="mt-3">
           <AuthForm redirectTo={redirectTo} />
         </div>
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-text-secondary">
         Noch kein Account?{" "}
         <Link href={`/auth/lead-setup?next=${encodeURIComponent(redirectTo)}`} className="text-blue-600 hover:underline">
           Registrieren

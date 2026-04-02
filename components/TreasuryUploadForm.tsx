@@ -62,7 +62,7 @@ export default function TreasuryUploadForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4 text-sm">
-      <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-400">
+      <div className="flex gap-4 text-xs text-text-secondary dark:text-text-muted">
         <label className="flex cursor-pointer items-center gap-1">
           <input
             type="radio"
@@ -70,7 +70,7 @@ export default function TreasuryUploadForm({
             value="excel"
             checked={mode === "excel"}
             onChange={() => setMode("excel")}
-            className="border-gray-400"
+            className="border-border-default"
           />
           {t("finance.excel_import_button", locale)}
         </label>
@@ -81,7 +81,7 @@ export default function TreasuryUploadForm({
             value="manual"
             checked={mode === "manual"}
             onChange={() => setMode("manual")}
-            className="border-gray-400"
+            className="border-border-default"
           />
           {t("finance.manual_entry", locale)}
         </label>
@@ -90,23 +90,23 @@ export default function TreasuryUploadForm({
       {mode === "excel" ? (
         <>
           <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+            <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
           {t("finance.excel_import_button", locale)}
         </label>
         <input
           type="file"
           accept=".xlsx"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="block w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             />
           </div>
-          <details className="rounded-lg border border-gray-200 bg-gray-50/80 dark:border-gray-600 dark:bg-gray-800/40">
-            <summary className="cursor-pointer select-none px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+          <details className="rounded-lg border border-border-subtle bg-bg-secondary/80 dark:border-border-default dark:bg-bg-primary/40">
+            <summary className="cursor-pointer select-none px-3 py-2 text-xs font-medium text-text-secondary dark:text-text-secondary">
               {t("finance.advanced_settings", locale)}
             </summary>
-            <div className="border-t border-gray-200 px-3 pb-3 pt-2 dark:border-gray-600">
+            <div className="border-t border-border-subtle px-3 pb-3 pt-2 dark:border-border-default">
               <div className="flex flex-wrap items-center gap-1.5">
-                <label className="mb-1 block w-full text-xs font-semibold text-gray-700 dark:text-gray-300">
+                <label className="mb-1 block w-full text-xs font-semibold text-text-secondary dark:text-text-secondary">
                   {t("finance.cell_label", locale)}
                 </label>
                 <div className="flex items-center gap-1.5">
@@ -116,7 +116,7 @@ export default function TreasuryUploadForm({
                     onChange={(e) => setCellRef(e.target.value.toUpperCase())}
                     placeholder={t("finance.cell_placeholder", locale)}
                     autoComplete="off"
-                    className="w-36 rounded border border-gray-300 bg-white p-1.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    className="w-36 rounded border border-border-default bg-bg-primary p-1.5 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
                     aria-describedby="treasury-cell-help"
                   />
                   <span
@@ -125,20 +125,20 @@ export default function TreasuryUploadForm({
                     title={t("finance.cell_help", locale)}
                   >
                     <HelpCircle
-                      className="h-4 w-4 text-gray-400 dark:text-gray-500"
+                      className="h-4 w-4 text-text-muted dark:text-text-secondary"
                       aria-hidden
                     />
                     <span className="sr-only">{t("finance.cell_help", locale)}</span>
                   </span>
                 </div>
-                <p className="mt-1 w-full text-[11px] text-gray-500 dark:text-gray-400">{t("finance.cell_hint_long", locale)}</p>
+                <p className="mt-1 w-full text-[11px] text-text-secondary dark:text-text-muted">{t("finance.cell_hint_long", locale)}</p>
               </div>
             </div>
           </details>
         </>
       ) : (
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("finance.balance_label", locale).replace("{currency}", currencyCode || "—")}
           </label>
           <input
@@ -146,7 +146,7 @@ export default function TreasuryUploadForm({
             inputMode="decimal"
             value={manualAmount}
             onChange={(e) => setManualAmount(e.target.value)}
-            className="w-40 rounded border border-gray-300 bg-white p-1.5 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-40 rounded border border-border-default bg-bg-primary p-1.5 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             placeholder={locale === "de" ? "1234,56" : "1234.56"}
           />
         </div>
@@ -161,7 +161,7 @@ export default function TreasuryUploadForm({
       </button>
 
       {message && (
-        <p className="text-xs text-gray-600 dark:text-gray-400">
+        <p className="text-xs text-text-secondary dark:text-text-muted">
           {message} – {t("finance.dashboard_refresh_hint", locale)}
         </p>
       )}

@@ -15,10 +15,10 @@ export default function AdminForbidden({
   const message = t("admin.forbidden_message", locale).replace("{orgName}", orgName);
   return (
     <div className="mx-auto max-w-md p-6 text-center">
-      <h1 className="text-xl font-bold text-gray-900 dark:text-foreground-dark">
+      <h1 className="text-xl font-bold text-text-primary dark:text-foreground-dark">
         {t("admin.forbidden_title", locale)}
       </h1>
-      <p className="mt-3 text-sm text-gray-600 dark:text-muted">
+      <p className="mt-3 text-sm text-text-secondary dark:text-muted">
         {message}
       </p>
       <Link

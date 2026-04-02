@@ -276,7 +276,7 @@ export default async function AdminTasksPage(props: PageProps) {
   return (
     <div className="space-y-4">
       {tasksLoadError && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200" role="alert">
+        <p className="rounded-lg border border-[var(--color-danger)]/30 bg-[var(--bg-danger-subtle)] px-3 py-2 text-sm text-[var(--color-danger-text)]" role="alert">
           {tasksLoadError.message}
         </p>
       )}
@@ -285,10 +285,10 @@ export default async function AdminTasksPage(props: PageProps) {
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-4">
-          <h2 className="text-sm font-semibold text-[var(--ink-2)] dark:text-white/70">
+          <h2 className="text-sm font-semibold text-text-secondary">
             {tr("tasks.kanban_title", locale)}
           </h2>
-          <Suspense fallback={<span className="text-[10px] text-gray-500">Filter …</span>}>
+          <Suspense fallback={<span className="text-[10px] text-text-secondary">Filter …</span>}>
             <CommitteeFilter committees={committeesForFilter} />
           </Suspense>
           {events.length > 0 && (
@@ -317,7 +317,7 @@ export default async function AdminTasksPage(props: PageProps) {
           {effectiveOrgSlug && <input type="hidden" name="org" value={effectiveOrgSlug} />}
           {committeeId && <input type="hidden" name="committee" value={committeeId} />}
           {eventIdFilter && <input type="hidden" name="event" value={eventIdFilter} />}
-          <label className="flex items-center gap-1 text-[var(--ink-2)] dark:text-white/65">
+          <label className="flex items-center gap-1 text-text-secondary">
             <span>{tr("tasks.filter_search", locale)}</span>
             <input
               type="search"
@@ -363,13 +363,13 @@ export default async function AdminTasksPage(props: PageProps) {
       <RealtimeRefreshBridge organizationId={orgId} table="tasks" />
       {(deletedTasks?.length ?? 0) > 0 && orgId && (
         <section className="card">
-          <h3 className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{tr("tasks.trash_title", locale)}</h3>
+          <h3 className="mb-2 text-sm font-semibold text-text-secondary dark:text-text-secondary">{tr("tasks.trash_title", locale)}</h3>
           <div className="space-y-2">
             {(deletedTasks ?? []).map((task: { id: string; title?: string | null; deleted_at?: string | null }) => (
-              <form key={task.id} action={restoreTask} className="flex items-center justify-between gap-2 rounded border border-gray-200 px-3 py-2 text-xs dark:border-gray-700">
+              <form key={task.id} action={restoreTask} className="flex items-center justify-between gap-2 rounded border border-border-subtle px-3 py-2 text-xs dark:border-border-default">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{task.title || "Untitled task"}</p>
-                  <p className="text-gray-500">
+                  <p className="text-text-secondary">
                     {task.deleted_at ? formatLocaleDateTime(task.deleted_at, locale) : "—"}
                   </p>
                 </div>

@@ -207,7 +207,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("tasks.breadcrumb_new", locale)} />
       )}
       <div className="card max-w-xl space-y-4">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <h2 className="text-sm font-semibold text-text-secondary dark:text-text-secondary">
           {t("tasks.new_task", locale)}
         </h2>
         <NewTaskForm

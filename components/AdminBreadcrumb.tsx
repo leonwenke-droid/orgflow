@@ -14,16 +14,16 @@ export default function AdminBreadcrumb({ orgSlug, currentLabel, showAdminSegmen
     <nav className="mb-4 flex items-center gap-2 text-sm" aria-label="Breadcrumb">
       <Link
         href={`/${orgSlug}/dashboard`}
-        className="text-gray-600 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+        className="text-text-secondary transition hover:text-text-primary dark:text-text-muted dark:hover:text-text-primary"
       >
         Dashboard
       </Link>
       {showAdminSegment ? (
         <>
-          <span className="text-gray-400 dark:text-gray-500" aria-hidden>·</span>
+          <span className="text-text-muted dark:text-text-secondary" aria-hidden>·</span>
           <Link
             href={`/${orgSlug}/admin`}
-            className="text-gray-600 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+            className="text-text-secondary transition hover:text-text-primary dark:text-text-muted dark:hover:text-text-primary"
           >
             Admin
           </Link>
@@ -31,8 +31,8 @@ export default function AdminBreadcrumb({ orgSlug, currentLabel, showAdminSegmen
       ) : null}
       {currentLabel && (
         <>
-          <span className="text-gray-400 dark:text-gray-500" aria-hidden>·</span>
-          <span className="text-gray-900 dark:text-gray-100">{currentLabel}</span>
+          <span className="text-text-muted dark:text-text-secondary" aria-hidden>·</span>
+          <span className="text-text-primary dark:text-text-primary">{currentLabel}</span>
         </>
       )}
     </nav>

@@ -52,7 +52,7 @@ export default function AppearanceControls({
               {locale === "en" ? "System" : "System"}
             </button>
           </div>
-          <div className="mt-2 text-xs text-[var(--ink-3)] dark:text-white/45">
+          <div className="mt-2 text-xs text-text-muted">
             {locale === "en"
               ? `Currently: ${activeResolved}`
               : `Aktiv: ${activeResolved === "dark" ? "dunkel" : "hell"}`}
@@ -69,7 +69,7 @@ export default function AppearanceControls({
               English
             </button>
           </div>
-          <div className="mt-2 text-xs text-[var(--ink-3)] dark:text-white/45">{t("settings.language_note", locale)}</div>
+          <div className="mt-2 text-xs text-text-muted">{t("settings.language_note", locale)}</div>
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@ export default function NotFound() {
         <div className="mt-6">
           <a
             href="/"
-            className="inline-flex rounded-md bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/15"
+            className="inline-flex rounded-md bg-bg-primary/10 px-4 py-2 text-sm font-medium hover:bg-bg-primary/15"
           >
             Go home
           </a>

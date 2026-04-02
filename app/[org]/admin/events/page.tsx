@@ -98,7 +98,7 @@ export default async function AdminEventsPage(props: {
               <div className="flex flex-wrap items-center gap-4 p-4">
                 <div
                   className={`flex h-12 w-12 flex-col items-center justify-center rounded-lg border text-center ${
-                    isPast ? "border-gray-200 bg-gray-50 text-gray-600" : "border-brand-light bg-brand-light text-brand-dark"
+                    isPast ? "border-border-subtle bg-bg-secondary text-text-secondary" : "border-brand-light bg-brand-light text-brand-dark"
                   }`}
                 >
                   <div className="text-sm font-semibold leading-none">{day}</div>
@@ -106,8 +106,8 @@ export default async function AdminEventsPage(props: {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="text-[15px] font-medium text-gray-900">{e.name}</div>
-                  <div className="mt-1 text-xs text-gray-500">
+                  <div className="text-[15px] font-medium text-text-primary">{e.name}</div>
+                  <div className="mt-1 text-xs text-text-secondary">
                     {start ? formatCalendarDateYmd(start, locale) : "—"}
                     {e.end_date && e.end_date !== start ? ` – ${formatCalendarDateYmd(e.end_date, locale)}` : ""}
                   </div>
@@ -128,7 +128,7 @@ export default async function AdminEventsPage(props: {
 
         {(!events || events.length === 0) ? (
           <div className="card p-4">
-            <p className="text-sm text-gray-600">{t("events.empty", locale)}</p>
+            <p className="text-sm text-text-secondary">{t("events.empty", locale)}</p>
           </div>
         ) : null}
       </div>

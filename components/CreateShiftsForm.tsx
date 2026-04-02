@@ -70,8 +70,8 @@ export default function CreateShiftsForm({
         <p className="text-xs text-red-600 dark:text-red-400 md:col-span-2">{errorMessage}</p>
       )}
       <div className="space-y-1">
-        <span className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">{t("shifts.type_label", locale)}</span>
-        <div className="flex flex-col gap-1 text-[11px] text-[var(--ink-3)] dark:text-white/55">
+        <span className="text-[11px] font-semibold text-text-secondary">{t("shifts.type_label", locale)}</span>
+        <div className="flex flex-col gap-1 text-[11px] text-text-muted">
           <label className="inline-flex items-center gap-2">
             <input
               type="radio"
@@ -97,12 +97,12 @@ export default function CreateShiftsForm({
         </div>
       </div>
       <div className="space-y-1">
-        <label className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">{t("shifts.date", locale)}</label>
+        <label className="text-[11px] font-semibold text-text-secondary">{t("shifts.date", locale)}</label>
         <CalendarPicker name="date" required />
       </div>
       {events.length > 0 && (
         <div className="space-y-1 md:col-span-2">
-          <label className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">{t("shifts.event_optional", locale)}</label>
+          <label className="text-[11px] font-semibold text-text-secondary">{t("shifts.event_optional", locale)}</label>
           <select
             name="event_id"
             className="ui-input min-h-[44px] p-2.5 text-xs sm:min-h-0 sm:p-2"
@@ -115,7 +115,7 @@ export default function CreateShiftsForm({
         </div>
       )}
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">
+        <label className="text-[11px] font-semibold text-text-secondary">
           {t("shifts.time_frame", locale)}
         </label>
         <div className="flex flex-wrap items-center gap-2">
@@ -126,7 +126,7 @@ export default function CreateShiftsForm({
             required
             className="ui-input min-h-[44px] p-2.5 text-xs sm:min-h-0 sm:p-2"
           />
-          <span className="text-xs text-[var(--ink-3)] dark:text-white/55">{t("shifts.until", locale)}</span>
+          <span className="text-xs text-text-muted">{t("shifts.until", locale)}</span>
           <input
             type="time"
             name="end_time"
@@ -137,14 +137,14 @@ export default function CreateShiftsForm({
         </div>
       </div>
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">{t("shifts.title", locale)}</label>
+        <label className="text-[11px] font-semibold text-text-secondary">{t("shifts.title", locale)}</label>
         <input
           type="text"
           name="event_name"
           placeholder={type === "recurring" ? t("shifts.placeholder_title_recurring", locale) : t("shifts.placeholder_title_event", locale)}
           className="ui-input min-h-[44px] p-2.5 text-xs sm:min-h-0 sm:p-2"
         />
-        <p className="text-[10px] text-[var(--ink-3)] dark:text-white/45">
+        <p className="text-[10px] text-text-muted">
           {locale === "de" ? "Optional — wird automatisch aus Datum/Zeit generiert, falls leer." : "Optional — auto-generated from date/time if left blank."}
         </p>
       </div>
@@ -158,19 +158,19 @@ export default function CreateShiftsForm({
                 value="1"
                 className="rounded border-[var(--border-strong)]"
               />
-              <span className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">
+              <span className="text-[11px] font-semibold text-text-secondary">
                 {t("shifts.add_setup_teardown", locale)}
               </span>
             </label>
-            <p className="ml-6 text-[10px] text-[var(--ink-3)] dark:text-white/45">
+            <p className="ml-6 text-[10px] text-text-muted">
               {t("shifts.setup_teardown_note", locale)}
             </p>
           </div>
           <div className="space-y-1 md:col-span-2">
-            <label className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">
+            <label className="text-[11px] font-semibold text-text-secondary">
               {t("shifts.interval_label", locale)}
             </label>
-            <p className="mb-1 text-[10px] text-[var(--ink-3)] dark:text-white/45">
+            <p className="mb-1 text-[10px] text-text-muted">
               {t("shifts.interval_hint", locale)}
             </p>
             <select
@@ -188,7 +188,7 @@ export default function CreateShiftsForm({
         </>
       )}
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">
+        <label className="text-[11px] font-semibold text-text-secondary">
           {t("shifts.required_persons", locale)}
         </label>
         <input
@@ -200,7 +200,7 @@ export default function CreateShiftsForm({
         />
       </div>
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">{t("shifts.location", locale)}</label>
+        <label className="text-[11px] font-semibold text-text-secondary">{t("shifts.location", locale)}</label>
         <input
           type="text"
           name="location"
@@ -209,7 +209,7 @@ export default function CreateShiftsForm({
         />
       </div>
       <div className="space-y-1 md:col-span-2">
-        <label className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">
+        <label className="text-[11px] font-semibold text-text-secondary">
           {t("shifts.info_for_team", locale)}
         </label>
         <textarea
@@ -220,8 +220,8 @@ export default function CreateShiftsForm({
         />
       </div>
       <div className="space-y-1 md:col-span-2">
-        <span className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">{t("shifts.assignment_mode", locale)}</span>
-        <div className="mt-1 flex flex-col gap-1 text-[11px] text-[var(--ink-3)] dark:text-white/55">
+        <span className="text-[11px] font-semibold text-text-secondary">{t("shifts.assignment_mode", locale)}</span>
+        <div className="mt-1 flex flex-col gap-1 text-[11px] text-text-muted">
           <label className="inline-flex items-center gap-2">
             <input
               type="radio"
@@ -249,7 +249,7 @@ export default function CreateShiftsForm({
       <div className="space-y-1 md:col-span-2">
         <label className="inline-flex items-center gap-2 cursor-pointer">
           <input type="checkbox" name="auto_assign" value="on" className="rounded border-[var(--border-strong)]" checked={assignmentMode === "auto"} readOnly />
-          <span className="text-[11px] font-semibold text-[var(--ink-2)] dark:text-white/70">
+          <span className="text-[11px] font-semibold text-text-secondary">
             {t("shifts.auto_assign_label", locale)}
           </span>
         </label>

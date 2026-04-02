@@ -42,13 +42,13 @@ export default function ResourceCategoriesForm({
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+    <div className="space-y-3 rounded-lg border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {t("materials.categories_title", locale)}
           </p>
-          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          <p className="mt-1 text-xs text-text-secondary dark:text-text-muted">
             {t("materials.categories_intro", locale)}
           </p>
         </div>
@@ -64,11 +64,11 @@ export default function ResourceCategoriesForm({
 
       <div className="grid gap-3 sm:grid-cols-3">
         {cats.map((c, idx) => (
-          <div key={c.key} className="rounded border border-gray-200 p-3 text-xs dark:border-gray-700">
-            <p className="font-semibold text-gray-700 dark:text-gray-200">
+          <div key={c.key} className="rounded border border-border-subtle p-3 text-xs dark:border-border-default">
+            <p className="font-semibold text-text-secondary dark:text-text-primary">
               {t("materials.categories_key", locale)}: {c.key}
             </p>
-            <label className="mt-2 block text-[11px] text-gray-500 dark:text-gray-400">
+            <label className="mt-2 block text-[11px] text-text-secondary dark:text-text-muted">
               {t("materials.categories_name", locale)}
             </label>
             <input
@@ -78,9 +78,9 @@ export default function ResourceCategoriesForm({
                 next[idx] = { ...c, name: e.target.value };
                 setCats(next);
               }}
-              className="mt-1 w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="mt-1 w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             />
-            <label className="mt-2 block text-[11px] text-gray-500 dark:text-gray-400">
+            <label className="mt-2 block text-[11px] text-text-secondary dark:text-text-muted">
               {t("materials.categories_points", locale)}
             </label>
             <input
@@ -91,13 +91,13 @@ export default function ResourceCategoriesForm({
                 next[idx] = { ...c, points: Number(e.target.value) };
                 setCats(next);
               }}
-              className="mt-1 w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="mt-1 w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             />
           </div>
         ))}
       </div>
 
-      {message && <p className="text-xs text-gray-600 dark:text-gray-400">{message}</p>}
+      {message && <p className="text-xs text-text-secondary dark:text-text-muted">{message}</p>}
     </div>
   );
 }

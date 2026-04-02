@@ -24,7 +24,7 @@ function SubmitButton() {
 
 function pill(active: boolean) {
   return `rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-    active ? "bg-white text-gray-900 shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-white/60 hover:text-gray-900"
+    active ? "bg-bg-primary text-text-primary shadow-sm" : "bg-bg-secondary text-text-secondary hover:bg-bg-primary/60 hover:text-text-primary"
   }`;
 }
 
@@ -67,7 +67,7 @@ export default function FeedbackForm({ orgSlug }: { orgSlug: string }) {
       {state?.ok ? (
         <p className="text-sm text-success-dark">
           {t("feedback.thanks", locale)}{" "}
-          <span className="text-gray-500">
+          <span className="text-text-secondary">
             {locale === "en" ? `(${typeLabel})` : `(${typeLabel})`}
           </span>
         </p>
@@ -89,7 +89,7 @@ export default function FeedbackForm({ orgSlug }: { orgSlug: string }) {
       </div>
 
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700">
+        <label className="mb-1 block text-xs font-semibold text-text-secondary">
           {t("feedback.title_label", locale)}
         </label>
         <input
@@ -97,12 +97,12 @@ export default function FeedbackForm({ orgSlug }: { orgSlug: string }) {
           required
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm"
           placeholder={locale === "en" ? "Short summary…" : "Kurze Zusammenfassung…"}
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700">
+        <label className="mb-1 block text-xs font-semibold text-text-secondary">
           {t("feedback.description_label", locale)}
         </label>
         <textarea
@@ -110,13 +110,13 @@ export default function FeedbackForm({ orgSlug }: { orgSlug: string }) {
           rows={4}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm"
           placeholder={locale === "en" ? "Details (optional)..." : "Details (optional)…"}
         />
       </div>
       <div className="flex items-center gap-3">
         <SubmitButton />
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-text-secondary">
           {locale === "en" ? "Goes directly to the team backlog." : "Landet direkt im Team-Backlog."}
         </span>
       </div>

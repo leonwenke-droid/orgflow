@@ -39,7 +39,7 @@ export default async function OrgLoginPage({
         <div>
           <h1 className="auth-title">Sign in</h1>
           <p className="auth-sub">
-            <span className="font-medium text-[var(--ink-2)] dark:text-white/70">{org.name}</span>
+            <span className="font-medium text-text-secondary">{org.name}</span>
             <span className="mt-1 block font-normal">
               Sign in to your organisation account.
             </span>

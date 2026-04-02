@@ -62,12 +62,12 @@ export default function CreateCommitteeForm({
   return (
     <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
       {otherError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200">
+        <div className="rounded-lg border border-[var(--color-danger)]/30 bg-[var(--bg-danger-subtle)] p-4 text-sm text-[var(--color-danger-text)]">
           <p className="font-medium">{otherError}</p>
         </div>
       )}
       {limitError && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+        <div className="rounded-lg border border-[var(--color-warning)]/30 bg-[var(--bg-warning-subtle)] p-4 text-sm text-[var(--color-warning-text)]">
           <p className="font-medium">{limitError}</p>
           <Link href="/#pricing" className="mt-2 inline-block text-blue-600 underline hover:text-blue-700 dark:text-blue-400">
             View pricing & upgrade →
@@ -79,7 +79,7 @@ export default function CreateCommitteeForm({
           type="text"
           name="name"
           placeholder={t("teams.name_placeholder", locale)}
-          className="flex-1 rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-400"
+          className="flex-1 rounded border border-border-default bg-bg-primary px-3 py-2 text-text-primary placeholder:text-text-muted dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:placeholder:text-text-muted"
           required
         />
         <button
@@ -92,18 +92,18 @@ export default function CreateCommitteeForm({
         </button>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+        <label className="mb-1 block text-xs font-medium text-text-secondary dark:text-text-muted">
           {t("teams.description", locale)}
         </label>
         <textarea
           name="description"
           rows={2}
           placeholder={t("teams.description_placeholder", locale)}
-          className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="w-full rounded border border-border-default bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-muted dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
         />
       </div>
-      <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-        <input type="checkbox" name="is_active" defaultChecked className="rounded border-gray-300" />
+      <label className="flex items-center gap-2 text-sm text-text-secondary dark:text-text-secondary">
+        <input type="checkbox" name="is_active" defaultChecked className="rounded border-border-default" />
         {t("teams.active", locale)}
       </label>
     </form>

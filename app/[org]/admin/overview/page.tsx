@@ -71,7 +71,7 @@ export default async function OrgOverviewPage(props: {
   if (!user) {
     return (
       <div className="mx-auto max-w-6xl p-6">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-text-secondary dark:text-text-muted">
           {t("feedback.sign_in_hint", locale)}{" "}
           <Link href={`/${orgSlug}/login`} className="text-blue-600 underline dark:text-blue-400">
             {t("feedback.sign_in_link", locale)}
@@ -166,7 +166,7 @@ export default async function OrgOverviewPage(props: {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="page-title">{t("admin.card.overview_title", locale)}</h1>
-          <p className="mt-1 text-sm text-[var(--ink-3)] dark:text-white/55">
+          <p className="mt-1 text-sm text-text-muted">
             {t("admin.overview_period_hint", locale)}
           </p>
         </div>
@@ -190,61 +190,61 @@ export default async function OrgOverviewPage(props: {
 
       <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <div className="stat-card">
-          <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">{t("admin.overview_org_balance", locale)}</p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-[var(--ink)] dark:text-white">
+          <p className="text-[11px] text-text-muted">{t("admin.overview_org_balance", locale)}</p>
+          <p className="mt-1 text-xl font-bold tabular-nums text-text-primary">
             {treasuryRow
               ? formatCurrency(Number(treasuryRow.amount), localeForMoney, currencyCode)
               : "–"}
           </p>
-          <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">{t("dashboard.in_this_org", locale)}</p>
+          <p className="text-[11px] text-text-muted">{t("dashboard.in_this_org", locale)}</p>
         </div>
         <div className="stat-card">
-          <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">{t("dashboard.tasks", locale)}</p>
-          <p className="mt-1 text-xl font-bold text-[var(--ink)] dark:text-white">{tasks?.length ?? 0}</p>
-          <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">{t("admin.overview_open_in_period", locale)}</p>
+          <p className="text-[11px] text-text-muted">{t("dashboard.tasks", locale)}</p>
+          <p className="mt-1 text-xl font-bold text-text-primary">{tasks?.length ?? 0}</p>
+          <p className="text-[11px] text-text-muted">{t("admin.overview_open_in_period", locale)}</p>
         </div>
         <div className="stat-card">
-          <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">{t("admin.overview_assigned", locale)}</p>
-          <p className="mt-1 text-xl font-bold text-[var(--ink)] dark:text-white">{assignedTasks}</p>
+          <p className="text-[11px] text-text-muted">{t("admin.overview_assigned", locale)}</p>
+          <p className="mt-1 text-xl font-bold text-text-primary">{assignedTasks}</p>
         </div>
         <div className="stat-card">
-          <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">{t("dashboard.shifts", locale)}</p>
-          <p className="mt-1 text-xl font-bold text-[var(--ink)] dark:text-white">{shifts?.length ?? 0}</p>
-          <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">
+          <p className="text-[11px] text-text-muted">{t("dashboard.shifts", locale)}</p>
+          <p className="mt-1 text-xl font-bold text-text-primary">{shifts?.length ?? 0}</p>
+          <p className="text-[11px] text-text-muted">
             {t("admin.overview_free_slots", locale)}: {freeSlots}
           </p>
         </div>
         <div className="stat-card">
-          <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">{t("events.title", locale)}</p>
-          <p className="mt-1 text-xl font-bold text-[var(--ink)] dark:text-white">{events?.length ?? 0}</p>
+          <p className="text-[11px] text-text-muted">{t("events.title", locale)}</p>
+          <p className="mt-1 text-xl font-bold text-text-primary">{events?.length ?? 0}</p>
         </div>
       </section>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="card p-4">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[var(--ink)] dark:text-white">{t("dashboard.tasks", locale)}</h2>
+            <h2 className="text-sm font-semibold text-text-primary">{t("dashboard.tasks", locale)}</h2>
             <Link href={tasksViewHref} className="text-xs">
               {t("common.view", locale)}
             </Link>
           </div>
           <ul className="space-y-2">
             {(tasks ?? []).slice(0, 8).map((task: { id: string; title: string; due_at?: string | null; owner_id?: string | null }) => (
-              <li key={task.id} className="rounded-[var(--radius-input)] border border-[var(--border)] bg-[var(--surface)] p-2 text-xs dark:border-white/10 dark:bg-black/25">
-                <p className="truncate font-medium text-[var(--ink)] dark:text-white">{task.title}</p>
-                <p className="text-[var(--ink-3)] dark:text-white/45">
+              <li key={task.id} className="rounded-[var(--radius-input)] border border-border-subtle bg-bg-secondary p-2 text-xs dark:border-border-subtle dark:bg-bg-primary/50">
+                <p className="truncate font-medium text-text-primary">{task.title}</p>
+                <p className="text-text-muted">
                   {task.due_at ? `${dateOnly(task.due_at)} · ` : ""}
                   {task.owner_id ? namesById.get(task.owner_id) ?? "–" : t("admin.overview_unassigned", locale)}
                 </p>
               </li>
             ))}
-            {(tasks ?? []).length === 0 && <li className="text-xs text-[var(--ink-3)] dark:text-white/45">{t(operational ? "empty.tasks" : "empty.member.tasks", locale)}</li>}
+            {(tasks ?? []).length === 0 && <li className="text-xs text-text-muted">{t(operational ? "empty.tasks" : "empty.member.tasks", locale)}</li>}
           </ul>
         </div>
 
         <div className="card p-4">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[var(--ink)] dark:text-white">{t("dashboard.shifts", locale)}</h2>
+            <h2 className="text-sm font-semibold text-text-primary">{t("dashboard.shifts", locale)}</h2>
             <Link href={shiftsViewHref} className="text-xs">
               {t("common.view", locale)}
             </Link>
@@ -254,43 +254,43 @@ export default async function OrgOverviewPage(props: {
               const req = Number(s.required_slots ?? 1) || 1;
               const taken = (s.shift_assignments ?? []).length;
               return (
-                <li key={s.id} className="rounded-[var(--radius-input)] border border-[var(--border)] bg-[var(--surface)] p-2 text-xs dark:border-white/10 dark:bg-black/25">
-                  <p className="truncate font-medium text-[var(--ink)] dark:text-white">{s.event_name ?? "–"}</p>
-                  <p className="text-[var(--ink-3)] dark:text-white/45">
+                <li key={s.id} className="rounded-[var(--radius-input)] border border-border-subtle bg-bg-secondary p-2 text-xs dark:border-border-subtle dark:bg-bg-primary/50">
+                  <p className="truncate font-medium text-text-primary">{s.event_name ?? "–"}</p>
+                  <p className="text-text-muted">
                     {formatShiftSlot(dateOnly(s.date), s.start_time, s.end_time, locale as AppLocale)}
                   </p>
-                  <p className="text-[var(--ink-3)] dark:text-white/45">
+                  <p className="text-text-muted">
                     {taken}/{req}
                   </p>
                 </li>
               );
             })}
-            {(shifts ?? []).length === 0 && <li className="text-xs text-[var(--ink-3)] dark:text-white/45">{t(operational ? "empty.shifts" : "empty.member.shifts", locale)}</li>}
+            {(shifts ?? []).length === 0 && <li className="text-xs text-text-muted">{t(operational ? "empty.shifts" : "empty.member.shifts", locale)}</li>}
           </ul>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("events.title", locale)}</h2>
+            <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">{t("events.title", locale)}</h2>
             {operational ? (
               <Link href={`/${orgSlug}/admin/events`} className="text-xs text-blue-600 hover:underline">
                 {t("common.view", locale)}
               </Link>
             ) : (
-              <span className="text-xs text-gray-400 dark:text-gray-500">{t("admin.overview_events_members_hint", locale)}</span>
+              <span className="text-xs text-text-muted dark:text-text-secondary">{t("admin.overview_events_members_hint", locale)}</span>
             )}
           </div>
           <ul className="space-y-2">
             {(events ?? []).slice(0, 8).map((e: { id: string; name: string; start_date: string; end_date: string }) => (
-              <li key={e.id} className="rounded border border-gray-200 bg-gray-50 p-2 text-xs dark:border-gray-700 dark:bg-gray-900/40">
-                <p className="truncate font-medium text-gray-900 dark:text-gray-100">{e.name}</p>
-                <p className="text-gray-500">
+              <li key={e.id} className="rounded border border-border-subtle bg-bg-secondary p-2 text-xs dark:border-border-default dark:bg-bg-primary/40">
+                <p className="truncate font-medium text-text-primary dark:text-text-primary">{e.name}</p>
+                <p className="text-text-secondary">
                   {dateOnly(e.start_date)}
                   {dateOnly(e.end_date) && dateOnly(e.end_date) !== dateOnly(e.start_date) ? ` – ${dateOnly(e.end_date)}` : ""}
                 </p>
               </li>
             ))}
-            {(events ?? []).length === 0 && <li className="text-xs text-gray-500">{t("events.empty", locale)}</li>}
+            {(events ?? []).length === 0 && <li className="text-xs text-text-secondary">{t("events.empty", locale)}</li>}
           </ul>
         </div>
       </section>

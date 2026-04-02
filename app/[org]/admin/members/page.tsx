@@ -162,7 +162,7 @@ export default async function AdminMembersPage({
               name="q"
               defaultValue={qRaw}
               placeholder={t("members.search_placeholder", locale)}
-              className="w-full min-w-[220px] flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400"
+              className="w-full min-w-[220px] flex-1 rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
             />
             <button type="submit" className="btn-secondary">{t("tasks.filter_search", locale)}</button>
           </form>
@@ -187,7 +187,7 @@ export default async function AdminMembersPage({
               key={key}
               href={key === "all" ? (qRaw ? `?q=${encodeURIComponent(qRaw)}` : "?status=all") : `?status=${encodeURIComponent(key)}${qRaw ? `&q=${encodeURIComponent(qRaw)}` : ""}`}
               className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                statusFilter === key ? "bg-white text-gray-900 shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-white/60 hover:text-gray-900"
+                statusFilter === key ? "bg-bg-primary text-text-primary shadow-sm" : "bg-bg-secondary text-text-secondary hover:bg-bg-primary/60 hover:text-text-primary"
               }`}
             >
               {t(labelKey, locale)}
@@ -196,9 +196,9 @@ export default async function AdminMembersPage({
         </div>
 
         <details className="mt-4">
-          <summary className="cursor-pointer text-sm font-medium text-gray-700">{t("members.excel_import", locale)}</summary>
+          <summary className="cursor-pointer text-sm font-medium text-text-secondary">{t("members.excel_import", locale)}</summary>
           <div className="mt-3 space-y-2">
-            <p className="text-sm text-gray-600">{t("members.excel_import_hint", locale)}</p>
+            <p className="text-sm text-text-secondary">{t("members.excel_import_hint", locale)}</p>
             <div className="flex flex-wrap items-center gap-3">
               <a href="/api/members-template" download="Members-Template.xlsx" className="text-sm text-brand hover:underline">
                 {t("members.download_template", locale)}
@@ -215,7 +215,7 @@ export default async function AdminMembersPage({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-text-secondary">
           {t("members.list_count", locale)
             .replace("{count}", String(searchedMembers.length))
             .replace("{page}", String(safePage))
@@ -229,12 +229,12 @@ export default async function AdminMembersPage({
 
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="border-b border-gray-100">
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">{t("engagement.export_name", locale)}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">{t("members.lead_column", locale)}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">{t("dashboard.teams", locale)}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">{t("common.actions", locale)}</th>
+          <thead className="bg-bg-secondary">
+            <tr className="border-b border-border-subtle">
+              <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">{t("engagement.export_name", locale)}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">{t("members.lead_column", locale)}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">{t("dashboard.teams", locale)}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">{t("common.actions", locale)}</th>
             </tr>
           </thead>
           <tbody>

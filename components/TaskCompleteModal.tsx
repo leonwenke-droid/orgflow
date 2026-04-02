@@ -114,37 +114,37 @@ function TaskCompleteDialog({
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 shadow-xl dark:border-gray-700 dark:bg-card-dark"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-border-subtle bg-bg-primary p-5 shadow-xl dark:border-border-default bg-card"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2
             id="task-complete-title"
-            className="text-lg font-semibold text-gray-900 dark:text-gray-100"
+            className="text-lg font-semibold text-text-primary dark:text-text-primary"
           >
             {t("tasks.complete_modal_title", locale)}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded px-2 py-1 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="rounded px-2 py-1 text-sm text-text-secondary hover:bg-bg-secondary dark:hover:bg-bg-primary"
           >
             {t("tasks.modal_close", locale)}
           </button>
         </div>
 
         <div className="space-y-4 text-sm">
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+          <div className="rounded-lg border border-border-subtle bg-bg-secondary p-3 dark:border-border-default dark:bg-bg-primary/40">
+            <h3 className="text-base font-semibold text-text-primary dark:text-text-primary">
               {task.title}
             </h3>
             {task.description ? (
-              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-xs text-text-secondary dark:text-text-muted">
                 {task.description}
               </p>
             ) : null}
             {task.due_at ? (
-              <p className="mt-2 text-[11px] text-gray-600 dark:text-gray-400">
+              <p className="mt-2 text-[11px] text-text-secondary dark:text-text-muted">
                 {t("tasks.deadline", locale)}:{" "}
                 {formatLocaleDateTime(task.due_at, locale)}
               </p>
@@ -161,13 +161,13 @@ function TaskCompleteDialog({
             ) : null}
           </div>
 
-          <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/40">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <div className="space-y-2 rounded-lg border border-border-subtle bg-bg-primary p-3 dark:border-border-default dark:bg-bg-primary/40">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary dark:text-text-muted">
               {t("tasks.current_status", locale)}
             </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-text-secondary dark:text-text-muted">
               {t("tasks.current_status", locale)}:{" "}
-              <span className="font-semibold text-gray-900 dark:text-gray-100">
+              <span className="font-semibold text-text-primary dark:text-text-primary">
                 {status === "offen"
                   ? t("tasks.status_open", locale)
                   : status === "in_arbeit"
@@ -222,8 +222,8 @@ function TaskCompleteDialog({
             ) : null}
           </div>
 
-          <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/40">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <div className="space-y-2 rounded-lg border border-border-subtle bg-bg-primary p-3 dark:border-border-default dark:bg-bg-primary/40">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary dark:text-text-muted">
               {t("tasks.proof_upload_hint", locale)}
             </p>
             <div>
@@ -231,7 +231,7 @@ function TaskCompleteDialog({
                 type="file"
                 accept="image/png,image/jpeg,application/pdf"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="block w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                className="block w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               />
             </div>
           </div>
@@ -240,8 +240,8 @@ function TaskCompleteDialog({
             <p
               className={`rounded px-2 py-1.5 text-xs ${
                 messageTone === "error"
-                  ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300"
-                  : "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+                  ? "bg-[var(--bg-danger-subtle)] text-[var(--color-danger-text)]"
+                  : "bg-[var(--bg-success-subtle)] text-[var(--color-success-text)]"
               }`}
             >
               {message}

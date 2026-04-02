@@ -32,7 +32,7 @@ export default async function OrgFeedbackPage(props: {
   if (!user?.id) {
     return (
       <div className="mx-auto max-w-2xl p-6">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-text-secondary dark:text-text-muted">
           {t("feedback.sign_in_hint", locale)}{" "}
           <Link href={`/${orgSlug}/login`} className="text-blue-600 underline dark:text-blue-400">
             {t("feedback.sign_in_link", locale)}
@@ -82,14 +82,14 @@ export default async function OrgFeedbackPage(props: {
         <div className="p-4 space-y-4">
           <div>
             <div className="section-label">{t("feedback.form_section", locale)}</div>
-            <p className="mt-1 text-sm text-gray-600">{t("feedback.page_intro", locale)}</p>
+            <p className="mt-1 text-sm text-text-secondary">{t("feedback.page_intro", locale)}</p>
           </div>
           <FeedbackForm orgSlug={orgSlug} />
         </div>
       </section>
 
       <section className="card overflow-hidden">
-        <div className="border-b border-gray-100 px-4 py-3">
+        <div className="border-b border-border-subtle px-4 py-3">
           <div className="section-label">{t("feedback.list_section", locale)}</div>
         </div>
         <ul className="divide-y divide-gray-100">
@@ -97,18 +97,18 @@ export default async function OrgFeedbackPage(props: {
             <li key={it.id} className="px-4 py-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900">{it.title}</p>
+                  <p className="truncate text-sm font-medium text-text-primary">{it.title}</p>
                   {it.description ? (
-                    <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-sm text-gray-600">{it.description}</p>
+                    <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-sm text-text-secondary">{it.description}</p>
                   ) : null}
-                  <p className="mt-2 text-xs text-gray-500">{formatLocaleDateTime(it.created_at, locale)}</p>
+                  <p className="mt-2 text-xs text-text-secondary">{formatLocaleDateTime(it.created_at, locale)}</p>
                 </div>
                 <span className="tag tag-compact tag-neutral">{String(it.status ?? "").toUpperCase() || "—"}</span>
               </div>
             </li>
           ))}
           {(!items || items.length === 0) ? (
-            <li className="p-4 text-sm text-gray-600">{t("feedback.empty_list", locale)}</li>
+            <li className="p-4 text-sm text-text-secondary">{t("feedback.empty_list", locale)}</li>
           ) : null}
         </ul>
       </section>

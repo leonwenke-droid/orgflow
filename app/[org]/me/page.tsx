@@ -51,9 +51,9 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
   if (!myProfileId) {
     return (
       <div className="mx-auto max-w-3xl p-6">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t("common.access_denied", locale)}</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("dashboard.use_invited_account", locale)}</p>
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default bg-card">
+          <h1 className="text-lg font-semibold text-text-primary dark:text-text-primary">{t("common.access_denied", locale)}</h1>
+          <p className="mt-2 text-sm text-text-secondary dark:text-text-muted">{t("dashboard.use_invited_account", locale)}</p>
         </div>
       </div>
     );
@@ -142,54 +142,54 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
   return (
     <div className="mx-auto max-w-3xl p-6 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("nav.my_stats", locale)}</h1>
+        <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary">{t("nav.my_stats", locale)}</h1>
         <Link className="text-sm text-blue-600 hover:underline" href={`/${orgSlug}/dashboard`}>
           {t("common.back", locale)}
         </Link>
       </div>
 
       {engagementEnabled ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <p className="text-sm text-gray-600 dark:text-gray-400">{displayName}</p>
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+          <p className="text-sm text-text-secondary dark:text-text-muted">{displayName}</p>
           <div className="mt-2 flex items-baseline gap-3">
-            <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{score}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">{t("dashboard.engagement", locale)}</div>
+            <div className="text-3xl font-bold text-text-primary dark:text-text-primary">{score}</div>
+            <div className="text-xs text-text-secondary dark:text-text-muted">{t("dashboard.engagement", locale)}</div>
           </div>
           {rank != null && totalRanked > 0 ? (
-            <p className="mt-2 text-sm font-medium text-gray-800 dark:text-gray-200">
+            <p className="mt-2 text-sm font-medium text-text-primary dark:text-text-primary">
               {t("me.rank_label", locale)}: {rank}{" "}
-              <span className="font-normal text-gray-500 dark:text-gray-400">
+              <span className="font-normal text-text-secondary dark:text-text-muted">
                 ({t("me.rank_of", locale).replace("{total}", String(totalRanked))})
               </span>
             </p>
           ) : null}
           {updatedAt ? (
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs text-text-secondary dark:text-text-muted">
               {(locale === "de" ? "Aktualisiert" : "Updated")}: {updatedAt}
             </p>
           ) : null}
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t("me.engagement_disabled", locale)}</p>
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+          <p className="text-sm text-text-secondary dark:text-text-muted">{t("me.engagement_disabled", locale)}</p>
         </div>
       )}
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <p className="text-xs text-gray-500 dark:text-gray-400">30d</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{counts.shift_done_30d}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t("dashboard.shifts", locale)}</p>
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+          <p className="text-xs text-text-secondary dark:text-text-muted">30d</p>
+          <p className="mt-1 text-2xl font-bold text-text-primary dark:text-text-primary">{counts.shift_done_30d}</p>
+          <p className="text-sm text-text-secondary dark:text-text-muted">{t("dashboard.shifts", locale)}</p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <p className="text-xs text-gray-500 dark:text-gray-400">30d</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{counts.task_done_30d}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t("dashboard.tasks", locale)}</p>
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+          <p className="text-xs text-text-secondary dark:text-text-muted">30d</p>
+          <p className="mt-1 text-2xl font-bold text-text-primary dark:text-text-primary">{counts.task_done_30d}</p>
+          <p className="text-sm text-text-secondary dark:text-text-muted">{t("dashboard.tasks", locale)}</p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-          <p className="text-xs text-gray-500 dark:text-gray-400">30d</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{counts.materials_30d}</p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{t("dashboard.resources", locale)}</p>
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+          <p className="text-xs text-text-secondary dark:text-text-muted">30d</p>
+          <p className="mt-1 text-2xl font-bold text-text-primary dark:text-text-primary">{counts.materials_30d}</p>
+          <p className="text-sm text-text-secondary dark:text-text-muted">{t("dashboard.resources", locale)}</p>
         </div>
       </div>
 
@@ -201,16 +201,16 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
         ];
         const max = Math.max(1, ...bars.map((b) => b.value));
         return (
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("me.stats_activity_chart", locale)}</h2>
+          <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+            <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">{t("me.stats_activity_chart", locale)}</h2>
             <ul className="mt-4 space-y-3">
               {bars.map((b) => (
                 <li key={b.label}>
-                  <div className="mb-0.5 flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                  <div className="mb-0.5 flex justify-between text-xs text-text-secondary dark:text-text-muted">
                     <span>{b.label}</span>
-                    <span className="tabular-nums font-medium text-gray-900 dark:text-gray-100">{b.value}</span>
+                    <span className="tabular-nums font-medium text-text-primary dark:text-text-primary">{b.value}</span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-bg-secondary dark:bg-bg-primary">
                     <div
                       className={`h-full rounded-full ${b.color}`}
                       style={{ width: `${Math.round((b.value / max) * 100)}%` }}
@@ -223,38 +223,38 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
         );
       })()}
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("tasks.my_tasks", locale)}</h2>
+      <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+        <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">{t("tasks.my_tasks", locale)}</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-4">
-          <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-800">
-            <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{taskStats.open}</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">{t("tasks.status_open", locale)}</div>
+          <div className="rounded-lg bg-bg-secondary p-3 text-center dark:bg-bg-primary">
+            <div className="text-lg font-bold text-text-primary dark:text-text-primary">{taskStats.open}</div>
+            <div className="text-xs text-text-secondary dark:text-text-muted">{t("tasks.status_open", locale)}</div>
           </div>
-          <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-800">
-            <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{taskStats.in_progress}</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">{t("tasks.status_in_progress", locale)}</div>
+          <div className="rounded-lg bg-bg-secondary p-3 text-center dark:bg-bg-primary">
+            <div className="text-lg font-bold text-text-primary dark:text-text-primary">{taskStats.in_progress}</div>
+            <div className="text-xs text-text-secondary dark:text-text-muted">{t("tasks.status_in_progress", locale)}</div>
           </div>
-          <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-800">
-            <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{taskStats.done}</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">{t("tasks.status_done", locale)}</div>
+          <div className="rounded-lg bg-bg-secondary p-3 text-center dark:bg-bg-primary">
+            <div className="text-lg font-bold text-text-primary dark:text-text-primary">{taskStats.done}</div>
+            <div className="text-xs text-text-secondary dark:text-text-muted">{t("tasks.status_done", locale)}</div>
           </div>
-          <div className="rounded-lg bg-gray-50 p-3 text-center dark:bg-gray-800">
-            <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{taskStats.overdue}</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">{t("dashboard.overdue", locale)}</div>
+          <div className="rounded-lg bg-bg-secondary p-3 text-center dark:bg-bg-primary">
+            <div className="text-lg font-bold text-text-primary dark:text-text-primary">{taskStats.overdue}</div>
+            <div className="text-xs text-text-secondary dark:text-text-muted">{t("dashboard.overdue", locale)}</div>
           </div>
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t("shifts.my_shifts", locale)}</h2>
+      <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+        <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">{t("shifts.my_shifts", locale)}</h2>
         {shiftsUpcoming.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t("empty.member.shifts", locale)}</p>
+          <p className="mt-2 text-sm text-text-secondary dark:text-text-muted">{t("empty.member.shifts", locale)}</p>
         ) : (
           <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800">
             {shiftsUpcoming.map((s: any, idx: number) => (
               <li key={`${s.date}-${idx}`} className="py-2">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{s.event_name || t("dashboard.shifts", locale)}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-sm font-medium text-text-primary dark:text-text-primary">{s.event_name || t("dashboard.shifts", locale)}</p>
+                <p className="text-xs text-text-secondary dark:text-text-muted">
                   {s.date ? formatCalendarDateYmd(String(s.date), locale) : "–"} ·{" "}
                   {formatShiftClockRange(s.start_time ?? null, s.end_time ?? null, locale)}
                 </p>

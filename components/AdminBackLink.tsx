@@ -11,7 +11,7 @@ export default function AdminBackLink() {
     <div className="mb-4">
       <Link
         href="/admin"
-        className="-mx-2 -my-1.5 inline-flex items-center gap-1.5 rounded px-2 py-1.5 text-sm text-gray-600 transition-colors hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        className="-mx-2 -my-1.5 inline-flex items-center gap-1.5 rounded px-2 py-1.5 text-sm text-text-secondary transition-colors hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-blue-300"
         aria-label="Back to admin board"
       >
         <span aria-hidden>←</span>

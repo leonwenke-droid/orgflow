@@ -32,11 +32,11 @@ export default function TasksDoneSection({
   if (doneTasks.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+    <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
           {t("tasks.done_section_title", locale)}{" "}
-          <span className="font-normal text-gray-500 dark:text-gray-400">({doneTasks.length})</span>
+          <span className="font-normal text-text-secondary dark:text-text-muted">({doneTasks.length})</span>
         </h2>
         <Button type="button" variant="secondary" size="sm" onClick={() => setShow((v) => !v)}>
           {show ? t("tasks.toggle_done_hide", locale) : t("tasks.toggle_done_show", locale)}

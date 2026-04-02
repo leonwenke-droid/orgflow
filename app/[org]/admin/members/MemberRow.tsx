@@ -244,7 +244,7 @@ export default function MemberRow({
       ? "bg-brand-light text-brand-dark"
       : role === "lead"
         ? "bg-success-light text-success-dark"
-        : "bg-gray-100 text-gray-700";
+        : "bg-bg-secondary text-text-secondary";
 
   const roleTag = invited
     ? "tag tag-amber"
@@ -257,15 +257,15 @@ export default function MemberRow({
           : "tag tag-neutral";
 
   return (
-    <tr className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+    <tr className="border-b border-border-subtle last:border-0 hover:bg-bg-secondary">
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold ${avatarClass}`}>
             {initials}
           </div>
           <div className="min-w-0">
-            <div className="truncate font-medium text-gray-900">{fullName}</div>
-            <div className="truncate text-xs text-gray-500">{member.email ?? "—"}</div>
+            <div className="truncate font-medium text-text-primary">{fullName}</div>
+            <div className="truncate text-xs text-text-secondary">{member.email ?? "—"}</div>
           </div>
         </div>
       </td>
@@ -274,7 +274,7 @@ export default function MemberRow({
         <span className={roleTag}>
           {invited ? t("members.filter_invited", locale) : memberRoleLabel(role, locale)}
         </span>
-        <div className="mt-1 text-[10px] text-gray-500">
+        <div className="mt-1 text-[10px] text-text-secondary">
           {effectiveStatus === "disabled"
             ? t("members.status_disabled", locale)
             : invited
@@ -284,22 +284,22 @@ export default function MemberRow({
       </td>
 
       <td className="px-4 py-3">
-        <span className="text-sm text-gray-700">{committeeNames || "—"}</span>
+        <span className="text-sm text-text-secondary">{committeeNames || "—"}</span>
       </td>
 
       <td className="px-4 py-3">
         <details className="relative inline-block">
-          <summary className="cursor-pointer select-none rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+          <summary className="cursor-pointer select-none rounded-lg border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary">
             ···
           </summary>
-          <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-lg">
+          <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-border-subtle bg-bg-primary p-3 shadow-lg">
             <div className="space-y-3">
               {role !== "super_admin" ? (
-                <div className="border-b border-gray-100 pb-3">
-                  <div className="text-xs font-medium text-gray-700">{t("members.role_label", locale)}</div>
-                  <p className="mt-1 text-[10px] leading-snug text-gray-500">{t("members.role_hint", locale)}</p>
+                <div className="border-b border-border-subtle pb-3">
+                  <div className="text-xs font-medium text-text-secondary">{t("members.role_label", locale)}</div>
+                  <p className="mt-1 text-[10px] leading-snug text-text-secondary">{t("members.role_hint", locale)}</p>
                   <select
-                    className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-900"
+                    className="mt-2 w-full rounded-lg border border-border-subtle bg-bg-primary px-2 py-1.5 text-xs text-text-primary"
                     value={selectRole}
                     disabled={loading}
                     onChange={async (e) => {
@@ -327,7 +327,7 @@ export default function MemberRow({
                         value={leadEmailDraft}
                         onChange={(ev) => setLeadEmailDraft(ev.target.value)}
                         placeholder={t("members.lead_email_label", locale)}
-                        className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs"
+                        className="w-full rounded-lg border border-border-subtle bg-bg-primary px-2 py-1.5 text-xs"
                       />
                       <button
                         type="button"
@@ -341,7 +341,7 @@ export default function MemberRow({
                   ) : null}
                 </div>
               ) : (
-                <p className="border-b border-gray-100 pb-3 text-xs text-gray-600">
+                <p className="border-b border-border-subtle pb-3 text-xs text-text-secondary">
                   {memberRoleLabel(role, locale)}
                 </p>
               )}
@@ -362,8 +362,8 @@ export default function MemberRow({
               </div>
 
               {(effectiveStatus !== "active") && (
-                <div className="border-t border-gray-100 pt-3">
-                  <div className="text-xs font-medium text-gray-700">{t("members.invite_pending", locale)}</div>
+                <div className="border-t border-border-subtle pt-3">
+                  <div className="text-xs font-medium text-text-secondary">{t("members.invite_pending", locale)}</div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button type="button" onClick={handleCopyInviteLink} disabled={loading} className="btn-secondary">
                       {t("members.copy_invite_link", locale)}
@@ -421,7 +421,7 @@ export default function MemberRow({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm"
               autoFocus
             />
             <button type="button" onClick={handleSaveName} disabled={loading} className="btn-primary">
@@ -443,11 +443,11 @@ export default function MemberRow({
 
         {showCommittees ? (
           <div className="relative mt-2" ref={popoverRef}>
-            <div className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+            <div className="rounded-xl border border-border-subtle bg-bg-primary p-3 shadow-sm">
               <div className="max-h-48 space-y-1 overflow-y-auto">
                 {committees.map((c) => (
-                  <label key={c.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
-                    <input type="checkbox" checked={committeeIds.has(c.id)} onChange={() => toggleCommittee(c.id)} className="rounded border-gray-400" />
+                  <label key={c.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary">
+                    <input type="checkbox" checked={committeeIds.has(c.id)} onChange={() => toggleCommittee(c.id)} className="rounded border-border-default" />
                     {c.name}
                   </label>
                 ))}

@@ -29,17 +29,17 @@ export default async function OnboardingPage(props: {
 
   return (
     <div className="mx-auto max-w-2xl p-6">
-      <h1 className="text-2xl font-bold text-gray-900">
+      <h1 className="text-2xl font-bold text-text-primary">
         {t("onboarding.setup_title", locale).replace("{name}", org.name)}
       </h1>
-      <p className="mt-1 text-sm text-gray-600">
+      <p className="mt-1 text-sm text-text-secondary">
         {t("onboarding.setup_intro", locale)}
       </p>
 
-      <ol className="mt-8 list-inside list-decimal space-y-6 text-sm text-gray-700">
+      <ol className="mt-8 list-inside list-decimal space-y-6 text-sm text-text-secondary">
         <li>
-          <strong className="text-gray-900">{t("onboarding.step_members_title", locale)}</strong>
-          <p className="mt-1 text-gray-600">
+          <strong className="text-text-primary">{t("onboarding.step_members_title", locale)}</strong>
+          <p className="mt-1 text-text-secondary">
             {t("onboarding.step_members_desc", locale)}
           </p>
           <Link
@@ -50,8 +50,8 @@ export default async function OnboardingPage(props: {
           </Link>
         </li>
         <li>
-          <strong className="text-gray-900">{t("onboarding.step_teams_title", locale)}</strong>
-          <p className="mt-1 text-gray-600">
+          <strong className="text-text-primary">{t("onboarding.step_teams_title", locale)}</strong>
+          <p className="mt-1 text-text-secondary">
             {t("onboarding.step_teams_desc", locale)}
           </p>
           <Link
@@ -62,8 +62,8 @@ export default async function OnboardingPage(props: {
           </Link>
         </li>
         <li>
-          <strong className="text-gray-900">{t("onboarding.step_roles_title", locale)}</strong>
-          <p className="mt-1 text-gray-600">
+          <strong className="text-text-primary">{t("onboarding.step_roles_title", locale)}</strong>
+          <p className="mt-1 text-text-secondary">
             {t("onboarding.step_roles_desc", locale)}
           </p>
           <Link
@@ -74,8 +74,8 @@ export default async function OnboardingPage(props: {
           </Link>
         </li>
         <li>
-          <strong className="text-gray-900">{t("onboarding.step_manage_title", locale)}</strong>
-          <p className="mt-1 text-gray-600">
+          <strong className="text-text-primary">{t("onboarding.step_manage_title", locale)}</strong>
+          <p className="mt-1 text-text-secondary">
             {t("onboarding.step_manage_desc", locale)}
           </p>
           <Link
@@ -87,7 +87,7 @@ export default async function OnboardingPage(props: {
         </li>
       </ol>
 
-      <p className="mt-8 text-xs text-gray-500">
+      <p className="mt-8 text-xs text-text-secondary">
         {t("onboarding.setup_footer", locale)}
       </p>
     </div>

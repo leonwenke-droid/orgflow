@@ -57,10 +57,10 @@ export default async function AdminActivityPage(props: PageProps) {
   return (
     <div className="space-y-4">
       <h1 className="text-lg font-semibold">Activity log</h1>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-border-subtle bg-bg-primary shadow-sm">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b bg-gray-50 text-left text-gray-600">
+            <tr className="border-b bg-bg-secondary text-left text-text-secondary">
               <th className="px-3 py-2">Time</th>
               <th className="px-3 py-2">Action</th>
               <th className="px-3 py-2">Entity</th>
@@ -70,8 +70,8 @@ export default async function AdminActivityPage(props: PageProps) {
           </thead>
           <tbody>
             {(logs ?? []).map((log: any) => (
-              <tr key={log.id} className="border-b border-gray-100">
-                <td className="px-3 py-2 text-gray-600">{formatLocaleDateTime(log.created_at, locale)}</td>
+              <tr key={log.id} className="border-b border-border-subtle">
+                <td className="px-3 py-2 text-text-secondary">{formatLocaleDateTime(log.created_at, locale)}</td>
                 <td className="px-3 py-2 font-medium">{log.action}</td>
                 <td className="px-3 py-2">{log.target_table ?? "—"}</td>
                 <td className="px-3 py-2">{log.target_id ?? "—"}</td>

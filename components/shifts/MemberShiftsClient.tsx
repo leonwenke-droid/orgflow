@@ -110,15 +110,15 @@ export default function MemberShiftsClient({
       <section className="card">
         <div className="p-4">
           {grouped.length === 0 ? (
-            <p className="text-sm text-[var(--ink-3)] dark:text-white/45">{t("empty.member.shifts", locale)}</p>
+            <p className="text-sm text-text-muted">{t("empty.member.shifts", locale)}</p>
           ) : (
             <div className="space-y-4">
               {grouped.map(([dateKey, rows]) => (
                 <div key={dateKey}>
-                  <div className="rounded-[var(--radius-input)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--ink-2)] dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+                  <div className="rounded-[var(--radius-input)] border border-border-subtle bg-bg-secondary px-3 py-2 text-sm font-medium text-text-secondary dark:border-border-subtle dark:bg-bg-primary/8">
                     {dateKey === "—" ? "—" : formatDateSeparator(dateKey, locale)}
                   </div>
-                  <ul className="divide-y divide-[var(--border)] dark:divide-white/10">
+                  <ul className="divide-y divide-border-subtle dark:divide-border-subtle">
                     {rows.map((s) => {
                       const required = Number(s.required_slots ?? 1) || 1;
                       const taken = (s.shift_assignments ?? []).length;
@@ -133,13 +133,13 @@ export default function MemberShiftsClient({
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className={`h-2 w-2 rounded-full ${dotColor(free)}`} aria-hidden />
-                                <span className="text-xs text-[var(--ink-3)] dark:text-white/45">
+                                <span className="text-xs text-text-muted">
                                   {free} {locale === "en" ? "free" : "frei"}
                                 </span>
-                                <span className="font-medium text-[var(--ink)] dark:text-white">{s.event_name || t("dashboard.shifts", locale)}</span>
+                                <span className="font-medium text-text-primary">{s.event_name || t("dashboard.shifts", locale)}</span>
                                 {assigned ? <span className="tag tag-blue">{t("shifts.you_are_signed_up", locale)}</span> : null}
                               </div>
-                              <div className="mt-1 text-xs text-[var(--ink-3)] dark:text-white/45">
+                              <div className="mt-1 text-xs text-text-muted">
                                 {s.date ? formatShiftSlot(String(s.date), s.start_time, s.end_time, fl) : "–"}
                                 {s.location ? ` · ${s.location}` : ""}
                                 {` · ${Math.max(0, free)} von ${required} ${locale === "en" ? "free" : "frei"}`}

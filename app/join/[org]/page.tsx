@@ -26,8 +26,8 @@ export default async function JoinOrgPage({
   if (!token) {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="text-xl font-bold text-gray-900">Invalid invite</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <h1 className="text-xl font-bold text-text-primary">Invalid invite</h1>
+        <p className="mt-2 text-sm text-text-secondary">
           This invite link is missing a token. Please use the full link from your invitation.
         </p>
         <Link href="/" className="mt-4 inline-block text-blue-600 hover:underline">
@@ -48,8 +48,8 @@ export default async function JoinOrgPage({
   if (!invite) {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="text-xl font-bold text-gray-900">Invalid invite</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <h1 className="text-xl font-bold text-text-primary">Invalid invite</h1>
+        <p className="mt-2 text-sm text-text-secondary">
           This invite link is invalid or has expired.
         </p>
         <Link href="/" className="mt-4 inline-block text-blue-600 hover:underline">
@@ -65,8 +65,8 @@ export default async function JoinOrgPage({
   if (expired || maxedOut) {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="text-xl font-bold text-gray-900">Invite expired</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <h1 className="text-xl font-bold text-text-primary">Invite expired</h1>
+        <p className="mt-2 text-sm text-text-secondary">
           {expired ? "This invite link has expired." : "This invite link has reached its maximum uses."}
         </p>
         <Link href="/" className="mt-4 inline-block text-blue-600 hover:underline">
@@ -78,8 +78,8 @@ export default async function JoinOrgPage({
 
   return (
     <div className="mx-auto max-w-md p-6">
-      <h1 className="text-xl font-bold text-gray-900">Join {org.name}</h1>
-      <p className="mt-1 text-sm text-gray-600">
+      <h1 className="text-xl font-bold text-text-primary">Join {org.name}</h1>
+      <p className="mt-1 text-sm text-text-secondary">
         You&apos;ve been invited to join this organisation.
       </p>
       <JoinOrgClient orgSlug={orgSlug} orgName={org.name} token={token} user={user} />

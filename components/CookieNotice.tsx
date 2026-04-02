@@ -22,13 +22,13 @@ export default function CookieNotice() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-4 left-0 right-0 z-50 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-card-dark">
+    <div className="fixed bottom-4 left-0 right-0 z-50 mx-auto w-[calc(100%-2rem)] max-w-xl rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-lg dark:border-border-default bg-card">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {t("cookies.notice_title", locale)}
           </p>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
+          <p className="text-xs text-text-secondary dark:text-text-muted">
             {t("cookies.notice_text", locale)}{" "}
             <a className="underline" href="/privacy">
               {t("cookies.learn_more", locale)}

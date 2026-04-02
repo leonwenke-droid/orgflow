@@ -154,13 +154,13 @@ export default async function FinanzenPage({
       <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("dashboard.finance", locale)} />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default dark:bg-bg-primary/60">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             {t("finance.metric_balance_title", locale)}
           </p>
           {lastUpdate ? (
             <>
-              <p className="mt-2 text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-100 md:text-4xl">
+              <p className="mt-2 text-3xl font-bold tabular-nums text-zinc-900 dark:text-text-primary md:text-4xl">
                 {formatCurrency(Number(lastUpdate.amount), localeMoney, currencyCode)}
               </p>
               <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
@@ -173,7 +173,7 @@ export default async function FinanzenPage({
           )}
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default dark:bg-bg-primary/60">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             {t("finance.metric_income_30", locale)}
           </p>
@@ -185,7 +185,7 @@ export default async function FinanzenPage({
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default dark:bg-bg-primary/60">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             {t("finance.metric_expense_30", locale)}
           </p>
@@ -211,8 +211,8 @@ export default async function FinanzenPage({
       )}
 
       {orgIdForData && (
-        <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
-          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+        <section className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default dark:bg-bg-primary/60">
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-text-primary">
             {t("finance.update_balance_title", locale)}
           </h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">

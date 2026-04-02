@@ -9,13 +9,13 @@ export default function ConditionalRootFooter() {
   if (pathname === "/") return null;
 
   return (
-    <footer className="mt-8 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+    <footer className="mt-8 border-t border-border-subtle pt-4 text-xs text-text-secondary dark:border-border-default dark:text-text-muted">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <a
           href="https://lyniqmedia.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-500 transition-colors hover:text-gray-700 dark:hover:text-gray-300"
+          className="text-text-secondary transition-colors hover:text-text-secondary dark:hover:text-text-secondary"
         >
           powered by LYNIQ Media
         </a>

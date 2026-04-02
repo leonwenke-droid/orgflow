@@ -32,13 +32,13 @@ export default function FooterLinks() {
 
   return (
     <div className="flex flex-wrap gap-4">
-      <a className="hover:text-gray-700 dark:hover:text-gray-300" href={base ? `${base}/privacy` : "/privacy"}>
+      <a className="hover:text-text-secondary dark:hover:text-text-secondary" href={base ? `${base}/privacy` : "/privacy"}>
         {locale === "de" ? "Datenschutz" : "Privacy"}
       </a>
-      <a className="hover:text-gray-700 dark:hover:text-gray-300" href={base ? `${base}/terms` : "/terms"}>
+      <a className="hover:text-text-secondary dark:hover:text-text-secondary" href={base ? `${base}/terms` : "/terms"}>
         {locale === "de" ? "Nutzungsbedingungen" : "Terms"}
       </a>
-      <a className="hover:text-gray-700 dark:hover:text-gray-300" href={base ? `${base}/imprint` : "/imprint"}>
+      <a className="hover:text-text-secondary dark:hover:text-text-secondary" href={base ? `${base}/imprint` : "/imprint"}>
         {locale === "de" ? "Impressum" : "Imprint"}
       </a>
     </div>

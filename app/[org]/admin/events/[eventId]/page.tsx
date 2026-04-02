@@ -95,25 +95,25 @@ export default async function EventDetailPage(props: {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="stat-card">
-          <p className="text-xs text-gray-500">{locale === "de" ? "Aufgaben" : "Tasks"}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-foreground-dark">{tasks.length}</p>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <p className="text-xs text-text-secondary">{locale === "de" ? "Aufgaben" : "Tasks"}</p>
+          <p className="mt-1 text-2xl font-bold text-text-primary dark:text-foreground-dark">{tasks.length}</p>
+          <p className="mt-0.5 text-xs text-text-secondary">
             {openTasks.length} {locale === "de" ? "offen" : "open"} · {doneTasks.length} {locale === "de" ? "erledigt" : "done"}
           </p>
         </div>
         <div className="stat-card">
-          <p className="text-xs text-gray-500">{locale === "de" ? "Schichten" : "Shifts"}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-foreground-dark">{shifts.length}</p>
+          <p className="text-xs text-text-secondary">{locale === "de" ? "Schichten" : "Shifts"}</p>
+          <p className="mt-1 text-2xl font-bold text-text-primary dark:text-foreground-dark">{shifts.length}</p>
         </div>
         <div className="stat-card">
-          <p className="text-xs text-gray-500">{locale === "de" ? "Ressourcen" : "Resources"}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-foreground-dark">{resourcesCount ?? 0}</p>
+          <p className="text-xs text-text-secondary">{locale === "de" ? "Ressourcen" : "Resources"}</p>
+          <p className="mt-1 text-2xl font-bold text-text-primary dark:text-foreground-dark">{resourcesCount ?? 0}</p>
         </div>
       </div>
 
       {tasks.length > 0 && (
         <section className="card overflow-hidden">
-          <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+          <div className="border-b border-border-subtle px-4 py-3 dark:border-border-default">
             <div className="section-label">{locale === "de" ? "Aufgaben" : "Tasks"}</div>
           </div>
           <ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
@@ -127,7 +127,7 @@ export default async function EventDetailPage(props: {
               const loc = locale === "en" ? "en" : "de";
               return (
                 <li key={tk.id} className="flex items-center justify-between gap-3 px-4 py-2">
-                  <span className="min-w-0 truncate text-sm text-gray-900 dark:text-gray-100">
+                  <span className="min-w-0 truncate text-sm text-text-primary dark:text-text-primary">
                     {tk.title}
                   </span>
                   <span className={statusTag}>{formatTaskStatus(tk.status, loc as AppLocale)}</span>
@@ -135,7 +135,7 @@ export default async function EventDetailPage(props: {
               );
             })}
           </ul>
-          <div className="border-t border-gray-100 px-4 py-2 dark:border-gray-700">
+          <div className="border-t border-border-subtle px-4 py-2 dark:border-border-default">
             <Link
               href={`/admin/tasks?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
               className="text-xs text-blue-600 hover:underline dark:text-blue-400"
@@ -148,22 +148,22 @@ export default async function EventDetailPage(props: {
 
       {shifts.length > 0 && (
         <section className="card overflow-hidden">
-          <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+          <div className="border-b border-border-subtle px-4 py-3 dark:border-border-default">
             <div className="section-label">{locale === "de" ? "Schichten" : "Shifts"}</div>
           </div>
           <ul className="divide-y divide-gray-100 dark:divide-gray-700/50">
             {shifts.map((sh) => (
               <li key={sh.id} className="flex items-center justify-between gap-3 px-4 py-2">
-                <span className="min-w-0 truncate text-sm text-gray-900 dark:text-gray-100">
+                <span className="min-w-0 truncate text-sm text-text-primary dark:text-text-primary">
                   {sh.event_name || sh.date}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-text-secondary">
                   {sh.date}{sh.start_time ? ` ${sh.start_time}` : ""}{sh.end_time ? `–${sh.end_time}` : ""}
                 </span>
               </li>
             ))}
           </ul>
-          <div className="border-t border-gray-100 px-4 py-2 dark:border-gray-700">
+          <div className="border-t border-border-subtle px-4 py-2 dark:border-border-default">
             <Link
               href={`/admin/shifts?org=${encodeURIComponent(orgSlug)}&event=${eventId}`}
               className="text-xs text-blue-600 hover:underline dark:text-blue-400"

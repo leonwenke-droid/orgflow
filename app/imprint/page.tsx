@@ -9,15 +9,15 @@ export default async function ImprintPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary">
         {t("legal.imprint_title", locale)}
       </h1>
-      <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="space-y-3 text-sm text-text-secondary dark:text-text-secondary">
+        <p className="text-xs text-text-secondary dark:text-text-muted">
           {isDe ? "Angaben gemäß § 5 TMG" : "Information pursuant to § 5 TMG (Germany)"}
         </p>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-card-dark">
+        <div className="rounded-lg border border-border-subtle bg-bg-primary p-4 dark:border-border-default bg-card">
           <p className="font-semibold">LYNIQ Media</p>
           <p>{isDe ? "Inhaber" : "Owner"}: Leon Wenke</p>
           <p>Alte Poststraße 17a</p>
@@ -53,7 +53,7 @@ export default async function ImprintPage() {
 
         <div className="space-y-2">
           <p className="font-semibold">{isDe ? "Streitschlichtung" : "Dispute resolution"}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
+          <p className="text-sm text-text-secondary dark:text-text-secondary">
             {isDe ? (
               <>
                 Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:{" "}
@@ -72,7 +72,7 @@ export default async function ImprintPage() {
               </>
             )}
           </p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
+          <p className="text-sm text-text-secondary dark:text-text-secondary">
             {isDe ? (
               <>
                 LYNIQ Media ist bereit, bei rechtlichen Konflikten mit Verbrauchern (§ 13 BGB) an einem außergerichtlichen

@@ -69,10 +69,10 @@ export default function TaskConfirmationForm({
       <div>
         <h3 className="text-base font-semibold">{task.title}</h3>
         {task.description && (
-          <p className="mt-1 text-xs text-gray-600">{task.description}</p>
+          <p className="mt-1 text-xs text-text-secondary">{task.description}</p>
         )}
         {task.due_at && (
-          <p className="mt-2 text-[11px] text-gray-600">
+          <p className="mt-2 text-[11px] text-text-secondary">
             {t("tasks.deadline", locale)}:{" "}
             {formatLocaleDateTime(task.due_at, locale)}
           </p>
@@ -80,7 +80,7 @@ export default function TaskConfirmationForm({
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-text-secondary">
           {t("tasks.current_status", locale)}:{" "}
           <span className="font-semibold">
             {status === "offen"
@@ -117,31 +117,31 @@ export default function TaskConfirmationForm({
 
       <div className="space-y-2">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700">
+          <label className="mb-1 block text-xs font-semibold text-text-secondary">
             {t("tasks.proof_upload_hint", locale)}
           </label>
           <input
             type="file"
             accept="image/png,image/jpeg,application/pdf"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="block w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700">
+          <label className="mb-1 block text-xs font-semibold text-text-secondary">
             {t("tasks.comment_optional", locale)}
           </label>
           <textarea
             rows={3}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           />
         </div>
       </div>
 
       {message && (
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-text-secondary">
           {message}
         </p>
       )}

@@ -85,8 +85,8 @@ export default function EngagementTabs({
             onClick={() => setTab(t.key)}
             className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
               tab === t.key
-                ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+                ? "bg-[var(--bg-brand-subtle)] font-medium text-[var(--color-brand-text)]"
+                : "bg-bg-secondary text-text-secondary hover:bg-bg-tertiary dark:bg-bg-tertiary dark:text-text-secondary"
             }`}
           >
             {locale === "de" ? t.de : t.en}
@@ -101,7 +101,7 @@ export default function EngagementTabs({
               <div className="section-label">
                 {locale === "de" ? "Aktive Mitglieder" : "Active members"}
               </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+              <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">
                 {stats.activeMembers}
               </div>
             </div>
@@ -109,7 +109,7 @@ export default function EngagementTabs({
               <div className="section-label">
                 {locale === "de" ? "Durchschnittsscore" : "Avg. score"}
               </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+              <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">
                 {stats.avgScore}
               </div>
             </div>
@@ -117,7 +117,7 @@ export default function EngagementTabs({
               <div className="section-label">
                 {locale === "de" ? "Aufgaben (30d)" : "Tasks (30d)"}
               </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+              <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">
                 {stats.tasksDone30d}
               </div>
             </div>
@@ -125,7 +125,7 @@ export default function EngagementTabs({
               <div className="section-label">
                 {locale === "de" ? "Schichten (30d)" : "Shifts (30d)"}
               </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+              <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">
                 {stats.shiftsDone30d}
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function EngagementTabs({
               <div className="section-label">
                 {locale === "de" ? "Inaktiv (30d)" : "Inactive (30d)"}
               </div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">
+              <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">
                 {stats.inactiveMembers}
               </div>
             </div>
@@ -148,13 +148,13 @@ export default function EngagementTabs({
                 return (
                   <li
                     key={r.user_id}
-                    className={`rounded-lg px-3 py-2 ${idx === 0 ? "bg-warning-light text-warning-dark dark:bg-amber-900/30 dark:text-amber-300" : "bg-gray-50 dark:bg-gray-800/60"}`}
+                    className={`rounded-lg px-3 py-2 ${idx === 0 ? "bg-warning-light text-warning-dark dark:bg-amber-900/30 dark:text-amber-300" : "bg-bg-secondary dark:bg-bg-primary/60"}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-6 text-xs font-medium">#{idx + 1}</div>
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{r.name}</div>
-                        <div className="mt-1 h-1.5 w-full rounded-full bg-white/70 dark:bg-gray-700">
+                        <div className="mt-1 h-1.5 w-full rounded-full bg-bg-primary/70 dark:bg-bg-tertiary">
                           <div className="h-1.5 rounded-full bg-brand" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
@@ -173,11 +173,11 @@ export default function EngagementTabs({
           <div className="-mx-0 overflow-x-auto">
             <table className="w-full min-w-[600px] text-sm">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
-                  <th className="w-12 px-4 py-3 text-xs font-medium text-gray-500">#</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">Name</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">Team</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 text-right">Score</th>
+                <tr className="border-b border-border-subtle dark:border-border-default text-left">
+                  <th className="w-12 px-4 py-3 text-xs font-medium text-text-secondary">#</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">Name</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">Team</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary text-right">Score</th>
                   <th className="w-40 px-4 py-3" />
                 </tr>
               </thead>
@@ -185,13 +185,13 @@ export default function EngagementTabs({
                 {scores.map((r, idx) => {
                   const pct = topScore > 0 ? Math.round((r.score / topScore) * 100) : 0;
                   return (
-                    <tr key={r.user_id} className="border-b border-gray-100 dark:border-gray-700/50 last:border-0">
-                      <td className="px-4 py-2 text-xs text-gray-500">{idx + 1}</td>
-                      <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{r.name}</td>
-                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{r.team || "—"}</td>
+                    <tr key={r.user_id} className="border-b border-border-subtle dark:border-border-default/50 last:border-0">
+                      <td className="px-4 py-2 text-xs text-text-secondary">{idx + 1}</td>
+                      <td className="px-4 py-2 font-medium text-text-primary dark:text-text-primary">{r.name}</td>
+                      <td className="px-4 py-2 text-text-secondary dark:text-text-muted">{r.team || "—"}</td>
                       <td className="px-4 py-2 text-right tabular-nums">{r.score}</td>
                       <td className="px-4 py-2">
-                        <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div className="h-1.5 w-full rounded-full bg-bg-tertiary dark:bg-bg-tertiary">
                           <div className="h-1.5 rounded-full bg-brand" style={{ width: `${pct}%` }} />
                         </div>
                       </td>
@@ -209,17 +209,17 @@ export default function EngagementTabs({
           <div className="-mx-0 overflow-x-auto">
             <table className="w-full min-w-[700px] text-sm">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">Name</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">Team</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 text-right">Score</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 text-right">
+                <tr className="border-b border-border-subtle dark:border-border-default text-left">
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">Name</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">Team</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary text-right">Score</th>
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary text-right">
                     {locale === "de" ? "Aufgaben" : "Tasks"}
                   </th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 text-right">
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary text-right">
                     {locale === "de" ? "Schichten" : "Shifts"}
                   </th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">
                     {locale === "de" ? "Letzte Aktivität" : "Last activity"}
                   </th>
                   <th className="w-10 px-4 py-3" />
@@ -230,34 +230,34 @@ export default function EngagementTabs({
                   <>
                     <tr
                       key={m.id}
-                      className="border-b border-gray-100 dark:border-gray-700/50 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/40"
+                      className="border-b border-border-subtle dark:border-border-default/50 cursor-pointer hover:bg-bg-secondary dark:hover:bg-bg-primary/40"
                       onClick={() => setExpandedMember(expandedMember === m.id ? null : m.id)}
                     >
-                      <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{m.full_name}</td>
-                      <td className="px-4 py-2 text-gray-600 dark:text-gray-400">{m.team || "—"}</td>
+                      <td className="px-4 py-2 font-medium text-text-primary dark:text-text-primary">{m.full_name}</td>
+                      <td className="px-4 py-2 text-text-secondary dark:text-text-muted">{m.team || "—"}</td>
                       <td className="px-4 py-2 text-right tabular-nums">{m.score}</td>
                       <td className="px-4 py-2 text-right tabular-nums">{m.tasksDone}</td>
                       <td className="px-4 py-2 text-right tabular-nums">{m.shiftsDone}</td>
-                      <td className="px-4 py-2 text-xs text-gray-500">
+                      <td className="px-4 py-2 text-xs text-text-secondary">
                         {m.lastActivity ? formatLocaleDateTime(m.lastActivity, locale) : "—"}
                       </td>
-                      <td className="px-4 py-2 text-xs text-gray-400">
+                      <td className="px-4 py-2 text-xs text-text-muted">
                         {expandedMember === m.id ? "▲" : "▼"}
                       </td>
                     </tr>
                     {expandedMember === m.id && (
                       <tr key={`${m.id}-log`}>
-                        <td colSpan={7} className="bg-gray-50 px-8 py-3 dark:bg-gray-800/30">
+                        <td colSpan={7} className="bg-bg-secondary px-8 py-3 dark:bg-bg-primary/30">
                           <div className="section-label">
                             {locale === "de" ? "Aktivitätslog" : "Activity log"}
                           </div>
                           {memberEvents.length === 0 ? (
-                            <p className="text-xs text-gray-500">—</p>
+                            <p className="text-xs text-text-secondary">—</p>
                           ) : (
                             <ul className="mt-1 space-y-1">
                               {memberEvents.map((e) => (
                                 <li key={e.id} className="flex items-center gap-3 text-xs">
-                                  <span className="text-gray-400">
+                                  <span className="text-text-muted">
                                     {formatLocaleDateTime(e.created_at, locale)}
                                   </span>
                                   <span className="tag tag-compact tag-neutral font-mono">{e.event_type}</span>

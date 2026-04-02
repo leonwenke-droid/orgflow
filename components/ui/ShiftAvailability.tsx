@@ -23,7 +23,7 @@ export function ShiftAvailability({
   required,
   locale: localeProp,
   className = "",
-  textClassName = "text-sm text-gray-700 dark:text-gray-300"
+  textClassName = "text-sm text-text-secondary dark:text-text-secondary"
 }: ShiftAvailabilityProps) {
   const { locale: ctxLocale } = useLocale();
   const locale = localeProp ?? ctxLocale;

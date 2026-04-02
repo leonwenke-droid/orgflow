@@ -18,8 +18,8 @@ export default function FinanceSixMonthChart({ title, months }: { title: string;
   const gap = groupW * 0.06;
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-      <h3 className="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
+    <div className="rounded-xl border border-border-subtle bg-zinc-50 p-4 dark:border-border-default dark:bg-bg-primary/60">
+      <h3 className="mb-4 text-sm font-semibold text-zinc-900 dark:text-text-primary">{title}</h3>
       <svg
         width="100%"
         height={H}

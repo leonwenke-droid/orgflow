@@ -101,7 +101,7 @@ export default function AdminTasksKanban({
       {STATUS_COLUMNS.map((col) => (
         <div
           key={col.key}
-          className={`flex min-h-[min(40vh,12rem)] min-w-[280px] flex-shrink-0 snap-start flex-col gap-2 rounded-[var(--radius-modal)] border border-[var(--border)] bg-[var(--surface-raised)] p-4 shadow-sm transition-colors md:min-w-0 md:flex-shrink dark:border-white/10 dark:bg-white/5 ${
+          className={`flex min-h-[min(40vh,12rem)] min-w-[280px] flex-shrink-0 snap-start flex-col gap-2 rounded-[var(--radius-modal)] border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-4 shadow-sm transition-colors md:min-w-0 md:flex-shrink dark:border-white/10 dark:bg-bg-primary/5 ${
             dropTarget === col.key ? "ring-2 ring-[var(--blue-mid)] ring-offset-2 dark:ring-offset-black/60" : ""
           }`}
           onDragEnter={(e) => {
@@ -127,10 +127,10 @@ export default function AdminTasksKanban({
           }}
         >
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-[var(--ink-3)] dark:text-white/55">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-text-muted">
               {t(col.labelKey, locale)}
             </h3>
-            <span className="text-[10px] text-[var(--ink-3)] dark:text-white/45">
+            <span className="text-[10px] text-text-muted">
               {t("tasks.count_tasks", locale).replace(
                 "{count}",
                 String(tasks.filter((x) => x.status === col.key).length)
@@ -155,14 +155,14 @@ export default function AdminTasksKanban({
                       setDraggingId(task.id);
                     }}
                     onDragEnd={() => setDraggingId(null)}
-                    className={`cursor-grab rounded-[var(--radius-input)] border bg-[var(--surface)] p-2 shadow-sm active:cursor-grabbing dark:bg-black/25 ${
-                      overdue ? "border-red-300 dark:border-red-900/60" : "border-[var(--border)] dark:border-white/10"
+                    className={`cursor-grab rounded-[var(--radius-input)] border bg-bg-secondary p-2 shadow-sm active:cursor-grabbing dark:bg-bg-primary/55 ${
+                      overdue ? "border-red-300 dark:border-red-900/60" : "border-border-subtle dark:border-border-subtle"
                     } ${draggingId === task.id ? "opacity-60" : ""} ${savingIds.has(task.id) ? "animate-pulse" : ""}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h4 className="text-[11px] font-semibold">{task.title}</h4>
-                        <p className="text-[10px] text-[var(--ink-3)] dark:text-white/55">
+                        <h4 className="text-[11px] font-semibold text-text-primary">{task.title}</h4>
+                        <p className="text-[10px] text-text-muted">
                           {t("tasks.team_label", locale)}: {committeeLabel(task.committees)}
                         </p>
                       </div>
@@ -172,14 +172,14 @@ export default function AdminTasksKanban({
                             className={`rounded px-1 py-0.5 ${
                               overdue
                                 ? "bg-[var(--red-light)] font-semibold text-[var(--red-dark)] dark:bg-red-950/40 dark:text-red-200"
-                                : "bg-[var(--surface)] text-[var(--ink-2)] dark:bg-white/5 dark:text-white/70"
+                                : "bg-bg-secondary text-text-secondary dark:bg-bg-primary/8"
                             }`}
                           >
                             {formatLocaleDateFromIso(task.due_at, locale)}
                             {overdue ? ` · ${t("tasks.overdue_badge", locale)}` : ""}
                           </span>
                         )}
-                        <span className="text-[var(--ink-3)] dark:text-white/45">
+                        <span className="text-text-muted">
                           {task.proof_required
                             ? task.proof_url
                               ? t("tasks.proof_uploaded", locale)
@@ -188,7 +188,7 @@ export default function AdminTasksKanban({
                         </span>
                       </div>
                     </div>
-                    <div className="mt-1.5 space-y-0.5 text-[10px] text-[var(--ink-3)] dark:text-white/55">
+                    <div className="mt-1.5 space-y-0.5 text-[10px] text-text-muted">
                       <p>
                         {t("tasks.created_by", locale)}:{" "}
                         {task.created_by ? profileNames[task.created_by] ?? "–" : "–"}
@@ -199,7 +199,7 @@ export default function AdminTasksKanban({
                       </p>
                     </div>
                     {task.description && (
-                      <p className="mt-1 line-clamp-2 text-[10px] text-[var(--ink-3)]/90 dark:text-white/45">
+                      <p className="mt-1 line-clamp-2 text-[10px] text-text-muted/90">
                         {task.description}
                       </p>
                     )}
@@ -207,7 +207,7 @@ export default function AdminTasksKanban({
                       {orgSlug && (
                         <Link
                           href={`/${orgSlug}/tasks#task-${task.id}`}
-                          className="rounded-[var(--radius-pill)] border border-[var(--border)] bg-[var(--surface-raised)] px-2 py-0.5 text-[var(--ink-2)] hover:bg-[var(--surface)] dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/8"
+                          className="rounded-[var(--radius-pill)] border border-border-subtle bg-bg-primary px-2 py-0.5 text-text-secondary hover:bg-bg-secondary dark:border-border-subtle dark:bg-bg-primary/8 dark:hover:bg-bg-tertiary/80"
                         >
                           {t("tasks.open_member_view", locale)}
                         </Link>
@@ -250,7 +250,7 @@ export default function AdminTasksKanban({
                 );
               })}
             {!tasks.filter((x) => x.status === col.key).length && (
-              <p className="text-[11px] text-[var(--ink-3)] dark:text-white/45">{t("tasks.no_tasks_in_column", locale)}</p>
+              <p className="text-[11px] text-text-muted">{t("tasks.no_tasks_in_column", locale)}</p>
             )}
           </div>
         </div>

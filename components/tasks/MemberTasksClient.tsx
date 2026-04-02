@@ -54,8 +54,8 @@ export default function MemberTasksClient({
   const pillClass = (active: boolean) =>
     `rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
       active
-        ? "bg-white text-gray-900 shadow-sm"
-        : "bg-gray-100 text-gray-600 hover:bg-white/60 hover:text-gray-900"
+        ? "bg-bg-primary text-text-primary shadow-sm"
+        : "bg-bg-secondary text-text-secondary hover:bg-bg-primary/60 hover:text-text-primary"
     }`;
 
   return (
@@ -106,7 +106,7 @@ export default function MemberTasksClient({
         <div className="p-4">
           <div className="section-label">{t("tasks.my_tasks_section_title", locale)}</div>
           {filteredMine.length === 0 ? (
-            <p className="text-sm text-gray-500">{t("tasks.no_open_tasks", locale)}</p>
+            <p className="text-sm text-text-secondary">{t("tasks.no_open_tasks", locale)}</p>
           ) : (
             <ul className="space-y-2">
               {filteredMine.map((task) => (
@@ -131,7 +131,7 @@ export default function MemberTasksClient({
         <div className="p-4">
           <div className="section-label">{t("tasks.open_claimable", locale)}</div>
           {filteredClaimable.length === 0 ? (
-            <p className="text-sm text-gray-500">—</p>
+            <p className="text-sm text-text-secondary">—</p>
           ) : (
             <ul className="space-y-2">
               {filteredClaimable.map((task) => (

@@ -20,7 +20,7 @@ export default function EmailVerificationBanner() {
   if (!show) return null;
 
   return (
-    <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+    <div className="border-b border-[var(--color-warning)]/30 bg-[var(--bg-warning-subtle)] px-4 py-2 text-center text-sm text-[var(--color-warning-text)]">
       Please verify your email to get the full experience.{" "}
       <Link href="/auth/callback" className="font-medium underline">Check your inbox</Link> or request a new link from your admin.
     </div>

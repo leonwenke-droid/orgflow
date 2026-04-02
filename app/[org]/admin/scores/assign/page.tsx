@@ -68,10 +68,10 @@ export default async function AssignPointsPage({
       <div className="mb-6">
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("engagement.assign_breadcrumb", locale)} />
       </div>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary">
         {t("engagement.assign_title", locale)}
       </h1>
-      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+      <p className="mt-1 text-sm text-text-secondary dark:text-text-muted">
         {t("engagement.assign_intro", locale)}
       </p>
       <AssignPointsForm

@@ -20,8 +20,8 @@ export default function LanguageToggle() {
         onClick={() => switchTo("en")}
         className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
           locale === "en"
-            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-            : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            ? "bg-[var(--bg-brand-subtle)] text-[var(--color-brand-text)]"
+            : "text-text-secondary hover:bg-bg-secondary dark:text-text-muted dark:hover:bg-bg-primary"
         }`}
       >
         EN
@@ -31,8 +31,8 @@ export default function LanguageToggle() {
         onClick={() => switchTo("de")}
         className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
           locale === "de"
-            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-            : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            ? "bg-[var(--bg-brand-subtle)] text-[var(--color-brand-text)]"
+            : "text-text-secondary hover:bg-bg-secondary dark:text-text-muted dark:hover:bg-bg-primary"
         }`}
       >
         DE

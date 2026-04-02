@@ -28,7 +28,7 @@ export default function LogoutButton({ returnTo = "/login" }: { returnTo?: strin
       type="button"
       onClick={handleLogout}
       disabled={loading}
-      className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-gray-400 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 dark:border-gray-600 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+      className="rounded-md border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:border-border-default hover:bg-bg-secondary hover:text-text-primary disabled:opacity-50 dark:border-border-default dark:text-text-muted dark:hover:border-border-default dark:hover:bg-bg-primary dark:hover:text-text-primary"
     >
       {loading ? "Logging out…" : "Log out"}
     </button>

@@ -52,11 +52,11 @@ export default function EngagementRulesClient({
         <div className="mt-3 divide-y divide-gray-100">
           {rows.map((r) => (
             <div key={r.key} className="flex items-center justify-between gap-3 py-2 text-sm">
-              <div className="min-w-0 text-gray-700">{r.key.replace(/_/g, " ")}</div>
+              <div className="min-w-0 text-text-secondary">{r.key.replace(/_/g, " ")}</div>
               {editing ? (
                 <input
                   type="number"
-                  className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1 text-right text-sm"
+                  className="w-24 rounded-lg border border-border-subtle bg-bg-primary px-2 py-1 text-right text-sm"
                   value={r.value}
                   onChange={(e) => {
                     const v = Number(e.target.value);
@@ -64,7 +64,7 @@ export default function EngagementRulesClient({
                   }}
                 />
               ) : (
-                <div className="shrink-0 text-right font-medium text-gray-900">{r.value}</div>
+                <div className="shrink-0 text-right font-medium text-text-primary">{r.value}</div>
               )}
             </div>
           ))}

@@ -37,10 +37,10 @@ export default function EmptyState({
 
   return (
     <div
-      className={`rounded-[var(--radius-modal)] border border-dashed border-[var(--border-mid)] bg-[var(--surface)]/70 py-8 text-center text-[var(--ink)] dark:border-white/12 dark:bg-white/5 dark:text-white ${className}`}
+      className={`rounded-[var(--radius-modal)] border border-dashed border-border-default bg-bg-secondary/70 py-8 text-center text-text-primary dark:border-border-subtle dark:bg-bg-primary/8 ${className}`}
     >
       {icon ? <div className="mb-3 text-3xl">{icon}</div> : null}
-      <p className="mx-auto max-w-sm text-sm text-[var(--ink-2)] dark:text-white/60">{message}</p>
+      <p className="mx-auto max-w-sm text-sm text-text-secondary">{message}</p>
       {showActions && ((actionHref && actionLabel) || (secondaryActionHref && secondaryLabel)) ? (
         <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row sm:flex-wrap">
           {actionHref && actionLabel && (

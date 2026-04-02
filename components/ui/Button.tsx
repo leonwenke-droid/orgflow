@@ -6,11 +6,11 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
     "bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-500",
   secondary:
-    "border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 focus-visible:ring-gray-400 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800",
+    "border border-border-default bg-bg-primary text-text-primary hover:bg-bg-secondary focus-visible:ring-gray-400 dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-primary",
   destructive:
     "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 dark:bg-red-600 dark:hover:bg-red-500",
   ghost:
-    "bg-transparent text-gray-700 hover:bg-gray-100 focus-visible:ring-gray-400 dark:text-gray-200 dark:hover:bg-gray-800"
+    "bg-transparent text-text-secondary hover:bg-bg-secondary focus-visible:ring-gray-400 dark:text-text-primary dark:hover:bg-bg-primary"
 };
 
 const BASE =

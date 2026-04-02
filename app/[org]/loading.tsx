@@ -15,7 +15,7 @@ export default async function OrgRouteLoading() {
         className="h-10 w-10 animate-spin rounded-full border-2 border-blue-600 border-t-transparent dark:border-blue-400"
         aria-hidden
       />
-      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t("common.loading", locale)}</p>
+      <p className="text-sm font-medium text-text-secondary dark:text-text-muted">{t("common.loading", locale)}</p>
     </div>
   );
 }

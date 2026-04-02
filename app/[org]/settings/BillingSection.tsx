@@ -57,10 +57,10 @@ export default function BillingSection({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+      <p className="text-sm font-medium text-text-primary dark:text-text-primary">
         {locale === "de" ? "Aktueller Plan" : "Current plan"}: {planLabel}
       </p>
-      <p className="text-xs text-gray-500 dark:text-muted">
+      <p className="text-xs text-text-secondary dark:text-muted">
         {locale === "de"
           ? "Upgrade per Stripe Checkout. Planlimits werden serverseitig erzwungen. Pro beinhaltet eine 2-wöchige kostenlose Testphase."
           : "Upgrade via Stripe Checkout. Plan limits are enforced server-side. Pro includes a 2-week free trial."}
@@ -70,7 +70,7 @@ export default function BillingSection({
           type="button"
           onClick={() => startCheckout("team")}
           disabled={loading !== null}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+          className="rounded-lg border border-border-default px-3 py-2 text-xs font-semibold text-text-primary hover:bg-bg-secondary disabled:opacity-50 dark:border-border-default dark:text-text-primary dark:hover:bg-bg-primary"
         >
           {loading === "team"
             ? locale === "de"
@@ -96,7 +96,7 @@ export default function BillingSection({
         </button>
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+      <p className="text-[11px] text-text-secondary dark:text-text-muted">
         {locale === "de"
           ? "Hinweis: Webhook-URL ist `/api/billing/stripe-webhook`."
           : "Note: webhook endpoint is `/api/billing/stripe-webhook`."}

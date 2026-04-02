@@ -25,7 +25,7 @@ export default function CopyTaskLinkButton({ token }: Props) {
     <button
       type="button"
       onClick={handleClick}
-      className="rounded border border-gray-300 bg-slate-100 px-2 py-0.5 text-slate-800 hover:bg-slate-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+      className="rounded border border-border-default bg-bg-secondary px-2 py-0.5 text-text-primary hover:bg-bg-tertiary dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-tertiary"
       title={t("tasks.copy_link", locale)}
     >
       {copied ? t("tasks.copied", locale) : t("tasks.copy_link", locale)}

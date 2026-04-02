@@ -35,13 +35,13 @@ export default function OnboardingChecklist({
   ];
 
   return (
-    <section className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-      <h2 className="mb-2 text-sm font-semibold text-amber-900 dark:text-amber-200">
+    <section className="rounded-xl border border-[var(--color-warning)]/30 bg-[var(--bg-warning-subtle)] p-4">
+      <h2 className="mb-2 text-sm font-semibold text-[var(--color-warning-text)]">
         {t("onboarding.checklist_title", locale)}
       </h2>
       <ul className="space-y-1.5 text-sm">
         {steps.map(({ done, labelKey, href }) => (
-          <li key={labelKey} className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+          <li key={labelKey} className="flex items-center gap-2 text-[var(--color-warning-text)]">
             {done ? (
               <CheckCircle className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" aria-hidden />
             ) : (

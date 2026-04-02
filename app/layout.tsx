@@ -6,7 +6,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Instrument_Serif, DM_Sans } from "next/font/google";
 import AppShell from "../components/AppShell";
 import ToastContainer from "../components/Toast";
-import ThemeProvider from "../components/ThemeProvider";
+import { Providers } from "./providers";
 import { LocaleProvider } from "../components/LocaleProvider";
 import EmailVerificationBanner from "../components/EmailVerificationBanner";
 import CookieNotice from "../components/CookieNotice";
@@ -117,7 +117,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             __html: `(function(){var t=localStorage.getItem('orgflow-theme');var sys=window.matchMedia('(prefers-color-scheme: dark)').matches;var useDark=(t==='dark')||((t==='system'||!t)&&sys);if(useDark){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}})();`
           }}
         />
-        <ThemeProvider>
+        <Providers>
           <LocaleProvider initialLocale={locale}>
           <div className="shell-root mx-auto flex min-h-screen max-w-6xl flex-col bg-background px-4 py-6 dark:bg-background-dark">
             <EmailVerificationBanner />
@@ -130,7 +130,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <ConditionalRootFooter />
         </div>
         </LocaleProvider>
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

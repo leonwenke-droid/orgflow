@@ -94,15 +94,15 @@ export default function CommitteeRow({
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="truncate text-sm font-medium text-gray-900">{committee.name}</div>
+                <div className="truncate text-sm font-medium text-text-primary">{committee.name}</div>
                 {showInactive ? <span className="tag tag-neutral">{t("teams.inactive_badge", locale)}</span> : null}
                 {typeof committee.memberCount === "number" ? (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-text-secondary">
                     {t("teams.member_count", locale).replace("{count}", String(committee.memberCount))}
                   </span>
                 ) : null}
               </div>
-              {committee.description ? <div className="mt-1 line-clamp-2 text-sm text-gray-500">{committee.description}</div> : null}
+              {committee.description ? <div className="mt-1 line-clamp-2 text-sm text-text-secondary">{committee.description}</div> : null}
               <div className="mt-2 flex flex-wrap gap-2">
                 {typeof committee.openTasks === "number" && committee.openTasks > 0 ? (
                   <span className="tag tag-amber">{committee.openTasks} {locale === "de" ? "Aufgaben offen" : "tasks open"}</span>
@@ -115,10 +115,10 @@ export default function CommitteeRow({
           </div>
 
           <details className="relative">
-            <summary className="cursor-pointer select-none rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50">
+            <summary className="cursor-pointer select-none rounded-lg border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary">
               ···
             </summary>
-            <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-lg">
+            <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-border-subtle bg-bg-primary p-3 shadow-lg">
               {!editing ? (
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => setEditing(true)} className="btn-secondary">
@@ -129,7 +129,7 @@ export default function CommitteeRow({
                   </button>
                 </div>
               ) : (
-                <div className="text-xs text-gray-600">—</div>
+                <div className="text-xs text-text-secondary">—</div>
               )}
             </div>
           </details>
@@ -141,7 +141,7 @@ export default function CommitteeRow({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm"
               autoFocus
             />
             <textarea
@@ -149,10 +149,10 @@ export default function CommitteeRow({
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               placeholder={t("teams.description_placeholder", locale)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm"
             />
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded border-gray-300" />
+            <label className="flex items-center gap-2 text-sm text-text-secondary">
+              <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} className="rounded border-border-default" />
               {t("teams.active", locale)}
             </label>
             <div className="flex flex-wrap gap-2">

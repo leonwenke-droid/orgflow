@@ -86,7 +86,7 @@ export default function AuthForm({ redirectTo }: { redirectTo?: string }) {
       <button type="submit" className="btn-primary inline-flex w-full justify-center py-2.5 text-sm" disabled={loading}>
         {loading ? "Signing in…" : "Sign in"}
       </button>
-      <p className="text-center text-xs text-[var(--ink-3)] dark:text-white/45">
+      <p className="text-center text-xs text-text-muted">
         <Link
           href={redirectTo ? `/auth/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}` : "/auth/forgot-password"}
           className="font-medium text-[var(--blue-600)] hover:text-[var(--blue-800)] dark:text-[var(--blue-400)] dark:hover:text-[var(--blue-200)]"

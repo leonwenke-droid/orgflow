@@ -36,7 +36,7 @@ export function OrgFlowLogoLockup({
       >
         <OrgFlowLogoMark className={icon} />
       </span>
-      <span className="font-sans text-[18px] font-medium leading-none tracking-[-0.01em] text-[#0c0c0b] dark:text-white">
+      <span className="font-sans text-[18px] font-medium leading-none tracking-[-0.01em] text-text-primary">
         OrgFlow
       </span>
     </Link>

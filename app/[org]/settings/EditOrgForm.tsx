@@ -81,7 +81,7 @@ export default function EditOrgForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3 text-sm">
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
           {t("settings.org_name", locale)}
         </label>
         <input
@@ -89,11 +89,11 @@ export default function EditOrgForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="w-full rounded border border-border-default bg-bg-primary px-3 py-2 text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
           {t("settings.org_slug", locale)}
         </label>
         <input
@@ -102,23 +102,23 @@ export default function EditOrgForm({
           onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
           required
           placeholder="my-org"
-          className="w-full rounded border border-gray-300 bg-white px-3 py-2 font-mono text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="w-full rounded border border-border-default bg-bg-primary px-3 py-2 font-mono text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
         />
-        <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-[11px] text-text-secondary dark:text-text-muted">
           URL will be /{slug || "…"}/…
         </p>
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
           {locale === "de" ? "Logo" : "Logo"}
         </label>
         <div className="flex items-center gap-3">
           {displayUrl ? (
             <div className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={displayUrl} alt="" className="h-12 w-12 rounded-lg border border-gray-200 object-cover dark:border-gray-600" />
+              <img src={displayUrl} alt="" className="h-12 w-12 rounded-lg border border-border-subtle object-cover dark:border-border-default" />
               {uploading && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/70">
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-bg-primary/70">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                 </div>
               )}
@@ -130,9 +130,9 @@ export default function EditOrgForm({
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={handleFileChange}
-              className="text-xs file:mr-2 file:rounded-lg file:border file:border-gray-200 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-gray-700 hover:file:bg-gray-50 dark:file:border-gray-600 dark:file:bg-gray-800 dark:file:text-gray-200"
+              className="text-xs file:mr-2 file:rounded-lg file:border file:border-border-subtle file:bg-bg-primary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-text-secondary hover:file:bg-bg-secondary dark:file:border-border-default dark:file:bg-bg-primary dark:file:text-gray-200"
             />
-            <p className="text-[10px] text-gray-500">
+            <p className="text-[10px] text-text-secondary">
               {locale === "de" ? "JPG, PNG oder WebP · max 2 MB" : "JPG, PNG or WebP · max 2 MB"}
             </p>
           </div>

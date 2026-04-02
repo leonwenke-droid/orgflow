@@ -70,7 +70,7 @@ export default function NotificationBell() {
           setOpen((o) => !o);
           if (!open) load();
         }}
-        className="relative rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+        className="relative rounded-lg p-2 text-text-secondary transition-colors hover:bg-bg-secondary hover:text-text-primary dark:text-text-muted dark:hover:bg-bg-primary dark:hover:text-text-primary"
         aria-label="Notifications"
         aria-expanded={open}
       >
@@ -89,9 +89,9 @@ export default function NotificationBell() {
             aria-label="Close"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-full z-50 mt-1 w-[min(100vw-2rem,22rem)] rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900">
-            <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2 dark:border-gray-700">
-              <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">Benachrichtigungen</span>
+          <div className="absolute right-0 top-full z-50 mt-1 w-[min(100vw-2rem,22rem)] rounded-xl border border-border-subtle bg-bg-primary shadow-xl dark:border-border-default dark:bg-bg-primary">
+            <div className="flex items-center justify-between border-b border-border-subtle px-3 py-2 dark:border-border-default">
+              <span className="text-xs font-semibold text-text-primary dark:text-text-primary">Benachrichtigungen</span>
               {unread > 0 && (
                 <button
                   type="button"
@@ -104,38 +104,38 @@ export default function NotificationBell() {
             </div>
             <ul className="max-h-72 overflow-y-auto py-1">
               {loading && items.length === 0 ? (
-                <li className="px-3 py-4 text-center text-xs text-gray-500">…</li>
+                <li className="px-3 py-4 text-center text-xs text-text-secondary">…</li>
               ) : items.length === 0 ? (
-                <li className="px-3 py-4 text-center text-xs text-gray-500 dark:text-gray-400">Keine Einträge</li>
+                <li className="px-3 py-4 text-center text-xs text-text-secondary dark:text-text-muted">Keine Einträge</li>
               ) : (
                 items.map((n) => (
-                  <li key={n.id} className="border-b border-gray-100 last:border-0 dark:border-gray-800">
+                  <li key={n.id} className="border-b border-border-subtle last:border-0 dark:border-border-default">
                     {n.link ? (
                       <a
                         href={n.link}
-                        className={`block px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 ${!n.read_at ? "bg-blue-50/50 dark:bg-blue-900/20" : ""}`}
+                        className={`block px-3 py-2 text-left hover:bg-bg-secondary dark:hover:bg-bg-primary ${!n.read_at ? "bg-[var(--bg-brand-subtle)]/60" : ""}`}
                         onClick={() => {
                           if (!n.read_at) markRead([n.id]);
                           setOpen(false);
                         }}
                       >
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{n.title}</p>
-                        {n.body && <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-400">{n.body}</p>}
-                        <p className="mt-1 text-[10px] text-gray-400">
+                        <p className="text-xs font-medium text-text-primary dark:text-text-primary">{n.title}</p>
+                        {n.body && <p className="mt-0.5 text-[11px] text-text-secondary dark:text-text-muted">{n.body}</p>}
+                        <p className="mt-1 text-[10px] text-text-muted">
                           {formatLocaleDateTime(n.created_at, locale)}
                         </p>
                       </a>
                     ) : (
                       <button
                         type="button"
-                        className={`w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 ${!n.read_at ? "bg-blue-50/50 dark:bg-blue-900/20" : ""}`}
+                        className={`w-full px-3 py-2 text-left hover:bg-bg-secondary dark:hover:bg-bg-primary ${!n.read_at ? "bg-[var(--bg-brand-subtle)]/60" : ""}`}
                         onClick={() => {
                           if (!n.read_at) markRead([n.id]);
                         }}
                       >
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{n.title}</p>
-                        {n.body && <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-400">{n.body}</p>}
-                        <p className="mt-1 text-[10px] text-gray-400">
+                        <p className="text-xs font-medium text-text-primary dark:text-text-primary">{n.title}</p>
+                        {n.body && <p className="mt-0.5 text-[11px] text-text-secondary dark:text-text-muted">{n.body}</p>}
+                        <p className="mt-1 text-[10px] text-text-muted">
                           {formatLocaleDateTime(n.created_at, locale)}
                         </p>
                       </button>

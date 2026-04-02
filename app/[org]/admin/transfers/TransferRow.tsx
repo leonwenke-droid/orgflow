@@ -58,13 +58,13 @@ export default function TransferRow({
         : t("transfers.status_rejected", locale);
 
   return (
-    <tr className="border-b border-gray-100 dark:border-gray-700/50 last:border-0">
-      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+    <tr className="border-b border-border-subtle dark:border-border-default/50 last:border-0">
+      <td className="px-4 py-3 font-medium text-text-primary dark:text-text-primary">
         {taskTitle}
       </td>
-      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{fromName}</td>
-      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{toName}</td>
-      <td className="px-4 py-3 text-xs text-gray-500">
+      <td className="px-4 py-3 text-text-secondary dark:text-text-muted">{fromName}</td>
+      <td className="px-4 py-3 text-text-secondary dark:text-text-muted">{toName}</td>
+      <td className="px-4 py-3 text-xs text-text-secondary">
         {formatLocaleDateTime(request.created_at, locale)}
       </td>
       <td className="px-4 py-3">

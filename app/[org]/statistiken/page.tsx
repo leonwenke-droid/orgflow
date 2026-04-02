@@ -133,21 +133,21 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
               {Number(score) || 0}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-gray-900">{displayName}</div>
-              <div className="mt-1 text-xs text-gray-500">
+              <div className="text-sm font-medium text-text-primary">{displayName}</div>
+              <div className="mt-1 text-xs text-text-secondary">
                 {locale === "en"
                   ? rank != null ? `Rank #${rank} of ${totalRanked}` : "Not ranked"
                   : rank != null ? `Rang #${rank} von ${totalRanked}` : "Nicht gerankt"}
               </div>
-              <div className="mt-3 h-2 w-full rounded-full bg-gray-200">
+              <div className="mt-3 h-2 w-full rounded-full bg-bg-tertiary">
                 <div className="h-2 rounded-full bg-brand" style={{ width: `${progressPct}%` }} />
               </div>
-              <div className="mt-2 text-xs text-gray-500">
+              <div className="mt-2 text-xs text-text-secondary">
                 {locale === "en"
                   ? `${Number(score) || 0} / ${next} pts. until next milestone`
                   : `${Number(score) || 0} / ${next} Pkt. bis nächster Meilenstein`}
               </div>
-              <div className="mt-2 text-[11px] text-gray-500">
+              <div className="mt-2 text-[11px] text-text-secondary">
                 {locale === "en"
                   ? "Scores increase when you complete tasks or shifts. Ranking compares scores inside your organisation."
                   : "Scores steigen, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
@@ -160,15 +160,15 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
       <section className="grid gap-4 md:grid-cols-3">
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Shifts (30d)" : "Schichten (30d)"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{shifts30d}</div>
+          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{shifts30d}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Tasks (30d)" : "Aufgaben (30d)"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{tasks30d}</div>
+          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{tasks30d}</div>
         </div>
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Resources" : "Ressourcen"}</div>
-          <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{resources30d}</div>
+          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{resources30d}</div>
         </div>
       </section>
 
@@ -178,7 +178,7 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="stat-card">
               <div className="section-label">{t("tasks.status_open", locale)}</div>
-              <div className="text-2xl font-semibold text-gray-900 dark:text-foreground-dark">{taskStats.open}</div>
+              <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{taskStats.open}</div>
             </div>
             <div className="stat-card">
               <div className="section-label">{t("tasks.status_in_progress", locale)}</div>

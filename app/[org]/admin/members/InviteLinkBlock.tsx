@@ -36,9 +36,9 @@ export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-      <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Invite link</h2>
-      <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+    <div className="rounded-lg border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+      <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">Invite link</h2>
+      <p className="mt-1 text-xs text-text-secondary dark:text-text-muted">
         Create a link to invite members. Share it via email or messaging.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -56,7 +56,7 @@ export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
             <button
               type="button"
               onClick={copyLink}
-              className="inline-flex items-center gap-1.5 rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-1.5 rounded border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-secondary dark:border-border-default dark:text-text-secondary dark:hover:bg-bg-primary"
             >
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? "Copied" : "Copy link"}
@@ -64,7 +64,7 @@ export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
             <button
               type="button"
               onClick={() => setShowQr(!showQr)}
-              className="inline-flex items-center gap-1.5 rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-1.5 rounded border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-secondary dark:border-border-default dark:text-text-secondary dark:hover:bg-bg-primary"
             >
               <QrCode className="h-3.5 w-3.5" />
               {showQr ? "Hide QR" : "Show QR"}
@@ -74,13 +74,13 @@ export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
       </div>
       {inviteUrl && (
         <>
-          <p className="mt-2 max-w-full truncate font-mono text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-2 max-w-full truncate font-mono text-xs text-text-secondary dark:text-text-muted">
             {inviteUrl}
           </p>
           {showQr && (
-            <div className="mt-3 flex flex-col items-center rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-600 dark:bg-gray-800">
+            <div className="mt-3 flex flex-col items-center rounded-lg border border-border-subtle bg-bg-primary p-4 dark:border-border-default dark:bg-bg-primary">
               <QRCodeSVG value={inviteUrl} size={160} level="M" />
-              <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">Scan to join</p>
+              <p className="mt-2 text-center text-xs text-text-secondary dark:text-text-muted">Scan to join</p>
             </div>
           )}
         </>

@@ -315,32 +315,32 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
       />
 
       <section id="materials-history" className="card overflow-hidden">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <h2 className="mb-4 text-sm font-semibold text-text-secondary dark:text-text-secondary">
           {t("materials.history_title", locale)}
         </h2>
         <div className="-mx-4 overflow-x-auto sm:mx-0">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+              <tr className="border-b border-border-subtle">
+                <th className="p-3 text-left text-xs font-semibold text-text-secondary dark:text-text-muted">
                   {t("materials.col_date", locale)}
                 </th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                <th className="p-3 text-left text-xs font-semibold text-text-secondary dark:text-text-muted">
                   {t("materials.col_persons", locale)}
                 </th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                <th className="p-3 text-left text-xs font-semibold text-text-secondary dark:text-text-muted">
                   {t("materials.col_event", locale)}
                 </th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                <th className="p-3 text-left text-xs font-semibold text-text-secondary dark:text-text-muted">
                   {t("materials.col_procured", locale)}
                 </th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                <th className="p-3 text-left text-xs font-semibold text-text-secondary dark:text-text-muted">
                   {t("materials.col_size", locale)}
                 </th>
-                <th className="p-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">
+                <th className="p-3 text-left text-xs font-semibold text-text-secondary dark:text-text-muted">
                   {t("materials.col_points", locale)}
                 </th>
-                <th className="w-20 p-3 text-left text-xs font-semibold text-gray-500"></th>
+                <th className="w-20 p-3 text-left text-xs font-semibold text-text-secondary"></th>
               </tr>
             </thead>
             <tbody>
@@ -368,26 +368,26 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                   return (
                   <tr
                     key={m.id}
-                    className="border-b border-gray-100 transition hover:bg-gray-50"
+                    className="border-b border-border-subtle transition hover:bg-bg-secondary"
                   >
-                    <td className="p-3 text-gray-600">
+                    <td className="p-3 text-text-secondary">
                       {formatLocaleDateFromIso(m.created_at, locale)}
                     </td>
-                    <td className="p-3 text-gray-600">
+                    <td className="p-3 text-text-secondary">
                       {names || "—"}
                     </td>
-                    <td className="p-3 text-gray-600">
+                    <td className="p-3 text-text-secondary">
                       {m.event_id ? (eventNameById.get(m.event_id) ?? m.event_name) : m.event_name}
                     </td>
-                    <td className="p-3 text-gray-600">{m.item_description}</td>
+                    <td className="p-3 text-text-secondary">{m.item_description}</td>
                     <td className="p-3">
                       <span
                         className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${
                           m.size === "small"
-                            ? "bg-green-100 text-green-700"
+                            ? "bg-[var(--bg-success-subtle)] text-[var(--color-success-text)]"
                             : m.size === "medium"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-blue-100 text-blue-700"
+                            ? "bg-[var(--bg-warning-subtle)] text-[var(--color-warning-text)]"
+                            : "bg-[var(--bg-brand-subtle)] text-[var(--color-brand-text)]"
                         }`}
                       >
                         {m.size === "small"
@@ -397,7 +397,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                             : t("resources.size_large", locale)}
                       </span>
                     </td>
-                    <td className="p-3 font-semibold text-gray-700">
+                    <td className="p-3 font-semibold text-text-secondary">
                       +{pointsPerPerson} {userIds.length > 1 ? `× ${userIds.length} = +${totalPoints}` : ""}
                     </td>
                     <td className="p-3">

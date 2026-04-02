@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
             </button>
           </form>
         )}
-        <p className="text-center text-xs text-[var(--ink-3)] dark:text-white/45">
+        <p className="text-center text-xs text-text-muted">
           <Link href="/login" className="font-medium text-[var(--blue-600)] dark:text-[var(--blue-400)]">
             Back to sign in
           </Link>

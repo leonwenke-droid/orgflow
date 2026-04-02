@@ -8,11 +8,11 @@ export default async function AvvPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary">
         {isDe ? "Auftragsverarbeitungsvertrag (AVV)" : "Data Processing Agreement (DPA)"}
       </h1>
-      <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="space-y-3 text-sm text-text-secondary dark:text-text-secondary">
+        <p className="text-xs text-text-secondary dark:text-text-muted">
           {isDe ? "Stand: 18.03.2026" : "Last updated: 2026-03-18"}
         </p>
 
@@ -22,8 +22,8 @@ export default async function AvvPage() {
             : "For OrgFlow, we provide a DPA under Art. 28 GDPR upon request."}
         </p>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-card-dark">
-          <p className="font-semibold text-gray-900 dark:text-gray-100">
+        <div className="rounded-lg border border-border-subtle bg-bg-primary p-4 dark:border-border-default bg-card">
+          <p className="font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "AVV anfordern" : "Request a DPA"}
           </p>
           <p className="mt-1 text-sm">
@@ -38,7 +38,7 @@ export default async function AvvPage() {
           </p>
         </div>
 
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-text-secondary dark:text-text-muted">
           {isDe
             ? "Hinweis: Diese Seite ist eine Einstiegsmöglichkeit und ersetzt keine Rechtsberatung."
             : "Note: This page is an entry point and does not constitute legal advice."}

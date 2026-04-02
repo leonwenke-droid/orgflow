@@ -18,7 +18,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="rounded-[var(--radius-input)] p-2 text-[var(--ink-3)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--ink)] dark:text-white/55 dark:hover:bg-white/6 dark:hover:text-white"
+      className="rounded-[var(--radius-input)] p-2 text-text-muted transition-colors hover:bg-bg-secondary hover:text-text-primary dark:hover:bg-bg-primary/8 dark:hover:text-text-primary"
       aria-label={t("theme.toggle_aria", locale)}
     >
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

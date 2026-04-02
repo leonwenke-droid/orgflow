@@ -150,14 +150,14 @@ export default function ShiftPlanTableWithEdit({
     const showReplacement = notAttendedAssignmentId === a.id;
     const checkinUrl = assignmentCheckinUrl(a.id);
     return (
-      <li key={a.id} className="rounded-md border border-gray-200 bg-gray-50 px-2 py-1.5 text-[11px] dark:border-gray-600 dark:bg-gray-800/80">
+      <li key={a.id} className="rounded-md border border-border-subtle bg-bg-secondary px-2 py-1.5 text-[11px] dark:border-border-default dark:bg-bg-primary/80">
         <div className="mb-1.5 flex items-center justify-between gap-2">
-          <span className="truncate font-medium text-gray-900 dark:text-gray-100">{name}</span>
-          <button type="button" onClick={() => { setEditingAssignmentId(null); setNotAttendedAssignmentId(null); }} className="shrink-0 text-[10px] text-gray-500 hover:text-gray-700">{t("common.close", locale)}</button>
+          <span className="truncate font-medium text-text-primary dark:text-text-primary">{name}</span>
+          <button type="button" onClick={() => { setEditingAssignmentId(null); setNotAttendedAssignmentId(null); }} className="shrink-0 text-[10px] text-text-secondary hover:text-text-secondary">{t("common.close", locale)}</button>
         </div>
         {checkinUrl && (
-          <div className="mb-2 rounded border border-gray-200 bg-white p-2 dark:border-gray-600 dark:bg-gray-900/50">
-            <p className="text-[10px] font-semibold text-gray-700 dark:text-gray-200">{t("shifts.checkin_qr", locale)}</p>
+          <div className="mb-2 rounded border border-border-subtle bg-bg-primary p-2 dark:border-border-default dark:bg-bg-primary/50">
+            <p className="text-[10px] font-semibold text-text-secondary dark:text-text-primary">{t("shifts.checkin_qr", locale)}</p>
             <a href={checkinUrl} className="mt-0.5 block truncate text-[10px] text-blue-600 underline" title={checkinUrl}>
               {checkinUrl}
             </a>
@@ -165,7 +165,7 @@ export default function ShiftPlanTableWithEdit({
               value={checkinUrl}
               filename={`checkin-assignment-${a.id.slice(0, 8)}`}
               label={t("shifts.checkin_qr_download_assignment", locale)}
-              className="mt-1.5 w-full rounded border border-gray-300 bg-gray-50 px-2 py-1.5 text-[10px] font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 sm:w-auto"
+              className="mt-1.5 w-full rounded border border-border-default bg-bg-secondary px-2 py-1.5 text-[10px] font-medium text-text-primary hover:bg-bg-secondary dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-tertiary sm:w-auto"
             />
           </div>
         )}
@@ -176,17 +176,17 @@ export default function ShiftPlanTableWithEdit({
           <button type="button" onClick={() => setNotAttendedAssignmentId(a.id)} className="rounded bg-amber-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-amber-300 hover:bg-amber-500/35 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center">✗ {t("shifts.not_attended", locale)}</button>
         </div>
         {showReplacement && (
-          <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await updateAssignmentStatus(a.id, "abgesagt", uid); setNotAttendedAssignmentId(null); setEditingAssignmentId(null); router.refresh(); }} className="space-y-1.5 border-t border-gray-200 pt-1 dark:border-gray-600">
-            <label className="mb-0.5 block text-[10px] text-gray-600 dark:text-gray-400">{t("shifts.replacement", locale)}</label>
-            <select name="replacement_user_id" className="max-w-full rounded border border-gray-300 bg-white px-1.5 py-1.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:py-0.5" defaultValue={a.replacement_user_id ?? ""}>
+          <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await updateAssignmentStatus(a.id, "abgesagt", uid); setNotAttendedAssignmentId(null); setEditingAssignmentId(null); router.refresh(); }} className="space-y-1.5 border-t border-border-subtle pt-1 dark:border-border-default">
+            <label className="mb-0.5 block text-[10px] text-text-secondary dark:text-text-muted">{t("shifts.replacement", locale)}</label>
+            <select name="replacement_user_id" className="max-w-full rounded border border-border-default bg-bg-primary px-1.5 py-1.5 text-[10px] dark:border-border-default dark:bg-bg-primary dark:text-text-primary sm:py-0.5" defaultValue={a.replacement_user_id ?? ""}>
               <option value="">{t("shifts.no_replacement", locale)}</option>
               {membersSortedByLoad.filter((m) => m.id !== a.user_id).map((m) => (
                 <option key={m.id} value={m.id}>{m.full_name}</option>
               ))}
             </select>
             <div className="flex gap-1.5">
-              <SubmitButtonWithSpinner className="rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">{t("common.ok", locale)}</SubmitButtonWithSpinner>
-              <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-blue-100 sm:px-1.5 sm:py-0.5">{t("common.cancel_short", locale)}</button>
+              <SubmitButtonWithSpinner className="rounded bg-[var(--bg-brand-subtle)] px-2 py-1 text-[10px] text-[var(--color-brand-text)] hover:opacity-90 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">{t("common.ok", locale)}</SubmitButtonWithSpinner>
+              <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-text-secondary hover:bg-[var(--bg-brand-subtle)] sm:px-1.5 sm:py-0.5">{t("common.cancel_short", locale)}</button>
             </div>
           </form>
         )}
@@ -222,18 +222,18 @@ export default function ShiftPlanTableWithEdit({
               <li key={a.id} className="rounded-md border border-red-500/25 bg-red-500/10 px-2 py-1 text-[11px]">
                 <div className="flex items-center gap-2">
                   <span className="text-red-400 shrink-0" aria-hidden>✗</span>
-                  <button type="button" onClick={() => { setEditingAssignmentId(a.id); setNotAttendedAssignmentId(a.id); }} className={replacementName ? "min-w-0 truncate text-left text-red-600 hover:underline" : "min-w-0 truncate text-left text-gray-400 line-through hover:underline"}>
+                  <button type="button" onClick={() => { setEditingAssignmentId(a.id); setNotAttendedAssignmentId(a.id); }} className={replacementName ? "min-w-0 truncate text-left text-red-600 hover:underline" : "min-w-0 truncate text-left text-text-muted line-through hover:underline"}>
                     {name}
                   </button>
                 </div>
-                {replacementName && <div className="mt-1 pl-4 text-[10px] text-gray-600 truncate">{t("shifts.replacement_label", locale).trim()}: {replacementName}</div>}
+                {replacementName && <div className="mt-1 pl-4 text-[10px] text-text-secondary truncate">{t("shifts.replacement_label", locale).trim()}: {replacementName}</div>}
               </li>
             );
           }
           const showReplacement = notAttendedAssignmentId === a.id;
           return (
             <li key={a.id} className="rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[11px]">
-              <div className="mb-1 truncate font-medium text-gray-900">{name}</div>
+              <div className="mb-1 truncate font-medium text-text-primary">{name}</div>
               {!showReplacement ? (
                 <div className="flex flex-wrap gap-1.5">
                   <form action={async () => { await markAssignmentAttended(a.id); setNotAttendedAssignmentId(null); router.refresh(); }} className="inline">
@@ -244,8 +244,8 @@ export default function ShiftPlanTableWithEdit({
               ) : (
                 <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await markAssignmentNotAttended(a.id, uid); setNotAttendedAssignmentId(null); router.refresh(); }} className="space-y-1.5">
                   <div>
-                    <label className="mb-0.5 block text-[10px] text-gray-600">{t("shifts.replacement", locale)}</label>
-                    <select name="replacement_user_id" className="max-w-full rounded border border-gray-300 bg-white px-1.5 py-1.5 text-[10px] dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 sm:py-0.5">
+                    <label className="mb-0.5 block text-[10px] text-text-secondary">{t("shifts.replacement", locale)}</label>
+                    <select name="replacement_user_id" className="max-w-full rounded border border-border-default bg-bg-primary px-1.5 py-1.5 text-[10px] dark:border-border-default dark:bg-bg-primary dark:text-text-primary sm:py-0.5">
                       <option value="">{t("shifts.no_replacement", locale)}</option>
                       {membersSortedByLoad.filter((m) => m.id !== a.user_id).map((m) => (
                         <option key={m.id} value={m.id}>{m.full_name}</option>
@@ -253,8 +253,8 @@ export default function ShiftPlanTableWithEdit({
                     </select>
                   </div>
                   <div className="flex gap-1.5">
-                    <SubmitButtonWithSpinner className="rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">{t("common.ok", locale)}</SubmitButtonWithSpinner>
-                    <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-blue-100 sm:px-1.5 sm:py-0.5">{t("common.cancel_short", locale)}</button>
+                    <SubmitButtonWithSpinner className="rounded bg-[var(--bg-brand-subtle)] px-2 py-1 text-[10px] text-[var(--color-brand-text)] hover:opacity-90 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">{t("common.ok", locale)}</SubmitButtonWithSpinner>
+                    <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-text-secondary hover:bg-[var(--bg-brand-subtle)] sm:px-1.5 sm:py-0.5">{t("common.cancel_short", locale)}</button>
                   </div>
                 </form>
               )}
@@ -276,10 +276,10 @@ export default function ShiftPlanTableWithEdit({
           return (
             <div
               key={dateStr}
-              className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900/40"
+              className="min-w-0 overflow-hidden rounded-xl border border-border-subtle bg-bg-primary shadow-sm dark:border-border-default dark:bg-bg-primary/40"
             >
-              <div className="border-b border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800/80">
-                <h4 className="text-xs font-semibold tracking-wide text-gray-900 dark:text-gray-100">
+              <div className="border-b border-border-subtle bg-bg-secondary px-3 py-2 dark:border-border-default dark:bg-bg-primary/80">
+                <h4 className="text-xs font-semibold tracking-wide text-text-primary dark:text-text-primary">
                   {dateLabel}
                 </h4>
               </div>
@@ -289,14 +289,14 @@ export default function ShiftPlanTableWithEdit({
                   const headerOrt = firstShift?.location?.trim();
                   const headerInfos = firstShift?.notes?.trim();
                   return (
-                <div key={`${dateStr}-${eventName}`} className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50">
-                  <div className="space-y-1 border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900/30">
+                <div key={`${dateStr}-${eventName}`} className="overflow-hidden rounded-lg border border-border-subtle bg-bg-secondary dark:border-border-default dark:bg-bg-primary/50">
+                  <div className="space-y-1 border-b border-border-subtle bg-bg-primary px-3 py-2 dark:border-border-default dark:bg-bg-primary/30">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-xs font-medium text-gray-900 dark:text-gray-100">
+                      <span className="min-w-0 truncate text-xs font-medium text-text-primary dark:text-text-primary">
                         {eventName || "—"}
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
-                        <button type="button" onClick={() => { setEditingShifts(dayShifts); setEditingPersonsOnly(false); }} className="flex min-h-[36px] items-center justify-center rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-700 hover:bg-blue-200 sm:min-h-0" title={t("shifts.edit_event", locale)}>✎</button>
+                        <button type="button" onClick={() => { setEditingShifts(dayShifts); setEditingPersonsOnly(false); }} className="flex min-h-[36px] items-center justify-center rounded bg-[var(--bg-brand-subtle)] px-2 py-1 text-[10px] text-[var(--color-brand-text)] hover:opacity-90 sm:min-h-0" title={t("shifts.edit_event", locale)}>✎</button>
                         <form
                           action={deleteEventShifts}
                           className="inline"
@@ -319,7 +319,7 @@ export default function ShiftPlanTableWithEdit({
                       </div>
                     </div>
                     {(headerOrt || headerInfos) && (
-                      <div className="truncate text-[10px] text-gray-500 dark:text-gray-400" title={[headerOrt, headerInfos].filter(Boolean).join(" — ") || undefined}>
+                      <div className="truncate text-[10px] text-text-secondary dark:text-text-muted" title={[headerOrt, headerInfos].filter(Boolean).join(" — ") || undefined}>
                         {[headerOrt, headerInfos].filter(Boolean).join(" · ")}
                       </div>
                     )}
@@ -343,19 +343,19 @@ export default function ShiftPlanTableWithEdit({
                       return (
                         <div
                           key={s.id}
-                          className="space-y-1.5 rounded-lg border border-gray-200 bg-gray-50 p-2.5 dark:border-gray-600 dark:bg-gray-800/60"
+                          className="space-y-1.5 rounded-lg border border-border-subtle bg-bg-secondary p-2.5 dark:border-border-default dark:bg-bg-primary/60"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
-                              <div className="text-[11px] font-medium text-gray-700 dark:text-gray-200">
+                              <div className="text-[11px] font-medium text-text-secondary dark:text-text-primary">
                                 {timeStr(s.start_time)}–{timeStr(s.end_time)}
                                 {(s.has_aufbau || s.has_abbau) && (
-                                  <span className="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
+                                  <span className="ml-1 text-[10px] text-text-secondary dark:text-text-muted">
                                     ({[s.has_aufbau && "Aufbau", s.has_abbau && "Abbau"].filter(Boolean).join(" + ")})
                                   </span>
                                 )}
                               </div>
-                              <div className="flex flex-col gap-0.5 text-[10px] text-gray-600 dark:text-gray-300">
+                              <div className="flex flex-col gap-0.5 text-[10px] text-text-secondary dark:text-text-secondary">
                                 {names.length > 0 ? names.map((name, i) => <span key={i} className="truncate" title={name}>{name}</span>) : "–"}
                               </div>
                             </div>
@@ -365,11 +365,11 @@ export default function ShiftPlanTableWithEdit({
                                 value={shiftCheckinUrl(s.id)!}
                                 filename={`checkin-shift-${s.id.slice(0, 8)}`}
                                 label={t("shifts.checkin_qr_download_shift", locale)}
-                                className="max-w-[140px] rounded border border-gray-200 bg-white px-2 py-1.5 text-[10px] font-medium text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                                className="max-w-[140px] rounded border border-border-subtle bg-bg-primary px-2 py-1.5 text-[10px] font-medium text-text-primary hover:bg-bg-secondary dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-primary"
                               />
                             )}
                             <div className="flex items-center gap-1">
-                              <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded bg-blue-100 text-sm text-blue-700 hover:bg-blue-200" title="Personen" aria-label="Personen">✎</button>
+                              <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded bg-[var(--bg-brand-subtle)] text-sm text-[var(--color-brand-text)] hover:opacity-90" title="Personen" aria-label="Personen">✎</button>
                               <form
                                 action={deleteShift}
                                 className="inline"
@@ -392,7 +392,7 @@ export default function ShiftPlanTableWithEdit({
                             </div>
                             </div>
                           </div>
-                          <div className="border-t border-gray-200 pt-1.5 text-[11px] text-gray-600 dark:border-gray-600 dark:text-gray-300">
+                          <div className="border-t border-border-subtle pt-1.5 text-[11px] text-text-secondary dark:border-border-default dark:text-text-secondary">
                             {renderStatusBlock(s, assignments, isPast, statusText)}
                           </div>
                         </div>
@@ -404,7 +404,7 @@ export default function ShiftPlanTableWithEdit({
                   <div className="hidden sm:block overflow-x-auto">
                     <table className="min-w-full border-collapse text-xs">
                       <thead>
-                        <tr className="bg-gray-50 text-[11px] font-medium text-gray-700 dark:bg-gray-800/80 dark:text-gray-200">
+                        <tr className="bg-bg-secondary text-[11px] font-medium text-text-secondary dark:bg-bg-primary/80 dark:text-text-primary">
                           <th className="py-2 px-2 text-left w-24">Zeit</th>
                           <th className="py-2 px-2 text-left max-w-[100px]">Personen</th>
                           <th className="py-2 px-2 text-left min-w-[140px]">Status</th>
@@ -426,16 +426,16 @@ export default function ShiftPlanTableWithEdit({
                           ? `${done}/${assignments.length}`
                           : "–";
                     return (
-                      <tr key={s.id} className={idx % 2 === 0 ? "bg-transparent dark:bg-transparent" : "bg-gray-50 dark:bg-gray-800/40"}>
-                        <td className="w-24 whitespace-nowrap px-2 py-2 text-[11px] text-gray-700 dark:text-gray-200">
+                      <tr key={s.id} className={idx % 2 === 0 ? "bg-transparent dark:bg-transparent" : "bg-bg-secondary dark:bg-bg-primary/40"}>
+                        <td className="w-24 whitespace-nowrap px-2 py-2 text-[11px] text-text-secondary dark:text-text-primary">
                           {timeStr(s.start_time)}–{timeStr(s.end_time)}
                           {(s.has_aufbau || s.has_abbau) && (
-                            <span className="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
+                            <span className="ml-1 text-[10px] text-text-secondary dark:text-text-muted">
                               ({[s.has_aufbau && "Aufbau", s.has_abbau && "Abbau"].filter(Boolean).join(" + ")})
                             </span>
                           )}
                         </td>
-                        <td className="max-w-[100px] px-2 py-2 align-top text-gray-700 dark:text-gray-200">
+                        <td className="max-w-[100px] px-2 py-2 align-top text-text-secondary dark:text-text-primary">
                           {names.length > 0 ? (
                             <div className="flex flex-col gap-0.5 text-[11px]">
                               {names.map((name, i) => (
@@ -444,7 +444,7 @@ export default function ShiftPlanTableWithEdit({
                             </div>
                           ) : "–"}
                         </td>
-                        <td className="min-w-[140px] px-2 py-2 align-top text-gray-600 dark:text-gray-300">
+                        <td className="min-w-[140px] px-2 py-2 align-top text-text-secondary dark:text-text-secondary">
                           {renderStatusBlock(s, assignments, isPast, statusText)}
                         </td>
                         <td className="py-2 px-2 text-right">
@@ -454,11 +454,11 @@ export default function ShiftPlanTableWithEdit({
                                 value={shiftCheckinUrl(s.id)!}
                                 filename={`checkin-shift-${s.id.slice(0, 8)}`}
                                 label={t("shifts.checkin_qr_download_shift", locale)}
-                                className="whitespace-nowrap rounded border border-gray-200 bg-white px-2 py-1 text-[10px] font-medium text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                                className="whitespace-nowrap rounded border border-border-subtle bg-bg-primary px-2 py-1 text-[10px] font-medium text-text-primary hover:bg-bg-secondary dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-primary"
                               />
                             )}
                             <div className="flex items-center justify-end gap-1">
-                            <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="rounded bg-blue-100 px-2 py-1 text-[11px] text-blue-700 hover:bg-blue-200" title="Personen">✎</button>
+                            <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="rounded bg-[var(--bg-brand-subtle)] px-2 py-1 text-[11px] text-[var(--color-brand-text)] hover:opacity-90" title="Personen">✎</button>
                             <form
                               action={deleteShift}
                               className="inline"

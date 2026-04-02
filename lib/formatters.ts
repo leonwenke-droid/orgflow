@@ -20,11 +20,11 @@ export const TASK_STATUS_LABELS_EN: Record<string, string> = {
 };
 
 export const TASK_STATUS_COLORS: Record<string, string> = {
-  in_arbeit: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-100",
-  offen: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200",
-  erledigt: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-100",
-  ueberfaellig: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-100",
-  abgebrochen: "bg-surface text-muted dark:bg-card-dark dark:text-muted-dark"
+  in_arbeit: "bg-[var(--bg-warning-subtle)] text-[var(--color-warning-text)]",
+  offen: "bg-[var(--bg-secondary)] text-[var(--text-secondary)]",
+  erledigt: "bg-[var(--bg-success-subtle)] text-[var(--color-success-text)]",
+  ueberfaellig: "bg-[var(--bg-danger-subtle)] text-[var(--color-danger-text)]",
+  abgebrochen: "bg-[var(--bg-secondary)] text-[var(--text-muted)]",
 };
 
 export type AppLocale = "en" | "de";

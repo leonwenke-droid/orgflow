@@ -91,7 +91,7 @@ export default function CalendarPicker({
   };
 
   return (
-    <div className={`rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-800 ${className}`}>
+    <div className={`rounded-lg border border-border-default bg-bg-primary p-3 dark:border-border-default dark:bg-bg-primary ${className}`}>
       {!omitHiddenInput && (
         <input
           type="hidden"
@@ -105,18 +105,18 @@ export default function CalendarPicker({
         <button
           type="button"
           onClick={prevMonth}
-          className="rounded p-1 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+          className="rounded p-1 text-text-secondary transition-colors hover:bg-bg-secondary dark:text-text-muted dark:hover:bg-bg-tertiary"
           aria-label={t("calendar.prev_month", locale)}
         >
           ‹
         </button>
-        <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">
+        <span className="text-xs font-semibold text-text-primary dark:text-text-primary">
           {MONTHS[month]} {year}
         </span>
         <button
           type="button"
           onClick={nextMonth}
-          className="rounded p-1 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+          className="rounded p-1 text-text-secondary transition-colors hover:bg-bg-secondary dark:text-text-muted dark:hover:bg-bg-tertiary"
           aria-label={t("calendar.next_month", locale)}
         >
           ›
@@ -124,7 +124,7 @@ export default function CalendarPicker({
       </div>
       <div className="grid grid-cols-7 gap-0.5 text-center">
         {WEEKDAYS.map((wd) => (
-          <div key={wd} className="py-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">
+          <div key={wd} className="py-0.5 text-[10px] font-medium text-text-secondary dark:text-text-muted">
             {wd}
           </div>
         ))}
@@ -141,10 +141,10 @@ export default function CalendarPicker({
               disabled={disabled}
               className={`rounded py-1 text-xs ${
                 disabled
-                  ? "cursor-not-allowed text-gray-300"
+                  ? "cursor-not-allowed text-text-secondary"
                   : isSelected
                     ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                    : "text-text-secondary hover:bg-bg-secondary dark:text-text-secondary dark:hover:bg-bg-tertiary"
               }`}
             >
               {day}

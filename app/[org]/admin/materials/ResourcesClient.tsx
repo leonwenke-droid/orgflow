@@ -103,7 +103,7 @@ export default function ResourcesClient({
     <>
       {eventFilter ? (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-light bg-brand-light/30 px-3 py-2 text-sm">
-          <span className="text-gray-800 dark:text-gray-200">
+          <span className="text-text-primary dark:text-text-primary">
             {locale === "de" ? "Veranstaltung:" : "Event:"}{" "}
             <strong>{eventFilter.name}</strong>
           </span>
@@ -123,8 +123,8 @@ export default function ResourcesClient({
             onClick={() => setFilter(f)}
             className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
               filter === f
-                ? "bg-blue-100 font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
+                ? "bg-[var(--bg-brand-subtle)] font-medium text-[var(--color-brand-text)]"
+                : "bg-bg-secondary text-text-secondary hover:bg-bg-tertiary dark:bg-bg-tertiary dark:text-text-secondary"
             }`}
           >
             {f === "alle"
@@ -157,14 +157,14 @@ export default function ResourcesClient({
               placeholder={
                 locale === "de" ? "Bezeichnung…" : "Description…"
               }
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             />
             <input
               name="category"
               placeholder={
                 locale === "de" ? "Kategorie (z.B. Catering)" : "Category"
               }
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             />
             <div className="flex gap-2">
               <input
@@ -172,18 +172,18 @@ export default function ResourcesClient({
                 type="number"
                 min={1}
                 defaultValue={1}
-                className="w-20 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                className="w-20 rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               />
               <input
                 name="quantity_unit"
                 placeholder={locale === "de" ? "Stück" : "pcs"}
-                className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                className="flex-1 rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               />
             </div>
             <select
               name="size"
               defaultValue="medium"
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             >
               <option value="small">Small</option>
               <option value="medium">Medium</option>
@@ -191,7 +191,7 @@ export default function ResourcesClient({
             </select>
             <select
               name="responsible_user_id"
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             >
               <option value="">
                 {locale === "de" ? "Verantwortlich…" : "Responsible…"}
@@ -205,13 +205,13 @@ export default function ResourcesClient({
             <input
               name="needed_by"
               type="date"
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             />
             {events.length > 0 && (
               <select
                 name="event_id"
                 defaultValue={eventFilter?.id ?? ""}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                className="rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               >
                 <option value="">
                   {locale === "de"
@@ -227,7 +227,7 @@ export default function ResourcesClient({
             )}
             <select
               name="source"
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             >
               <option value="">{locale === "de" ? "Quelle…" : "Source…"}</option>
               <option value="gekauft">{locale === "de" ? "Gekauft" : "Bought"}</option>
@@ -252,7 +252,7 @@ export default function ResourcesClient({
 
       {filtered.length === 0 ? (
         <div className="card p-6 text-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-text-secondary">
             {t("empty.resources", locale)}
           </p>
         </div>
@@ -261,23 +261,23 @@ export default function ResourcesClient({
           <div className="-mx-0 overflow-x-auto">
             <table className="w-full min-w-[700px] text-sm">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-700 text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">
+                <tr className="border-b border-border-subtle dark:border-border-default text-left">
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">
                     {locale === "de" ? "Bezeichnung" : "Name"}
                   </th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">
                     {locale === "de" ? "Kategorie" : "Category"}
                   </th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">
                     {locale === "de" ? "Menge" : "Qty"}
                   </th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">
                     {locale === "de" ? "Verantwortlich" : "Responsible"}
                   </th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500">
+                  <th className="px-4 py-3 text-xs font-medium text-text-secondary">
                     {locale === "de" ? "Benötigt bis" : "Needed by"}
                   </th>
                   <th className="w-32 px-4 py-3" />
@@ -287,22 +287,22 @@ export default function ResourcesClient({
                 {filtered.map((r) => (
                   <tr
                     key={r.id}
-                    className="border-b border-gray-100 dark:border-gray-700/50 last:border-0"
+                    className="border-b border-border-subtle dark:border-border-default/50 last:border-0"
                   >
                     <td className="px-4 py-3">
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-text-primary dark:text-text-primary">
                         {r.item_description}
                       </span>
                       {r.event_name && (
-                        <span className="ml-2 text-xs text-gray-500">
+                        <span className="ml-2 text-xs text-text-secondary">
                           ({r.event_name})
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    <td className="px-4 py-3 text-text-secondary dark:text-text-muted">
                       {r.category || "—"}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    <td className="px-4 py-3 text-text-secondary dark:text-text-muted">
                       {r.quantity}
                       {r.quantity_unit ? ` ${r.quantity_unit}` : ""}
                     </td>
@@ -314,10 +314,10 @@ export default function ResourcesClient({
                         }
                         className={`rounded-full border-0 px-2 py-0.5 text-xs font-medium ${
                           r.status === "beschafft"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                            ? "bg-[var(--bg-success-subtle)] text-[var(--color-success-text)]"
                             : r.status === "geliehen"
-                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300"
-                              : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                              ? "bg-[var(--bg-brand-subtle)] text-[var(--color-brand-text)]"
+                              : "bg-[var(--bg-warning-subtle)] text-[var(--color-warning-text)]"
                         }`}
                       >
                         <option value="offen">Offen</option>
@@ -325,12 +325,12 @@ export default function ResourcesClient({
                         <option value="geliehen">Geliehen</option>
                       </select>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    <td className="px-4 py-3 text-text-secondary dark:text-text-muted">
                       {r.responsible_user_id
                         ? nameById[r.responsible_user_id] ?? "—"
                         : "—"}
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">
+                    <td className="px-4 py-3 text-xs text-text-secondary">
                       {r.needed_by || "—"}
                     </td>
                     <td className="px-4 py-3 text-right">

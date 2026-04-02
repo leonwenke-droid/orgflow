@@ -76,7 +76,7 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
     const name = a.user_id ? getName(a.user_id) : "–";
     const replacementName = a.replacement_user_id ? getName(a.replacement_user_id) : null;
     if (a.status === "erledigt") return <span key={a.id} className="text-[10px] text-green-300/90">✓ {name}</span>;
-    if (a.status === "abgesagt") return <span key={a.id} className="text-[10px]"><span className="text-red-600">✗ </span><span className={replacementName ? "text-red-600/90" : "line-through text-gray-500"}>{name}</span>{replacementName && <span className="text-[9px] text-gray-600"> ({replacementName})</span>}</span>;
+    if (a.status === "abgesagt") return <span key={a.id} className="text-[10px]"><span className="text-red-600">✗ </span><span className={replacementName ? "text-red-600/90" : "line-through text-text-secondary"}>{name}</span>{replacementName && <span className="text-[9px] text-text-secondary"> ({replacementName})</span>}</span>;
     return <span key={a.id} className="text-[10px] text-amber-300/90">{name}</span>;
   };
 
@@ -86,9 +86,9 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
         {weeks.map(({ weekLabel, monday, days }) => (
           <div
             key={monday}
-            className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-800/60"
+            className="rounded-lg border border-border-subtle bg-bg-secondary p-3 dark:border-border-default dark:bg-bg-primary/60"
           >
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-200">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary dark:text-text-primary">
               Woche {weekLabel}
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 min-w-0">
@@ -96,24 +96,24 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
                 const hasShifts = day.shifts.length > 0;
                 const content = (
                   <>
-                    <p className="text-[11px] font-semibold text-gray-700 shrink-0 dark:text-gray-100">
+                    <p className="text-[11px] font-semibold text-text-secondary shrink-0 dark:text-text-primary">
                       {day.weekdayName} {day.dateStr.slice(8, 10)}.{day.dateStr.slice(5, 7)}.
                     </p>
                     {!hasShifts ? (
-                      <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">–</p>
+                      <p className="mt-1 text-[11px] text-text-muted dark:text-text-secondary">–</p>
                     ) : (
                       <>
-                        <div className="mt-1 border-t border-gray-200 pt-1.5 space-y-1 dark:border-gray-600">
+                        <div className="mt-1 border-t border-border-subtle pt-1.5 space-y-1 dark:border-border-default">
                           {day.dayTitle && (
-                            <p className="text-[10px] font-medium text-gray-600 line-clamp-2 dark:text-gray-300">
+                            <p className="text-[10px] font-medium text-text-secondary line-clamp-2 dark:text-text-secondary">
                               {day.dayTitle}
                             </p>
                           )}
                           {day.location && (
-                            <p className="text-[10px] text-gray-600 dark:text-gray-400">Ort: {day.location}</p>
+                            <p className="text-[10px] text-text-secondary dark:text-text-muted">Ort: {day.location}</p>
                           )}
                           {day.notes && (
-                            <p className="text-[10px] text-gray-600 line-clamp-2 dark:text-gray-400" title={day.notes}>
+                            <p className="text-[10px] text-text-secondary line-clamp-2 dark:text-text-muted" title={day.notes}>
                               {day.notes}
                             </p>
                           )}
@@ -122,10 +122,10 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
                           {day.shifts.map((s) => (
                             <div
                               key={s.id}
-                              className="rounded bg-card/50 px-1.5 py-1 text-[10px] dark:bg-gray-900/50"
+                              className="rounded bg-card/50 px-1.5 py-1 text-[10px] dark:bg-bg-primary/50"
                             >
-                              <span className="text-gray-700 dark:text-gray-200">{slotLabel(s, appLocale)}</span>
-                              <div className="mt-0.5 ml-1 flex flex-wrap gap-x-1.5 gap-y-0.5 text-gray-600 dark:text-gray-400 [&>span]:after:content-['·'] [&>span]:after:ml-1 [&>span]:after:text-gray-400 [&>span:last-child]:after:content-none [&>span:last-child]:after:ml-0">
+                              <span className="text-text-secondary dark:text-text-primary">{slotLabel(s, appLocale)}</span>
+                              <div className="mt-0.5 ml-1 flex flex-wrap gap-x-1.5 gap-y-0.5 text-text-secondary dark:text-text-muted [&>span]:after:content-['·'] [&>span]:after:ml-1 [&>span]:after:text-text-muted [&>span:last-child]:after:content-none [&>span:last-child]:after:ml-0">
                                 {s.assignments?.length > 0
                                   ? s.assignments.map(renderAssignment)
                                   : "–"}
@@ -146,9 +146,9 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
                     onKeyDown={(e) =>
                       hasShifts && (e.key === "Enter" || e.key === " ") && setOverlayDay(day)
                     }
-                    className={`min-w-0 rounded border border-gray-200 bg-white p-2 flex flex-col text-left dark:border-gray-600 dark:bg-gray-800/90 dark:text-gray-100 ${
+                    className={`min-w-0 rounded border border-border-subtle bg-bg-primary p-2 flex flex-col text-left dark:border-border-default dark:bg-bg-primary/90 dark:text-text-primary ${
                       hasShifts
-                        ? "cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:hover:bg-gray-700/80"
+                        ? "cursor-pointer hover:bg-bg-secondary focus:outline-none focus:ring-1 focus:ring-blue-500/50 dark:hover:bg-bg-tertiary/80"
                         : ""
                     }`}
                   >
@@ -170,17 +170,17 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
           aria-label="Schichtdetails"
         >
           <div
-            className="rounded-xl border border-gray-200 bg-white shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col dark:border-gray-600 dark:bg-gray-900"
+            className="rounded-xl border border-border-subtle bg-bg-primary shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col dark:border-border-default dark:bg-bg-primary"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 flex items-center justify-between shrink-0 dark:border-gray-700 dark:bg-gray-800">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-100">
+            <div className="border-b border-border-subtle bg-bg-secondary px-4 py-3 flex items-center justify-between shrink-0 dark:border-border-default dark:bg-bg-primary">
+              <h3 className="text-sm font-semibold text-text-secondary dark:text-text-primary">
                 {overlayDay.dateStr && formatDateLabel(overlayDay.dateStr, { weekday: "long" })}
               </h3>
               <button
                 type="button"
                 onClick={() => setOverlayDay(null)}
-                className="rounded p-1 text-gray-600 hover:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded p-1 text-text-secondary hover:bg-bg-secondary focus:outline-none dark:text-text-secondary dark:hover:bg-bg-tertiary"
                 aria-label="Close"
               >
                 ✕
@@ -188,28 +188,28 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
             </div>
             <div className="p-4 overflow-y-auto space-y-3">
               {overlayDay.dayTitle && (
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-100">{overlayDay.dayTitle}</p>
+                <p className="text-sm font-medium text-text-secondary dark:text-text-primary">{overlayDay.dayTitle}</p>
               )}
               {overlayDay.location && (
-                <p className="text-xs text-gray-600 dark:text-gray-400">Ort: {overlayDay.location}</p>
+                <p className="text-xs text-text-secondary dark:text-text-muted">Ort: {overlayDay.location}</p>
               )}
               {overlayDay.notes && (
-                <p className="text-xs text-gray-600 whitespace-pre-wrap dark:text-gray-400">{overlayDay.notes}</p>
+                <p className="text-xs text-text-secondary whitespace-pre-wrap dark:text-text-muted">{overlayDay.notes}</p>
               )}
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700 mb-2 dark:text-gray-300">
+              <div className="pt-2 border-t border-border-subtle dark:border-border-default">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-text-secondary mb-2 dark:text-text-secondary">
                   Zeitfenster
                 </p>
                 <ul className="space-y-2">
                   {overlayDay.shifts.map((s) => (
                     <li
                       key={s.id}
-                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800/80"
+                      className="rounded border border-border-subtle bg-bg-secondary px-3 py-2 text-xs dark:border-border-default dark:bg-bg-primary/80"
                     >
-                      <span className="font-medium text-gray-700 dark:text-gray-200">
+                      <span className="font-medium text-text-secondary dark:text-text-primary">
                         {slotLabelDetail(s, appLocale)}
                       </span>
-                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-gray-600 text-xs dark:text-gray-400">
+                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-text-secondary text-xs dark:text-text-muted">
                         {s.assignments?.length > 0
                           ? s.assignments.map((a) => {
                               const name = a.user_id ? (profileNames[a.user_id] ?? a.user_id) : "–";

@@ -34,8 +34,8 @@ export default async function SuperAdminDashboard() {
     const locale = await getRequestLocale();
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <h1 className="text-xl font-bold text-blue-100 dark:text-gray-100">{t("super_admin.forbidden_title", locale)}</h1>
-        <p className="mt-3 text-sm text-blue-300 dark:text-gray-400">
+        <h1 className="text-xl font-bold text-blue-100 dark:text-text-primary">{t("super_admin.forbidden_title", locale)}</h1>
+        <p className="mt-3 text-sm text-blue-300 dark:text-text-muted">
           {t("super_admin.forbidden_message", locale)}
         </p>
         <Link

@@ -43,34 +43,34 @@ export default function NewTaskForm({
         </p>
       )}
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
           {t("tasks.title_label", locale)}
         </label>
         <input
           name="title"
           required
           placeholder={t("placeholders.task_title", locale)}
-          className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+        <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
           {t("tasks.description_label", locale)}
         </label>
         <textarea
           name="description"
           rows={3}
-          className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
         />
       </div>
       {eventsList.length > 0 && (
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("shifts.event_optional", locale)}
           </label>
           <select
             name="event_id"
-            className="w-full rounded border border-gray-300 bg-white p-2 text-xs dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           >
             <option value="">{t("shifts.event_none", locale)}</option>
             {eventsList.map((ev) => (
@@ -92,30 +92,30 @@ export default function NewTaskForm({
       />
       <div className="grid gap-3 md:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("tasks.deadline", locale)}
           </label>
           <DueDateTimePicker name="due_at" />
         </div>
         <div className="flex items-end">
-          <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+          <label className="inline-flex items-center gap-2 text-xs text-text-secondary dark:text-text-muted">
             <input
               type="checkbox"
               name="proof_required"
               defaultChecked
-              className="rounded border-gray-400"
+              className="rounded border-border-default"
             />
             {t("tasks.proof_required", locale)}
           </label>
         </div>
       </div>
       <div className="flex items-center">
-        <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-          <input type="checkbox" name="claimable" className="rounded border-gray-400" />
+        <label className="inline-flex items-center gap-2 text-xs text-text-secondary dark:text-text-muted">
+          <input type="checkbox" name="claimable" className="rounded border-border-default" />
           {t("tasks.claimable_label", locale)}
         </label>
       </div>
-      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+      <p className="text-[11px] text-text-secondary dark:text-text-muted">
         {t("tasks.owner_or_claimable_hint", locale)}
       </p>
       <div className="pt-2">

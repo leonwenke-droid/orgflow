@@ -66,7 +66,7 @@ export default function CreateEventForm({ orgId }: { orgId: string }) {
     <div className="mt-6">
       <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1 space-y-1">
-          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("events.form_name", locale)}
           </label>
           <input
@@ -74,27 +74,27 @@ export default function CreateEventForm({ orgId }: { orgId: string }) {
             name="name"
             required
             placeholder={t("events.form_name_placeholder", locale)}
-            className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded border border-border-default bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           />
         </div>
         <div className="space-y-1">
-          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("events.form_start", locale)}
           </label>
           <input
             type="date"
             name="start_date"
-            className="rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="rounded border border-border-default bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           />
         </div>
         <div className="space-y-1">
-          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          <label className="block text-xs font-semibold text-text-secondary dark:text-text-secondary">
             {t("events.form_end", locale)}
           </label>
           <input
             type="date"
             name="end_date"
-            className="rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="rounded border border-border-default bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           />
         </div>
         <button

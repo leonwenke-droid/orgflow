@@ -18,13 +18,13 @@ export default function GlobalError({
           <div className="mt-6 flex gap-3">
             <button
               onClick={() => reset()}
-              className="rounded-md bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/15"
+              className="rounded-md bg-bg-primary/10 px-4 py-2 text-sm font-medium hover:bg-bg-primary/15"
             >
               Try again
             </button>
             <a
               href="/"
-              className="rounded-md border border-white/10 px-4 py-2 text-sm font-medium hover:bg-white/5"
+              className="rounded-md border border-white/10 px-4 py-2 text-sm font-medium hover:bg-bg-primary/5"
             >
               Go home
             </a>

@@ -118,16 +118,16 @@ export default function AssignPointsForm({
 
   return (
     <>
-      <form onSubmit={handleRequestConfirm} className="mt-6 space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
+      <form onSubmit={handleRequestConfirm} className="mt-6 space-y-4 rounded-lg border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default bg-card">
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-200">
+          <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-primary">
             {t("engagement.assign_member", locale)}
           </label>
           <select
             required
             value={profileId}
             onChange={(e) => setProfileId(e.target.value)}
-            className="w-full rounded border border-gray-300 bg-white p-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+            className="w-full rounded border border-border-default bg-bg-primary p-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           >
             <option value="">{t("engagement.assign_select", locale)}</option>
             {members.map((m) => (
@@ -138,7 +138,7 @@ export default function AssignPointsForm({
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-200">
+          <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-primary">
             {t("engagement.assign_points_label", locale)}
           </label>
           <input
@@ -147,13 +147,13 @@ export default function AssignPointsForm({
             value={points}
             onChange={(e) => setPoints(e.target.value)}
             placeholder={t("engagement.assign_points_placeholder", locale)}
-            className="w-full rounded border border-gray-300 bg-white p-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+            className="w-full rounded border border-border-default bg-bg-primary p-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-200">
+          <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-primary">
             {t("engagement.assign_reason_label", locale)}{" "}
-            <span className="font-normal text-gray-500 dark:text-gray-400">
+            <span className="font-normal text-text-secondary dark:text-text-muted">
               {t("engagement.assign_reason_hint_required", locale)}
             </span>
           </label>
@@ -163,9 +163,9 @@ export default function AssignPointsForm({
             onChange={(e) => setReason(e.target.value)}
             placeholder={t("engagement.assign_reason_placeholder", locale)}
             rows={3}
-            className="w-full resize-y rounded border border-gray-300 bg-white p-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+            className="w-full resize-y rounded border border-border-default bg-bg-primary p-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           />
-          <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-[11px] text-text-secondary dark:text-text-muted">
             {t("engagement.reason_negative_min", locale).replace("{min}", String(MIN_REASON_NEGATIVE))}{" "}
             · {t("engagement.reason_positive_min", locale).replace("{min}", String(MIN_REASON_POSITIVE))}
           </p>
@@ -197,19 +197,19 @@ export default function AssignPointsForm({
           aria-modal="true"
           aria-labelledby="assign-confirm-title"
         >
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-gray-200 bg-white p-5 shadow-xl dark:border-gray-600 dark:bg-gray-900">
-            <h2 id="assign-confirm-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg border border-border-subtle bg-bg-primary p-5 shadow-xl dark:border-border-default dark:bg-bg-primary">
+            <h2 id="assign-confirm-title" className="text-lg font-semibold text-text-primary dark:text-text-primary">
               {t("engagement.assign_confirm_title", locale)}
             </h2>
-            <dl className="mt-4 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+            <dl className="mt-4 space-y-2 text-sm text-text-secondary dark:text-text-secondary">
               <div>
-                <dt className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                <dt className="text-xs font-medium text-text-secondary dark:text-text-muted">
                   {t("engagement.assign_confirm_member", locale)}
                 </dt>
                 <dd>{memberName(profileId)}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                <dt className="text-xs font-medium text-text-secondary dark:text-text-muted">
                   {t("engagement.assign_confirm_points", locale)}
                 </dt>
                 <dd className="font-mono">
@@ -217,7 +217,7 @@ export default function AssignPointsForm({
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                <dt className="text-xs font-medium text-text-secondary dark:text-text-muted">
                   {t("engagement.assign_confirm_current", locale)}
                 </dt>
                 <dd>
@@ -225,7 +225,7 @@ export default function AssignPointsForm({
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                <dt className="text-xs font-medium text-text-secondary dark:text-text-muted">
                   {t("engagement.assign_confirm_after", locale)}
                 </dt>
                 <dd className="font-semibold">
@@ -233,17 +233,17 @@ export default function AssignPointsForm({
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                <dt className="text-xs font-medium text-text-secondary dark:text-text-muted">
                   {t("engagement.assign_confirm_reason", locale)}
                 </dt>
-                <dd className="whitespace-pre-wrap text-gray-600 dark:text-gray-400">{pendingReason}</dd>
+                <dd className="whitespace-pre-wrap text-text-secondary dark:text-text-muted">{pendingReason}</dd>
               </div>
             </dl>
             <div className="mt-6 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
                 disabled={loading}
-                className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                className="rounded border border-border-default px-3 py-2 text-sm text-text-secondary hover:bg-bg-secondary disabled:opacity-50 dark:border-border-default dark:text-text-primary dark:hover:bg-bg-primary"
                 onClick={() => {
                   setModalOpen(false);
                   setPreviewScore(null);

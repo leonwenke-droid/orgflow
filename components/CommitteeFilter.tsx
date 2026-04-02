@@ -30,11 +30,11 @@ export default function CommitteeFilter({
 
   return (
     <div className={className}>
-      <label className="mb-1 block text-[10px] font-semibold text-gray-700">Team</label>
+      <label className="mb-1 block text-[10px] font-semibold text-text-secondary">Team</label>
       <select
         value={current}
         onChange={(e) => handleChange(e.target.value)}
-        className="min-w-[160px] rounded border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        className="min-w-[160px] rounded border border-border-default bg-bg-primary px-2 py-1.5 text-xs text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
       >
         <option value="">{t("teams.all_teams", locale)}</option>
         {committees.map((c) => (

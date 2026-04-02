@@ -44,8 +44,8 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
   if (entries.length === 0) return null;
 
   return (
-    <section className="mt-10 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-card-dark">
-      <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+    <section className="mt-10 rounded-lg border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default bg-card">
+      <h2 className="mb-3 text-sm font-semibold text-text-primary dark:text-text-primary">
         {t("engagement.log_title", locale)}
       </h2>
       {error && (
@@ -53,13 +53,13 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
           {error}
         </p>
       )}
-      <p className="mb-4 text-xs text-gray-600 dark:text-gray-400">
+      <p className="mb-4 text-xs text-text-secondary dark:text-text-muted">
         When, how many points, to whom, reason and assigner.
       </p>
       <div className="overflow-x-auto">
         <table className="min-w-full text-xs border-collapse">
           <thead>
-            <tr className="border-b border-gray-200 text-left text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            <tr className="border-b border-border-subtle text-left text-text-secondary dark:border-border-default dark:text-text-muted">
               <th className="py-2 pr-4 font-medium">{t("engagement.date_time", locale)}</th>
               <th className="py-2 pr-4 font-medium">{t("engagement.recipient", locale)}</th>
               <th className="py-2 pr-4 font-medium text-right">{t("engagement.points_column", locale)}</th>
@@ -70,8 +70,8 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
           </thead>
           <tbody>
             {entries.map((e) => (
-              <tr key={e.id} className="border-b border-gray-100 text-gray-700">
-                <td className="whitespace-nowrap py-2.5 pr-4 text-gray-600">
+              <tr key={e.id} className="border-b border-border-subtle text-text-secondary">
+                <td className="whitespace-nowrap py-2.5 pr-4 text-text-secondary">
                   {formatLocaleDateTime(e.created_at, locale)}
                 </td>
                 <td className="py-2.5 pr-4">{e.recipientName}</td>
@@ -81,7 +81,7 @@ export default function ScoreImportLog({ entries, orgSlug }: { entries: LogEntry
                 <td className="py-2.5 pr-4 max-w-[200px] truncate" title={e.reason}>
                   {e.reason}
                 </td>
-                <td className="py-2.5 text-gray-600">{e.createdBy}</td>
+                <td className="py-2.5 text-text-secondary">{e.createdBy}</td>
                 <td className="py-2.5 text-right">
                   {e.canRemove ? (
                     <form action={handleRemove} className="inline">

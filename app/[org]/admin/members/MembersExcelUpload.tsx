@@ -71,14 +71,14 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
-      <p className="w-full text-xs text-gray-500 dark:text-gray-400">
+      <p className="w-full text-xs text-text-secondary dark:text-text-muted">
         {t("members.excel_formats_hint", locale)}
       </p>
       <input
         type="file"
         accept=".xlsx,.xls,.csv"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-        className="text-sm text-gray-600 file:mr-2 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white file:hover:bg-blue-700 dark:text-gray-400"
+        className="text-sm text-text-secondary file:mr-2 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white file:hover:bg-blue-700 dark:text-text-muted"
       />
       <button
         type="submit"
@@ -93,13 +93,13 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
         </span>
       )}
       {summary && (
-        <div className="w-full rounded border border-gray-200 bg-gray-50 p-2 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+        <div className="w-full rounded border border-border-subtle bg-bg-secondary p-2 text-xs text-text-secondary dark:border-border-default dark:bg-bg-primary dark:text-text-secondary">
           <span className="font-medium">Result:</span>{" "}
           created {summary.created} | skipped {summary.skipped} | failed {summary.failed}
         </div>
       )}
       {issues.length > 0 && (
-        <div className="w-full rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+        <div className="w-full rounded border border-[var(--color-warning)]/30 bg-[var(--bg-warning-subtle)] p-2 text-xs text-[var(--color-warning-text)]">
           <p className="font-medium">Import notes</p>
           <ul className="mt-1 max-h-32 list-disc overflow-y-auto pl-4">
             {issues.slice(0, 20).map((issue, idx) => (
@@ -111,8 +111,8 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
         </div>
       )}
       {inviteLinks.length > 0 && (
-        <div className="mt-3 w-full rounded border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
-          <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="mt-3 w-full rounded border border-border-subtle bg-bg-secondary p-3 dark:border-border-default dark:bg-bg-primary">
+          <p className="mb-2 text-sm font-medium text-text-secondary dark:text-text-secondary">
             {t("members.invite_links_export", locale)}
           </p>
           <div className="mb-2 flex gap-2">
@@ -126,12 +126,12 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
             <button
               type="button"
               onClick={doneAndReload}
-              className="rounded border border-gray-300 bg-white px-2 py-1 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+              className="rounded border border-border-default bg-bg-primary px-2 py-1 text-xs dark:border-border-default dark:bg-bg-tertiary dark:text-text-primary"
             >
               {t("common.done", locale)}
             </button>
           </div>
-          <ul className="max-h-40 overflow-y-auto text-xs text-gray-600 dark:text-gray-400">
+          <ul className="max-h-40 overflow-y-auto text-xs text-text-secondary dark:text-text-muted">
             {inviteLinks.slice(0, 20).map((link, i) => (
               <li key={i} className="truncate">
                 {link.fullName}: <a className="underline" href={link.inviteUrl} target="_blank" rel="noreferrer">{link.inviteUrl}</a>

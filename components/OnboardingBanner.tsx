@@ -33,8 +33,8 @@ export default function OnboardingBanner() {
   if (!visible) return null;
 
   return (
-    <div className="relative rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 pr-10 dark:border-blue-800 dark:bg-blue-900/30">
-      <p className="text-sm text-blue-800 dark:text-blue-200">
+    <div className="relative rounded-xl border border-[var(--color-brand)]/25 bg-[var(--bg-brand-subtle)] px-4 py-3 pr-10">
+      <p className="text-sm text-[var(--color-brand-text)]">
         {t("onboarding.welcome", locale)}
       </p>
       <button

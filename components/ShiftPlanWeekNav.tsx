@@ -66,9 +66,9 @@ function formatAssignments(
         const rep = a.replacement_user_id ? (profileNames[a.replacement_user_id] ?? "–") : null;
         let inner: React.ReactNode;
         if (a.status === "erledigt") inner = <span className="text-green-600">✓ {name}</span>;
-        else if (a.status === "abgesagt") inner = <><span className="text-red-500">✗ </span><span className={rep ? "text-red-600" : "line-through text-gray-400"}>{name}</span>{rep ? <span className="text-gray-600"> ({rep})</span> : null}</>;
+        else if (a.status === "abgesagt") inner = <><span className="text-red-500">✗ </span><span className={rep ? "text-red-600" : "line-through text-text-muted"}>{name}</span>{rep ? <span className="text-text-secondary"> ({rep})</span> : null}</>;
         else inner = <span className="text-amber-600">{name}</span>;
-        return <span key={a.id}>{i > 0 && <span className="mx-0.5 text-gray-400">·</span>}{inner}</span>;
+        return <span key={a.id}>{i > 0 && <span className="mx-0.5 text-text-muted">·</span>}{inner}</span>;
       })}
     </span>
   );
@@ -205,7 +205,7 @@ export default function ShiftPlanWeekNav({
 
   if (!week) {
     return (
-      <p className="text-xs text-gray-500">No shifts in this period.</p>
+      <p className="text-xs text-text-secondary">No shifts in this period.</p>
     );
   }
 
@@ -221,29 +221,29 @@ export default function ShiftPlanWeekNav({
     return (
       <>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <p className={`text-[11px] font-semibold ${isToday ? "text-blue-600" : "text-gray-600"}`}>
+          <p className={`text-[11px] font-semibold ${isToday ? "text-blue-600" : "text-text-secondary"}`}>
             {day.weekdayName} {day.dateStr.slice(8, 10)}.{day.dateStr.slice(5, 7)}.
           </p>
           {isToday && (
-            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-blue-600">
+            <span className="rounded bg-[var(--bg-brand-subtle)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--color-brand)]">
               Heute
             </span>
           )}
         </div>
         {!hasShifts ? (
-          <p className="mt-1 text-[11px] text-gray-400">–</p>
+          <p className="mt-1 text-[11px] text-text-muted">–</p>
         ) : (
           <>
-            <div className="mt-1 space-y-1 border-t border-gray-100 pt-1.5">
+            <div className="mt-1 space-y-1 border-t border-border-subtle pt-1.5">
               {day.dayTitle && (
-                <p className="line-clamp-2 text-[10px] font-medium text-gray-700">
+                <p className="line-clamp-2 text-[10px] font-medium text-text-secondary">
                   {day.dayTitle}</p>
               )}
               {day.location && (
-                <p className="text-[10px] text-gray-500">Ort: {day.location}</p>
+                <p className="text-[10px] text-text-secondary">Ort: {day.location}</p>
               )}
               {day.notes && (
-                <p className="line-clamp-2 text-[10px] text-gray-600" title={day.notes}>
+                <p className="line-clamp-2 text-[10px] text-text-secondary" title={day.notes}>
                   {day.notes}</p>
               )}
             </div>
@@ -255,9 +255,9 @@ export default function ShiftPlanWeekNav({
                 const hasFreeSlot =
                   showClaimButton && orgSlug && count < required && claimOk;
                 return (
-                <div key={s.id} className="rounded bg-gray-50 px-1.5 py-1 text-[10px] dark:bg-gray-800">
-                  <span className="text-gray-700 dark:text-gray-300">{slotLabel(s, appLocale)}</span>
-                  <div className="ml-1 text-gray-600 dark:text-gray-400">
+                <div key={s.id} className="rounded bg-bg-secondary px-1.5 py-1 text-[10px] dark:bg-bg-primary">
+                  <span className="text-text-secondary dark:text-text-secondary">{slotLabel(s, appLocale)}</span>
+                  <div className="ml-1 text-text-secondary dark:text-text-muted">
                     {count > 0
                       ? formatAssignments(s.assignments, profileNames)
                       : "–"}
@@ -281,19 +281,19 @@ export default function ShiftPlanWeekNav({
           type="button"
           onClick={() => setWeekIndex((i) => Math.max(0, i - 1))}
           disabled={!canGoLeft}
-          className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="rounded-lg border border-border-default bg-bg-primary p-2 text-text-secondary hover:bg-bg-secondary disabled:cursor-not-allowed disabled:opacity-40 dark:border-border-default dark:bg-bg-primary dark:text-text-secondary dark:hover:bg-bg-tertiary"
           aria-label="Vorherige Woche"
         >
           ←
         </button>
-        <h3 className="flex-1 text-center text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400">
+        <h3 className="flex-1 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary dark:text-text-muted">
           Woche {weekLabel}
         </h3>
         <button
           type="button"
           onClick={() => setWeekIndex((i) => Math.min(weeks.length - 1, i + 1))}
           disabled={!canGoRight}
-          className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          className="rounded-lg border border-border-default bg-bg-primary p-2 text-text-secondary hover:bg-bg-secondary disabled:cursor-not-allowed disabled:opacity-40 dark:border-border-default dark:bg-bg-primary dark:text-text-secondary dark:hover:bg-bg-tertiary"
           aria-label="Nächste Woche"
         >
           →
@@ -313,16 +313,16 @@ export default function ShiftPlanWeekNav({
               }
             }}
             disabled={!canDayLeft}
-            className="shrink-0 rounded-xl border border-gray-300 bg-white p-3 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="shrink-0 rounded-xl border border-border-default bg-bg-primary p-3 text-text-secondary hover:bg-bg-secondary disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation dark:border-border-default dark:bg-bg-primary dark:text-text-secondary dark:hover:bg-bg-tertiary"
             aria-label="Vorheriger Tag"
           >
             ←
           </button>
           <div className="min-w-0 flex-1 text-center">
-            <p className="truncate text-base font-semibold text-gray-900 dark:text-gray-100">
+            <p className="truncate text-base font-semibold text-text-primary dark:text-text-primary">
               {currentDay && formatDateLabel(currentDay.dateStr, { weekday: "long" })}
             </p>
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-0.5 text-xs text-text-secondary dark:text-text-muted">
               {currentDay && `${currentDay.dateStr.slice(8, 10)}.${currentDay.dateStr.slice(5, 7)}.${currentDay.dateStr.slice(0, 4)}`}
             </p>
           </div>
@@ -336,7 +336,7 @@ export default function ShiftPlanWeekNav({
               }
             }}
             disabled={!canDayRight}
-            className="shrink-0 rounded-xl border border-gray-300 bg-white p-3 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="shrink-0 rounded-xl border border-border-default bg-bg-primary p-3 text-text-secondary hover:bg-bg-secondary disabled:cursor-not-allowed disabled:opacity-40 touch-manipulation dark:border-border-default dark:bg-bg-primary dark:text-text-secondary dark:hover:bg-bg-tertiary"
             aria-label="Next day"
           >
             →
@@ -352,12 +352,12 @@ export default function ShiftPlanWeekNav({
             }
             className={`relative flex flex-col rounded-xl border-2 p-4 text-left ${
               currentDay.dateStr === todayStr
-                ? "border-blue-400 bg-blue-50/50 ring-2 ring-blue-200 dark:border-blue-600 dark:bg-blue-950/40 dark:ring-blue-800"
-                : "border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800/90"
-            } ${currentDay.shifts.length > 0 ? "cursor-pointer active:bg-gray-50 dark:active:bg-gray-700" : ""}`}
+                ? "border-[var(--color-brand)]/50 bg-[var(--bg-brand-subtle)]/80 ring-2 ring-[var(--color-brand)]/25 dark:border-[var(--color-brand)]/40 dark:bg-[var(--bg-brand-subtle)]/40 dark:ring-[var(--color-brand)]/30"
+                : "border-border-subtle bg-bg-primary dark:border-border-default dark:bg-bg-primary/90"
+            } ${currentDay.shifts.length > 0 ? "cursor-pointer active:bg-bg-secondary dark:active:bg-bg-tertiary" : ""}`}
           >
             {currentDay.dateStr === todayStr && (
-              <span className="absolute right-12 top-3 rounded-md bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-600 dark:bg-blue-900/50 dark:text-blue-200">
+              <span className="absolute right-12 top-3 rounded-md bg-[var(--bg-brand-subtle)] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--color-brand)]">
                 Heute
               </span>
             )}
@@ -369,7 +369,7 @@ export default function ShiftPlanWeekNav({
                   setExportFormat("png");
                   setExportDay(currentDay);
                 }}
-                className="absolute right-3 top-3 rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 touch-manipulation"
+                className="absolute right-3 top-3 rounded-lg p-2 text-text-secondary hover:bg-bg-secondary hover:text-text-secondary touch-manipulation"
                 title="Als Bild herunterladen"
                 aria-label="Als Bild herunterladen"
               >
@@ -378,26 +378,26 @@ export default function ShiftPlanWeekNav({
             )}
 
             {!currentDay.shifts.length ? (
-              <p className="py-2 text-sm text-gray-500">No shifts entered.</p>
+              <p className="py-2 text-sm text-text-secondary">No shifts entered.</p>
             ) : (
               <div className="space-y-4">
                 {(currentDay.dayTitle || currentDay.location || currentDay.notes) && (
-                  <div className="space-y-1.5 border-b border-gray-200 pb-3">
+                  <div className="space-y-1.5 border-b border-border-subtle pb-3">
                     {currentDay.dayTitle && (
-                      <p className="text-sm font-medium text-gray-900">{currentDay.dayTitle}</p>
+                      <p className="text-sm font-medium text-text-primary">{currentDay.dayTitle}</p>
                     )}
                     {currentDay.location && (
-                      <p className="text-xs text-gray-600">📍 {currentDay.location}</p>
+                      <p className="text-xs text-text-secondary">📍 {currentDay.location}</p>
                     )}
                     {currentDay.notes && (
-                      <p className="leading-snug text-xs text-gray-600" title={currentDay.notes}>
+                      <p className="leading-snug text-xs text-text-secondary" title={currentDay.notes}>
                         {currentDay.notes}
                       </p>
                     )}
                   </div>
                 )}
                 <div>
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-text-secondary">
                     Shifts
                   </p>
                   <ul className="space-y-2">
@@ -410,12 +410,12 @@ export default function ShiftPlanWeekNav({
                       return (
                       <li
                         key={s.id}
-                        className="flex flex-col gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 dark:border-gray-600 dark:bg-gray-800"
+                        className="flex flex-col gap-0.5 rounded-lg border border-border-subtle bg-bg-secondary px-3 py-2.5 dark:border-border-default dark:bg-bg-primary"
                       >
-                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                        <span className="text-xs font-semibold text-text-secondary dark:text-text-secondary">
                           {slotLabel(s, appLocale)}
                         </span>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="text-sm text-text-secondary dark:text-text-muted">
                           {count > 0
                             ? formatAssignments(s.assignments, profileNames)
                             : "–"}
@@ -448,9 +448,9 @@ export default function ShiftPlanWeekNav({
               }
               className={`relative flex min-w-0 flex-col rounded border p-2 text-left ${
                 day.dateStr === todayStr
-                  ? "border-blue-300 bg-blue-50/50 ring-1 ring-blue-200 dark:border-blue-600 dark:bg-blue-950/40 dark:ring-blue-800"
-                  : "border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/90"
-              } ${hasShifts ? "cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-300 dark:hover:bg-gray-700/80 dark:focus:ring-blue-600" : ""}`}
+                  ? "border-[var(--color-brand)]/40 bg-[var(--bg-brand-subtle)]/70 ring-1 ring-[var(--color-brand)]/20 dark:border-[var(--color-brand)]/40 dark:bg-[var(--bg-brand-subtle)]/35 dark:ring-[var(--color-brand)]/25"
+                  : "border-border-subtle bg-bg-secondary dark:border-border-default dark:bg-bg-primary/90"
+              } ${hasShifts ? "cursor-pointer hover:bg-bg-secondary focus:outline-none focus:ring-1 focus:ring-blue-300 dark:hover:bg-bg-tertiary/80 dark:focus:ring-blue-600" : ""}`}
             >
               {renderDayCard(day)}
               {hasShifts && (
@@ -461,7 +461,7 @@ export default function ShiftPlanWeekNav({
                     setExportFormat("png");
                     setExportDay(day);
                   }}
-                  className="absolute right-1.5 top-1.5 rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
+                  className="absolute right-1.5 top-1.5 rounded p-1 text-text-secondary hover:bg-bg-tertiary hover:text-text-secondary focus:outline-none"
                   title="Als Bild herunterladen (PNG)"
                   aria-label="Als Bild herunterladen"
                 >
@@ -483,40 +483,40 @@ export default function ShiftPlanWeekNav({
         >
           <div
             ref={overlayCardRef}
-            className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-600 dark:bg-gray-900"
+            className="flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-border-subtle bg-bg-primary shadow-xl dark:border-border-default dark:bg-bg-primary"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border-subtle bg-bg-secondary px-4 py-3 dark:border-border-default dark:bg-bg-primary">
               <div>
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="text-sm font-semibold text-text-primary dark:text-text-primary">
                   {overlayDay.dateStr && formatDateLabel(overlayDay.dateStr, { weekday: "long" })}
                 </h3>
                 {overlayDay.dateStr === getTodayDateString() && (
-                  <span className="mt-1 inline-block rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase text-blue-600 dark:bg-blue-900/50 dark:text-blue-200">
+                  <span className="mt-1 inline-block rounded bg-[var(--bg-brand-subtle)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--color-brand)]">
                     Heute
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-1">
-                <span className="mr-1 text-[10px] text-gray-500 dark:text-gray-400">Download:</span>
+                <span className="mr-1 text-[10px] text-text-secondary dark:text-text-muted">Download:</span>
                 <button
                   type="button"
                   onClick={() => captureOverlayAsImage("png")}
-                  className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-200 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="rounded px-2 py-1 text-[10px] text-text-secondary hover:bg-bg-tertiary focus:outline-none dark:text-text-secondary dark:hover:bg-bg-tertiary"
                 >
                   PNG
                 </button>
                 <button
                   type="button"
                   onClick={() => captureOverlayAsImage("jpeg")}
-                  className="rounded px-2 py-1 text-[10px] text-gray-600 hover:bg-gray-200 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="rounded px-2 py-1 text-[10px] text-text-secondary hover:bg-bg-tertiary focus:outline-none dark:text-text-secondary dark:hover:bg-bg-tertiary"
                 >
                   JPG
                 </button>
                 <button
                   type="button"
                   onClick={() => setOverlayDay(null)}
-                  className="rounded p-1 text-gray-600 hover:bg-gray-200 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="rounded p-1 text-text-secondary hover:bg-bg-tertiary focus:outline-none dark:text-text-secondary dark:hover:bg-bg-tertiary"
                   aria-label="Close"
                 >
                   ✕
@@ -525,26 +525,26 @@ export default function ShiftPlanWeekNav({
             </div>
             <div className="space-y-3 overflow-y-auto p-4">
               {overlayDay.dayTitle && (
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{overlayDay.dayTitle}</p>
+                <p className="text-sm font-medium text-text-primary dark:text-text-primary">{overlayDay.dayTitle}</p>
               )}
               {overlayDay.location && (
-                <p className="text-xs text-gray-600 dark:text-gray-400">Ort: {overlayDay.location}</p>
+                <p className="text-xs text-text-secondary dark:text-text-muted">Ort: {overlayDay.location}</p>
               )}
               {overlayDay.notes && (
-                <p className="whitespace-pre-wrap text-xs text-gray-600 dark:text-gray-400">{overlayDay.notes}</p>
+                <p className="whitespace-pre-wrap text-xs text-text-secondary dark:text-text-muted">{overlayDay.notes}</p>
               )}
-              <div className="border-t border-gray-200 pt-2 dark:border-gray-700">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <div className="border-t border-border-subtle pt-2 dark:border-border-default">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-text-secondary dark:text-text-muted">
                   Zeitfenster
                 </p>
                 <ul className="space-y-2">
                   {overlayDay.shifts.map((s) => (
                     <li
                       key={s.id}
-                      className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs dark:border-gray-600 dark:bg-gray-800/90 dark:text-gray-200"
+                      className="rounded border border-border-subtle bg-bg-secondary px-3 py-2 text-xs dark:border-border-default dark:bg-bg-primary/90 dark:text-text-primary"
                     >
-                      <span className="font-medium text-gray-700 dark:text-gray-200">{slotLabelDetail(s, appLocale)}</span>
-                      <p className="mt-1 text-gray-600 dark:text-gray-300">
+                      <span className="font-medium text-text-secondary dark:text-text-primary">{slotLabelDetail(s, appLocale)}</span>
+                      <p className="mt-1 text-text-secondary dark:text-text-secondary">
                         {formatAssignmentsPlain(s.assignments, profileNames)}
                       </p>
                     </li>
@@ -559,7 +559,7 @@ export default function ShiftPlanWeekNav({
       {exportDay && (
         <div
           ref={exportDivRef}
-          className="fixed left-[-9999px] top-0 w-[400px] rounded-xl border border-blue-500/30 bg-card-dark p-4 text-left text-blue-100"
+          className="fixed left-[-9999px] top-0 w-[400px] rounded-xl border border-blue-500/30 bg-card p-4 text-left text-blue-100"
           style={{ fontFamily: "inherit" }}
         >
           <h3 className="text-base font-semibold text-blue-400 border-b border-blue-500/20 pb-2 mb-3">

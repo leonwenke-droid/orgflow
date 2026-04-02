@@ -6,19 +6,19 @@ export default function TermsContent({ locale }: { locale: Locale }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary">
         {t("legal.terms_title", locale)}
       </h1>
-      <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="space-y-3 text-sm text-text-secondary dark:text-text-secondary">
+        <p className="text-xs text-text-secondary dark:text-text-muted">
           {isDe ? "Stand: 18.03.2026" : "Last updated: 2026-03-18"}
         </p>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "1. Anbieter" : "1. Provider"}
           </h2>
-          <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-card-dark">
+          <div className="rounded-lg border border-border-subtle bg-bg-primary p-4 dark:border-border-default bg-card">
             <p className="font-semibold">LYNIQ Media</p>
             <p>{isDe ? "Inhaber" : "Owner"}: Leon Wenke</p>
             <p>Alte Poststraße 17a, 26835 Holtland, {isDe ? "Deutschland" : "Germany"}</p>
@@ -33,7 +33,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "2. Geltungsbereich" : "2. Scope"}
           </h2>
           <p>
@@ -44,7 +44,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "3. Registrierung & Einladungen" : "3. Accounts & invitations"}
           </h2>
           <ul className="list-disc space-y-1 pl-5 text-sm">
@@ -67,7 +67,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "4. Leistungsbeschreibung" : "4. Service description"}
           </h2>
           <p>
@@ -75,7 +75,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
               ? "OrgFlow unterstützt die Organisation von Teams, Aufgaben (Tasks), Schichten (Shifts), Ressourcen und Finanzen. Funktionsumfang kann je Organisation variieren."
               : "OrgFlow helps organise teams, tasks, shifts, resources and finances. Features may vary per organisation."}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-text-secondary dark:text-text-muted">
             {isDe
               ? "Hinweis: OrgFlow ist ein Organisationswerkzeug und ersetzt keine rechtliche, steuerliche oder arbeitsrechtliche Beratung."
               : "Note: OrgFlow is an organisational tool and does not replace legal, tax or employment advice."}
@@ -83,7 +83,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "5. Pflichten der Nutzer / Acceptable Use" : "5. User obligations / acceptable use"}
           </h2>
           <ul className="list-disc space-y-1 pl-5 text-sm">
@@ -101,7 +101,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "6. Verfügbarkeit & Änderungen" : "6. Availability & changes"}
           </h2>
           <p>
@@ -112,7 +112,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "7. Haftung" : "7. Liability"}
           </h2>
           <p>
@@ -120,7 +120,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
               ? "Wir haften unbeschränkt bei Vorsatz und grober Fahrlässigkeit sowie bei Verletzung von Leben, Körper oder Gesundheit. Bei einfacher Fahrlässigkeit haften wir nur bei Verletzung wesentlicher Vertragspflichten (Kardinalpflichten) und begrenzt auf den typischerweise vorhersehbaren Schaden."
               : "We are liable without limitation for intent and gross negligence and for injury to life, body or health. For simple negligence, we are liable only for breach of essential contractual duties and limited to the typically foreseeable damage."}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-text-secondary dark:text-text-muted">
             {isDe
               ? "Soweit gesetzlich zulässig, ist eine Haftung für Datenverluste ausgeschlossen, sofern diese durch angemessene Datensicherungsmaßnahmen vermeidbar gewesen wären."
               : "To the extent permitted by law, liability for data loss is excluded if avoidable through reasonable backups."}
@@ -128,7 +128,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "8. Laufzeit & Kündigung" : "8. Term & termination"}
           </h2>
           <p>
@@ -139,7 +139,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "9. Datenschutz" : "9. Data protection"}
           </h2>
           <p>
@@ -150,7 +150,7 @@ export default function TermsContent({ locale }: { locale: Locale }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {isDe ? "10. Schlussbestimmungen" : "10. Final provisions"}
           </h2>
           <p>

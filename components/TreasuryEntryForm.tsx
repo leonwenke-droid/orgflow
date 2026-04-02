@@ -38,29 +38,29 @@ export default function TreasuryEntryForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-      <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t("finance.add_entry", locale)}</h3>
+    <form onSubmit={handleSubmit} className="mt-4 space-y-3 rounded-lg border border-border-subtle bg-bg-secondary p-4 dark:border-border-default dark:bg-bg-primary/50">
+      <h3 className="text-xs font-semibold text-text-secondary dark:text-text-secondary">{t("finance.add_entry", locale)}</h3>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">{t("finance.entry_date", locale)}</label>
-          <input type="date" name="date" required className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+          <label className="mb-0.5 block text-[11px] font-medium text-text-secondary dark:text-text-muted">{t("finance.entry_date", locale)}</label>
+          <input type="date" name="date" required className="w-full rounded border border-border-default bg-bg-primary px-2 py-1.5 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary" />
         </div>
         <div>
-          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">{t("finance.entry_type", locale)}</label>
-          <select name="type" required className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+          <label className="mb-0.5 block text-[11px] font-medium text-text-secondary dark:text-text-muted">{t("finance.entry_type", locale)}</label>
+          <select name="type" required className="w-full rounded border border-border-default bg-bg-primary px-2 py-1.5 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary">
             <option value="income">{t("finance.entry_type_income", locale)}</option>
             <option value="expense">{t("finance.entry_type_expense", locale)}</option>
           </select>
         </div>
         <div>
-          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">{t("finance.entry_description", locale)}</label>
-          <input type="text" name="description" placeholder="" className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+          <label className="mb-0.5 block text-[11px] font-medium text-text-secondary dark:text-text-muted">{t("finance.entry_description", locale)}</label>
+          <input type="text" name="description" placeholder="" className="w-full rounded border border-border-default bg-bg-primary px-2 py-1.5 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary" />
         </div>
         <div>
-          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">
+          <label className="mb-0.5 block text-[11px] font-medium text-text-secondary dark:text-text-muted">
             {t("finance.entry_category", locale)}
           </label>
-          <select name="category" className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+          <select name="category" className="w-full rounded border border-border-default bg-bg-primary px-2 py-1.5 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary">
             <option value="">—</option>
             {(categories ?? []).map((c) => (
               <option key={c.key} value={c.name}>
@@ -70,7 +70,7 @@ export default function TreasuryEntryForm({
           </select>
         </div>
         <div>
-          <label className="mb-0.5 block text-[11px] font-medium text-gray-600 dark:text-gray-400">
+          <label className="mb-0.5 block text-[11px] font-medium text-text-secondary dark:text-text-muted">
             {t("finance.entry_amount", locale).replace("{currency}", currencyCode)}
           </label>
           <input
@@ -80,7 +80,7 @@ export default function TreasuryEntryForm({
             autoComplete="off"
             required
             placeholder={locale === "de" ? "0,00" : "0.00"}
-            className="w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded border border-border-default bg-bg-primary px-2 py-1.5 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           />
         </div>
       </div>
