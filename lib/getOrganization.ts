@@ -205,24 +205,28 @@ export async function isOrgAdmin(orgId: string): Promise<boolean> {
 
   if (!user) return false;
 
-  const { data: superAdmin } = await supabase.rpc("is_super_admin");
-  if (superAdmin === true) return true;
-
-  const { data, error } = await supabase.rpc("is_org_admin", { org_id: orgId });
-  if (!error && typeof data === "boolean") return data;
-
-  const { data: profile } = await supabase
+  // Fast-path: one profile lookup scoped to the org (common case).
+  const { data: profileForOrg } = await supabase
     .from("profiles")
     .select("role, organization_id, status")
     .eq("auth_user_id", user.id)
-    .single();
+    .eq("organization_id", orgId)
+    .maybeSingle();
 
-  return (
-    profile?.status !== "disabled" &&
-    (profile?.role === "super_admin" ||
-      ((profile?.role === "admin" || profile?.role === "lead" || profile?.role === "owner") &&
-        profile?.organization_id === orgId))
-  );
+  if (profileForOrg?.status !== "disabled") {
+    const r = profileForOrg?.role as DbRole | undefined;
+    if (r === "admin" || r === "owner" || r === "lead") return true;
+  }
+
+  // Fallback: super-admin has access to every org.
+  const { data: superAdmin } = await supabase.rpc("is_super_admin");
+  if (superAdmin === true) return true;
+
+  // Last resort: keep existing RPC semantics (may bypass RLS recursion in edge cases).
+  const { data, error } = await supabase.rpc("is_org_admin", { org_id: orgId });
+  if (!error && typeof data === "boolean") return data;
+
+  return false;
 }
 
 /**

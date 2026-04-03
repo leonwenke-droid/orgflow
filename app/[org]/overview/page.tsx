@@ -77,6 +77,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
       .from("tasks")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
+      .is("deleted_at", null)
       .neq("status", "erledigt"),
     service
       .from("shifts")
@@ -101,6 +102,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
           .from("tasks")
           .select("id, title, status, due_at")
           .eq("organization_id", orgIdForData)
+          .is("deleted_at", null)
           .eq("owner_id", myProfileId)
           .neq("status", "erledigt")
           .order("due_at", { ascending: true })

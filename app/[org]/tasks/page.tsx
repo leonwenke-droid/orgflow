@@ -80,12 +80,14 @@ export default async function TasksViewerPage(props: {
       .from("tasks")
       .select(TASK_SELECT)
       .eq("organization_id", effectiveOrgIdForData)
+      .is("deleted_at", null)
       .neq("status", "erledigt")
       .order("due_at", { ascending: true }),
     service
       .from("tasks")
       .select(TASK_SELECT)
       .eq("organization_id", effectiveOrgIdForData)
+      .is("deleted_at", null)
       .eq("status", "erledigt")
       .order("due_at", { ascending: false })
       .limit(200),

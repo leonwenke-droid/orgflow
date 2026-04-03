@@ -61,11 +61,13 @@ export default async function AdminDashboard({
       .from("tasks")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
+      .is("deleted_at", null)
       .neq("status", "erledigt"),
     service
       .from("tasks")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
+      .is("deleted_at", null)
       .neq("status", "erledigt")
       .lt("due_at", new Date().toISOString()),
     service

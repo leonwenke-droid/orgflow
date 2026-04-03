@@ -116,6 +116,7 @@ export default async function OrgOverviewPage(props: {
       .from("tasks")
       .select("id, title, status, due_at, owner_id")
       .eq("organization_id", orgIdForData)
+      .is("deleted_at", null)
       .neq("status", "erledigt")
       .gte("due_at", startStr)
       .lte("due_at", `${endStr}T23:59:59`)

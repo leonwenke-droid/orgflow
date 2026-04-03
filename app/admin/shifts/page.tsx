@@ -4,7 +4,7 @@ import Link from "next/link";
 import { revalidatePath, unstable_noStore } from "next/cache";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import { getCurrentUserOrganization } from "../../../lib/getOrganization";
+import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isOrgAdmin } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { removePastShifts } from "../../../lib/cleanupShifts";
 import CreateShiftsForm from "../../../components/CreateShiftsForm";
@@ -890,11 +890,13 @@ type ShiftsPageProps = {
 
 export default async function ShiftsPage(props: ShiftsPageProps) {
   unstable_noStore();
-  const locale = await getRequestLocale();
   const raw = props.searchParams;
-  const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ org?: string; event?: string; success?: string }>)
-    : (raw ?? {}) as { org?: string; event?: string; success?: string };
+  const [locale, searchParams] = await Promise.all([
+    getRequestLocale(),
+    raw && typeof (raw as Promise<unknown>).then === "function"
+      ? (raw as Promise<{ org?: string; event?: string; success?: string }>)
+      : Promise.resolve((raw ?? {}) as { org?: string; event?: string; success?: string })
+  ]);
   const orgSlug = searchParams?.org?.trim() || null;
   const eventIdFilter = searchParams?.event?.trim() || null;
   const shiftsCreatedSuccess = searchParams?.success === "1";
@@ -923,7 +925,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     .eq("auth_user_id", userId)
     .single();
 
-  if (!profile || !["admin", "lead", "super_admin", "owner"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "super_admin", "owner", "teamlead"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300 dark:text-red-200">
         {t("tasks.access_admin_only", locale)}
@@ -934,7 +936,6 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   let orgId: string | null = null;
   if (orgSlug) {
     try {
-      const { getCurrentOrganization, isOrgAdmin, getOrgIdForData } = await import("../../../lib/getOrganization");
       const org = await getCurrentOrganization(orgSlug);
       const orgIdForData = getOrgIdForData(orgSlug, org.id);
       if (await isOrgAdmin(orgIdForData)) orgId = orgIdForData;

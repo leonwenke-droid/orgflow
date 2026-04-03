@@ -49,6 +49,7 @@ export async function updateTaskKanbanStatus(formData: FormData) {
 export async function deleteTask(formData: FormData) {
   const taskId = formData.get("taskId")?.toString();
   const organizationId = String(formData.get("organization_id") ?? "").trim();
+  const orgSlug = String(formData.get("org_slug") ?? "").trim();
   if (!taskId || !organizationId) return;
   const actor = await requireOrgAdminAction(organizationId);
   if (!actor) return;
@@ -66,6 +67,12 @@ export async function deleteTask(formData: FormData) {
     targetId: taskId
   });
   revalidatePath("/admin/tasks");
+  if (orgSlug) {
+    revalidatePath(`/admin/tasks?org=${encodeURIComponent(orgSlug)}`);
+    revalidatePath(`/${orgSlug}/tasks`);
+    revalidatePath(`/${orgSlug}/dashboard`);
+    revalidatePath(`/${orgSlug}/overview`);
+  }
 }
 
 export async function restoreTask(formData: FormData) {

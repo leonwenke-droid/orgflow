@@ -45,17 +45,20 @@ export async function requireOrgAdminAction(
   } = await supabase.auth.getUser();
   if (!user?.id) return null;
 
-  const { data: adminOk } = await supabase.rpc("is_org_admin", { org_id: orgId });
-  if (adminOk !== true) return null;
-
+  // Fast: single service-role lookup (no RPC, no sequential role checks).
   const service = createSupabaseServiceRoleClient();
   const { data: profile } = await service
     .from("profiles")
-    .select("id, role")
+    .select("id, role, status")
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgId)
     .maybeSingle();
-  if (!profile?.id || !canManageOrg((profile.role as DbRole | undefined) ?? null)) return null;
+  if (
+    !profile?.id ||
+    profile.status === "disabled" ||
+    !canManageOrg((profile.role as DbRole | undefined) ?? null)
+  )
+    return null;
   return {
     actorProfileId: profile.id as string,
     role: profile.role as DbRole

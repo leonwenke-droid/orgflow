@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
+import { toast } from "../../../hooks/useToast";
 import CopyTaskLinkButton from "../../../components/CopyTaskLinkButton";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import { useLocale } from "../../../components/LocaleProvider";
 import { t } from "../../../lib/i18n";
 import { formatLocaleDateFromIso } from "../../../lib/formatDate";
-import { deleteTask, updateTaskKanbanStatus } from "./kanban-actions";
+import { deleteTask } from "./kanban-actions";
 
 const STATUS_COLUMNS = [
   { key: "offen", labelKey: "tasks.status_open" },
@@ -62,7 +63,6 @@ export default function AdminTasksKanban({
 
   const handleDrop = useCallback(
     async (taskId: string, newStatus: string) => {
-      if (!orgId) return;
       const prev = serverTasks.find((tk) => tk.id === taskId)?.status;
       if (prev === newStatus) return;
 
@@ -72,19 +72,23 @@ export default function AdminTasksKanban({
       setDropTarget(null);
 
       try {
-        const fd = new FormData();
-        fd.set("taskId", taskId);
-        fd.set("status", newStatus);
-        fd.set("organization_id", orgId);
-        fd.set("org_slug", orgSlug ?? "");
-        await updateTaskKanbanStatus(fd);
+        const res = await fetch(`/api/tasks/${encodeURIComponent(taskId)}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
         router.refresh();
-      } catch {
+      } catch (err) {
+        console.error("Task status update failed:", err);
         setStatusOverrides((o) => {
           const copy = { ...o };
           delete copy[taskId];
           return copy;
         });
+        toast("Status konnte nicht gespeichert werden.", "error");
       } finally {
         setSavingIds((s) => {
           const copy = new Set(s);
@@ -93,7 +97,7 @@ export default function AdminTasksKanban({
         });
       }
     },
-    [orgId, orgSlug, router, serverTasks]
+    [router, serverTasks]
   );
 
   return (
@@ -235,6 +239,7 @@ export default function AdminTasksKanban({
                       <form action={deleteTask} className="inline">
                         <input type="hidden" name="taskId" value={task.id} />
                         <input type="hidden" name="organization_id" value={orgId ?? ""} />
+                        <input type="hidden" name="org_slug" value={orgSlug ?? ""} />
                         <SubmitButtonWithSpinner
                           variant="destructive"
                           buttonSize="sm"

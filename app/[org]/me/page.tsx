@@ -90,7 +90,8 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
       .from("tasks")
       .select("id, status, due_at")
       .eq("organization_id", effectiveOrgIdForData)
-      .eq("owner_id", myProfileId),
+      .eq("owner_id", myProfileId)
+      .is("deleted_at", null),
     service
       .from("shift_assignments")
       .select("id, status, shift_id, replacement_user_id, shifts(date, start_time, end_time, event_name)")

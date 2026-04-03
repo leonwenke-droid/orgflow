@@ -131,11 +131,13 @@ type PageProps = {
 };
 
 export default async function AdminTasksPage(props: PageProps) {
-  const locale = await getRequestLocale();
   const raw = props.searchParams;
-  const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ committee?: string; org?: string; event?: string; q?: string }>)
-    : (raw ?? {}) as { committee?: string; org?: string; event?: string; q?: string };
+  const [locale, searchParams] = await Promise.all([
+    getRequestLocale(),
+    raw && typeof (raw as Promise<unknown>).then === "function"
+      ? (raw as Promise<{ committee?: string; org?: string; event?: string; q?: string }>)
+      : Promise.resolve((raw ?? {}) as { committee?: string; org?: string; event?: string; q?: string })
+  ]);
   const committeeId = searchParams?.committee?.trim() || null;
   const orgSlug = searchParams?.org?.trim() || null;
   const eventIdFilter = searchParams?.event?.trim() || null;
@@ -164,7 +166,7 @@ export default async function AdminTasksPage(props: PageProps) {
     .eq("auth_user_id", userId)
     .single();
 
-  if (!profile || !["admin", "lead", "super_admin", "owner"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "super_admin", "owner", "teamlead"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300">
         {tr("tasks.access_admin_only", locale)}
@@ -177,6 +179,7 @@ export default async function AdminTasksPage(props: PageProps) {
     try {
       const org = await getCurrentOrganization(orgSlug);
       const orgIdForData = getOrgIdForData(orgSlug, org.id);
+      // Fast-path: use direct profile lookup (isOrgAdmin now has a fast org-scoped path).
       if (await isOrgAdmin(orgIdForData)) orgId = orgIdForData;
     } catch {
       orgId = null;

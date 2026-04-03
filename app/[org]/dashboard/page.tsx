@@ -104,6 +104,7 @@ export default async function OrgDashboardPage(props: {
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
       .eq("owner_id", myProfileId)
+      .is("deleted_at", null)
       .neq("status", "erledigt"),
     service
       .from("engagement_scores")
