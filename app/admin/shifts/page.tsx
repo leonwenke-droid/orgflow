@@ -18,7 +18,8 @@ import { isMissingSoftDeleteColumnError } from "../../../lib/supabaseSoftDelete"
 import { requireOrgAdminAction } from "../../../lib/permissionsServer";
 import { writeAuditLog } from "../../../lib/audit";
 import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
-import ShiftTabFilter, { filterShiftsByTime, type ShiftTimeFilter } from "../../../components/shifts/ShiftTabFilter";
+import ShiftTabFilter from "../../../components/shifts/ShiftTabFilter";
+import { filterShiftsByTime, type ShiftTimeFilter } from "../../../lib/shiftTimeFilter";
 
 export const dynamic = "force-dynamic";
 

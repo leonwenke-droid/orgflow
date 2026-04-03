@@ -2,10 +2,12 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { getCurrentOrganization } from "../../../lib/getOrganization";
-import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { getCurrentOrganization, resolveMemberProfileForOrganization } from "../../../lib/getOrganization";
+import type { DbRole } from "../../../types";
 
 export const dynamic = "force-dynamic";
+
+const ADMIN_ACCESS_ROLES = new Set<DbRole>(["admin", "owner", "teamlead", "lead", "super_admin"]);
 
 export default async function AdminLayout({
   children,
@@ -23,32 +25,13 @@ export default async function AdminLayout({
   const user = auth.user;
   if (!user) redirect(`/${params.org}/login`);
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role, status")
-    .eq("auth_user_id", user.id)
-    .eq("organization_id", org.id)
-    .maybeSingle();
-
-  let effectiveProfile: { role?: string | null; status?: string | null } | null = profile ?? null;
-  if (profileError) {
-    const service = createSupabaseServiceRoleClient();
-    const { data: srProfile } = await service
-      .from("profiles")
-      .select("role, status")
-      .eq("auth_user_id", user.id)
-      .eq("organization_id", org.id)
-      .maybeSingle();
-    effectiveProfile = srProfile ?? null;
+  const member = await resolveMemberProfileForOrganization(user.id, params.org, org);
+  const role = (member?.role ?? null) as DbRole | null;
+  let ok = role != null && ADMIN_ACCESS_ROLES.has(role);
+  if (!ok) {
+    const { data: isSuper } = await supabase.rpc("is_super_admin");
+    if (isSuper === true) ok = true;
   }
-
-  const role = (effectiveProfile?.role ?? undefined) as string | undefined;
-  const ok =
-    effectiveProfile?.status !== "disabled" &&
-    (role === "admin" ||
-      role === "owner" ||
-      role === "teamlead" ||
-      role === "lead");
 
   if (!ok) redirect(`/${params.org}/dashboard`);
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { fetchActiveOrganizationBySlug, getOrgIdForData } from "../../../lib/getOrganization";
+import { fetchActiveOrganizationBySlug, getOrgIdForData, resolveMemberProfileForOrganization } from "../../../lib/getOrganization";
 import { canViewFinance, canManageOrg, isReadOnly } from "../../../lib/permissions";
 import type { DbRole } from "../../../types";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -40,53 +40,12 @@ export async function GET(req: NextRequest) {
   let role: DbRole | null = null;
   let profileId: string | null = null;
   if (user) {
-    // Use service role for reliable role lookup (prevents UI flipping to admin modules on role=null)
-    try {
-      const service = createSupabaseServiceRoleClient();
-
-      const { data: profilePrimary } = await service
-        .from("profiles")
-        .select("id, role")
-        .eq("auth_user_id", user.id)
-        .eq("organization_id", orgIdForData)
-        .maybeSingle();
-
-      // Legacy: if the profile is not stored under orgIdForData (mapped),
-      // try again under the raw org.id.
-      const shouldFallbackToRawOrg = !profilePrimary && orgIdForData !== o.id;
-      const { data: profileFallback } = shouldFallbackToRawOrg
-        ? await service
-            .from("profiles")
-          .select("id, role")
-            .eq("auth_user_id", user.id)
-            .eq("organization_id", o.id)
-            .maybeSingle()
-        : { data: null };
-
-      const prof = (profilePrimary ?? profileFallback) as { id?: string; role?: DbRole } | null;
-      role = prof?.role ?? null;
-      profileId = prof?.id ?? null;
-    } catch {
-      const { data: profilePrimary } = await supabase
-        .from("profiles")
-        .select("id, role")
-        .eq("auth_user_id", user.id)
-        .eq("organization_id", orgIdForData)
-        .maybeSingle();
-
-      const shouldFallbackToRawOrg = !profilePrimary && orgIdForData !== o.id;
-      const { data: profileFallback } = shouldFallbackToRawOrg
-        ? await supabase
-            .from("profiles")
-          .select("id, role")
-            .eq("auth_user_id", user.id)
-            .eq("organization_id", o.id)
-            .maybeSingle()
-        : { data: null };
-
-      const prof = (profilePrimary ?? profileFallback) as { id?: string; role?: DbRole } | null;
-      role = prof?.role ?? null;
-      profileId = prof?.id ?? null;
+    const member = await resolveMemberProfileForOrganization(user.id, slug, resolved);
+    role = (member?.role ?? null) as DbRole | null;
+    profileId = member?.id ?? null;
+    if (role == null) {
+      const { data: isSuper } = await supabase.rpc("is_super_admin");
+      if (isSuper === true) role = "super_admin";
     }
   }
 

@@ -5,22 +5,22 @@
 import type { DbRole } from "../types";
 
 /** Roles that can use operational admin tools (tasks/shifts/resources/engagement hub) */
-export const OPERATIONAL_ADMIN_ROLES: DbRole[] = ["super_admin", "admin", "owner", "lead"];
+export const OPERATIONAL_ADMIN_ROLES: DbRole[] = ["super_admin", "admin", "owner", "lead", "teamlead"];
 
-/** Roles that count as org managers for legacy checks (includes lead) */
-export const ADMIN_ROLES: DbRole[] = ["super_admin", "admin", "owner", "lead"];
+/** Roles that count as org managers for legacy checks (includes lead / teamlead) */
+export const ADMIN_ROLES: DbRole[] = ["super_admin", "admin", "owner", "lead", "teamlead"];
 
 /** Roles that can view/manage finance */
 export const FINANCE_ROLES: DbRole[] = ["super_admin", "owner", "admin", "lead", "finance"];
 
 /** Roles that can manage tasks within their team */
-export const TEAM_LEAD_ROLES: DbRole[] = ["admin", "owner", "lead"];
+export const TEAM_LEAD_ROLES: DbRole[] = ["admin", "owner", "lead", "teamlead"];
 
 /** Roles with read-only access */
 export const VIEWER_ROLES: DbRole[] = ["viewer"];
 
 /** Roles that can view (non-viewer) */
-export const MEMBER_ROLES: DbRole[] = ["member", "lead", "admin", "owner", "super_admin", "finance"];
+export const MEMBER_ROLES: DbRole[] = ["member", "lead", "teamlead", "admin", "owner", "super_admin", "finance"];
 
 export function canManageOrg(role: DbRole | null | undefined): boolean {
   return role != null && ADMIN_ROLES.includes(role);
@@ -31,12 +31,12 @@ export function canManageOrg(role: DbRole | null | undefined): boolean {
  * (member / lead / admin / owner / finance / viewer). Team leads are excluded.
  */
 export function canManageMembersAndTeams(role: DbRole | null | undefined): boolean {
-  return role === "super_admin" || role === "admin" || role === "owner";
+  return role === "super_admin" || role === "admin" || role === "owner" || role === "teamlead";
 }
 
 /** May change organisation name, modules, slug, etc. */
 export function canChangeOrgSettings(role: DbRole | null | undefined): boolean {
-  return role === "super_admin" || role === "admin" || role === "owner";
+  return role === "super_admin" || role === "admin" || role === "owner" || role === "teamlead";
 }
 
 /** Admin hub, planning tools, engagement — includes Teamleads, excludes finance-only. */

@@ -3,15 +3,14 @@
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useCallback } from "react";
 import { useLocale } from "../LocaleProvider";
+import type { ShiftTimeFilter } from "../../lib/shiftTimeFilter";
 
 const TABS = [
-  { key: "all", de: "Alle", en: "All" },
-  { key: "today", de: "Heute", en: "Today" },
-  { key: "upcoming", de: "Kommend", en: "Upcoming" },
-  { key: "past", de: "Vergangen", en: "Past" },
+  { key: "all" as const, de: "Alle", en: "All" },
+  { key: "today" as const, de: "Heute", en: "Today" },
+  { key: "upcoming" as const, de: "Kommend", en: "Upcoming" },
+  { key: "past" as const, de: "Vergangen", en: "Past" },
 ] as const;
-
-export type ShiftTimeFilter = (typeof TABS)[number]["key"];
 
 export default function ShiftTabFilter() {
   const { locale } = useLocale();
@@ -49,14 +48,4 @@ export default function ShiftTabFilter() {
       ))}
     </div>
   );
-}
-
-export function filterShiftsByTime<
-  T extends { date?: string | null }
->(shifts: T[], filter: ShiftTimeFilter, todayStr: string): T[] {
-  if (filter === "all") return shifts;
-  if (filter === "today") return shifts.filter((s) => s.date === todayStr);
-  if (filter === "upcoming") return shifts.filter((s) => (s.date ?? "") > todayStr);
-  if (filter === "past") return shifts.filter((s) => (s.date ?? "") < todayStr);
-  return shifts;
 }
