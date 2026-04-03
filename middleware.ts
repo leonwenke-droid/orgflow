@@ -44,7 +44,7 @@ const ORG_SCOPED_SEGMENTS = new Set([
   "onboarding",
 ]);
 
-function hardenAuthCookiesOnResponse(res: NextResponse) {
+function hardenAuthCookiesOnResponse(res: NextResponse, opts: { secure: boolean }) {
   const maxAge = 60 * 60 * 24 * 30; // 30 days
   try {
     const all = res.cookies.getAll();
@@ -56,7 +56,7 @@ function hardenAuthCookiesOnResponse(res: NextResponse) {
         value: c.value,
         path: "/",
         sameSite: "lax",
-        secure: true,
+        secure: opts.secure,
         httpOnly: true,
         maxAge,
       });
@@ -98,6 +98,13 @@ export async function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
   const res = NextResponse.next();
 
+  const isLocalhost =
+    host.startsWith("localhost") ||
+    host.startsWith("127.0.0.1") ||
+    host.startsWith("[::1]") ||
+    host.includes("localhost:");
+  const shouldUseSecureCookies = process.env.NODE_ENV === "production" && !isLocalhost;
+
   // Real API routes are handled by route handlers. Do not treat `/api/*` as org pages.
   if (pathname === "/api" || pathname.startsWith("/api/")) {
     return res;
@@ -138,23 +145,9 @@ export async function middleware(req: NextRequest) {
       if (RESERVED_ORG_SLUGS.has(orgSlug)) {
         return NextResponse.rewrite(new URL("/404", req.url));
       }
-      if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-        try {
-          const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-          const { data: org } = await supabase
-            .from("organizations")
-            .select("id")
-            .eq("slug", orgSlug)
-            .eq("is_active", true)
-            .maybeSingle();
-          if (!org) {
-            return NextResponse.rewrite(new URL("/404", req.url));
-          }
-        } catch {
-          // If org validation fails, don't accidentally grant access; show not found for org-scoped routes.
-          return NextResponse.rewrite(new URL("/404", req.url));
-        }
-      }
+      // No Supabase org lookup here: `organizations` RLS usually exposes only the viewer's org row
+      // (`current_user_organization_id`). Slug-in-URL may match another row (legacy id vs canonical slug),
+      // so a middleware SELECT by slug returns empty → false 404. Server pages use getCurrentOrganization + notFound().
     }
   }
 
@@ -175,11 +168,12 @@ export async function middleware(req: NextRequest) {
         redirectUrl.pathname = "/login";
       }
       redirectUrl.searchParams.set("redirectTo", pathname + req.nextUrl.search);
+
       return NextResponse.redirect(redirectUrl);
     }
   }
 
-  hardenAuthCookiesOnResponse(res);
+  hardenAuthCookiesOnResponse(res, { secure: shouldUseSecureCookies });
   return res;
 }
 

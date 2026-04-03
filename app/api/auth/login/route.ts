@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 
 const LOGIN_RATE_LIMIT = 10; // per minute per IP
 
-function hardenAuthCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
+function hardenAuthCookies(cookieStore: Awaited<ReturnType<typeof cookies>>, opts: { secure: boolean }) {
   const maxAge = 60 * 60 * 24 * 30; // 30 days
   for (const c of cookieStore.getAll()) {
     if (!c.name.startsWith("sb-")) continue;
@@ -20,7 +20,7 @@ function hardenAuthCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
       value: c.value,
       path: "/",
       sameSite: "lax",
-      secure: true,
+      secure: opts.secure,
       httpOnly: true,
       maxAge,
     });
@@ -69,6 +69,14 @@ export async function POST(req: NextRequest) {
       password
     });
 
+    const host = req.headers.get("host") ?? "";
+    const isLocalhost =
+      host.startsWith("localhost") ||
+      host.startsWith("127.0.0.1") ||
+      host.startsWith("[::1]") ||
+      host.includes("localhost:");
+    const shouldUseSecureCookies = process.env.NODE_ENV === "production" && !isLocalhost;
+
     if (error) {
       log("warn", "auth_login_failed", { requestId, route: "auth/login", ip, email: email.toLowerCase() });
       const needsVerification =
@@ -111,7 +119,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Cookies werden vom Auth-Helper gesetzt
-    hardenAuthCookies(cookieStore);
+    hardenAuthCookies(cookieStore, { secure: shouldUseSecureCookies });
 
     const uid = (await supabase.auth.getUser()).data.user?.id ?? null;
     const defaultOrgDashboard = uid ? await getSingleOrgDashboardPathForUserId(uid) : null;

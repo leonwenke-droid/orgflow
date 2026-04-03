@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { getOrgIdForData } from "../../../lib/getOrganization";
+import { fetchActiveOrganizationBySlug, getOrgIdForData } from "../../../lib/getOrganization";
 import { canViewFinance, canManageOrg, isReadOnly } from "../../../lib/permissions";
 import type { DbRole } from "../../../types";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -18,18 +18,18 @@ export async function GET(req: NextRequest) {
   const cookieStore = await cookies();
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: org, error } = await supabase
-    .from("organizations")
-    .select("id, name, settings, slug")
-    .or(`slug.eq."${slug.replace(/"/g, '""')}",subdomain.eq."${slug.replace(/"/g, '""')}"`)
-    .eq("is_active", true)
-    .single();
+  const resolved = await fetchActiveOrganizationBySlug(slug);
 
-  if (error || !org) {
+  if (!resolved) {
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
 
-  const o = org as { id: string; name: string; settings?: Record<string, unknown>; slug?: string };
+  const o = {
+    id: resolved.id,
+    name: resolved.name,
+    settings: (resolved.settings ?? {}) as Record<string, unknown>,
+    slug: resolved.slug
+  };
   const settings = o.settings ?? {};
   const features = (settings.features as Record<string, boolean>) ?? {};
   const branding = (settings.branding as { logo_url?: string } | undefined) ?? {};

@@ -132,46 +132,53 @@ export async function resolveMemberProfileForOrganization(
 }
 
 /**
- * Holt Organization basierend auf Slug ODER Subdomain
- * (wird später von org-spezifischen Routen und Landingpage genutzt).
+ * Resolve an active organisation by public URL slug, subdomain, or `slug_aliases`.
+ * Uses the service role so `/[org]/login` and API routes work while logged out (RLS often hides `organizations`).
  */
-export async function getCurrentOrganization(
+export async function fetchActiveOrganizationBySlug(
   slugOrSubdomain: string
-): Promise<Organization> {
-  const supabase = createServerComponentClient({ cookies });
+): Promise<Organization | null> {
+  const service = createSupabaseServiceRoleClient();
   const value = String(slugOrSubdomain).trim();
+  if (!value) return null;
   const quoted = `"${value.replace(/"/g, '""')}"`;
 
-  let { data: org, error } = await supabase
+  let { data: org, error } = await service
     .from("organizations")
     .select("*")
     .or(`slug.eq.${quoted},subdomain.eq.${quoted}`)
     .eq("is_active", true)
     .maybeSingle();
 
-  if (error) {
-    notFound();
-  }
+  if (error) return null;
 
   if (!org) {
-    const { data: aliasRows, error: aliasError } = await supabase
+    const { data: aliasRows, error: aliasError } = await service
       .from("organizations")
       .select("*")
       .eq("is_active", true)
       .contains("slug_aliases", [value]);
 
-    if (aliasError || !aliasRows?.length) {
-      notFound();
-    }
-    if (aliasRows.length !== 1) {
-      notFound();
-    }
+    if (aliasError || !aliasRows?.length) return null;
+    if (aliasRows.length !== 1) return null;
     org = aliasRows[0];
   }
 
   const o = org as Organization;
   if (typeof o.name === "string") o.name = o.name.trim();
   return o;
+}
+
+/**
+ * Holt Organization basierend auf Slug ODER Subdomain
+ * (wird später von org-spezifischen Routen und Landingpage genutzt).
+ */
+export async function getCurrentOrganization(
+  slugOrSubdomain: string
+): Promise<Organization> {
+  const org = await fetchActiveOrganizationBySlug(slugOrSubdomain);
+  if (!org) notFound();
+  return org;
 }
 
 /**
