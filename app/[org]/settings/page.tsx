@@ -12,6 +12,7 @@ import PrivacyActions from "./PrivacyActions";
 import { t } from "../../../lib/i18n";
 import BillingSection from "./BillingSection";
 import AppearanceControls from "../../../components/AppearanceControls";
+import RotationSettingsForm from "../../../components/RotationSettingsForm";
 
 export default async function OrgSettingsPage({
   params
@@ -72,6 +73,13 @@ export default async function OrgSettingsPage({
         <div className="p-4 space-y-4">
           <div className="section-label">{t("settings.plan", locale)}</div>
           <BillingSection orgSlug={orgSlug} currentPlan={(org as any).plan ?? "free"} />
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="p-4 space-y-4">
+          <div className="section-label">{locale === "de" ? "Schicht-Rotation (Fairness)" : "Shift rotation (fairness)"}</div>
+          <RotationSettingsForm orgSlug={orgSlug} initial={(org as { rotation_config?: unknown }).rotation_config} />
         </div>
       </section>
 

@@ -13,6 +13,15 @@ import {
 } from "../../../lib/memberInvites";
 import { sendEmail as sendEmailMessage } from "../../../lib/email";
 import { getOrgIdForData } from "../../../lib/getOrganization";
+import { assertCanManageMembersAndTeams } from "../../../lib/permissionsServer";
+import { canAddMember, type Plan } from "../../../lib/planLimits";
+import {
+  buildMemberListColumnMap,
+  findMemberListHeaderRow,
+  memberImportCellIsTruthy,
+  normalizeMemberImportHeader,
+  parseCommaSeparatedList
+} from "../../../lib/memberImportExcel";
 
 export const runtime = "nodejs";
 
@@ -32,11 +41,7 @@ function parseCommitteeList(val: unknown): string[] {
 }
 
 function normalizeHeader(val: unknown): string {
-  return String(val ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/[^\wäöüß]/g, "");
+  return normalizeMemberImportHeader(val);
 }
 
 function readRowsFromExcel(buffer: ArrayBuffer): Map<
@@ -97,7 +102,7 @@ export async function POST(req: NextRequest) {
 
     const { data: org, error: orgErr } = await supabaseAuth
       .from("organizations")
-      .select("id, name")
+      .select("id, name, plan")
       .or(`slug.eq.${orgSlug},subdomain.eq.${orgSlug}`)
       .eq("is_active", true)
       .single();
@@ -105,22 +110,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Organisation nicht gefunden." }, { status: 404 });
     }
     const orgName = (org as { id: string; name?: string }).name ?? "Organisation";
+    const rawPlan = (org as { plan?: string | null }).plan;
+    const orgPlan: Plan | null =
+      rawPlan === "free" || rawPlan === "team" || rawPlan === "pro" ? rawPlan : null;
 
     const service = createSupabaseServiceRoleClient();
     const orgIdRaw = (org as { id: string }).id;
     const orgId = getOrgIdForData(orgSlug, orgIdRaw);
     const { getPublicBaseUrl } = await import("../../../lib/publicBaseUrl");
     const baseUrl = await getPublicBaseUrl();
+    const orgIdsForProfile = [...new Set([orgId, orgIdRaw].map((x) => String(x).trim()))].filter(Boolean);
     const { data: requesterProfile } = await service
       .from("profiles")
       .select("id")
       .eq("auth_user_id", user.id)
-      .eq("organization_id", orgId)
+      .in("organization_id", orgIdsForProfile.length ? orgIdsForProfile : [orgId])
       .maybeSingle();
     const invitedBy = (requesterProfile as { id: string } | null)?.id ?? null;
 
-    const { data: isAdmin } = await supabaseAuth.rpc("is_org_admin", { org_id: orgId });
-    if (!isAdmin) {
+    if (!(await assertCanManageMembersAndTeams(orgId, orgIdRaw, orgSlug))) {
       return NextResponse.json(
         { message: "Forbidden", errorKey: "common.unauthorized" },
         { status: 403 }
@@ -161,19 +169,33 @@ export async function POST(req: NextRequest) {
       if (!sheet) throw new Error("Kein Arbeitsblatt gefunden.");
       data = XLSX.utils.sheet_to_json(sheet as XLSX.WorkSheet, { header: 1 }) as unknown[][];
     }
-    const headerRow = data[0] ?? [];
-    const headers = headerRow.map((h) => normalizeHeader(h));
-    const genericMode = headers.some((h) => ["first_name", "vorname", "full_name", "name"].includes(h));
-    const nameToRow = genericMode ? null : readRowsFromExcel(arrayBuffer);
-    if (genericMode && data.length <= 1) {
+    const memberListHeaderIdx = findMemberListHeaderRow(data);
+    const headerRow0 = data[0] ?? [];
+    const headers0 = headerRow0.map((h) => normalizeHeader(h));
+    const genericModeFirstRow = headers0.some((h) =>
+      ["first_name", "vorname", "full_name", "name"].includes(h)
+    );
+    const nameToRowEngagement =
+      memberListHeaderIdx < 0 && !genericModeFirstRow ? readRowsFromExcel(arrayBuffer) : null;
+    if (memberListHeaderIdx >= 0) {
+      const hdrs = (data[memberListHeaderIdx] as unknown[]).map((h) => normalizeHeader(h));
+      if (!buildMemberListColumnMap(hdrs)) {
+        return NextResponse.json(
+          { message: "Ungültige Kopfzeile: Vorname und Nachname (bzw. First/Last name) werden benötigt." },
+          { status: 400 }
+        );
+      }
+    } else if (genericModeFirstRow && data.length <= 1) {
       return NextResponse.json(
         { message: "Keine gültigen Zeilen in der Mitglieder-Datei gefunden." },
         { status: 400 }
       );
-    }
-    if (!genericMode && (nameToRow?.size ?? 0) === 0) {
+    } else if ((nameToRowEngagement?.size ?? 0) === 0) {
       return NextResponse.json(
-        { message: "Keine gültigen Zeilen in der Excel-Datei (Sheet 'Engagement Overview' oder erstes Sheet, Spalte A = Name)." },
+        {
+          message:
+            "Keine gültigen Zeilen in der Excel-Datei (OrgFlow-Mitgliederliste, oder Sheet „Engagement Overview“ mit Spalte A = Name)."
+        },
         { status: 400 }
       );
     }
@@ -203,14 +225,142 @@ export async function POST(req: NextRequest) {
       (committees ?? []).map((c: { id: string; name: string }) => [c.name, c.id])
     );
 
-    if (genericMode) {
+    let memberCountForLimit = (existingProfiles ?? []).length;
+
+    if (memberListHeaderIdx >= 0) {
+      const hdrs = (data[memberListHeaderIdx] as unknown[]).map((h) => normalizeHeader(h));
+      const map = buildMemberListColumnMap(hdrs)!;
+
+      for (let i = memberListHeaderIdx + 1; i < data.length; i++) {
+        const row = data[i] ?? [];
+        const firstName = String(row[map.firstNameIdx] ?? "").trim();
+        const lastName = String(row[map.lastNameIdx] ?? "").trim();
+        const fullName = `${firstName} ${lastName}`.trim();
+        const email =
+          map.emailIdx >= 0 ? String(row[map.emailIdx] ?? "").trim() : "";
+        const phone =
+          map.phoneIdx >= 0 ? String(row[map.phoneIdx] ?? "").trim() : "";
+        const teamsRaw =
+          map.teamsIdx >= 0 ? row[map.teamsIdx] : "";
+        const teamNames = [...new Set(parseCommaSeparatedList(teamsRaw))];
+        const isAdmin = map.adminIdx >= 0 && memberImportCellIsTruthy(row[map.adminIdx]);
+        const isTeamLead = map.teamLeadIdx >= 0 && memberImportCellIsTruthy(row[map.teamLeadIdx]);
+        let role: "member" | "lead" | "admin" | "owner" | "viewer" = "member";
+        let roleFromColumn = false;
+        if (map.roleIdx >= 0) {
+          const roleRaw = String(row[map.roleIdx] ?? "").trim().toLowerCase();
+          if (roleRaw === "admin" || roleRaw === "owner" || roleRaw === "lead" || roleRaw === "viewer") {
+            role = roleRaw;
+            roleFromColumn = true;
+          }
+        }
+        if (!roleFromColumn) {
+          if (isAdmin) role = "admin";
+          else if (isTeamLead) role = "lead";
+        }
+
+        if (!firstName || !lastName) continue;
+
+        if (existingNames.has(fullName) || (email && existingNames.has(email.toLowerCase()))) {
+          skipped++;
+          issues.push({ row: i + 1, name: fullName, reason: "Already exists (duplicate name/email)." });
+          continue;
+        }
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          skipped++;
+          issues.push({ row: i + 1, name: fullName, reason: "Invalid email format." });
+          continue;
+        }
+        if (!canAddMember(orgPlan, memberCountForLimit)) {
+          skipped++;
+          issues.push({ row: i + 1, name: fullName, reason: "Plan member limit reached." });
+          continue;
+        }
+
+        const id = randomUUID();
+        const token = generateInviteToken();
+        const tokenHash = hashInviteToken(token);
+        const expiresAt = inviteExpiresAt();
+
+        const committeeIdsResolved: string[] = [];
+        for (const tn of teamNames) {
+          if (!nameToCommitteeId.has(tn)) {
+            const { data: inserted } = await service
+              .from("committees")
+              .insert({ name: tn, organization_id: orgId })
+              .select("id")
+              .single();
+            if (inserted) nameToCommitteeId.set(tn, (inserted as { id: string }).id);
+          }
+          const cid = nameToCommitteeId.get(tn);
+          if (cid) committeeIdsResolved.push(cid);
+        }
+        const primaryCommitteeId = committeeIdsResolved[0] ?? null;
+
+        const { error: profErr } = await service.from("profiles").insert({
+          id,
+          full_name: fullName,
+          role,
+          committee_id: primaryCommitteeId,
+          organization_id: orgId,
+          auth_user_id: null,
+          email: email || null,
+          phone: phone || null,
+          status: "invited",
+          invite_status: "pending",
+          invited_at: new Date().toISOString(),
+          invite_token_hash: tokenHash,
+          invite_expires_at: expiresAt.toISOString(),
+          invited_by: invitedBy
+        });
+        if (profErr) {
+          failed++;
+          issues.push({ row: i + 1, name: fullName, reason: `Insert failed: ${profErr.message}` });
+          continue;
+        }
+        if (committeeIdsResolved.length > 0) {
+          await service.from("profile_committees").insert(
+            committeeIdsResolved.map((committee_id) => ({ user_id: id, committee_id }))
+          );
+        }
+        existingNames.add(fullName);
+        if (email) existingNames.add(email.toLowerCase());
+        memberCountForLimit++;
+        created++;
+
+        const inviteUrl = buildInviteUrl(baseUrl, token);
+        const whatsappText = buildWhatsAppInviteText({
+          firstName: fullName.split(" ")[0] || null,
+          organizationName: orgName,
+          inviteUrl
+        });
+        inviteLinks.push({ fullName, email: email || undefined, inviteUrl, whatsappText });
+
+        if (email) {
+          const subject = `Invite to ${orgName} on OrgFlow`;
+          const text = [
+            `Hi${fullName ? ` ${fullName.split(" ")[0]}` : ""},`,
+            ``,
+            `you have been invited to OrgFlow for ${orgName}.`,
+            `Set your password here:`,
+            inviteUrl,
+            ``,
+            `OrgFlow`
+          ].join("\n");
+          await sendEmailMessage({ to: email, subject, text });
+        }
+      }
+    } else if (genericModeFirstRow) {
+      const headers = headers0;
       const nameIdx = headers.findIndex((h) => ["full_name", "name"].includes(h));
       const firstNameIdx = headers.findIndex((h) => h === "first_name" || h === "vorname");
       const lastNameIdx = headers.findIndex((h) => h === "last_name" || h === "nachname");
       const emailIdx = headers.findIndex((h) => h === "email" || h === "e_mail");
       const phoneIdx = headers.findIndex((h) => h === "phone" || h === "telefon");
       const roleIdx = headers.findIndex((h) => h === "role" || h === "rolle");
-      const teamIdx = headers.findIndex((h) => ["team", "team_name", "gruppe", "committee"].includes(h));
+      const teamIdx = headers.findIndex((h) =>
+        ["team", "teams", "team_name", "gruppe", "committee"].includes(h)
+      );
 
       for (let i = 1; i < data.length; i++) {
         const row = data[i] ?? [];
@@ -225,7 +375,8 @@ export async function POST(req: NextRequest) {
         const role = roleRaw === "admin" || roleRaw === "owner" || roleRaw === "lead" || roleRaw === "viewer"
           ? roleRaw
           : "member";
-        const teamName = String((teamIdx >= 0 ? row[teamIdx] : "") ?? "").trim();
+        const teamCell = teamIdx >= 0 ? row[teamIdx] : "";
+        const teamNames = [...new Set(parseCommaSeparatedList(teamCell))];
 
         if (!fullName) {
           skipped++;
@@ -242,22 +393,29 @@ export async function POST(req: NextRequest) {
           issues.push({ row: i + 1, name: fullName, reason: "Invalid email format." });
           continue;
         }
+        if (!canAddMember(orgPlan, memberCountForLimit)) {
+          skipped++;
+          issues.push({ row: i + 1, name: fullName, reason: "Plan member limit reached." });
+          continue;
+        }
         const id = randomUUID();
         const token = generateInviteToken();
         const tokenHash = hashInviteToken(token);
         const expiresAt = inviteExpiresAt();
-        let committeeId: string | null = null;
-        if (teamName) {
-          if (!nameToCommitteeId.has(teamName)) {
+        const committeeIdsResolved: string[] = [];
+        for (const tn of teamNames) {
+          if (!nameToCommitteeId.has(tn)) {
             const { data: inserted } = await service
               .from("committees")
-              .insert({ name: teamName, organization_id: orgId })
+              .insert({ name: tn, organization_id: orgId })
               .select("id")
               .single();
-            if (inserted) nameToCommitteeId.set(teamName, (inserted as { id: string }).id);
+            if (inserted) nameToCommitteeId.set(tn, (inserted as { id: string }).id);
           }
-          committeeId = nameToCommitteeId.get(teamName) ?? null;
+          const cid = nameToCommitteeId.get(tn);
+          if (cid) committeeIdsResolved.push(cid);
         }
+        const committeeId = committeeIdsResolved[0] ?? null;
 
         const { error: profErr } = await service.from("profiles").insert({
           id,
@@ -280,11 +438,14 @@ export async function POST(req: NextRequest) {
           issues.push({ row: i + 1, name: fullName, reason: `Insert failed: ${profErr.message}` });
           continue;
         }
-        if (committeeId) {
-          await service.from("profile_committees").insert([{ user_id: id, committee_id: committeeId }]);
+        if (committeeIdsResolved.length > 0) {
+          await service.from("profile_committees").insert(
+            committeeIdsResolved.map((committee_id) => ({ user_id: id, committee_id }))
+          );
         }
         existingNames.add(fullName.trim());
         if (email) existingNames.add(email.toLowerCase());
+        memberCountForLimit++;
         created++;
 
         const inviteUrl = buildInviteUrl(baseUrl, token);
@@ -310,7 +471,7 @@ export async function POST(req: NextRequest) {
         }
       }
     } else {
-      const nameToRow = readRowsFromExcel(arrayBuffer);
+      const nameToRow = nameToRowEngagement!;
       const committeeNamesFromExcel = new Set<string>();
       for (const row of nameToRow.values()) {
         if (row.primaryCommittee) committeeNamesFromExcel.add(row.primaryCommittee);
@@ -333,6 +494,11 @@ export async function POST(req: NextRequest) {
         if (existingNames.has(fullName)) {
           skipped++;
           issues.push({ name: fullName, reason: "Already exists (duplicate name)." });
+          continue;
+        }
+        if (!canAddMember(orgPlan, memberCountForLimit)) {
+          skipped++;
+          issues.push({ name: fullName, reason: "Plan member limit reached." });
           continue;
         }
         const id = randomUUID();
@@ -370,7 +536,9 @@ export async function POST(req: NextRequest) {
             user_id: id,
             event_type: "score_import",
             points: row.score,
-            source_id: null
+            source_id: null,
+            category: "other",
+            organization_id: orgId
           });
         }
 
@@ -383,6 +551,7 @@ export async function POST(req: NextRequest) {
           );
         }
         existingNames.add(fullName);
+        memberCountForLimit++;
         created++;
 
         const inviteUrl = buildInviteUrl(baseUrl, token);

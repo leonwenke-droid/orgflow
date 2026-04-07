@@ -8,6 +8,7 @@ type Search = {
   org?: string;
   assignmentId?: string;
   shiftId?: string;
+  qr_token?: string;
   auto?: string;
 };
 
@@ -19,7 +20,10 @@ function mapApiMessage(raw: string, locale: "en" | "de"): string {
     "Assignment not found.": t("checkin.error_failed", locale),
     "Shift not found.": t("checkin.error_failed", locale),
     "Profile not found.": t("checkin.error_failed", locale),
-    "No assignment for you on this shift.": t("checkin.error_failed", locale)
+    "No assignment for you on this shift.": t("checkin.error_failed", locale),
+    invalid_or_expired_token: t("shifts.checkin.invalid_token", locale),
+    not_registered: t("shifts.checkin.not_registered", locale),
+    already_checked_in: t("shifts.checkin.already_checked_in", locale)
   };
   if (map[m]) return map[m];
   if (
@@ -36,9 +40,10 @@ export default function CheckinPage({ searchParams }: { searchParams?: Search })
   const orgSlug = String(searchParams?.org ?? "").trim();
   const assignmentId = String(searchParams?.assignmentId ?? "").trim();
   const shiftId = String(searchParams?.shiftId ?? "").trim();
+  const qrToken = String(searchParams?.qr_token ?? "").trim();
   const autoPost = String(searchParams?.auto ?? "").trim() === "1";
 
-  const hasTarget = !!(orgSlug && (assignmentId || shiftId));
+  const hasTarget = !!(orgSlug && (assignmentId || shiftId || qrToken));
   const [state, setState] = useState<"idle" | "loading" | "ok" | "error">(
     !hasTarget ? "error" : "idle"
   );
@@ -47,7 +52,7 @@ export default function CheckinPage({ searchParams }: { searchParams?: Search })
   );
 
   const runCheckin = useCallback(async () => {
-    if (!orgSlug || (!assignmentId && !shiftId)) {
+    if (!orgSlug || (!assignmentId && !shiftId && !qrToken)) {
       setState("error");
       setMessage(t("checkin.error_invalid", locale));
       return;
@@ -58,6 +63,7 @@ export default function CheckinPage({ searchParams }: { searchParams?: Search })
       const body: Record<string, string> = { orgSlug };
       if (assignmentId) body.assignmentId = assignmentId;
       if (shiftId) body.shiftId = shiftId;
+      if (qrToken) body.qr_token = qrToken;
 
       const res = await fetch("/api/shifts/checkin", {
         method: "POST",
@@ -80,7 +86,7 @@ export default function CheckinPage({ searchParams }: { searchParams?: Search })
       setState("error");
       setMessage(t("checkin.error_network", locale));
     }
-  }, [orgSlug, assignmentId, shiftId, locale]);
+  }, [orgSlug, assignmentId, shiftId, qrToken, locale]);
 
   useEffect(() => {
     if (!hasTarget) {
@@ -93,9 +99,11 @@ export default function CheckinPage({ searchParams }: { searchParams?: Search })
     }
   }, [hasTarget, autoPost, runCheckin, locale]);
 
-  const intro = shiftId && !assignmentId
-    ? t("checkin.intro_shift", locale)
-    : t("checkin.intro_assignment", locale);
+  const intro = qrToken
+    ? t("checkin.intro_qr_token", locale)
+    : shiftId && !assignmentId
+      ? t("checkin.intro_shift", locale)
+      : t("checkin.intro_assignment", locale);
 
   return (
     <div className="mx-auto max-w-md p-6 text-center">

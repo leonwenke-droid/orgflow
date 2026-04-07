@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Locale } from "../../lib/i18n";
 import { t } from "../../lib/i18n";
 import { formatShiftSlot, type AppLocale } from "../../lib/formatDate";
+import { effectiveAssignmentKind, memberMaySelfCheckIn } from "../../lib/shiftAssignmentKind";
+import { isShiftQrWindowActive } from "../../lib/shiftQr";
+import { MemberQrCode } from "./MemberQrCode";
 
 type ShiftRow = {
   id: string;
@@ -15,6 +18,11 @@ type ShiftRow = {
   required_slots?: number | null;
   auto_assign?: boolean | null;
   claimable?: boolean | null;
+  assignment_kind?: string | null;
+  attendance_mode?: string | null;
+  qr_token?: string | null;
+  qr_valid_from?: string | null;
+  qr_valid_until?: string | null;
   shift_assignments?: { id: string; user_id?: string | null; replacement_user_id?: string | null }[] | null;
 };
 
@@ -36,25 +44,50 @@ function formatDateSeparator(ymd: string, locale: Locale) {
   );
 }
 
+function startOfWeekMonday(d: Date) {
+  const x = new Date(d);
+  const day = (x.getDay() + 6) % 7;
+  x.setDate(x.getDate() - day);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function shiftWeekStartMs(ymd: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
+  const [y, m, d] = ymd.split("-").map(Number);
+  return startOfWeekMonday(new Date(y, m - 1, d)).getTime();
+}
+
 export default function MemberShiftsClient({
   orgSlug,
   locale,
   canClaim,
   myProfileId,
+  memberDisplayName,
   organizationId,
   shifts,
   claimShiftAction,
+  embeddedInAdminConsole = false,
 }: {
   orgSlug: string;
   locale: Locale;
   canClaim: boolean;
   myProfileId: string;
+  memberDisplayName: string;
   organizationId: string;
   shifts: ShiftRow[];
   claimShiftAction: (formData: FormData) => Promise<void>;
+  /** Schichtplanung admin console: compact layout, prototype filter-pills */
+  embeddedInAdminConsole?: boolean;
 }) {
   const [filter, setFilter] = useState<Filter>("all");
+  const [qrFor, setQrFor] = useState<{ assignmentId: string; title: string; qrValue: string } | null>(null);
+  const [origin, setOrigin] = useState("");
   const fl = locale as AppLocale;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") setOrigin(window.location.origin);
+  }, []);
 
   const isAssignedToMe = useCallback(
     (s: ShiftRow) =>
@@ -86,87 +119,318 @@ export default function MemberShiftsClient({
     return [...map.entries()];
   }, [filtered]);
 
-  return (
-    <div className="mx-auto max-w-5xl space-y-5 p-6">
-      <header>
-        <h1 className="page-title">{t("dashboard.shifts", locale)}</h1>
-        <p className="page-sub">
-          {locale === "en" ? "Sign up for open shifts" : "Trag dich in freie Schichten ein"}
-        </p>
-      </header>
+  const byWeek = useMemo(() => {
+    if (!embeddedInAdminConsole) return null;
+    const today = new Date();
+    const thisMonday = startOfWeekMonday(today);
+    const nextMonday = new Date(thisMonday);
+    nextMonday.setDate(nextMonday.getDate() + 7);
+    const t0 = thisMonday.getTime();
+    const t1 = nextMonday.getTime();
 
-      <div className="flex flex-wrap gap-2">
-        <button type="button" className="ui-pill text-xs" aria-current={filter === "all" ? "page" : undefined} onClick={() => setFilter("all")}>
+    const thisWeek: ShiftRow[] = [];
+    const nextWeek: ShiftRow[] = [];
+    const later: ShiftRow[] = [];
+
+    for (const s of filtered) {
+      const ymd = String(s.date ?? "").slice(0, 10);
+      const wk = shiftWeekStartMs(ymd);
+      if (wk === null) {
+        later.push(s);
+        continue;
+      }
+      if (wk === t0) thisWeek.push(s);
+      else if (wk === t1) nextWeek.push(s);
+      else later.push(s);
+    }
+
+    const sortFn = (a: ShiftRow, b: ShiftRow) => {
+      const da = String(a.date ?? "").slice(0, 10);
+      const db = String(b.date ?? "").slice(0, 10);
+      if (da !== db) return da.localeCompare(db);
+      return String(a.start_time ?? "").localeCompare(String(b.start_time ?? ""));
+    };
+    thisWeek.sort(sortFn);
+    nextWeek.sort(sortFn);
+    later.sort(sortFn);
+    return { thisWeek, nextWeek, later };
+  }, [filtered, embeddedInAdminConsole]);
+
+  function renderShiftRow(s: ShiftRow, layout: "embedded" | "list") {
+    const required = Number(s.required_slots ?? 1) || 1;
+    const taken = (s.shift_assignments ?? []).length;
+    const free = Math.max(0, required - taken);
+    const assigned = isAssignedToMe(s);
+    const showButton =
+      canClaim && !assigned && free > 0 && effectiveAssignmentKind(s) === "self_signup";
+    const myAssignment = (s.shift_assignments ?? []).find(
+      (a) => a.user_id === myProfileId || a.replacement_user_id === myProfileId
+    );
+    const checkinUrl =
+      origin && orgSlug && myAssignment?.id
+        ? `${origin}/checkin?org=${encodeURIComponent(orgSlug)}&assignmentId=${encodeURIComponent(myAssignment.id)}&auto=1`
+        : "";
+    const tokenUrl =
+      origin && orgSlug && s.qr_token && isShiftQrWindowActive(s.qr_valid_from, s.qr_valid_until)
+        ? `${origin}/checkin?org=${encodeURIComponent(orgSlug)}&qr_token=${encodeURIComponent(s.qr_token)}&auto=1`
+        : "";
+    const qrValue = tokenUrl || checkinUrl;
+    const showQr = Boolean(assigned && qrValue && memberMaySelfCheckIn(s.attendance_mode));
+    const showQrDayHint =
+      assigned &&
+      memberMaySelfCheckIn(s.attendance_mode) &&
+      Boolean(s.qr_token) &&
+      !isShiftQrWindowActive(s.qr_valid_from, s.qr_valid_until);
+    const isFull = free <= 0;
+    const dotClass = free <= 0 ? "dr" : free === 1 ? "da" : "dg";
+    const freeLine = isFull
+      ? t("shifts.member_shift_full_label", locale)
+      : t("shifts.member_free_count", locale).replace("{count}", String(free));
+
+    if (layout === "embedded") {
+      return (
+        <div key={s.id} className={`row ${isFull ? "opacity-60" : ""}`}>
+          <div className="avail">
+            <span className={`dot ${dotClass}`} aria-hidden />
+            <span>{freeLine}</span>
+          </div>
+          <div className="rm">
+            <div className="rt flex flex-wrap items-center gap-2">
+              <span>{s.event_name || t("dashboard.shifts", locale)}</span>
+              {assigned ? (
+                <span className="tag tb">{t("shifts.you_are_signed_up", locale)}</span>
+              ) : null}
+            </div>
+            <div className="rmt">
+              {s.date ? formatShiftSlot(String(s.date), s.start_time, s.end_time, fl) : "–"}
+              {s.location ? ` · ${s.location}` : ""}
+              {` · ${t("shifts.member_slots_detail", locale).replace("{free}", String(Math.max(0, free))).replace("{required}", String(required))}`}
+              {isFull ? ` · ${t("shifts.member_shift_full_label", locale)}` : ""}
+            </div>
+            {showQrDayHint ? (
+              <div className="rmt" style={{ color: "var(--sp-accent)" }}>
+                {t("shifts.member_qr_day_available", locale)}
+              </div>
+            ) : null}
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {showButton ? (
+              <form action={claimShiftAction}>
+                <input type="hidden" name="orgSlug" value={orgSlug} />
+                <input type="hidden" name="organization_id" value={organizationId} />
+                <input type="hidden" name="shiftId" value={s.id} />
+                <button type="submit" className="btn btnp">
+                  {t("shifts.claim", locale)}
+                </button>
+              </form>
+            ) : null}
+            {showQr ? (
+              <button
+                type="button"
+                className="btn"
+                onClick={() =>
+                  setQrFor({
+                    assignmentId: myAssignment!.id,
+                    title: s.event_name || t("dashboard.shifts", locale),
+                    qrValue
+                  })
+                }
+              >
+                {t("shifts.show_checkin_qr", locale)}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <li key={s.id} className={`py-3 ${isFull ? "opacity-60" : ""}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${dotColor(free)}`} aria-hidden />
+              <span className="text-xs text-text-muted">{freeLine}</span>
+              <span className="font-medium text-text-primary">{s.event_name || t("dashboard.shifts", locale)}</span>
+              {assigned ? <span className="tag tag-blue">{t("shifts.you_are_signed_up", locale)}</span> : null}
+            </div>
+            <div className="mt-1 text-xs text-text-muted">
+              {s.date ? formatShiftSlot(String(s.date), s.start_time, s.end_time, fl) : "–"}
+              {s.location ? ` · ${s.location}` : ""}
+              {` · ${t("shifts.member_slots_detail", locale).replace("{free}", String(Math.max(0, free))).replace("{required}", String(required))}`}
+              {isFull ? ` · ${t("shifts.member_shift_full_label", locale)}` : ""}
+            </div>
+            {showQrDayHint ? (
+              <div className="mt-1 text-xs" style={{ color: "var(--sp-accent)" }}>
+                {t("shifts.member_qr_day_available", locale)}
+              </div>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {showButton ? (
+              <form action={claimShiftAction}>
+                <input type="hidden" name="orgSlug" value={orgSlug} />
+                <input type="hidden" name="organization_id" value={organizationId} />
+                <input type="hidden" name="shiftId" value={s.id} />
+                <button type="submit" className="btn-primary">
+                  {t("shifts.claim", locale)}
+                </button>
+              </form>
+            ) : null}
+            {showQr ? (
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                onClick={() =>
+                  setQrFor({
+                    assignmentId: myAssignment!.id,
+                    title: s.event_name || t("dashboard.shifts", locale),
+                    qrValue
+                  })
+                }
+              >
+                {t("shifts.show_checkin_qr", locale)}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <div
+      className={
+        embeddedInAdminConsole
+          ? "mx-auto max-w-5xl space-y-5 pb-2 pt-0"
+          : "mx-auto max-w-5xl space-y-5 p-6"
+      }
+    >
+      {!embeddedInAdminConsole ? (
+        <header>
+          <h1 className="page-title">{t("dashboard.shifts", locale)}</h1>
+          <p className="page-sub">{t("shifts.member_page_intro", locale)}</p>
+        </header>
+      ) : null}
+
+      <div className={embeddedInAdminConsole ? "filter-pills" : "flex flex-wrap gap-2"}>
+        <button
+          type="button"
+          className={
+            embeddedInAdminConsole
+              ? filter === "all"
+                ? "tag tb"
+                : "tag tn"
+              : "ui-pill text-xs"
+          }
+          aria-current={filter === "all" ? "page" : undefined}
+          onClick={() => setFilter("all")}
+        >
           {t("finance.filter_all", locale)}
         </button>
-        <button type="button" className="ui-pill text-xs" aria-current={filter === "free" ? "page" : undefined} onClick={() => setFilter("free")}>
+        <button
+          type="button"
+          className={
+            embeddedInAdminConsole
+              ? filter === "free"
+                ? "tag tb"
+                : "tag tn"
+              : "ui-pill text-xs"
+          }
+          aria-current={filter === "free" ? "page" : undefined}
+          onClick={() => setFilter("free")}
+        >
           {t("dashboard.filter_free_shifts", locale)}
         </button>
-        <button type="button" className="ui-pill text-xs" aria-current={filter === "mine" ? "page" : undefined} onClick={() => setFilter("mine")}>
+        <button
+          type="button"
+          className={
+            embeddedInAdminConsole
+              ? filter === "mine"
+                ? "tag tb"
+                : "tag tn"
+              : "ui-pill text-xs"
+          }
+          aria-current={filter === "mine" ? "page" : undefined}
+          onClick={() => setFilter("mine")}
+        >
           {t("dashboard.my_assigned_shifts", locale)}
         </button>
       </div>
 
       <section className="card">
-        <div className="p-4">
-          {grouped.length === 0 ? (
-            <p className="text-sm text-text-muted">{t("empty.member.shifts", locale)}</p>
-          ) : (
-            <div className="space-y-4">
-              {grouped.map(([dateKey, rows]) => (
-                <div key={dateKey}>
-                  <div className="rounded-[var(--radius-input)] border border-border-subtle bg-bg-secondary px-3 py-2 text-sm font-medium text-text-secondary dark:border-border-subtle dark:bg-bg-primary/8">
-                    {dateKey === "—" ? "—" : formatDateSeparator(dateKey, locale)}
-                  </div>
-                  <ul className="divide-y divide-border-subtle dark:divide-border-subtle">
-                    {rows.map((s) => {
-                      const required = Number(s.required_slots ?? 1) || 1;
-                      const taken = (s.shift_assignments ?? []).length;
-                      const free = Math.max(0, required - taken);
-                      const assigned = isAssignedToMe(s);
-                      const showButton =
-                        canClaim && !assigned && free > 0 && s.auto_assign !== true && s.claimable !== false;
-                      const isFull = free <= 0;
-                      return (
-                        <li key={s.id} className={`py-3 ${isFull ? "opacity-60" : ""}`}>
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className={`h-2 w-2 rounded-full ${dotColor(free)}`} aria-hidden />
-                                <span className="text-xs text-text-muted">
-                                  {free} {locale === "en" ? "free" : "frei"}
-                                </span>
-                                <span className="font-medium text-text-primary">{s.event_name || t("dashboard.shifts", locale)}</span>
-                                {assigned ? <span className="tag tag-blue">{t("shifts.you_are_signed_up", locale)}</span> : null}
-                              </div>
-                              <div className="mt-1 text-xs text-text-muted">
-                                {s.date ? formatShiftSlot(String(s.date), s.start_time, s.end_time, fl) : "–"}
-                                {s.location ? ` · ${s.location}` : ""}
-                                {` · ${Math.max(0, free)} von ${required} ${locale === "en" ? "free" : "frei"}`}
-                                {isFull ? ` · ${locale === "en" ? "Full" : "Belegt"}` : ""}
-                              </div>
-                            </div>
-                            {showButton ? (
-                              <form action={claimShiftAction}>
-                                <input type="hidden" name="orgSlug" value={orgSlug} />
-                                <input type="hidden" name="organization_id" value={organizationId} />
-                                <input type="hidden" name="shiftId" value={s.id} />
-                                <button type="submit" className="btn-primary">
-                                  {t("shifts.claim", locale)}
-                                </button>
-                              </form>
-                            ) : null}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+        {embeddedInAdminConsole && byWeek ? (
+          byWeek.thisWeek.length + byWeek.nextWeek.length + byWeek.later.length === 0 ? (
+            <div className="p-4">
+              <p className="text-sm" style={{ color: "var(--sp-text2)" }}>
+                {t("empty.member.shifts", locale)}
+              </p>
             </div>
-          )}
-        </div>
+          ) : (
+            <>
+              {byWeek.thisWeek.length > 0 ? (
+                <>
+                  <div className="date-strip">{t("shifts.member_section_this_week", locale)}</div>
+                  {byWeek.thisWeek.map((s) => renderShiftRow(s, "embedded"))}
+                </>
+              ) : null}
+              {byWeek.nextWeek.length > 0 ? (
+                <>
+                  <div className="date-strip">{t("shifts.member_section_next_week", locale)}</div>
+                  {byWeek.nextWeek.map((s) => renderShiftRow(s, "embedded"))}
+                </>
+              ) : null}
+              {byWeek.later.length > 0 ? (
+                <>
+                  <div className="date-strip">{t("shifts.member_section_later", locale)}</div>
+                  {byWeek.later.map((s) => renderShiftRow(s, "embedded"))}
+                </>
+              ) : null}
+            </>
+          )
+        ) : grouped.length === 0 ? (
+          <div className="p-4">
+            <p className="text-sm text-text-muted">{t("empty.member.shifts", locale)}</p>
+          </div>
+        ) : (
+          <div className="space-y-4 p-4">
+            {grouped.map(([dateKey, rows]) => (
+              <div key={dateKey}>
+                <div className="rounded-[var(--radius-input)] border border-border-subtle bg-bg-secondary px-3 py-2 text-sm font-medium text-text-secondary dark:border-border-subtle dark:bg-bg-primary/8">
+                  {dateKey === "—" ? "—" : formatDateSeparator(dateKey, locale)}
+                </div>
+                <ul className="divide-y divide-border-subtle dark:divide-border-subtle">
+                  {rows.map((s) => renderShiftRow(s, "list"))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
+
+      {qrFor && origin && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("shifts.show_checkin_qr", locale)}
+          onClick={() => setQrFor(null)}
+        >
+          <div
+            className="max-w-sm rounded-xl border border-border-subtle bg-bg-primary p-5 shadow-xl dark:border-border-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MemberQrCode
+              value={qrFor.qrValue}
+              title={qrFor.title}
+              memberName={memberDisplayName || t("shifts.you_are_signed_up", locale)}
+            />
+            <button type="button" className="btn-secondary mt-4 w-full text-xs" onClick={() => setQrFor(null)}>
+              {t("common.close", locale)}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

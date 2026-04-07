@@ -131,7 +131,8 @@ export async function POST(req: NextRequest) {
       .from("tasks")
       .update({
         status,
-        proof_url: proofUrlToSet
+        proof_url: proofUrlToSet,
+        ...(status === "erledigt" ? { completed_at: new Date().toISOString() } : {}),
       })
       .eq("id", task.id);
 

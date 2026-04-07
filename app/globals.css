@@ -1042,3 +1042,83 @@ a:hover {
   background: var(--bg-primary);
   color: var(--text-primary);
 }
+
+/* ─── Schichtplanung: --sp-* folgt App-Shell (Hell), .dark überschreibt (Prototyp) ─── */
+.shifts-page {
+  --sp-bg0: var(--bg-app);
+  --sp-bg1: var(--bg-secondary);
+  --sp-surface: var(--bg-primary);
+  --sp-surface2: var(--bg-secondary);
+  --sp-border: var(--border-default);
+  --sp-border-strong: var(--border-strong);
+  --sp-text: var(--text-primary);
+  --sp-text2: var(--text-secondary);
+  --sp-text3: var(--text-muted);
+  --sp-accent: var(--blue-600);
+  --sp-accent-dim: rgba(24, 95, 165, 0.14);
+  --sp-success: var(--green-mid);
+  --sp-success-dim: var(--bg-success-subtle);
+  --sp-warn: var(--amber-bright);
+  --sp-warn-dim: var(--bg-warning-subtle);
+  --sp-danger: var(--red-bright);
+  --sp-danger-dim: var(--bg-danger-subtle);
+  --sp-violet: #7c3aed;
+  --sp-violet-dim: rgba(124, 58, 237, 0.14);
+  --sp-radius-sm: 10px;
+  --sp-radius-md: 14px;
+  --sp-radius-lg: 20px;
+  --sp-radius-full: 999px;
+  --sp-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.08);
+  --sp-font-sans: var(--font-dm-sans, "DM Sans"), system-ui, -apple-system, sans-serif;
+  --sp-font-mono: var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, monospace;
+  --sp-ink-on-light: #0c0c0b;
+  --sc-font: var(--sp-font-sans);
+  --sc-mono: var(--sp-font-mono);
+  --sc-bg0: var(--sp-bg0);
+  --sc-bg1: var(--sp-bg1);
+  --sc-surface: var(--sp-surface);
+  --sc-surface2: var(--sp-surface2);
+  --sc-border: var(--sp-border);
+  --sc-border-strong: var(--sp-border-strong);
+  --sc-text: var(--sp-text);
+  --sc-text2: var(--sp-text2);
+  --sc-text3: var(--sp-text3);
+  --sc-accent: var(--sp-accent);
+  --sc-accent-dim: var(--sp-accent-dim);
+  --sc-success: var(--sp-success);
+  --sc-success-dim: var(--sp-success-dim);
+  --sc-warn: var(--sp-warn);
+  --sc-warn-dim: var(--sp-warn-dim);
+  --sc-danger: var(--sp-danger);
+  --sc-danger-dim: var(--sp-danger-dim);
+  --sc-violet: var(--sp-violet);
+  --sc-violet-dim: var(--sp-violet-dim);
+  --sc-radius-sm: var(--sp-radius-sm);
+  --sc-radius-md: var(--sp-radius-md);
+  --sc-radius-lg: var(--sp-radius-lg);
+  --sc-radius-full: var(--sp-radius-full);
+}
+
+.dark .shifts-page {
+  --sp-bg0: #07080c;
+  --sp-bg1: #0f1118;
+  --sp-surface: rgba(255, 255, 255, 0.035);
+  --sp-surface2: rgba(255, 255, 255, 0.055);
+  --sp-border: rgba(255, 255, 255, 0.09);
+  --sp-border-strong: rgba(255, 255, 255, 0.14);
+  --sp-text: #f4f5f7;
+  --sp-text2: #9ca3b0;
+  --sp-text3: #6b7280;
+  --sp-accent: #6d9eff;
+  --sp-accent-dim: rgba(109, 158, 255, 0.18);
+  --sp-success: #3dd68c;
+  --sp-success-dim: rgba(61, 214, 140, 0.15);
+  --sp-warn: #f0b429;
+  --sp-warn-dim: rgba(240, 180, 41, 0.18);
+  --sp-danger: #f07178;
+  --sp-danger-dim: rgba(240, 113, 120, 0.16);
+  --sp-violet: #a78bfa;
+  --sp-violet-dim: rgba(167, 139, 250, 0.2);
+  --sp-shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.55);
+  --sp-ink-on-light: #07080c;
+}

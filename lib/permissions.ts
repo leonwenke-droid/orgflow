@@ -11,7 +11,8 @@ export const OPERATIONAL_ADMIN_ROLES: DbRole[] = ["super_admin", "admin", "owner
 export const ADMIN_ROLES: DbRole[] = ["super_admin", "admin", "owner", "lead", "teamlead"];
 
 /** Roles that can view/manage finance */
-export const FINANCE_ROLES: DbRole[] = ["super_admin", "owner", "admin", "lead", "finance"];
+/** Finanz-Admin: nicht Lead/Teamlead (nur operative Planung). */
+export const FINANCE_ROLES: DbRole[] = ["super_admin", "owner", "admin", "finance"];
 
 /** Roles that can manage tasks within their team */
 export const TEAM_LEAD_ROLES: DbRole[] = ["admin", "owner", "lead", "teamlead"];
@@ -30,13 +31,14 @@ export function canManageOrg(role: DbRole | null | undefined): boolean {
  * Owner / Admin / Super-Admin: members, teams, org settings, and assigning org roles
  * (member / lead / admin / owner / finance / viewer). Team leads are excluded.
  */
+/** Mitglieder, Teams, Rollen: nur Owner/Admin (nicht Lead/Teamlead — die nutzen nur operative Admin-Module). */
 export function canManageMembersAndTeams(role: DbRole | null | undefined): boolean {
-  return role === "super_admin" || role === "admin" || role === "owner" || role === "teamlead";
+  return role === "super_admin" || role === "admin" || role === "owner";
 }
 
-/** May change organisation name, modules, slug, etc. */
+/** Org-Einstellungen (Name, Module, Slug): wie Mitglieder/Teams. */
 export function canChangeOrgSettings(role: DbRole | null | undefined): boolean {
-  return role === "super_admin" || role === "admin" || role === "owner" || role === "teamlead";
+  return role === "super_admin" || role === "admin" || role === "owner";
 }
 
 /** Admin hub, planning tools, engagement — includes Teamleads, excludes finance-only. */

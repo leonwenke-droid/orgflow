@@ -32,7 +32,7 @@ export default async function AdminActivityPage(props: PageProps) {
     try {
       const org = await getCurrentOrganization(orgSlug);
       const mapped = getOrgIdForData(orgSlug, org.id);
-      if (await isOrgAdmin(mapped)) orgId = mapped;
+      if (await isOrgAdmin(mapped, orgSlug)) orgId = mapped;
     } catch {
       orgId = null;
     }
@@ -43,7 +43,7 @@ export default async function AdminActivityPage(props: PageProps) {
     orgId = userOrg?.id ?? null;
   }
   if (!orgId) return <p className="text-sm text-red-300">No organization context.</p>;
-  if (!(await isOrgAdmin(orgId))) return <p className="text-sm text-red-300">Access denied.</p>;
+  if (!(await isOrgAdmin(orgId, orgSlug))) return <p className="text-sm text-red-300">Access denied.</p>;
 
   const { data: logs } = await service
     .from("audit_logs")

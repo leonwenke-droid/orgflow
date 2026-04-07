@@ -60,6 +60,12 @@ export default function DocsPage() {
         <Link href="/terms">Nutzungsbedingungen</Link>.
       </p>
 
+      <h2>Schichten &amp; Check-in</h2>
+      <p>
+        Ablauf von Zuweisung bis QR-Check-in und Admin-Bestätigung:{" "}
+        <Link href="/docs/shift-checkin">Schichten &amp; Anwesenheit</Link>.
+      </p>
+
       <h2>API für Entwickler</h2>
       <p>
         Übersicht zu Authentifizierung und Schnittstellen:{" "}

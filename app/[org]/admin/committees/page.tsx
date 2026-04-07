@@ -25,7 +25,7 @@ export default async function AdminCommitteesPage(props: {
     : (params as { org: string }).org;
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   const userRole = await getEffectiveUserRoleForOrg(orgSlug, org);
   if (!canManageMembersAndTeams(userRole)) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;

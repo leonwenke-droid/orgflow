@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { updateCommitteeAction, deleteCommitteeAction } from "./actions";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
-import { Button } from "../../../../components/ui/Button";
+
+const MENU_WIDTH_PX = 288; /* w-72 */
 
 type Committee = {
   id: string;
@@ -30,6 +32,62 @@ export default function CommitteeRow({
   const [isActive, setIsActive] = useState(committee.is_active !== false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+  const updateMenuPosition = useCallback(() => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const margin = 8;
+    const left = Math.min(
+      window.innerWidth - MENU_WIDTH_PX - margin,
+      Math.max(margin, r.right - MENU_WIDTH_PX)
+    );
+    const top = r.bottom + margin;
+    setMenuPos({ top, left });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!menuOpen) return;
+    updateMenuPosition();
+  }, [menuOpen, updateMenuPosition]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onScrollOrResize = () => updateMenuPosition();
+    window.addEventListener("scroll", onScrollOrResize, true);
+    window.addEventListener("resize", onScrollOrResize);
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize, true);
+      window.removeEventListener("resize", onScrollOrResize);
+    };
+  }, [menuOpen, updateMenuPosition]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (e: MouseEvent | PointerEvent) => {
+      const t = triggerRef.current;
+      const target = e.target as Node;
+      if (t?.contains(target)) return;
+      const menuEl = document.getElementById(`committee-team-menu-${committee.id}`);
+      if (menuEl?.contains(target)) return;
+      setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [menuOpen, committee.id]);
 
   async function handleSave() {
     if (
@@ -79,8 +137,51 @@ export default function CommitteeRow({
 
   const showInactive = committee.is_active === false;
 
+  const menuPanel =
+    menuOpen && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            id={`committee-team-menu-${committee.id}`}
+            role="menu"
+            className="fixed z-[200] w-72 rounded-xl border border-border-subtle bg-bg-primary p-3 shadow-lg"
+            style={{ top: menuPos.top, left: menuPos.left }}
+          >
+            {!editing ? (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setEditing(true);
+                    setMenuOpen(false);
+                  }}
+                  className="btn-secondary"
+                >
+                  {t("common.edit", locale)}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void handleDelete();
+                  }}
+                  disabled={loading}
+                  className="btn-danger"
+                >
+                  {t("common.delete", locale)}
+                </button>
+              </div>
+            ) : (
+              <div className="text-xs text-text-secondary">—</div>
+            )}
+          </div>,
+          document.body
+        )
+      : null;
+
   return (
-    <div className="card">
+    <div className="card overflow-visible">
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
@@ -105,34 +206,32 @@ export default function CommitteeRow({
               {committee.description ? <div className="mt-1 line-clamp-2 text-sm text-text-secondary">{committee.description}</div> : null}
               <div className="mt-2 flex flex-wrap gap-2">
                 {typeof committee.openTasks === "number" && committee.openTasks > 0 ? (
-                  <span className="tag tag-amber">{committee.openTasks} {locale === "de" ? "Aufgaben offen" : "tasks open"}</span>
+                  <span className="tag tag-amber">
+                    {committee.openTasks} {locale === "de" ? "Aufgaben offen" : "tasks open"}
+                  </span>
                 ) : null}
                 {typeof committee.upcomingShifts === "number" && committee.upcomingShifts > 0 ? (
-                  <span className="tag tag-blue">{committee.upcomingShifts} {locale === "de" ? "Schichten" : "shifts"}</span>
+                  <span className="tag tag-blue">
+                    {committee.upcomingShifts} {locale === "de" ? "Schichten" : "shifts"}
+                  </span>
                 ) : null}
               </div>
             </div>
           </div>
 
-          <details className="relative">
-            <summary className="cursor-pointer select-none rounded-lg border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary">
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              ref={triggerRef}
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              onClick={() => setMenuOpen((o) => !o)}
+              className="cursor-pointer select-none rounded-lg border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary"
+            >
               ···
-            </summary>
-            <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-border-subtle bg-bg-primary p-3 shadow-lg">
-              {!editing ? (
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => setEditing(true)} className="btn-secondary">
-                    {t("common.edit", locale)}
-                  </button>
-                  <button type="button" onClick={handleDelete} disabled={loading} className="btn-danger">
-                    {t("common.delete", locale)}
-                  </button>
-                </div>
-              ) : (
-                <div className="text-xs text-text-secondary">—</div>
-              )}
-            </div>
-          </details>
+            </button>
+            {menuPanel}
+          </div>
         </div>
 
         {editing ? (

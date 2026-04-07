@@ -23,7 +23,7 @@ export default async function OnboardingPage(props: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/onboarding`);
 
-  const canAccess = await isOrgAdmin(org.id);
+  const canAccess = await isOrgAdmin(org.id, orgSlug);
   if (!canAccess) redirect(`/${orgSlug}/dashboard`);
   const locale = await getRequestLocale();
 

@@ -1,232 +1,76 @@
 "use client";
 
-import { useCallback } from "react";
-import { jsPDF } from "jspdf";
+import { useMemo } from "react";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
+import { buildAttendanceExportData } from "../lib/pdf/attendance-adapter";
+import type { ShiftForPdf } from "../lib/shiftForPdf";
+import { ExportAttendanceButton } from "./shifts/ExportAttendanceButton";
 
-export type ShiftForPdf = {
-  id: string;
-  event_name: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  location?: string | null;
-  has_aufbau?: boolean;
-  has_abbau?: boolean;
-  shift_assignments?: { id: string; status: string; user_id: string; replacement_user_id?: string | null }[];
-};
+export type { ShiftForPdf } from "../lib/shiftForPdf";
 
 type Props = {
   shifts: ShiftForPdf[];
-  /** { [profileId]: full_name } – serialisierbar von Server zu Client */
   profileNames: Record<string, string>;
+  /** `profiles.role` per user id (organisation role: Member, Admin, Lead, …). */
+  profileRoles?: Record<string, string | null | undefined>;
+  /** Kept for call-site compatibility (not required for client-side jsPDF export). */
+  organizationId?: string;
+  buttonClassName?: string;
+  organizationName?: string;
+  organizationSlug?: string;
 };
 
-function timeStr(t: string | null | undefined): string {
-  const s = String(t ?? "").trim();
-  return s.slice(0, 5) || "–";
+function deriveDateRange(shifts: ShiftForPdf[]): { start: string; end: string } {
+  const ds = shifts
+    .map((s) => String(s.date ?? "").slice(0, 10))
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .sort();
+  if (ds.length === 0) return { start: "1970-01-01", end: "2099-12-31" };
+  return { start: ds[0]!, end: ds[ds.length - 1]! };
 }
 
-function formatDateLabel(d: string, locale: "en" | "de"): string {
-  const [y, m, day] = d.split("-");
-  if (!day || !m || !y) return d;
-  const date = new Date(d + "T12:00:00Z");
-  const localeStr = locale === "de" ? "de-DE" : "en-GB";
-  const weekday = new Intl.DateTimeFormat(localeStr, { weekday: "short" }).format(date);
-  const datePart =
-    locale === "de"
-      ? `${day}.${m}.${y}`
-      : `${y}-${m}-${day}`;
-  return `${weekday}, ${datePart}`;
-}
-
-/** Gruppiert Schichten zu einer Veranstaltung (wie im Dashboard). */
-function eventGroupKey(eventName: string): string {
-  return String(eventName ?? "")
-    .trim()
-    .replace(/\s*–\s*[12]\.\s*Pause$/i, "")
-    .replace(/\s*–\s*\d{1,2}:\d{2}–\d{1,2}:\d{2}$/, "")
-    .trim() || "—";
-}
-
-const PAGE_WIDTH = 210;
-const PAGE_HEIGHT = 297;
-const MARGIN = 12;
-const BOTTOM_LIMIT = PAGE_HEIGHT - 18;
-const LINE = 4;
-const CARD_PAD = 3;
-const blue = [37, 99, 235] as [number, number, number];
-const blueLight = [239, 246, 255] as [number, number, number];
-const blueBorder = [37, 99, 235] as [number, number, number];
-const greenBg = [22, 101, 52] as [number, number, number];
-const greenText = [74, 222, 128] as [number, number, number];
-const redBg = [127, 29, 29] as [number, number, number];
-const redText = [252, 165, 165] as [number, number, number];
-const amberBg = [120, 53, 15] as [number, number, number];
-const amberText = [251, 191, 36] as [number, number, number];
-const text = [30, 41, 59] as [number, number, number];
-const blockPad = 2;
-const blockGap = 1;
-
-function newPageIfNeeded(doc: jsPDF, y: number): number {
-  if (y >= BOTTOM_LIMIT) {
-    doc.addPage();
-    return MARGIN;
-  }
-  return y;
-}
-
-export default function ShiftAttendancePdfExport({ shifts, profileNames }: Props) {
+/**
+ * Generates the attendance PDF in the browser (jsPDF + autoTable).
+ */
+export default function ShiftAttendancePdfExport({
+  shifts,
+  profileNames,
+  profileRoles,
+  buttonClassName,
+  organizationName,
+  organizationSlug
+}: Props) {
   const { locale } = useLocale();
-  const exportPdf = useCallback(() => {
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    let y = MARGIN;
+  const loc = locale === "de" ? "de" : "en";
 
-    doc.setFontSize(12);
-    doc.setTextColor(...text);
-    doc.setFont("helvetica", "bold");
-    doc.text(t("shifts.attendance_pdf_title", locale), MARGIN, y);
-    y += LINE + 2;
-
-    const byDate = shifts.reduce((acc: Record<string, ShiftForPdf[]>, s) => {
-      const d = s.date ?? "";
-      if (!acc[d]) acc[d] = [];
-      acc[d].push(s);
-      return acc;
-    }, {});
-
-    for (const dateStr of Object.keys(byDate).sort()) {
-      const dayShifts = byDate[dateStr];
-      if (dayShifts.length === 0) continue;
-
-      const eventGroups = new Map<string, ShiftForPdf[]>();
-      for (const s of dayShifts) {
-        const key = eventGroupKey(s.event_name);
-        if (!eventGroups.has(key)) eventGroups.set(key, []);
-        eventGroups.get(key)!.push(s);
-      }
-      for (const [, groupShifts] of eventGroups) {
-        groupShifts.sort((a, b) => (a.start_time || "").localeCompare(b.start_time || ""));
-      }
-
-      y = newPageIfNeeded(doc, y);
-
-      const dateCardW = PAGE_WIDTH - MARGIN * 2;
-      const dateCardH = LINE + CARD_PAD * 2;
-      doc.setFillColor(...blueLight);
-      doc.setDrawColor(...blueBorder);
-      doc.rect(MARGIN, y, dateCardW, dateCardH, "FD");
-      doc.setTextColor(...blue);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text(formatDateLabel(dateStr, locale), MARGIN + CARD_PAD, y + dateCardH / 2 + 1);
-      y += dateCardH + CARD_PAD;
-
-      for (const [eventName, groupShifts] of eventGroups) {
-        const first = groupShifts[0];
-        const location = first?.location?.trim();
-
-        y = newPageIfNeeded(doc, y);
-
-        const eventHeaderH = LINE + CARD_PAD * 2;
-        const eventCardX = MARGIN + 4;
-        const eventCardW = dateCardW - 8;
-        doc.setFillColor(...blueLight);
-        doc.setDrawColor(...blueBorder);
-        doc.rect(eventCardX, y, eventCardW, eventHeaderH, "FD");
-        doc.setTextColor(...text);
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "bold");
-        doc.text(eventName + (location ? `  ·  ${location}` : ""), eventCardX + CARD_PAD, y + eventHeaderH / 2 + 1);
-        y += eventHeaderH;
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-
-        for (const s of groupShifts) {
-          const assignments = s.shift_assignments ?? [];
-          const timeRange = `${timeStr(s.start_time)} – ${timeStr(s.end_time)}`;
-
-          y = newPageIfNeeded(doc, y);
-
-          doc.setTextColor(...text);
-          doc.text(timeRange, eventCardX + CARD_PAD, y + LINE / 2);
-          y += LINE;
-
-          for (const a of assignments) {
-            const name = profileNames[a.user_id ?? ""] ?? "?";
-            const status = a.status ?? "zugewiesen";
-            const repName = status === "abgesagt" && a.replacement_user_id ? profileNames[a.replacement_user_id] ?? "?" : null;
-
-            const hasErsatz = status === "abgesagt" && !!repName;
-            const blockH = LINE + blockPad * 2 + (hasErsatz ? LINE + 1 : 0);
-            y = newPageIfNeeded(doc, y);
-            if (y + blockH > BOTTOM_LIMIT) {
-              doc.addPage();
-              y = MARGIN;
-            }
-
-            const blockY = y;
-            const blockX = eventCardX + CARD_PAD;
-            const blockW = eventCardW - CARD_PAD * 2;
-            const textX = blockX + blockPad + 4;
-
-            if (status === "erledigt") {
-              doc.setFillColor(...greenBg);
-              doc.rect(blockX, blockY, blockW, blockH, "F");
-              doc.setDrawColor(...greenText);
-              doc.rect(blockX, blockY, blockW, blockH, "S");
-              doc.setTextColor(...greenText);
-              doc.text(`✓ ${name}`, textX, blockY + blockPad + LINE * 0.8);
-            } else if (status === "abgesagt") {
-              doc.setFillColor(...redBg);
-              doc.rect(blockX, blockY, blockW, blockH, "F");
-              doc.setDrawColor(...redText);
-              doc.rect(blockX, blockY, blockW, blockH, "S");
-              doc.setTextColor(...redText);
-              if (repName) {
-                doc.text(`✗ ${name}`, textX, blockY + blockPad + LINE * 0.8);
-                const ersatzLabel = t("shifts.replacement_label", locale);
-                doc.text(ersatzLabel, textX, blockY + blockPad + LINE + LINE * 0.8);
-                doc.setTextColor(...blue);
-                const ersatzLabelW = doc.getTextWidth(ersatzLabel);
-                doc.text(repName, textX + ersatzLabelW, blockY + blockPad + LINE + LINE * 0.8);
-              } else {
-                const txt = `✗ ${name}`;
-                doc.text(txt, textX, blockY + blockPad + LINE * 0.8);
-                const nameW = doc.getTextWidth(txt);
-                doc.setDrawColor(...blue);
-                doc.line(textX, blockY + blockPad + LINE * 0.7, textX + nameW, blockY + blockPad + LINE * 0.7);
-              }
-            } else {
-              doc.setFillColor(...amberBg);
-              doc.rect(blockX, blockY, blockW, blockH, "F");
-              doc.setDrawColor(...amberText);
-              doc.rect(blockX, blockY, blockW, blockH, "S");
-              doc.setTextColor(...amberText);
-              doc.text(`– ${name}  ${t("shifts.status_open", locale)}`, textX, blockY + blockPad + LINE * 0.8);
-            }
-            y += blockH + blockGap;
-          }
-          y += 2;
-        }
-        y += 4;
-      }
-    }
-
-    doc.save(`Anwesenheit-Schichtplan-${new Date().toISOString().slice(0, 10)}.pdf`);
-  }, [shifts, profileNames, locale]);
+  const pdfData = useMemo(() => {
+    const orgLabel =
+      (organizationName ?? "").trim() ||
+      (organizationSlug ?? "").trim() ||
+      "—";
+    const { start, end } = deriveDateRange(shifts);
+    return buildAttendanceExportData({
+      organisationName: orgLabel,
+      shifts,
+      profileNames,
+      profileRoles,
+      periodFrom: start,
+      periodTo: end,
+      locale: loc
+    });
+  }, [shifts, profileNames, profileRoles, organizationName, organizationSlug, loc]);
 
   if (!shifts || shifts.length === 0) return null;
+  if (pdfData.days.length === 0) return null;
 
   return (
-    <button
-      type="button"
-      onClick={exportPdf}
-      className="rounded border border-border-default bg-bg-secondary px-3 py-1.5 text-xs text-text-primary hover:bg-bg-tertiary focus:outline-none focus:ring-2 focus:ring-gray-300 dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-tertiary dark:focus:ring-gray-600"
-    >
-      {t("shifts.export_attendance_pdf", locale)}
-    </button>
+    <ExportAttendanceButton
+      data={pdfData}
+      className={buttonClassName}
+      exportLabel={t("shifts.export_attendance_pdf", locale)}
+      loadingLabel={t("shifts.export_attendance_pdf_generating", locale)}
+      aria-label={t("shifts.export_attendance_pdf", locale)}
+    />
   );
 }

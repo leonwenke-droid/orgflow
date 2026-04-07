@@ -13,7 +13,7 @@ export async function approveTransferAction(
 ): Promise<{ error?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const actor = await requireOrgAdminAction(orgIdForData);
+  const actor = await requireOrgAdminAction(orgIdForData, orgSlug);
   if (!actor) return { error: "Not authorized." };
 
   const supabase = createServerComponentClient({ cookies });
@@ -34,7 +34,7 @@ export async function rejectTransferAction(
 ): Promise<{ error?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const actor = await requireOrgAdminAction(orgIdForData);
+  const actor = await requireOrgAdminAction(orgIdForData, orgSlug);
   if (!actor) return { error: "Not authorized." };
 
   const supabase = createServerComponentClient({ cookies });

@@ -18,7 +18,7 @@ export async function GET(
   const { org: orgSlug } = await context.params;
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) {
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return NextResponse.json({ error: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
   }
 

@@ -180,7 +180,7 @@ export default async function AdminTasksPage(props: PageProps) {
       const org = await getCurrentOrganization(orgSlug);
       const orgIdForData = getOrgIdForData(orgSlug, org.id);
       // Fast-path: use direct profile lookup (isOrgAdmin now has a fast org-scoped path).
-      if (await isOrgAdmin(orgIdForData)) orgId = orgIdForData;
+      if (await isOrgAdmin(orgIdForData, orgSlug)) orgId = orgIdForData;
     } catch {
       orgId = null;
     }

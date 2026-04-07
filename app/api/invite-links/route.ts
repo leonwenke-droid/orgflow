@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     const org = await getCurrentOrganization(orgSlug);
-    if (!(await isOrgAdmin(org.id))) {
+    if (!(await isOrgAdmin(org.id, orgSlug))) {
       return NextResponse.json({ message: "Admin access required." }, { status: 403 });
     }
 

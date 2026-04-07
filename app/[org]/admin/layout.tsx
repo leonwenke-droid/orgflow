@@ -7,7 +7,8 @@ import type { DbRole } from "../../../types";
 
 export const dynamic = "force-dynamic";
 
-const ADMIN_ACCESS_ROLES = new Set<DbRole>(["admin", "owner", "teamlead", "lead", "super_admin"]);
+/** Org-scoped roles that may use /[org]/admin/* (Mitgliedschaft in dieser Organisation). */
+const ORG_ADMIN_AREA_ROLES = new Set<DbRole>(["admin", "owner", "teamlead", "lead"]);
 
 export default async function AdminLayout({
   children,
@@ -27,10 +28,11 @@ export default async function AdminLayout({
 
   const member = await resolveMemberProfileForOrganization(user.id, params.org, org);
   const role = (member?.role ?? null) as DbRole | null;
-  let ok = role != null && ADMIN_ACCESS_ROLES.has(role);
+  let ok = role != null && ORG_ADMIN_AREA_ROLES.has(role);
+  // Plattform-Super-Admin (Developer): alle Orgs, unabhängig von Org-Rolle — bewusst getrennt vom Org-Admin.
   if (!ok) {
-    const { data: isSuper } = await supabase.rpc("is_super_admin");
-    if (isSuper === true) ok = true;
+    const { data: isPlatformSuperAdmin } = await supabase.rpc("is_super_admin");
+    if (isPlatformSuperAdmin === true) ok = true;
   }
 
   if (!ok) redirect(`/${params.org}/dashboard`);

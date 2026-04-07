@@ -66,6 +66,16 @@ export default function AdminTasksKanban({
       const prev = serverTasks.find((tk) => tk.id === taskId)?.status;
       if (prev === newStatus) return;
 
+      const task = serverTasks.find((tk) => tk.id === taskId);
+      if (
+        newStatus === "erledigt" &&
+        task?.proof_required &&
+        !task?.proof_url
+      ) {
+        toast(t("tasks.proof_required_before_done", locale), "error");
+        return;
+      }
+
       setStatusOverrides((o) => ({ ...o, [taskId]: newStatus }));
       setSavingIds((s) => new Set(s).add(taskId));
       setDraggingId(null);
@@ -78,7 +88,10 @@ export default function AdminTasksKanban({
           body: JSON.stringify({ status: newStatus })
         });
         if (!res.ok) {
-          throw new Error(`Server error: ${res.status}`);
+          const data = (await res.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          throw new Error(data.error || `Server error: ${res.status}`);
         }
         router.refresh();
       } catch (err) {
@@ -88,7 +101,11 @@ export default function AdminTasksKanban({
           delete copy[taskId];
           return copy;
         });
-        toast("Status konnte nicht gespeichert werden.", "error");
+        const msg =
+          err instanceof Error && err.message
+            ? err.message
+            : t("tasks.complete_error", locale);
+        toast(msg, "error");
       } finally {
         setSavingIds((s) => {
           const copy = new Set(s);
@@ -97,7 +114,7 @@ export default function AdminTasksKanban({
         });
       }
     },
-    [router, serverTasks]
+    [router, serverTasks, locale]
   );
 
   return (

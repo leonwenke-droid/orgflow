@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { getRequestLocale } from "../../../lib/localeServer";
 import Link from "next/link";
@@ -7,7 +8,6 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isOrgAdmin } from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { removePastShifts } from "../../../lib/cleanupShifts";
-import CreateShiftsForm from "../../../components/CreateShiftsForm";
 import ShiftPlanTableWithEdit from "../../../components/ShiftPlanTableWithEdit";
 import ShiftAttendancePdfExport, { type ShiftForPdf } from "../../../components/ShiftAttendancePdfExport";
 import EmptyState from "../../../components/EmptyState";
@@ -19,7 +19,28 @@ import { requireOrgAdminAction } from "../../../lib/permissionsServer";
 import { writeAuditLog } from "../../../lib/audit";
 import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
 import ShiftTabFilter from "../../../components/shifts/ShiftTabFilter";
+import ShiftTrashDropdown from "../../../components/shifts/ShiftTrashDropdown";
+import ShiftsConsoleShell from "../../../components/shifts/ShiftsConsoleShell";
+import ShiftsConsoleTabs from "../../../components/shifts/ShiftsConsoleTabs";
+import { normalizeShiftsConsoleTab } from "../../../lib/shiftsConsoleTabs";
+import ShiftsCalendarPanel from "../../../components/shifts/ShiftsCalendarPanel";
+import NewShiftModal from "../../../components/shifts/NewShiftModal";
+import MemberConsoleShiftsLoader from "../../../components/shifts/MemberConsoleShiftsLoader";
+import ShiftsAttendanceConsole from "../../../components/shifts/ShiftsAttendanceConsole";
+import ShiftsQrFlowTimeline from "../../../components/shifts/ShiftsQrFlowTimeline";
+import ShiftsStatsPanel from "../../../components/shifts/ShiftsStatsPanel";
+import ShiftsAutoAssignConfirmForm from "../../../components/shifts/ShiftsAutoAssignConfirmForm";
+import { computeShiftConsoleStats, addCalendarDays } from "../../../lib/shiftStats";
 import { filterShiftsByTime, type ShiftTimeFilter } from "../../../lib/shiftTimeFilter";
+import {
+  flagsFromAssignmentKind,
+  parseAssignmentKind,
+  parseAttendanceMode,
+  type ShiftAssignmentKind
+} from "../../../lib/shiftAssignmentKind";
+import { qrFieldsForAttendanceMode, shiftQrValidityIso } from "../../../lib/shiftQr";
+import { assignRotationFairOne, previewRotationForShift } from "../../../lib/actions/rotation";
+import { addEngagementEvent } from "../../../lib/engagement/addEvent";
 
 export const dynamic = "force-dynamic";
 
@@ -272,6 +293,163 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
   if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
 }
 
+type MemberFillRow = {
+  id: string;
+  score: number;
+  full_name: string | null;
+  last_rot: string | null;
+};
+
+function sortMembersForRotationFill(a: MemberFillRow, b: MemberFillRow): number {
+  if (a.score !== b.score) return a.score - b.score;
+  const aT = a.last_rot == null ? Number.NEGATIVE_INFINITY : new Date(a.last_rot).getTime();
+  const bT = b.last_rot == null ? Number.NEGATIVE_INFINITY : new Date(b.last_rot).getTime();
+  if (aT !== bT) return aT - bT;
+  return (a.full_name ?? "").localeCompare(b.full_name ?? "", undefined, { sensitivity: "base" });
+}
+
+/**
+ * Fills remaining slots on self-sign-up shifts (not enough members claimed).
+ * Mode "auto": weighted random by engagement score (like batch auto-assign for new shifts).
+ * Mode "rotation": lowest engagement score first, then rotation last_assigned_at (nulls first), then name.
+ */
+async function fillSelfSignupGaps(formData: FormData) {
+  "use server";
+  const orgId = formData.get("organization_id")?.toString() || null;
+  const orgSlug = formData.get("org_slug")?.toString() || null;
+  const mode = formData.get("mode")?.toString() === "rotation" ? "rotation" : "auto";
+  if (!orgId) return;
+
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const actor = await requireOrgAdminAction(orgId, orgSlug);
+  if (!actor) return;
+
+  const service = createSupabaseServiceRoleClient();
+  const todayStr = getTodayDateString();
+
+  const { data: shifts } = await service
+    .from("shifts")
+    .select("id, required_slots, date")
+    .eq("organization_id", orgId)
+    .eq("assignment_kind", "self_signup")
+    .is("deleted_at", null)
+    .gte("date", todayStr)
+    .order("date", { ascending: true })
+    .order("start_time", { ascending: true });
+
+  const shiftRows = (shifts ?? []) as { id: string; required_slots: number | null; date: string }[];
+  if (shiftRows.length === 0) {
+    revalidatePath("/admin/shifts");
+    if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
+    return;
+  }
+
+  const shiftIds = shiftRows.map((s) => s.id);
+  const { data: assignments } = await service
+    .from("shift_assignments")
+    .select("shift_id, user_id")
+    .in("shift_id", shiftIds);
+
+  const assignedByShift = new Map<string, Set<string>>();
+  for (const a of assignments ?? []) {
+    const sid = (a as { shift_id: string }).shift_id;
+    const uid = (a as { user_id: string }).user_id;
+    if (!assignedByShift.has(sid)) assignedByShift.set(sid, new Set());
+    assignedByShift.get(sid)!.add(uid);
+  }
+
+  const [{ data: profiles }, { data: scores }, { data: rotScores }, { data: counters }] = await Promise.all([
+    service.from("profiles").select("id, role, status, full_name").eq("organization_id", orgId),
+    service.from("engagement_scores").select("user_id, score").eq("organization_id", orgId),
+    service.from("rotation_scores").select("user_id, last_assigned_at").eq("organization_id", orgId),
+    service.from("user_counters").select("user_id, load_index")
+  ]);
+
+  const scoreMap = new Map((scores ?? []).map((s: { user_id: string; score?: number | null }) => [s.user_id, Number(s.score) ?? 0]));
+  const rotMap = new Map(
+    (rotScores ?? []).map((r: { user_id: string; last_assigned_at?: string | null }) => [
+      r.user_id,
+      r.last_assigned_at ?? null
+    ])
+  );
+  const loadMap = new Map(
+    (counters ?? []).map((c: { user_id: string; load_index?: number | null }) => [
+      c.user_id,
+      Number(c.load_index) ?? 0
+    ])
+  );
+
+  const members: MemberFillRow[] = (profiles ?? [])
+    .filter((p: { status?: string | null; role?: string | null }) => p.status !== "disabled" && p.role !== "viewer")
+    .map((p: { id: string; full_name?: string | null }) => ({
+      id: p.id as string,
+      score: scoreMap.get(p.id as string) ?? 0,
+      full_name: (p.full_name as string | null) ?? null,
+      last_rot: rotMap.get(p.id as string) ?? null
+    }));
+
+  const globallyUsed = new Set<string>();
+  const toInsert: { shift_id: string; user_id: string; status: string }[] = [];
+  const increments = new Map<string, number>();
+
+  for (const shift of shiftRows) {
+    const required = Math.max(1, Number(shift.required_slots ?? 1) || 1);
+    const already = assignedByShift.get(shift.id) ?? new Set<string>();
+    const missing = Math.max(0, required - already.size);
+    if (missing <= 0) continue;
+
+    const cooldownUsers = await getUsersInCooldown(service, shift.date);
+
+    const eligible = members.filter(
+      (m) => !already.has(m.id) && !globallyUsed.has(m.id) && !cooldownUsers.has(m.id)
+    );
+    if (eligible.length === 0) continue;
+
+    let picked: { id: string }[] = [];
+    if (mode === "auto") {
+      picked = weightedRandomSelect(
+        eligible.map((m) => ({ id: m.id, score: m.score })),
+        missing
+      );
+    } else {
+      const sorted = [...eligible].sort(sortMembersForRotationFill);
+      picked = sorted.slice(0, missing).map((m) => ({ id: m.id }));
+    }
+
+    for (const p of picked) {
+      toInsert.push({ shift_id: shift.id, user_id: p.id, status: "zugewiesen" });
+      globallyUsed.add(p.id);
+      increments.set(p.id, (increments.get(p.id) ?? 0) + 1);
+    }
+  }
+
+  if (toInsert.length > 0) {
+    await service.from("shift_assignments").insert(toInsert);
+    for (const [uid, inc] of increments.entries()) {
+      const current = loadMap.get(uid) ?? 0;
+      await service
+        .from("user_counters")
+        .update({ load_index: current + inc, updated_at: new Date().toISOString() })
+        .eq("user_id", uid);
+    }
+    await writeAuditLog({
+      organizationId: orgId,
+      actorProfileId: actor.actorProfileId,
+      action: "shift.fill_self_signup_gaps",
+      targetTable: "shift_assignments",
+      metadata: { mode, inserted: toInsert.length }
+    });
+  }
+
+  revalidatePath("/admin/shifts");
+  if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
+}
+
 async function resolveShiftOrganizationId(shiftId: string): Promise<string | null> {
   const service = createSupabaseServiceRoleClient();
   const { data } = await service.from("shifts").select("organization_id").eq("id", shiftId).maybeSingle();
@@ -306,10 +484,16 @@ async function createShifts(
     const requiredSlotsRaw = Number(formData.get("required_slots")?.toString() || "0");
     const requiredSlots = Number.isFinite(requiredSlotsRaw) ? Math.max(1, Math.floor(requiredSlotsRaw)) : 1;
     const organizationId = formData.get("organization_id")?.toString() || null;
+    const formOrgSlug = formData.get("org_slug")?.toString().trim() || null;
     const eventId = formData.get("event_id")?.toString().trim() || null;
-    const assignmentMode = formData.get("assignment_mode")?.toString() || "claim";
-    const autoAssign = assignmentMode === "auto" || formData.get("auto_assign") === "on";
-    const claimable = assignmentMode !== "auto";
+    const rawKind = formData.get("assignment_kind")?.toString();
+    const legacyMode = formData.get("assignment_mode")?.toString();
+    const assignmentKind: ShiftAssignmentKind = parseAssignmentKind(
+      rawKind || (legacyMode === "auto" ? "auto_assign" : "self_signup")
+    );
+    const { claimable, auto_assign: autoAssignFlag } = flagsFromAssignmentKind(assignmentKind);
+    const autoAssign = assignmentKind === "auto_assign";
+    const attendanceMode = parseAttendanceMode(formData.get("attendance_mode")?.toString());
 
     if (!date) {
       return { error: "Date required.", errorKey: "shifts.date_required" };
@@ -319,7 +503,7 @@ async function createShifts(
     }
 
     if (!organizationId) return { errorKey: "common.unauthorized" };
-    const actor = await requireOrgAdminAction(organizationId);
+    const actor = await requireOrgAdminAction(organizationId, formOrgSlug);
     if (!actor) return { errorKey: "common.unauthorized" };
 
     const supabase = createServerComponentClient({ cookies });
@@ -339,8 +523,42 @@ async function createShifts(
       createdBy = profile?.id ?? null;
     }
 
-    const baseRow = (overrides: Partial<{ event_name: string; date: string; start_time: string; end_time: string; location: string | null; notes: string | null; created_by: string | null; required_slots: number; event_id: string | null }>) =>
-      ({ event_name: "", date, start_time: "", end_time: "", location, notes, created_by: createdBy, required_slots: requiredSlots, auto_assign: autoAssign, claimable, ...(eventId ? { event_id: eventId } : {}), ...overrides, ...(organizationId ? { organization_id: organizationId } : {}) });
+    const baseRow = (
+      overrides: Partial<{
+        event_name: string;
+        date: string;
+        start_time: string;
+        end_time: string;
+        location: string | null;
+        notes: string | null;
+        created_by: string | null;
+        required_slots: number;
+        event_id: string | null;
+      }>
+    ) => {
+      const st = overrides.start_time ?? "";
+      const et = overrides.end_time ?? "";
+      const qr =
+        st && et ? qrFieldsForAttendanceMode(attendanceMode, date, st, et) : { qr_token: null, qr_valid_from: null, qr_valid_until: null };
+      return {
+        event_name: "",
+        date,
+        start_time: "",
+        end_time: "",
+        location,
+        notes,
+        created_by: createdBy,
+        required_slots: requiredSlots,
+        auto_assign: autoAssignFlag,
+        claimable,
+        assignment_kind: assignmentKind,
+        attendance_mode: attendanceMode,
+        ...qr,
+        ...(eventId ? { event_id: eventId } : {}),
+        ...overrides,
+        ...(organizationId ? { organization_id: organizationId } : {})
+      };
+    };
 
     if (type === "pausenverkauf") {
       const rows = [
@@ -414,19 +632,28 @@ async function createShifts(
         const hasAufbau = addSetupTeardown && isFirst && firstSlotStart < start;
         const hasAbbau = addSetupTeardown && isLast && lastSlotEnd > end;
 
+        const stSlot = toHHMM(effectiveStart);
+        const etSlot = toHHMM(effectiveEnd);
+        const logicalSt = toHHMM(start);
+        const logicalEt = toHHMM(end);
+        const displayTitle =
+          slotTimes.length > 1 ? `${eventName} – ${logicalSt}–${logicalEt}` : eventName;
         rows.push({
-          event_name: eventName,
+          event_name: displayTitle,
           date,
-          start_time: toHHMM(effectiveStart),
-          end_time: toHHMM(effectiveEnd),
+          start_time: stSlot,
+          end_time: etSlot,
           location,
           notes,
           created_by: createdBy,
           required_slots: requiredSlots,
           has_aufbau: hasAufbau,
           has_abbau: hasAbbau,
-          auto_assign: autoAssign,
+          auto_assign: autoAssignFlag,
           claimable,
+          assignment_kind: assignmentKind,
+          attendance_mode: attendanceMode,
+          ...qrFieldsForAttendanceMode(attendanceMode, date, stSlot, etSlot),
           ...(eventId ? { event_id: eventId } : {}),
           ...(organizationId ? { organization_id: organizationId } : {})
         });
@@ -498,6 +725,8 @@ async function updateShift(shiftId: string, formData: FormData) {
   const endTime = formData.get("end_time")?.toString();
   const location = formData.get("location")?.toString().trim() || null;
   const notes = formData.get("notes")?.toString().trim() || null;
+  const kindRaw = formData.get("assignment_kind")?.toString();
+  const attendanceRaw = formData.get("attendance_mode")?.toString();
 
   if (!eventName || !date || !startTime || !endTime) return;
   const organizationId = await resolveShiftOrganizationId(shiftId);
@@ -505,18 +734,50 @@ async function updateShift(shiftId: string, formData: FormData) {
   const actor = await requireOrgAdminAction(organizationId);
   if (!actor) return;
 
+  const assignmentKind = kindRaw ? parseAssignmentKind(kindRaw) : null;
+  const flags = assignmentKind ? flagsFromAssignmentKind(assignmentKind) : null;
+  const attendanceMode = attendanceRaw ? parseAttendanceMode(attendanceRaw) : null;
+
   const service = createSupabaseServiceRoleClient();
-  const { error } = await service
+  const { data: existingShift } = await service
     .from("shifts")
-    .update({
-      event_name: eventName,
-      date,
-      start_time: startTime,
-      end_time: endTime,
-      location,
-      notes
-    })
-    .eq("id", shiftId);
+    .select("qr_token, attendance_mode")
+    .eq("id", shiftId)
+    .maybeSingle();
+  const effectiveAttendanceMode = attendanceRaw
+    ? parseAttendanceMode(attendanceRaw)
+    : parseAttendanceMode(String((existingShift as { attendance_mode?: string } | null)?.attendance_mode ?? "qr"));
+  const qrPart =
+    effectiveAttendanceMode === "qr" && (existingShift as { qr_token?: string | null } | null)?.qr_token
+      ? (() => {
+          const w = shiftQrValidityIso(date, startTime, endTime);
+          return {
+            qr_token: (existingShift as { qr_token: string }).qr_token,
+            qr_valid_from: w.qr_valid_from,
+            qr_valid_until: w.qr_valid_until
+          };
+        })()
+      : qrFieldsForAttendanceMode(effectiveAttendanceMode, date, startTime, endTime);
+
+  const payload: Record<string, unknown> = {
+    event_name: eventName,
+    date,
+    start_time: startTime,
+    end_time: endTime,
+    location,
+    notes,
+    ...qrPart
+  };
+  if (assignmentKind && flags) {
+    payload.assignment_kind = assignmentKind;
+    payload.claimable = flags.claimable;
+    payload.auto_assign = flags.auto_assign;
+  }
+  if (attendanceMode) {
+    payload.attendance_mode = attendanceMode;
+  }
+
+  const { error } = await service.from("shifts").update(payload).eq("id", shiftId);
 
   if (!error) {
     await writeAuditLog({
@@ -679,9 +940,16 @@ async function markAssignmentAttended(assignmentId: string) {
   const actor = await requireOrgAdminAction(organizationId);
   if (!actor) return;
   const service = createSupabaseServiceRoleClient();
+  const nowIso = new Date().toISOString();
   const { error } = await service
     .from("shift_assignments")
-    .update({ status: "erledigt" })
+    .update({
+      status: "erledigt",
+      checked_in_at: nowIso,
+      checked_in_by: actor.actorProfileId,
+      check_in_method: "manual",
+      attendance_status: "present"
+    })
     .eq("id", assignmentId);
   if (!error) {
     await writeAuditLog({
@@ -690,7 +958,7 @@ async function markAssignmentAttended(assignmentId: string) {
       action: "shift.assignment_status_updated",
       targetTable: "shift_assignments",
       targetId: assignmentId,
-      metadata: { status: "erledigt" }
+      metadata: { status: "erledigt", checkedIn: true }
     });
     revalidatePath("/admin/shifts");
     revalidatePath("/dashboard");
@@ -719,21 +987,34 @@ async function markAssignmentNotAttended(
     .from("shift_assignments")
     .update({
       status: "abgesagt",
-      replacement_user_id: replacementUserId || null
+      replacement_user_id: replacementUserId || null,
+      attendance_status: "absent",
+      checked_in_at: null,
+      check_in_method: null
     })
     .eq("id", assignmentId);
   if (updateErr) return;
 
   const originalUserId = assignment.user_id as string;
+  const shiftIdStr = assignment.shift_id as string;
   if (replacementUserId) {
-    const points = await getShiftDonePoints(service, assignment.shift_id as string);
-    await service.from("engagement_events").insert({ user_id: replacementUserId, event_type: "shift_done", points, source_id: assignmentId });
+    const points = await getShiftDonePoints(service, shiftIdStr);
+    await addEngagementEvent(service, {
+      userId: replacementUserId,
+      organizationId: organizationId,
+      eventType: "shift_done",
+      points,
+      sourceId: assignmentId,
+      shiftId: shiftIdStr
+    });
   } else {
-    await service.from("engagement_events").insert({
-      user_id: originalUserId,
-      event_type: "shift_missed",
+    await addEngagementEvent(service, {
+      userId: originalUserId,
+      organizationId: organizationId,
+      eventType: "shift_missed",
       points: SHIFT_MISSED_PENALTY,
-      source_id: assignmentId
+      sourceId: assignmentId,
+      shiftId: shiftIdStr
     });
   }
   revalidatePath("/admin/shifts");
@@ -779,12 +1060,27 @@ async function updateAssignmentStatus(
   if (updateErr) return;
 
   const originalUserId = assignment.user_id as string;
+  const shiftIdForEv = assignment.shift_id as string;
   if (status === "abgesagt") {
     if (replacementUserId) {
-      const points = await getShiftDonePoints(service, assignment.shift_id as string);
-      await service.from("engagement_events").insert({ user_id: replacementUserId, event_type: "shift_done", points, source_id: assignmentId });
+      const points = await getShiftDonePoints(service, shiftIdForEv);
+      await addEngagementEvent(service, {
+        userId: replacementUserId,
+        organizationId: organizationId,
+        eventType: "shift_done",
+        points,
+        sourceId: assignmentId,
+        shiftId: shiftIdForEv
+      });
     } else {
-      await service.from("engagement_events").insert({ user_id: originalUserId, event_type: "shift_missed", points: SHIFT_MISSED_PENALTY, source_id: assignmentId });
+      await addEngagementEvent(service, {
+        userId: originalUserId,
+        organizationId: organizationId,
+        eventType: "shift_missed",
+        points: SHIFT_MISSED_PENALTY,
+        sourceId: assignmentId,
+        shiftId: shiftIdForEv
+      });
     }
   }
   revalidatePath("/admin/shifts");
@@ -824,69 +1120,10 @@ async function deleteShift(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
-/**
- * Löscht alle Schichten einer Veranstaltung (date + event_name exakt oder mit Suffix wie " – 1. Pause").
- * Damit ist z. B. Pausenverkauf komplett löschbar (beide Pausen auf einmal).
- */
-async function deleteEventShifts(formData: FormData) {
-  "use server";
-  const baseEventName = formData.get("eventName")?.toString();
-  const date = formData.get("eventDate")?.toString();
-  if (!baseEventName || !date) return;
-  const service = createSupabaseServiceRoleClient();
-  const { data: allOnDate } = await service
-    .from("shifts")
-    .select("id, event_name")
-    .eq("date", date);
-  const toDelete = (allOnDate ?? []).filter(
-    (s: { id: string; event_name: string }) =>
-      s.event_name === baseEventName || s.event_name.startsWith(baseEventName + " – ")
-  );
-  const ids = toDelete.map((s: { id: string }) => s.id);
-  if (ids.length === 0) return;
-  const orgForCheck = await resolveShiftOrganizationId(ids[0]);
-  if (!orgForCheck) return;
-  const actor = await requireOrgAdminAction(orgForCheck);
-  if (!actor) return;
-  await service.from("shift_assignments").delete().in("shift_id", ids);
-  await service
-    .from("shifts")
-    .update({ deleted_at: new Date().toISOString(), deleted_by: actor.actorProfileId })
-    .in("id", ids);
-  await writeAuditLog({
-    organizationId: orgForCheck,
-    actorProfileId: actor.actorProfileId,
-    action: "shift.soft_deleted_batch",
-    targetTable: "shifts",
-    metadata: { count: ids.length, baseEventName }
-  });
-  revalidatePath("/admin/shifts");
-  revalidatePath("/dashboard");
-}
-
-async function restoreShift(formData: FormData) {
-  "use server";
-  const shiftId = String(formData.get("shiftId") ?? "").trim();
-  if (!shiftId) return;
-  const organizationId = await resolveShiftOrganizationId(shiftId);
-  if (!organizationId) return;
-  const actor = await requireOrgAdminAction(organizationId);
-  if (!actor) return;
-  const service = createSupabaseServiceRoleClient();
-  await service.from("shifts").update({ deleted_at: null, deleted_by: null }).eq("id", shiftId);
-  await writeAuditLog({
-    organizationId,
-    actorProfileId: actor.actorProfileId,
-    action: "shift.restored",
-    targetTable: "shifts",
-    targetId: shiftId
-  });
-  revalidatePath("/admin/shifts");
-  revalidatePath("/dashboard");
-}
-
 type ShiftsPageProps = {
-  searchParams?: Promise<{ org?: string; event?: string; success?: string }> | { org?: string; event?: string; success?: string };
+  searchParams?:
+    | Promise<{ org?: string; event?: string; success?: string; view?: string; tab?: string }>
+    | { org?: string; event?: string; success?: string; view?: string; tab?: string };
 };
 
 export default async function ShiftsPage(props: ShiftsPageProps) {
@@ -895,13 +1132,18 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   const [locale, searchParams] = await Promise.all([
     getRequestLocale(),
     raw && typeof (raw as Promise<unknown>).then === "function"
-      ? (raw as Promise<{ org?: string; event?: string; success?: string }>)
-      : Promise.resolve((raw ?? {}) as { org?: string; event?: string; success?: string })
+      ? (raw as Promise<{ org?: string; event?: string; success?: string; view?: string; tab?: string }>)
+      : Promise.resolve(
+          (raw ?? {}) as { org?: string; event?: string; success?: string; view?: string; tab?: string }
+        )
   ]);
   const orgSlug = searchParams?.org?.trim() || null;
   const eventIdFilter = searchParams?.event?.trim() || null;
   const shiftsCreatedSuccess = searchParams?.success === "1";
   const timeFilter = ((searchParams as Record<string, string | undefined>)?.time ?? "all") as ShiftTimeFilter;
+  const sp = searchParams as Record<string, string | undefined>;
+  let activeTab = normalizeShiftsConsoleTab(sp?.tab);
+  if (!sp?.tab && sp?.view === "calendar") activeTab = "cal";
 
   const supabase = createServerComponentClient({ cookies });
   const {
@@ -939,12 +1181,22 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     try {
       const org = await getCurrentOrganization(orgSlug);
       const orgIdForData = getOrgIdForData(orgSlug, org.id);
-      if (await isOrgAdmin(orgIdForData)) orgId = orgIdForData;
+      if (await isOrgAdmin(orgIdForData, orgSlug)) orgId = orgIdForData;
     } catch {
       orgId = null;
     }
   }
   if (!orgId && profile.organization_id) orgId = profile.organization_id;
+
+  let organizationName: string | null = null;
+  if (orgId) {
+    const { data: orgNameRow } = await service
+      .from("organizations")
+      .select("name")
+      .eq("id", orgId)
+      .maybeSingle();
+    organizationName = (orgNameRow as { name?: string | null } | null)?.name?.trim() || null;
+  }
 
   let effectiveOrgSlug = orgSlug;
   if (!effectiveOrgSlug && orgId) {
@@ -956,7 +1208,8 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
 
   const todayStr = getTodayDateString();
 
-  const SHIFT_SELECT = "id, event_name, date, start_time, end_time, location, notes, has_aufbau, has_abbau";
+  const SHIFT_SELECT =
+    "id, event_name, date, start_time, end_time, location, notes, has_aufbau, has_abbau, required_slots, auto_assign, claimable, assignment_kind, attendance_mode, event_id, qr_token, qr_valid_from, qr_valid_until";
 
   function buildShiftsQuery(includeDeletedFilter: boolean) {
     let q = service
@@ -984,22 +1237,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   const shiftsError =
     shiftsRes.error && !isMissingSoftDeleteColumnError(shiftsRes.error.message) ? shiftsRes.error : null;
 
-  let deletedShiftsQuery = service
-    .from("shifts")
-    .select("id, event_name, date, start_time, deleted_at")
-    .not("deleted_at", "is", null)
-    .order("deleted_at", { ascending: false })
-    .limit(50);
-  if (orgId) {
-    deletedShiftsQuery = deletedShiftsQuery.eq("organization_id", orgId);
-  }
-  const deletedShiftsRes = await deletedShiftsQuery;
-  const deletedShifts =
-    deletedShiftsRes.error && isMissingSoftDeleteColumnError(deletedShiftsRes.error.message)
-      ? []
-      : (deletedShiftsRes.data ?? []);
-
-  const profilesQuery = service.from("profiles").select("id, full_name").order("full_name");
+  const profilesQuery = service.from("profiles").select("id, full_name, role").order("full_name");
   const eventsQuery = orgId
     ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
     : Promise.resolve({ data: [] as { id: string; name: string }[] });
@@ -1008,7 +1246,9 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   }
 
   const [{ data: assignmentsRaw }, { data: profiles }, { data: counters }, { data: eventsList }] = await Promise.all([
-    service.from("shift_assignments").select("id, shift_id, status, user_id, replacement_user_id"),
+    service
+      .from("shift_assignments")
+      .select("id, shift_id, status, user_id, replacement_user_id, checked_in_at, check_in_method, attendance_status"),
     profilesQuery,
     service.from("user_counters").select("user_id, load_index, responsibility_malus"),
     eventsQuery
@@ -1017,7 +1257,15 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
 
   const assignmentsByShift = new Map<
     string,
-    { id: string; status: string; user_id: string; replacement_user_id: string | null }[]
+    {
+      id: string;
+      status: string;
+      user_id: string;
+      replacement_user_id: string | null;
+      checked_in_at: string | null;
+      check_in_method: string | null;
+      attendance_status: string | null;
+    }[]
   >();
   for (const a of assignmentsRaw ?? []) {
     const sid = (a as { shift_id: string }).shift_id;
@@ -1027,7 +1275,10 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
       id: (a as { id: string }).id,
       status: (a as { status: string }).status ?? "zugewiesen",
       user_id: (a as { user_id: string }).user_id ?? "",
-      replacement_user_id: (a as { replacement_user_id?: string }).replacement_user_id ?? null
+      replacement_user_id: (a as { replacement_user_id?: string }).replacement_user_id ?? null,
+      checked_in_at: (a as { checked_in_at?: string | null }).checked_in_at ?? null,
+      check_in_method: (a as { check_in_method?: string | null }).check_in_method ?? null,
+      attendance_status: (a as { attendance_status?: string | null }).attendance_status ?? null
     });
   }
   const shifts: ShiftForPdf[] = (shiftsRaw ?? []).map((s: Record<string, unknown>) => ({
@@ -1039,6 +1290,15 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
     location: (s.location as string | null) ?? null,
     has_aufbau: !!(s.has_aufbau as boolean),
     has_abbau: !!(s.has_abbau as boolean),
+    required_slots: s.required_slots as number | undefined,
+    auto_assign: s.auto_assign as boolean | null | undefined,
+    claimable: s.claimable as boolean | null | undefined,
+    assignment_kind: s.assignment_kind as string | undefined,
+    attendance_mode: s.attendance_mode as string | undefined,
+    event_id: s.event_id as string | null | undefined,
+    qr_token: s.qr_token as string | null | undefined,
+    qr_valid_from: s.qr_valid_from as string | null | undefined,
+    qr_valid_until: s.qr_valid_until as string | null | undefined,
     shift_assignments: assignmentsByShift.get((s.id as string) ?? "") ?? []
   }));
 
@@ -1063,8 +1323,36 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   const profileNames = new Map(
     (profiles ?? []).map((p) => [p.id, p.full_name])
   );
+  const profileRoles = new Map(
+    (profiles ?? []).map((p: { id: string; role?: string | null }) => [p.id, p.role ?? null])
+  );
 
   const filteredShifts = filterShiftsByTime(shifts, timeFilter, todayStr);
+
+  const consoleStats = computeShiftConsoleStats(shifts, profileNames, todayStr, 30);
+  const horizonEnd = addCalendarDays(todayStr, 30);
+  const shifts30 = shifts.filter((s) => {
+    const d = String(s.date ?? "").slice(0, 10);
+    return d >= todayStr && d <= horizonEnd;
+  });
+  let kpiCap = 0;
+  let kpiFilled = 0;
+  for (const s of shifts30) {
+    kpiCap += Math.max(1, Number(s.required_slots ?? 1) || 1);
+    kpiFilled += s.shift_assignments?.length ?? 0;
+  }
+  const kpiFree = Math.max(0, kpiCap - kpiFilled);
+
+  const eventQuery = (eventOverride?: string) => {
+    const p = new URLSearchParams();
+    if (effectiveOrgSlug) p.set("org", effectiveOrgSlug);
+    if (eventOverride) p.set("event", eventOverride);
+    const tf = (searchParams as Record<string, string | undefined>)?.time;
+    if (tf && tf !== "all") p.set("time", tf);
+    if (activeTab !== "admin") p.set("tab", activeTab);
+    const qs = p.toString();
+    return qs ? `/admin/shifts?${qs}` : "/admin/shifts";
+  };
 
   return (
     <div className="space-y-4">
@@ -1076,111 +1364,225 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
           {t("shifts.created_success", locale)}
         </p>
       )}
-      <div className="flex flex-wrap items-center gap-3">
-        <ShiftTabFilter />
-      </div>
-      {events.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="font-medium text-text-secondary">{t("shifts.event_optional", locale)}:</span>
-          <Link
-            href={effectiveOrgSlug ? `/admin/shifts?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/shifts"}
-            className="ui-pill"
-            aria-current={!eventIdFilter ? "page" : undefined}
-          >
-            {t("shifts.event_none", locale)}
-          </Link>
-          {events.map((ev) => (
-            <Link
-              key={ev.id}
-              href={effectiveOrgSlug ? `/admin/shifts?org=${encodeURIComponent(effectiveOrgSlug)}&event=${encodeURIComponent(ev.id)}` : `/admin/shifts?event=${encodeURIComponent(ev.id)}`}
-              className="ui-pill"
-              aria-current={eventIdFilter === ev.id ? "page" : undefined}
-            >
-              {ev.name}
-            </Link>
-          ))}
-        </div>
-      )}
-      <h2 className="text-sm font-semibold text-text-secondary">
-        {t("shifts.auto_assignment_title", locale)}
-      </h2>
-      <section className="card space-y-2 text-xs sm:space-y-3">
-        <h3 className="text-xs font-semibold text-text-secondary">{t("admin.new_shifts", locale)}</h3>
-        <p className="hidden text-[11px] text-text-muted sm:block">
-          {t("shifts.help_text", locale)}
-        </p>
-        <CreateShiftsForm action={createShifts} organizationId={orgId ?? undefined} events={events} />
-      </section>
-      <section className="overflow-hidden rounded-[var(--radius-modal)] border border-[var(--border-subtle)] bg-[var(--bg-primary)] shadow-sm dark:border-white/10 dark:bg-[#161614]">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] px-4 py-3 dark:border-white/10 dark:bg-bg-primary/5">
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary">{t("admin.shift_plan", locale)}</h3>
-            <p className="mt-0.5 text-[11px] text-text-muted">{t("admin.shift_plan_hint", locale)}</p>
+      <ShiftsConsoleShell>
+        <Suspense
+          fallback={
+            <div className="tab-shell mb-5 h-[52px] animate-pulse rounded-[var(--sp-radius-lg)] bg-bg-secondary dark:bg-white/[0.06]" />
+          }
+        >
+          <ShiftsConsoleTabs active={activeTab} />
+        </Suspense>
+        <div className="sp-tab-spacer" aria-hidden />
+
+        {activeTab === "admin" && (
+          <>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <ShiftTabFilter />
+              {orgId ? <ShiftTrashDropdown orgId={orgId} /> : null}
+            </div>
+            {events.length > 0 && (
+              <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-medium text-text-secondary">{t("shifts.event_optional", locale)}:</span>
+                <Link href={eventQuery()} className="ui-pill" aria-current={!eventIdFilter ? "page" : undefined}>
+                  {t("shifts.event_none", locale)}
+                </Link>
+                {events.map((ev) => (
+                  <Link
+                    key={ev.id}
+                    href={eventQuery(ev.id)}
+                    className="ui-pill"
+                    aria-current={eventIdFilter === ev.id ? "page" : undefined}
+                  >
+                    {ev.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+            <div className="g4 mb-4">
+              <div className="stat">
+                <div className="sl">{t("shifts.v2_kpi_shifts", locale)}</div>
+                <div className="sv">{shifts30.length}</div>
+                <div className="ss">{t("shifts.v2_kpi_shifts_sub", locale)}</div>
+              </div>
+              <div className="stat">
+                <div className="sl">{t("shifts.v2_kpi_slots", locale)}</div>
+                <div className="sv" style={{ color: "var(--sp-success)" }}>
+                  {kpiFilled}/{kpiCap || 0}
+                </div>
+                <div className="ss">
+                  {kpiCap > 0 ? t("shifts.v2_kpi_utilization", locale).replace("{pct}", String(Math.round((kpiFilled / kpiCap) * 100))) : "—"}
+                </div>
+              </div>
+              <div className="stat">
+                <div className="sl">{t("shifts.v2_kpi_open", locale)}</div>
+                <div className="sv" style={{ color: "var(--sp-warn)" }}>
+                  {kpiFree}
+                </div>
+                <div className="ss">{t("shifts.v2_kpi_open_sub", locale)}</div>
+              </div>
+              <div className="stat">
+                <div className="sl">{t("shifts.console_stats_rate", locale)}</div>
+                <div className="sv">
+                  {consoleStats.ratePercent != null ? `${consoleStats.ratePercent}%` : "—"}
+                </div>
+                <div className="ss">{t("shifts.console_stats_last_month", locale)}</div>
+              </div>
+            </div>
+            <section className="card overflow-hidden">
+              {shiftsError ? (
+                <div className="cbd">
+                  <p className="text-xs text-red-300">{shiftsError.message}</p>
+                </div>
+              ) : !filteredShifts || filteredShifts.length === 0 ? (
+                <>
+                  <div className="chd flex flex-wrap items-center justify-between gap-2">
+                    <span>{t("shifts.v2_manage_shifts_title", locale)}</span>
+                    {orgId ? (
+                      <NewShiftModal action={createShifts} organizationId={orgId} events={events} />
+                    ) : null}
+                  </div>
+                  <div className="cbd">
+                    <EmptyState messageKey="empty.shifts_first" variant="admin" />
+                  </div>
+                </>
+              ) : (
+                <ShiftPlanTableWithEdit
+                  orgSlug={effectiveOrgSlug ?? ""}
+                  shifts={filteredShifts}
+                  profileNames={profileNames}
+                  membersSortedByLoad={membersSortedByLoad}
+                  assignToShift={assignToShift}
+                  deleteShift={deleteShift}
+                  updateShift={updateShift}
+                  updateEventGroup={updateEventGroup}
+                  removeAssignment={removeAssignment}
+                  replaceAssignment={replaceAssignment}
+                  previewRotationForShift={previewRotationForShift}
+                  assignRotationFairOne={assignRotationFairOne}
+                  headerActions={
+                    <>
+                      <NewShiftModal action={createShifts} organizationId={orgId ?? undefined} events={events} />
+                      {orgId ? (
+                        <ShiftsAutoAssignConfirmForm action={runAutoAssignForExistingShifts} className="contents">
+                          <input type="hidden" name="organization_id" value={orgId} />
+                          <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
+                          <SubmitButtonWithSpinner className="btn btnp" loadingLabel="…">
+                            {t("shifts.run_auto_assignment", locale)}
+                          </SubmitButtonWithSpinner>
+                        </ShiftsAutoAssignConfirmForm>
+                      ) : null}
+                      {orgId ? (
+                        <ShiftsAutoAssignConfirmForm
+                          action={fillSelfSignupGaps}
+                          confirmKey="shifts.confirm_fill_self_signup"
+                          className="flex flex-wrap items-center gap-2"
+                        >
+                          <input type="hidden" name="organization_id" value={orgId} />
+                          <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
+                          <select
+                            name="mode"
+                            defaultValue="auto"
+                            className="sh-fill-mode-select"
+                            aria-label={t("shifts.fill_self_signup_mode_label", locale)}
+                            title={t("shifts.fill_self_signup_mode_tooltip", locale)}
+                          >
+                            <option value="auto">{t("shifts.fill_self_signup_mode_auto", locale)}</option>
+                            <option value="rotation">{t("shifts.fill_self_signup_mode_rotation", locale)}</option>
+                          </select>
+                          <SubmitButtonWithSpinner
+                            className="btn btnp"
+                            loadingLabel="…"
+                            aria-label={t("shifts.fill_self_signup_run_aria", locale)}
+                          >
+                            {t("shifts.fill_self_signup_run", locale)}
+                          </SubmitButtonWithSpinner>
+                        </ShiftsAutoAssignConfirmForm>
+                      ) : null}
+                      {orgId && shifts && shifts.length > 0 ? (
+                        <ShiftAttendancePdfExport
+                          organizationId={orgId}
+                          shifts={shifts}
+                          profileNames={Object.fromEntries(profileNames)}
+                          profileRoles={Object.fromEntries(profileRoles)}
+                          organizationName={organizationName ?? undefined}
+                          organizationSlug={effectiveOrgSlug ?? undefined}
+                          buttonClassName="btn"
+                        />
+                      ) : null}
+                    </>
+                  }
+                />
+              )}
+            </section>
+          </>
+        )}
+
+        {activeTab === "cal" && (
+          <div className="sc-card p-4">
+            <div className="mb-4">
+              <ShiftTabFilter />
+            </div>
+            {shiftsError ? (
+              <p className="text-xs text-red-300">{shiftsError.message}</p>
+            ) : !filteredShifts || filteredShifts.length === 0 ? (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {orgId ? (
+                    <NewShiftModal action={createShifts} organizationId={orgId} events={events} />
+                  ) : null}
+                </div>
+                <EmptyState messageKey="empty.shifts_first" variant="admin" />
+              </div>
+            ) : (
+              <ShiftsCalendarPanel
+                shifts={filteredShifts}
+                todayStr={todayStr}
+                profileNames={Object.fromEntries(profileNames)}
+              />
+            )}
           </div>
-          {orgId && (
-            <form action={runAutoAssignForExistingShifts} className="flex items-center gap-2">
-              <input type="hidden" name="organization_id" value={orgId} />
-              <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
-              <SubmitButtonWithSpinner
-                className="btn-primary px-3 py-1.5 text-xs"
-                loadingLabel="…"
-              >
-                {t("shifts.run_auto_assignment", locale)}
-              </SubmitButtonWithSpinner>
-            </form>
-          )}
-          {shifts && shifts.length > 0 && (
-            <ShiftAttendancePdfExport
-              shifts={shifts}
-              profileNames={Object.fromEntries(profileNames)}
-            />
-          )}
-        </div>
-        <div className="p-4">
-        {shiftsError ? (
-          <p className="text-xs text-red-300">{shiftsError.message}</p>
-        ) : (!filteredShifts || filteredShifts.length === 0) ? (
-          <EmptyState messageKey="empty.shifts" actionHref={effectiveOrgSlug ? `/${effectiveOrgSlug}/admin/shifts` : "/admin/shifts"} actionLabelKey="cta.create_shift" />
-        ) : (
-          <ShiftPlanTableWithEdit
-            orgSlug={effectiveOrgSlug ?? undefined}
-            shifts={filteredShifts}
-            todayStr={todayStr}
-            profileNames={profileNames}
-            membersSortedByLoad={membersSortedByLoad}
-            assignToShift={assignToShift}
-            deleteShift={deleteShift}
-            deleteEventShifts={deleteEventShifts}
-            updateShift={updateShift}
-            updateEventGroup={updateEventGroup}
-            removeAssignment={removeAssignment}
-            replaceAssignment={replaceAssignment}
-            markAssignmentAttended={markAssignmentAttended}
-            markAssignmentNotAttended={markAssignmentNotAttended}
-            updateAssignmentStatus={updateAssignmentStatus}
+        )}
+
+        {activeTab === "member" && <MemberConsoleShiftsLoader orgSlug={effectiveOrgSlug} />}
+
+        {activeTab === "attend" && (
+          <>
+            <div className="mb-4">
+              <ShiftTabFilter />
+            </div>
+            <Suspense fallback={<p className="text-sm opacity-80">{t("common.loading", locale)}</p>}>
+              <ShiftsAttendanceConsole
+                orgSlug={effectiveOrgSlug ?? ""}
+                organizationId={orgId ?? undefined}
+                organizationName={organizationName ?? undefined}
+                shifts={filteredShifts ?? []}
+                profileNames={Object.fromEntries(profileNames)}
+                profileRoles={Object.fromEntries(profileRoles)}
+                markAssignmentAttended={markAssignmentAttended}
+                markAssignmentNotAttended={markAssignmentNotAttended}
+              />
+            </Suspense>
+          </>
+        )}
+
+        {activeTab === "qr" && (
+          <div className="sc-card p-5">
+            <ShiftsQrFlowTimeline />
+          </div>
+        )}
+
+        {activeTab === "stats" && (
+          <ShiftsStatsPanel
+            locale={locale}
+            orgSlug={effectiveOrgSlug}
+            ratePercent={consoleStats.ratePercent}
+            completedShiftsCount={consoleStats.completedShiftsCount}
+            unexcusedMissedCount={consoleStats.unexcusedMissedCount}
+            memberRows={consoleStats.memberRows}
           />
         )}
-        </div>
-      </section>
-      {(deletedShifts?.length ?? 0) > 0 && (
-        <section className="card">
-          <h3 className="mb-2 text-sm font-semibold text-text-secondary">{t("shifts.trash_title", locale)}</h3>
-          <div className="space-y-2">
-            {(deletedShifts ?? []).map((shift: { id: string; event_name?: string | null; date?: string | null; start_time?: string | null; deleted_at?: string | null }) => (
-              <form key={shift.id} action={restoreShift} className="flex items-center justify-between gap-2 rounded-[var(--radius-input)] border border-[var(--border-subtle)] bg-[var(--bg-primary)] px-3 py-2 text-xs dark:border-white/10 dark:bg-bg-primary/5">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{shift.event_name || "Untitled shift"}</p>
-                  <p className="text-text-muted">{shift.date || "—"} {shift.start_time || ""}</p>
-                </div>
-                <input type="hidden" name="shiftId" value={shift.id} />
-                <SubmitButtonWithSpinner className="btn-secondary px-2 py-1 text-xs" loadingLabel="…">
-                  {t("common.restore", locale)}
-                </SubmitButtonWithSpinner>
-              </form>
-            ))}
-          </div>
-        </section>
-      )}
+
+      </ShiftsConsoleShell>
       <RealtimeRefreshBridge organizationId={orgId} table="shift_assignments" />
     </div>
   );

@@ -37,7 +37,7 @@ export default async function ShiftsViewerPage(props: {
   const service = createSupabaseServiceRoleClient();
   const { data: mePrimary } = await service
     .from("profiles")
-    .select("id, role")
+    .select("id, role, full_name")
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgIdForData)
     .maybeSingle();
@@ -46,14 +46,15 @@ export default async function ShiftsViewerPage(props: {
   const { data: meFallback } = (!mePrimary && orgIdForData !== org.id)
     ? await service
         .from("profiles")
-        .select("id, role")
+        .select("id, role, full_name")
         .eq("auth_user_id", user.id)
         .eq("organization_id", org.id)
         .maybeSingle()
     : { data: null };
 
-  const myProfile = (mePrimary ?? meFallback) as { id?: string; role?: string } | null;
+  const myProfile = (mePrimary ?? meFallback) as { id?: string; role?: string; full_name?: string } | null;
   const myProfileId = myProfile?.id ?? null;
+  const myDisplayName = myProfile?.full_name ?? "";
   const myRole = myProfile?.role ?? null;
 
   if (!myProfileId) {
@@ -72,7 +73,7 @@ export default async function ShiftsViewerPage(props: {
 
   const { data: shifts } = await service
     .from("shifts")
-    .select("id, event_name, date, start_time, end_time, location, required_slots, auto_assign, claimable, shift_assignments(id, user_id, replacement_user_id, status, swap_offered)")
+    .select("id, event_name, date, start_time, end_time, location, required_slots, auto_assign, claimable, assignment_kind, attendance_mode, qr_token, qr_valid_from, qr_valid_until, shift_assignments(id, user_id, replacement_user_id, status, swap_offered)")
     .eq("organization_id", effectiveOrgIdForData)
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
@@ -116,6 +117,7 @@ export default async function ShiftsViewerPage(props: {
       locale={locale}
       canClaim={canClaim}
       myProfileId={myProfileId}
+      memberDisplayName={myDisplayName}
       organizationId={effectiveOrgIdForData}
       shifts={upcomingShifts as any}
       claimShiftAction={claimShiftAction}

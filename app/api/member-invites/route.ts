@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) {
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return NextResponse.json({ message: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
   }
 
@@ -150,7 +150,7 @@ export async function DELETE(req: Request) {
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) {
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return NextResponse.json({ message: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
   }
 

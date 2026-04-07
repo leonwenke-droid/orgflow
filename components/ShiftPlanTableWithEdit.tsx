@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ShiftEditModal from "./ShiftEditModal";
 import SubmitButtonWithSpinner from "./SubmitButtonWithSpinner";
-import { formatDateLabel } from "../lib/dateFormat";
 import { useLocale } from "./LocaleProvider";
-import { t } from "../lib/i18n";
-import DownloadQrPngButton from "./DownloadQrPngButton";
+import { t, type Locale } from "../lib/i18n";
+import { effectiveAssignmentKind, type ShiftAssignmentKind } from "../lib/shiftAssignmentKind";
+import AssignmentKindHelpIcon from "./shifts/AssignmentKindHelpIcon";
+import RotationAssignButton from "./shifts/RotationAssignButton";
 
 type Member = { id: string; full_name: string; load_index?: number; responsibility_malus?: number };
 
@@ -19,21 +21,22 @@ type AssignmentRow = {
 };
 
 type Props = {
-  orgSlug?: string;
+  orgSlug: string;
   shifts: any[];
-  todayStr: string;
   profileNames: Map<string, string>;
   membersSortedByLoad: Member[];
   assignToShift: (shiftId: string, formData: FormData) => Promise<void>;
   deleteShift: (formData: FormData) => Promise<void>;
-  deleteEventShifts: (formData: FormData) => Promise<void>;
   updateShift: (shiftId: string, formData: FormData) => Promise<void>;
   updateEventGroup?: (shiftIds: string[], formData: FormData) => Promise<void>;
   removeAssignment: (assignmentId: string) => Promise<void>;
   replaceAssignment: (assignmentId: string, formData: FormData) => Promise<void>;
-  markAssignmentAttended: (assignmentId: string) => Promise<void>;
-  markAssignmentNotAttended: (assignmentId: string, replacementUserId: string | null) => Promise<void>;
-  updateAssignmentStatus: (assignmentId: string, status: "erledigt" | "abgesagt", replacementUserId: string | null) => Promise<void>;
+  previewRotationForShift?: (shiftId: string) => Promise<
+    import("../types/rotation").PreviewRotationForShiftResult
+  >;
+  assignRotationFairOne?: (shiftId: string) => Promise<import("../types/rotation").AssignRotationFairOneResult>;
+  /** Actions rechts neben Typ-Filter (z. B. Neue Schicht, PDF, Batch Auto-Zuteilung) */
+  headerActions?: ReactNode;
 };
 
 function timeStr(t: string | null | undefined): string {
@@ -41,459 +44,233 @@ function timeStr(t: string | null | undefined): string {
   return s.slice(0, 5) || "–";
 }
 
-/** Prüft, ob die Schicht zeitlich begonnen hat (Datum + Startzeit in der Vergangenheit). Ab dann kann Antreten/Ersatz abgefragt werden. */
-function isShiftStarted(shift: { date?: string; start_time?: string }, todayStr: string): boolean {
-  const dateStr = (shift.date ?? "").trim();
-  if (!dateStr) return false;
-  if (dateStr < todayStr) return true;
-  if (dateStr > todayStr) return false;
-  const start = String(shift.start_time ?? "00:00").trim().slice(0, 5);
-  const shiftStart = new Date(`${dateStr}T${start}`);
-  return !isNaN(shiftStart.getTime()) && new Date() >= shiftStart;
+function formatDateStrip(dateYmd: string, locale: Locale): string {
+  const s = String(dateYmd ?? "").slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || "–";
+  const [y, m, d] = s.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const loc = locale === "en" ? "en-GB" : "de-DE";
+  return new Intl.DateTimeFormat(loc, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(date);
 }
+
+function slotDotClass(taken: number, required: number): "dg" | "da" | "dr" {
+  if (taken === 0) return "dr";
+  const free = Math.max(0, required - taken);
+  if (free === 1) return "da";
+  return "dg";
+}
+
+function kindDotColor(kind: ShiftAssignmentKind): string {
+  switch (kind) {
+    case "self_signup":
+      return "#5b9fff";
+    case "auto_assign":
+      return "var(--sp-warn)";
+    case "rotation":
+      return "var(--sp-success)";
+    case "fixed":
+      return "var(--sp-violet)";
+    default:
+      return "var(--sp-text3)";
+  }
+}
+
+function buildSubline(
+  s: any,
+  assignments: AssignmentRow[],
+  profileNames: Map<string, string>,
+  locale: Locale
+): string {
+  const time = `${timeStr(s.start_time)}–${timeStr(s.end_time)}`;
+  const loc = typeof s.location === "string" ? s.location.trim() : "";
+  const kind = effectiveAssignmentKind(s);
+  const names = assignments.map((a) => profileNames.get(a.user_id ?? "") ?? "").filter(Boolean);
+  if (names.length === 0) {
+    if (kind === "rotation") {
+      return [time, loc, t("shifts.admin_subline_rotation", locale)].filter(Boolean).join(" · ");
+    }
+    return [time, loc, t("shifts.admin_subline_no_assignments", locale)].filter(Boolean).join(" · ");
+  }
+  const shown = names.slice(0, 2).join(", ");
+  const rest = names.length - 2;
+  const namePart = rest > 0 ? `${shown} +${rest}` : shown;
+  return [time, loc, namePart].filter(Boolean).join(" · ");
+}
+
+const KIND_OPTIONS = ["all", "self_signup", "auto_assign", "rotation", "fixed"] as const;
 
 export default function ShiftPlanTableWithEdit({
   orgSlug,
   shifts,
-  todayStr,
   profileNames,
   membersSortedByLoad,
   assignToShift,
   deleteShift,
-  deleteEventShifts,
   updateShift,
   updateEventGroup,
   removeAssignment,
   replaceAssignment,
-  markAssignmentAttended,
-  markAssignmentNotAttended,
-  updateAssignmentStatus
+  previewRotationForShift,
+  assignRotationFairOne,
+  headerActions
 }: Props) {
   const { locale } = useLocale();
   const router = useRouter();
+  const [kindFilter, setKindFilter] = useState<(typeof KIND_OPTIONS)[number]>("all");
   const [editingShifts, setEditingShifts] = useState<any[] | null>(null);
 
-  /** Nach Personenänderung werden Schichten neu geladen – Modal-Daten synchronisieren */
   useEffect(() => {
     if (!editingShifts?.length || !shifts?.length) return;
     const ids = editingShifts.map((s: any) => s.id);
     const updated = ids.map((id) => shifts.find((s: any) => s.id === id)).filter(Boolean);
     if (updated.length === ids.length) setEditingShifts(updated);
-    // Re-sync open modal only when server `shifts` refresh; omit `editingShifts` from deps to avoid loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shifts]);
   const [editingPersonsOnly, setEditingPersonsOnly] = useState(false);
-  const [notAttendedAssignmentId, setNotAttendedAssignmentId] = useState<string | null>(null);
-  const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
 
-  /** Full origin for QR / print; falls back to NEXT_PUBLIC_SITE_URL until hydrated. */
-  const [absOrigin, setAbsOrigin] = useState(
-    () =>
-      (typeof window !== "undefined" ? window.location.origin : "") ||
-      (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_SITE_URL || "" : "")
-  );
-  useEffect(() => {
-    if (typeof window !== "undefined") setAbsOrigin(window.location.origin);
-  }, []);
+  const visibleShifts = useMemo(() => {
+    if (kindFilter === "all") return shifts;
+    return (shifts as any[]).filter((s) => effectiveAssignmentKind(s) === kindFilter);
+  }, [shifts, kindFilter]);
 
-  const checkinBasePrefix = absOrigin || "";
-
-  const assignmentCheckinUrl = (assignmentId: string) =>
-    orgSlug
-      ? `${checkinBasePrefix}/checkin?org=${encodeURIComponent(orgSlug)}&assignmentId=${encodeURIComponent(assignmentId)}&auto=1`
-      : null;
-
-  const shiftCheckinUrl = (shiftId: string) =>
-    orgSlug
-      ? `${checkinBasePrefix}/checkin?org=${encodeURIComponent(orgSlug)}&shiftId=${encodeURIComponent(shiftId)}&auto=1`
-      : null;
-
-  const byDate = (shifts as any[]).reduce(
-    (acc: Record<string, any[]>, s: any) => {
-      const d = s.date;
+  const byDate = useMemo(() => {
+    const acc: Record<string, any[]> = {};
+    for (const s of visibleShifts as any[]) {
+      const d = String(s.date ?? "").slice(0, 10) || "—";
       if (!acc[d]) acc[d] = [];
       acc[d].push(s);
-      return acc;
-    },
-    {}
-  );
+    }
+    return acc;
+  }, [visibleShifts]);
+
   const dates = Object.keys(byDate).sort();
 
-  /** Gruppiert Schichten zu einem Event (z. B. Conference setup – 14:30–15:30 → Conference setup). */
-  const eventGroupKey = (eventName: string) =>
-    String(eventName ?? "")
-      .trim()
-      .replace(/\s*–\s*[12]\.\s*Pause$/i, "")
-      .replace(/\s*–\s*\d{1,2}:\d{2}–\d{1,2}:\d{2}$/, "")
-      .trim() || "—";
-
-  const sortShiftsByTime = (arr: any[]) =>
-    [...arr].sort((a, b) => {
-      const ta = String(a.start_time ?? "").replace(":", "");
-      const tb = String(b.start_time ?? "").replace(":", "");
-      return ta.localeCompare(tb);
-    });
-
-  const byDateAndEvent = (dateStr: string) => {
-    const dayShifts = sortShiftsByTime(byDate[dateStr] ?? []);
-    const map = new Map<string, any[]>();
-    for (const s of dayShifts) {
-      const key = eventGroupKey(s.event_name);
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(s);
-    }
-    return Array.from(map.entries()).map(([k, v]) => [k, sortShiftsByTime(v)] as [string, any[]]);
+  const attendHref = (shiftId: string) => {
+    const q = new URLSearchParams();
+    if (orgSlug) q.set("org", orgSlug);
+    q.set("tab", "attend");
+    q.set("shiftId", shiftId);
+    return `/admin/shifts?${q.toString()}`;
   };
-
-  const renderEditStatusForm = (a: AssignmentRow) => {
-    const name = profileNames.get(a.user_id ?? "") ?? "?";
-    const showReplacement = notAttendedAssignmentId === a.id;
-    const checkinUrl = assignmentCheckinUrl(a.id);
-    return (
-      <li key={a.id} className="rounded-md border border-border-subtle bg-bg-secondary px-2 py-1.5 text-[11px] dark:border-border-default dark:bg-bg-primary/80">
-        <div className="mb-1.5 flex items-center justify-between gap-2">
-          <span className="truncate font-medium text-text-primary dark:text-text-primary">{name}</span>
-          <button type="button" onClick={() => { setEditingAssignmentId(null); setNotAttendedAssignmentId(null); }} className="shrink-0 text-[10px] text-text-secondary hover:text-text-secondary">{t("common.close", locale)}</button>
-        </div>
-        {checkinUrl && (
-          <div className="mb-2 rounded border border-border-subtle bg-bg-primary p-2 dark:border-border-default dark:bg-bg-primary/50">
-            <p className="text-[10px] font-semibold text-text-secondary dark:text-text-primary">{t("shifts.checkin_qr", locale)}</p>
-            <a href={checkinUrl} className="mt-0.5 block truncate text-[10px] text-blue-600 underline" title={checkinUrl}>
-              {checkinUrl}
-            </a>
-            <DownloadQrPngButton
-              value={checkinUrl}
-              filename={`checkin-assignment-${a.id.slice(0, 8)}`}
-              label={t("shifts.checkin_qr_download_assignment", locale)}
-              className="mt-1.5 w-full rounded border border-border-default bg-bg-secondary px-2 py-1.5 text-[10px] font-medium text-text-primary hover:bg-bg-secondary dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-tertiary sm:w-auto"
-            />
-          </div>
-        )}
-        <div className="mb-1.5 flex flex-wrap gap-1.5">
-          <form action={async () => { await updateAssignmentStatus(a.id, "erledigt", null); setEditingAssignmentId(null); setNotAttendedAssignmentId(null); router.refresh(); }} className="inline">
-            <SubmitButtonWithSpinner className="rounded bg-green-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-green-300 hover:bg-green-500/35 disabled:opacity-70 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center" loadingLabel="…">✓ {t("shifts.attended", locale)}</SubmitButtonWithSpinner>
-          </form>
-          <button type="button" onClick={() => setNotAttendedAssignmentId(a.id)} className="rounded bg-amber-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-amber-300 hover:bg-amber-500/35 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center">✗ {t("shifts.not_attended", locale)}</button>
-        </div>
-        {showReplacement && (
-          <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await updateAssignmentStatus(a.id, "abgesagt", uid); setNotAttendedAssignmentId(null); setEditingAssignmentId(null); router.refresh(); }} className="space-y-1.5 border-t border-border-subtle pt-1 dark:border-border-default">
-            <label className="mb-0.5 block text-[10px] text-text-secondary dark:text-text-muted">{t("shifts.replacement", locale)}</label>
-            <select name="replacement_user_id" className="max-w-full rounded border border-border-default bg-bg-primary px-1.5 py-1.5 text-[10px] dark:border-border-default dark:bg-bg-primary dark:text-text-primary sm:py-0.5" defaultValue={a.replacement_user_id ?? ""}>
-              <option value="">{t("shifts.no_replacement", locale)}</option>
-              {membersSortedByLoad.filter((m) => m.id !== a.user_id).map((m) => (
-                <option key={m.id} value={m.id}>{m.full_name}</option>
-              ))}
-            </select>
-            <div className="flex gap-1.5">
-              <SubmitButtonWithSpinner className="rounded bg-[var(--bg-brand-subtle)] px-2 py-1 text-[10px] text-[var(--color-brand-text)] hover:opacity-90 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">{t("common.ok", locale)}</SubmitButtonWithSpinner>
-              <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-text-secondary hover:bg-[var(--bg-brand-subtle)] sm:px-1.5 sm:py-0.5">{t("common.cancel_short", locale)}</button>
-            </div>
-          </form>
-        )}
-      </li>
-    );
-  };
-
-  const renderStatusBlock = (s: any, assignments: AssignmentRow[], isPast: boolean, statusText: string) => (
-    isPast ? (
-      <ul className="space-y-1.5 sm:space-y-2">
-        {assignments.map((a) => {
-          const name = profileNames.get(a.user_id ?? "") ?? "?";
-          const replacementName = a.replacement_user_id
-            ? profileNames.get(a.replacement_user_id) ?? "?"
-            : null;
-          const isEditingThis = editingAssignmentId === a.id;
-
-          if (isEditingThis) {
-            return renderEditStatusForm(a);
-          }
-          if (a.status === "erledigt") {
-            return (
-              <li key={a.id} className="flex items-center gap-2 rounded-md border border-green-500/25 bg-green-500/10 px-2 py-1 text-[11px]">
-                <span className="text-green-400 shrink-0" aria-hidden>✓</span>
-                <button type="button" onClick={() => setEditingAssignmentId(a.id)} className="truncate text-left text-green-200/90 hover:underline focus:outline-none focus:underline min-w-0">
-                  {name}
-                </button>
-              </li>
-            );
-          }
-          if (a.status === "abgesagt") {
-            return (
-              <li key={a.id} className="rounded-md border border-red-500/25 bg-red-500/10 px-2 py-1 text-[11px]">
-                <div className="flex items-center gap-2">
-                  <span className="text-red-400 shrink-0" aria-hidden>✗</span>
-                  <button type="button" onClick={() => { setEditingAssignmentId(a.id); setNotAttendedAssignmentId(a.id); }} className={replacementName ? "min-w-0 truncate text-left text-red-600 hover:underline" : "min-w-0 truncate text-left text-text-muted line-through hover:underline"}>
-                    {name}
-                  </button>
-                </div>
-                {replacementName && <div className="mt-1 pl-4 text-[10px] text-text-secondary truncate">{t("shifts.replacement_label", locale).trim()}: {replacementName}</div>}
-              </li>
-            );
-          }
-          const showReplacement = notAttendedAssignmentId === a.id;
-          return (
-            <li key={a.id} className="rounded-md border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[11px]">
-              <div className="mb-1 truncate font-medium text-text-primary">{name}</div>
-              {!showReplacement ? (
-                <div className="flex flex-wrap gap-1.5">
-                  <form action={async () => { await markAssignmentAttended(a.id); setNotAttendedAssignmentId(null); router.refresh(); }} className="inline">
-                    <SubmitButtonWithSpinner className="rounded bg-green-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-green-300 hover:bg-green-500/35 disabled:opacity-70 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center" loadingLabel="…">✓</SubmitButtonWithSpinner>
-                  </form>
-                  <button type="button" onClick={() => setNotAttendedAssignmentId(a.id)} className="rounded bg-amber-500/25 px-2 py-1 sm:px-1.5 sm:py-0.5 text-[10px] text-amber-300 hover:bg-amber-500/35 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center">✗</button>
-                </div>
-              ) : (
-                <form action={async (fd: FormData) => { const uid = fd.get("replacement_user_id")?.toString() || null; await markAssignmentNotAttended(a.id, uid); setNotAttendedAssignmentId(null); router.refresh(); }} className="space-y-1.5">
-                  <div>
-                    <label className="mb-0.5 block text-[10px] text-text-secondary">{t("shifts.replacement", locale)}</label>
-                    <select name="replacement_user_id" className="max-w-full rounded border border-border-default bg-bg-primary px-1.5 py-1.5 text-[10px] dark:border-border-default dark:bg-bg-primary dark:text-text-primary sm:py-0.5">
-                      <option value="">{t("shifts.no_replacement", locale)}</option>
-                      {membersSortedByLoad.filter((m) => m.id !== a.user_id).map((m) => (
-                        <option key={m.id} value={m.id}>{m.full_name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex gap-1.5">
-                    <SubmitButtonWithSpinner className="rounded bg-[var(--bg-brand-subtle)] px-2 py-1 text-[10px] text-[var(--color-brand-text)] hover:opacity-90 disabled:opacity-70 sm:px-1.5 sm:py-0.5" loadingLabel="…">{t("common.ok", locale)}</SubmitButtonWithSpinner>
-                    <button type="button" onClick={() => setNotAttendedAssignmentId(null)} className="rounded px-2 py-1 text-[10px] text-text-secondary hover:bg-[var(--bg-brand-subtle)] sm:px-1.5 sm:py-0.5">{t("common.cancel_short", locale)}</button>
-                  </div>
-                </form>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    ) : (
-      statusText
-    )
-  );
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {dates.map((dateStr) => {
-          const dateLabel = formatDateLabel(dateStr);
-          const eventGroups = byDateAndEvent(dateStr);
+      <div className={`chd${headerActions ? " chd-shift-manage" : ""}`}>
+        <div className="chd-shift-manage-top">
+          <span>{t("shifts.v2_manage_shifts_title", locale)}</span>
+          <select
+            className="sh-kind-select"
+            value={kindFilter}
+            aria-label={t("shifts.filter_assignment_kind", locale)}
+            onChange={(e) => setKindFilter(e.target.value as (typeof KIND_OPTIONS)[number])}
+          >
+            {KIND_OPTIONS.map((k) => (
+              <option key={k} value={k}>
+                {t(`shifts.assignment_kind_short_${k}` as "shifts.assignment_kind_short_all", locale)}
+              </option>
+            ))}
+          </select>
+        </div>
+        {headerActions ? <div className="chd-shift-manage-actions">{headerActions}</div> : null}
+      </div>
+
+      {dates.length === 0 ? (
+        <div className="cbd">
+          <p className="text-sm" style={{ color: "var(--sp-text2)" }}>
+            {t("empty.shifts", locale)}
+          </p>
+        </div>
+      ) : (
+        dates.map((dateStr) => {
+          const dayShifts = [...(byDate[dateStr] ?? [])].sort((a, b) =>
+            String(a.start_time ?? "").localeCompare(String(b.start_time ?? ""))
+          );
           return (
-            <div
-              key={dateStr}
-              className="min-w-0 overflow-hidden rounded-xl border border-border-subtle bg-bg-primary shadow-sm dark:border-border-default dark:bg-bg-primary/40"
-            >
-              <div className="border-b border-border-subtle bg-bg-secondary px-3 py-2 dark:border-border-default dark:bg-bg-primary/80">
-                <h4 className="text-xs font-semibold tracking-wide text-text-primary dark:text-text-primary">
-                  {dateLabel}
-                </h4>
-              </div>
-              <div className="p-3 space-y-5">
-              {eventGroups.map(([eventName, dayShifts]) => {
-                  const firstShift = dayShifts[0];
-                  const headerOrt = firstShift?.location?.trim();
-                  const headerInfos = firstShift?.notes?.trim();
-                  return (
-                <div key={`${dateStr}-${eventName}`} className="overflow-hidden rounded-lg border border-border-subtle bg-bg-secondary dark:border-border-default dark:bg-bg-primary/50">
-                  <div className="space-y-1 border-b border-border-subtle bg-bg-primary px-3 py-2 dark:border-border-default dark:bg-bg-primary/30">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-xs font-medium text-text-primary dark:text-text-primary">
-                        {eventName || "—"}
-                      </span>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button type="button" onClick={() => { setEditingShifts(dayShifts); setEditingPersonsOnly(false); }} className="flex min-h-[36px] items-center justify-center rounded bg-[var(--bg-brand-subtle)] px-2 py-1 text-[10px] text-[var(--color-brand-text)] hover:opacity-90 sm:min-h-0" title={t("shifts.edit_event", locale)}>✎</button>
-                        <form
-                          action={deleteEventShifts}
-                          className="inline"
-                          onSubmit={(e) => {
-                            if (!window.confirm(t("shifts.confirm_delete_event", locale))) e.preventDefault();
+            <div key={dateStr}>
+              <div className="date-strip">{formatDateStrip(dateStr, locale)}</div>
+              {dayShifts.map((s: any) => {
+                const assignments = (s.shift_assignments ?? []) as AssignmentRow[];
+                const required = Math.max(1, Number(s.required_slots ?? 1) || 1);
+                const taken = assignments.length;
+                const ratio = `${taken}/${required}`;
+                const dot = slotDotClass(taken, required);
+                const kind = effectiveAssignmentKind(s);
+                const dotCol = kindDotColor(kind);
+                const sub = buildSubline(s, assignments, profileNames, locale);
+                const title = String(s.event_name ?? "").trim() || t("shifts.untitled_shift", locale);
+                const showRotationOnly =
+                  taken < required &&
+                  kind === "rotation" &&
+                  previewRotationForShift &&
+                  assignRotationFairOne &&
+                  required > 0;
+
+                return (
+                  <div key={s.id} className="row admin-shift-row">
+                    <div className="avail">
+                      <span className={`dot ${dot}`} aria-hidden />
+                      <span>{ratio}</span>
+                    </div>
+                    <div className="rm">
+                      <div className="fl" style={{ marginBottom: 2 }}>
+                        <span className="rt">{title}</span>
+                        <span className="type-badge inline-flex items-center gap-1">
+                          <span className="tdot" style={{ background: dotCol }} />
+                          {t(`shifts.assignment_kind_short_${kind}` as "shifts.assignment_kind_short_self_signup", locale)}
+                          <AssignmentKindHelpIcon kind={kind} />
+                        </span>
+                      </div>
+                      <div className="rmt">{sub}</div>
+                    </div>
+                    {showRotationOnly ? (
+                      <div className="ml">
+                        <RotationAssignButton
+                          shiftId={s.id}
+                          previewRotationForShift={previewRotationForShift}
+                          assignRotationFairOne={assignRotationFairOne}
+                        />
+                      </div>
+                    ) : (
+                      <div className="fl ml">
+                        <Link href={attendHref(s.id)} className="btn no-underline">
+                          {t("shifts.attendance_page_link", locale)}
+                        </Link>
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => {
+                            setEditingShifts([s]);
+                            setEditingPersonsOnly(false);
                           }}
                         >
-                          <input type="hidden" name="eventName" value={eventName} />
-                          <input type="hidden" name="eventDate" value={dateStr} />
+                          {t("common.edit", locale)}
+                        </button>
+                        <form
+                          action={deleteShift}
+                          className="inline"
+                          onSubmit={(e) => {
+                            if (!window.confirm(t("shifts.confirm_delete_shift", locale))) e.preventDefault();
+                          }}
+                        >
+                          <input type="hidden" name="shiftId" value={s.id} />
                           <SubmitButtonWithSpinner
-                            variant="destructive"
-                            buttonSize="sm"
-                            className="flex min-h-[36px] items-center justify-center text-[10px] sm:min-h-0"
-                            title={t("shifts.delete_event", locale)}
+                            className="btn btnr px-2 py-1.5 text-xs"
+                            title={t("common.remove", locale)}
                             loadingLabel="…"
+                            aria-label={t("common.remove", locale)}
                           >
-                            {t("common.delete", locale)}
+                            ✕
                           </SubmitButtonWithSpinner>
                         </form>
                       </div>
-                    </div>
-                    {(headerOrt || headerInfos) && (
-                      <div className="truncate text-[10px] text-text-secondary dark:text-text-muted" title={[headerOrt, headerInfos].filter(Boolean).join(" — ") || undefined}>
-                        {[headerOrt, headerInfos].filter(Boolean).join(" · ")}
-                      </div>
                     )}
                   </div>
-
-                  {/* Mobile: Karten pro Schicht */}
-                  <div className="sm:hidden p-2 space-y-2">
-                    {dayShifts.map((s: any) => {
-                      const assignments = (s.shift_assignments ?? []) as AssignmentRow[];
-                      const names = assignments.map(
-                        (a) => profileNames.get(a.user_id ?? "") ?? "?"
-                      );
-                      const isPast = isShiftStarted(s, todayStr);
-                      const done = assignments.filter((a) => a.status === "erledigt").length;
-                      const statusText =
-                        done === assignments.length && assignments.length > 0
-                          ? "erledigt"
-                          : assignments.length > 0
-                            ? `${done}/${assignments.length}`
-                            : "–";
-                      return (
-                        <div
-                          key={s.id}
-                          className="space-y-1.5 rounded-lg border border-border-subtle bg-bg-secondary p-2.5 dark:border-border-default dark:bg-bg-primary/60"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <div className="text-[11px] font-medium text-text-secondary dark:text-text-primary">
-                                {timeStr(s.start_time)}–{timeStr(s.end_time)}
-                                {(s.has_aufbau || s.has_abbau) && (
-                                  <span className="ml-1 text-[10px] text-text-secondary dark:text-text-muted">
-                                    ({[s.has_aufbau && "Aufbau", s.has_abbau && "Abbau"].filter(Boolean).join(" + ")})
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex flex-col gap-0.5 text-[10px] text-text-secondary dark:text-text-secondary">
-                                {names.length > 0 ? names.map((name, i) => <span key={i} className="truncate" title={name}>{name}</span>) : "–"}
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-1 shrink-0 touch-manipulation">
-                            {shiftCheckinUrl(s.id) && (
-                              <DownloadQrPngButton
-                                value={shiftCheckinUrl(s.id)!}
-                                filename={`checkin-shift-${s.id.slice(0, 8)}`}
-                                label={t("shifts.checkin_qr_download_shift", locale)}
-                                className="max-w-[140px] rounded border border-border-subtle bg-bg-primary px-2 py-1.5 text-[10px] font-medium text-text-primary hover:bg-bg-secondary dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-primary"
-                              />
-                            )}
-                            <div className="flex items-center gap-1">
-                              <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded bg-[var(--bg-brand-subtle)] text-sm text-[var(--color-brand-text)] hover:opacity-90" title="Personen" aria-label="Personen">✎</button>
-                              <form
-                                action={deleteShift}
-                                className="inline"
-                                onSubmit={(e) => {
-                                  if (!window.confirm(t("shifts.confirm_delete_shift", locale))) e.preventDefault();
-                                }}
-                              >
-                                <input type="hidden" name="shiftId" value={s.id} />
-                                <SubmitButtonWithSpinner
-                                  variant="destructive"
-                                  buttonSize="sm"
-                                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-sm"
-                                  title={t("common.remove", locale)}
-                                  loadingLabel="…"
-                                  aria-label={t("common.remove", locale)}
-                                >
-                                  ✕
-                                </SubmitButtonWithSpinner>
-                              </form>
-                            </div>
-                            </div>
-                          </div>
-                          <div className="border-t border-border-subtle pt-1.5 text-[11px] text-text-secondary dark:border-border-default dark:text-text-secondary">
-                            {renderStatusBlock(s, assignments, isPast, statusText)}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Desktop: Tabelle */}
-                  <div className="hidden sm:block overflow-x-auto">
-                    <table className="min-w-full border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-bg-secondary text-[11px] font-medium text-text-secondary dark:bg-bg-primary/80 dark:text-text-primary">
-                          <th className="py-2 px-2 text-left w-24">Zeit</th>
-                          <th className="py-2 px-2 text-left max-w-[100px]">Personen</th>
-                          <th className="py-2 px-2 text-left min-w-[140px]">Status</th>
-                          <th className="py-2 px-2 w-20 text-right"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                  {dayShifts.map((s: any, idx: number) => {
-                    const assignments = (s.shift_assignments ?? []) as AssignmentRow[];
-                    const names = assignments.map(
-                      (a) => profileNames.get(a.user_id ?? "") ?? "?"
-                    );
-                    const isPast = isShiftStarted(s, todayStr);
-                    const done = assignments.filter((a) => a.status === "erledigt").length;
-                    const statusText =
-                      done === assignments.length && assignments.length > 0
-                        ? "erledigt"
-                        : assignments.length > 0
-                          ? `${done}/${assignments.length}`
-                          : "–";
-                    return (
-                      <tr key={s.id} className={idx % 2 === 0 ? "bg-transparent dark:bg-transparent" : "bg-bg-secondary dark:bg-bg-primary/40"}>
-                        <td className="w-24 whitespace-nowrap px-2 py-2 text-[11px] text-text-secondary dark:text-text-primary">
-                          {timeStr(s.start_time)}–{timeStr(s.end_time)}
-                          {(s.has_aufbau || s.has_abbau) && (
-                            <span className="ml-1 text-[10px] text-text-secondary dark:text-text-muted">
-                              ({[s.has_aufbau && "Aufbau", s.has_abbau && "Abbau"].filter(Boolean).join(" + ")})
-                            </span>
-                          )}
-                        </td>
-                        <td className="max-w-[100px] px-2 py-2 align-top text-text-secondary dark:text-text-primary">
-                          {names.length > 0 ? (
-                            <div className="flex flex-col gap-0.5 text-[11px]">
-                              {names.map((name, i) => (
-                                <span key={i} className="truncate" title={name}>{name}</span>
-                              ))}
-                            </div>
-                          ) : "–"}
-                        </td>
-                        <td className="min-w-[140px] px-2 py-2 align-top text-text-secondary dark:text-text-secondary">
-                          {renderStatusBlock(s, assignments, isPast, statusText)}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:justify-end">
-                            {shiftCheckinUrl(s.id) && (
-                              <DownloadQrPngButton
-                                value={shiftCheckinUrl(s.id)!}
-                                filename={`checkin-shift-${s.id.slice(0, 8)}`}
-                                label={t("shifts.checkin_qr_download_shift", locale)}
-                                className="whitespace-nowrap rounded border border-border-subtle bg-bg-primary px-2 py-1 text-[10px] font-medium text-text-primary hover:bg-bg-secondary dark:border-border-default dark:bg-bg-primary dark:text-text-primary dark:hover:bg-bg-primary"
-                              />
-                            )}
-                            <div className="flex items-center justify-end gap-1">
-                            <button type="button" onClick={() => { setEditingShifts([s]); setEditingPersonsOnly(true); }} className="rounded bg-[var(--bg-brand-subtle)] px-2 py-1 text-[11px] text-[var(--color-brand-text)] hover:opacity-90" title="Personen">✎</button>
-                            <form
-                              action={deleteShift}
-                              className="inline"
-                              onSubmit={(e) => {
-                                if (!window.confirm(t("shifts.confirm_delete_shift", locale))) e.preventDefault();
-                              }}
-                            >
-                              <input type="hidden" name="shiftId" value={s.id} />
-                              <SubmitButtonWithSpinner
-                                variant="destructive"
-                                buttonSize="sm"
-                                className="px-2 py-1 text-[11px]"
-                                title={t("common.remove", locale)}
-                                loadingLabel="…"
-                              >
-                                ✕
-                              </SubmitButtonWithSpinner>
-                            </form>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                  );
-                })}
-              </div>
+                );
+              })}
             </div>
           );
-        })}
-      </div>
+        })
+      )}
 
       {editingShifts != null && editingShifts.length > 0 && (
         <ShiftEditModal
@@ -504,7 +281,9 @@ export default function ShiftPlanTableWithEdit({
             start_time: String(editingShifts[0].start_time ?? ""),
             end_time: String(editingShifts[0].end_time ?? ""),
             location: editingShifts[0].location ?? null,
-            notes: editingShifts[0].notes ?? null
+            notes: editingShifts[0].notes ?? null,
+            assignment_kind: editingShifts[0].assignment_kind ?? null,
+            attendance_mode: editingShifts[0].attendance_mode ?? null
           }}
           assignments={(editingShifts[0].shift_assignments ?? []).map((a: any) => ({
             id: a.id,
@@ -520,27 +299,34 @@ export default function ShiftPlanTableWithEdit({
           assignToShift={assignToShift}
           removeAssignment={removeAssignment}
           replaceAssignment={replaceAssignment}
-          onClose={() => { setEditingShifts(null); setEditingPersonsOnly(false); }}
+          onClose={() => {
+            setEditingShifts(null);
+            setEditingPersonsOnly(false);
+          }}
           onRefresh={router.refresh}
           personsOnly={editingPersonsOnly}
-          allShiftsWithAssignments={editingShifts.length > 1 && !editingPersonsOnly && updateEventGroup
-            ? editingShifts.map((s: any) => ({
-                shift: {
-                  id: s.id,
-                  event_name: s.event_name ?? "",
-                  date: String(s.date ?? ""),
-                  start_time: String(s.start_time ?? ""),
-                  end_time: String(s.end_time ?? ""),
-                  location: s.location ?? null,
-                  notes: s.notes ?? null
-                },
-                assignments: (s.shift_assignments ?? []).map((a: any) => ({
-                  id: a.id,
-                  user_id: a.user_id ?? "",
-                  status: a.status ?? "zugewiesen"
+          allShiftsWithAssignments={
+            editingShifts.length > 1 && !editingPersonsOnly && updateEventGroup
+              ? editingShifts.map((s: any) => ({
+                  shift: {
+                    id: s.id,
+                    event_name: s.event_name ?? "",
+                    date: String(s.date ?? ""),
+                    start_time: String(s.start_time ?? ""),
+                    end_time: String(s.end_time ?? ""),
+                    location: s.location ?? null,
+                    notes: s.notes ?? null,
+                    assignment_kind: s.assignment_kind ?? null,
+                    attendance_mode: s.attendance_mode ?? null
+                  },
+                  assignments: (s.shift_assignments ?? []).map((a: any) => ({
+                    id: a.id,
+                    user_id: a.user_id ?? "",
+                    status: a.status ?? "zugewiesen"
+                  }))
                 }))
-              }))
-            : undefined}
+              : undefined
+          }
           updateEventGroup={updateEventGroup}
         />
       )}

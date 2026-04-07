@@ -43,9 +43,10 @@ export async function GET(req: NextRequest) {
     const member = await resolveMemberProfileForOrganization(user.id, slug, resolved);
     role = (member?.role ?? null) as DbRole | null;
     profileId = member?.id ?? null;
+    // Nur Plattform-Accounts (global); Org-Admins kommen immer über `member.role` oben.
     if (role == null) {
-      const { data: isSuper } = await supabase.rpc("is_super_admin");
-      if (isSuper === true) role = "super_admin";
+      const { data: isPlatformSuperAdmin } = await supabase.rpc("is_super_admin");
+      if (isPlatformSuperAdmin === true) role = "super_admin";
     }
   }
 

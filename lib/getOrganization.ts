@@ -2,6 +2,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { DbRole } from "../types";
+import type { RotationConfig } from "./rotationConfig";
 import { createSupabaseServiceRoleClient } from "./supabaseServer";
 
 /** Organisations the current user belongs to (for /dashboard hub). */
@@ -52,6 +53,8 @@ export interface Organization {
   settings: {
     currency?: string;
     timezone?: string;
+    /** When `"en"` or `"de"`, member Excel template download uses that language; otherwise UI locale is used. */
+    locale?: string;
     features?: Record<string, boolean>;
     engagement_weights?: Record<string, number>;
     contact_email?: string;
@@ -64,6 +67,8 @@ export interface Organization {
   updated_at: string;
   setup_token?: string | null;
   setup_token_used_at?: string | null;
+  /** Fair rotation weights (JSONB); see rotation_assign / apply_rotation_daily_decay. */
+  rotation_config?: RotationConfig | null;
 }
 
 function orgIdentifierTokens(
@@ -199,12 +204,23 @@ export async function getAllOrganizations(): Promise<Organization[]> {
   return list;
 }
 
+const ORG_ADMIN_ACCESS_ROLES = new Set<string>(["admin", "owner", "lead", "teamlead"]);
+
+function roleAllowsOrgAdminArea(role: string | null | undefined): boolean {
+  return role != null && ORG_ADMIN_ACCESS_ROLES.has(String(role));
+}
+
 /**
- * Prüft, ob der aktuelle User Admin/Lead dieser Organisation ist (oder Super-Admin).
- * Nutzt RPC is_org_admin(org_id), um RLS beim Profil-Lesen zu umgehen.
- * Super-Admin hat immer Zugriff auf jedes Org-Admin.
+ * Prüft, ob der aktuelle User operative Org-Admin-Rechte hat (admin/owner/lead/teamlead) für diese Organisation,
+ * oder Plattform-Super-Admin. Berücksichtigt Legacy (Profil.organization_id ≠ organisations.id) wie
+ * resolveMemberProfileForOrganization.
+ *
+ * @param orgSlug optional URL-Slug — beschleunigt Auflösung; ohne Slug wird bei Bedarf die Org per `orgId` geladen.
  */
-export async function isOrgAdmin(orgId: string): Promise<boolean> {
+export async function isOrgAdmin(orgId: string, orgSlug?: string | null): Promise<boolean> {
+  const id = String(orgId ?? "").trim();
+  if (!id) return false;
+
   const supabase = createServerComponentClient({ cookies });
   const {
     data: { user }
@@ -212,26 +228,70 @@ export async function isOrgAdmin(orgId: string): Promise<boolean> {
 
   if (!user) return false;
 
-  // Fast-path: one profile lookup scoped to the org (common case).
   const { data: profileForOrg } = await supabase
     .from("profiles")
     .select("role, organization_id, status")
     .eq("auth_user_id", user.id)
-    .eq("organization_id", orgId)
+    .eq("organization_id", id)
     .maybeSingle();
 
   if (profileForOrg?.status !== "disabled") {
-    const r = profileForOrg?.role as DbRole | undefined;
-    if (r === "admin" || r === "owner" || r === "lead") return true;
+    const r = profileForOrg?.role as string | undefined;
+    if (roleAllowsOrgAdminArea(r)) return true;
   }
 
-  // Fallback: super-admin has access to every org.
+  const tryResolveByOrg = async (org: Organization, slugForResolve: string) => {
+    const member = await resolveMemberProfileForOrganization(user.id, slugForResolve, org);
+    return !!(member && roleAllowsOrgAdminArea(member.role as string));
+  };
+
+  const slugParam = String(orgSlug ?? "").trim();
+  if (slugParam) {
+    const org = await fetchActiveOrganizationBySlug(slugParam);
+    if (org && (await tryResolveByOrg(org, slugParam))) return true;
+  }
+
+  const service = createSupabaseServiceRoleClient();
+  const { data: orgRow } = await service
+    .from("organizations")
+    .select("*")
+    .eq("id", id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (orgRow) {
+    const org = orgRow as Organization;
+    const slug = String(org.slug ?? "").trim();
+    if (slug && (await tryResolveByOrg(org, slug))) return true;
+  }
+
   const { data: superAdmin } = await supabase.rpc("is_super_admin");
   if (superAdmin === true) return true;
 
-  // Last resort: keep existing RPC semantics (may bypass RLS recursion in edge cases).
-  const { data, error } = await supabase.rpc("is_org_admin", { org_id: orgId });
-  if (!error && typeof data === "boolean") return data;
+  const { data, error } = await supabase.rpc("is_org_admin", { org_id: id });
+  if (!error && typeof data === "boolean" && data) return true;
+
+  const { data: rows } = await service
+    .from("profiles")
+    .select("id, role, status, organization_id")
+    .eq("auth_user_id", user.id);
+  const active = (rows ?? []).filter(
+    (p) => (p as { status?: string }).status !== "disabled" && p.organization_id
+  ) as { id: string; role: string; organization_id: string }[];
+
+  for (const p of active) {
+    const { data: o } = await service
+      .from("organizations")
+      .select("id, slug")
+      .eq("id", p.organization_id)
+      .eq("is_active", true)
+      .maybeSingle();
+    const row = o as { id: string; slug: string } | null;
+    if (!row?.slug) continue;
+    const dataPlaneId = getOrgIdForData(row.slug, row.id);
+    if (String(dataPlaneId) !== id && String(row.id) !== id) continue;
+    if (roleAllowsOrgAdminArea(p.role)) return true;
+  }
 
   return false;
 }
@@ -305,7 +365,8 @@ export async function getCurrentUserOrganization(): Promise<Organization | null>
 }
 
 /**
- * Prüft, ob der aktuelle User Super-Admin ist.
+ * Plattform-Super-Admin (Developer): `profiles.role = super_admin`, Zugriff plattformweit.
+ * Das ist nicht dasselbe wie „Admin einer Organisation“ (`admin` / `owner` in genau dieser Org).
  */
 export async function isSuperAdmin(): Promise<boolean> {
   const supabase = createServerComponentClient({ cookies });
@@ -317,7 +378,7 @@ export async function isSuperAdmin(): Promise<boolean> {
 
   const { data, error } = await supabase.rpc("is_super_admin");
   if (error) {
-    console.error("[isSuperAdmin] rpc error", error);
+    console.error("[isSuperAdmin] platform RPC is_super_admin failed (org admins are unaffected)", error);
     return false;
   }
   return data === true;

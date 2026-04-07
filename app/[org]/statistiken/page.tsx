@@ -7,6 +7,8 @@ import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganiz
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { t } from "../../../lib/i18n";
 import { nextEngagementMilestone } from "../../../lib/formatDate";
+import { getEngagementBreakdown, getOrgScoreboard, getRecentEngagementEvents } from "../../../lib/engagement/getScore";
+import EngagementScoreWidget from "../../../components/engagement/EngagementScoreWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -119,6 +121,14 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
 
   const displayName = (me as any)?.full_name || (locale === "de" ? "Du" : "You");
 
+  const [breakdownWidget, recentEvWidget, orgBoardWidget] = engagementEnabled
+    ? await Promise.all([
+        getEngagementBreakdown(service, myProfileId, effectiveOrgIdForData),
+        getRecentEngagementEvents(service, myProfileId, effectiveOrgIdForData, 24),
+        getOrgScoreboard(service, effectiveOrgIdForData)
+      ])
+    : [null, null, null];
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header>
@@ -128,32 +138,58 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
 
       <section className="card">
         <div className="p-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-light text-xl font-semibold text-brand-dark">
-              {Number(score) || 0}
-            </div>
-            <div className="min-w-0 flex-1">
+          {engagementEnabled && breakdownWidget && recentEvWidget && orgBoardWidget ? (
+            <div className="space-y-2">
               <div className="text-sm font-medium text-text-primary">{displayName}</div>
-              <div className="mt-1 text-xs text-text-secondary">
-                {locale === "en"
-                  ? rank != null ? `Rank #${rank} of ${totalRanked}` : "Not ranked"
-                  : rank != null ? `Rang #${rank} von ${totalRanked}` : "Nicht gerankt"}
-              </div>
-              <div className="mt-3 h-2 w-full rounded-full bg-bg-tertiary">
-                <div className="h-2 rounded-full bg-brand" style={{ width: `${progressPct}%` }} />
-              </div>
+              <EngagementScoreWidget
+                totalScore={score}
+                breakdown={breakdownWidget}
+                recentEvents={recentEvWidget}
+                orgScoreboard={orgBoardWidget}
+                profileId={myProfileId}
+                displayName={displayName}
+              />
               <div className="mt-2 text-xs text-text-secondary">
                 {locale === "en"
                   ? `${Number(score) || 0} / ${next} pts. until next milestone`
                   : `${Number(score) || 0} / ${next} Pkt. bis nächster Meilenstein`}
               </div>
-              <div className="mt-2 text-[11px] text-text-secondary">
-                {locale === "en"
-                  ? "Scores increase when you complete tasks or shifts. Ranking compares scores inside your organisation."
-                  : "Scores steigen, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
+              <div className="mt-2 h-2 w-full max-w-md rounded-full bg-bg-tertiary">
+                <div className="h-2 rounded-full bg-brand" style={{ width: `${progressPct}%` }} />
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-light text-xl font-semibold text-brand-dark">
+                {Number(score) || 0}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-text-primary">{displayName}</div>
+                <div className="mt-1 text-xs text-text-secondary">
+                  {locale === "en"
+                    ? rank != null
+                      ? `Rank #${rank} of ${totalRanked}`
+                      : "Not ranked"
+                    : rank != null
+                      ? `Rang #${rank} von ${totalRanked}`
+                      : "Nicht gerankt"}
+                </div>
+                <div className="mt-3 h-2 w-full rounded-full bg-bg-tertiary">
+                  <div className="h-2 rounded-full bg-brand" style={{ width: `${progressPct}%` }} />
+                </div>
+                <div className="mt-2 text-xs text-text-secondary">
+                  {locale === "en"
+                    ? `${Number(score) || 0} / ${next} pts. until next milestone`
+                    : `${Number(score) || 0} / ${next} Pkt. bis nächster Meilenstein`}
+                </div>
+                <div className="mt-2 text-[11px] text-text-secondary">
+                  {locale === "en"
+                    ? "Scores increase when you complete tasks or shifts. Ranking compares scores inside your organisation."
+                    : "Scores steigen, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

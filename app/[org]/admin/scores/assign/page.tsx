@@ -20,7 +20,7 @@ export default async function AssignPointsPage({
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
 
-  if (!(await isOrgAdmin(orgIdForData))) {
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
 

@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import SubmitButtonWithSpinner from "./SubmitButtonWithSpinner";
+import AssignmentKindHelpIcon from "./shifts/AssignmentKindHelpIcon";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
 
@@ -12,6 +14,8 @@ type Shift = {
   end_time: string;
   location: string | null;
   notes: string | null;
+  assignment_kind?: string | null;
+  attendance_mode?: string | null;
 };
 
 type Assignment = { id: string; user_id: string; status: string };
@@ -76,6 +80,10 @@ export default function ShiftEditModal({
   updateEventGroup
 }: Props) {
   const { locale } = useLocale();
+  const [assignmentKindLocal, setAssignmentKindLocal] = useState(shift.assignment_kind ?? "self_signup");
+  useEffect(() => {
+    setAssignmentKindLocal(shift.assignment_kind ?? "self_signup");
+  }, [shift.id, shift.assignment_kind]);
   const isEventGroup = (allShiftsWithAssignments?.length ?? 0) > 1 && updateEventGroup;
   const totalAssignments = allShiftsWithAssignments?.reduce((sum, s) => sum + s.assignments.length, 0) ?? assignments.length;
 
@@ -187,6 +195,43 @@ export default function ShiftEditModal({
                 className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs resize-y dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
               />
             </div>
+            {!isEventGroup && (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div>
+                  <div className="mb-0.5 flex items-center gap-1.5">
+                    <label className="text-[10px] font-semibold text-text-secondary dark:text-text-secondary block">
+                      {t("shifts.assignment_kind_field", locale)}
+                    </label>
+                    <AssignmentKindHelpIcon kind={assignmentKindLocal} />
+                  </div>
+                  <select
+                    name="assignment_kind"
+                    value={assignmentKindLocal}
+                    onChange={(e) => setAssignmentKindLocal(e.target.value)}
+                    className="w-full rounded border border-border-default bg-bg-primary p-2.5 text-xs min-h-[44px] dark:border-border-default dark:bg-bg-primary dark:text-text-primary sm:min-h-0 sm:p-2"
+                  >
+                    <option value="self_signup">{t("shifts.assignment_kind_label_self_signup", locale)}</option>
+                    <option value="auto_assign">{t("shifts.assignment_kind_label_auto_assign", locale)}</option>
+                    <option value="rotation">{t("shifts.assignment_kind_label_rotation", locale)}</option>
+                    <option value="fixed">{t("shifts.assignment_kind_label_fixed", locale)}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-text-secondary dark:text-text-secondary mb-0.5 block">
+                    {t("shifts.attendance_mode_field", locale)}
+                  </label>
+                  <select
+                    name="attendance_mode"
+                    defaultValue={shift.attendance_mode ?? "qr"}
+                    className="w-full rounded border border-border-default bg-bg-primary p-2.5 text-xs min-h-[44px] dark:border-border-default dark:bg-bg-primary dark:text-text-primary sm:min-h-0 sm:p-2"
+                  >
+                    <option value="qr">{t("shifts.attendance_mode_label_qr", locale)}</option>
+                    <option value="admin_only">{t("shifts.attendance_mode_label_admin_only", locale)}</option>
+                    <option value="none">{t("shifts.attendance_mode_label_none", locale)}</option>
+                  </select>
+                </div>
+              </div>
+            )}
             <SubmitButtonWithSpinner
               className="rounded bg-blue-600 px-3 py-2.5 text-[11px] text-white hover:bg-blue-700 sm:px-2.5 sm:py-1 disabled:opacity-70 min-h-[44px] sm:min-h-0 touch-manipulation dark:bg-blue-500 dark:hover:bg-blue-600"
               loadingLabel="…"

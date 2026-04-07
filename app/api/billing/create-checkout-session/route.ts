@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     const org = await getCurrentOrganization(orgSlug);
     const orgIdForData = getOrgIdForData(orgSlug, org.id);
-    if (!(await isOrgAdmin(orgIdForData))) {
+    if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 

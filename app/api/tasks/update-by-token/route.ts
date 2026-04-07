@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { addEngagementEvent } from "../../../../lib/engagement/addEvent";
 
 export const runtime = "nodejs";
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const { data: task, error: taskError } = await supabase
       .from("tasks")
-      .select("id, proof_required, proof_url, access_token, owner_id")
+      .select("id, proof_required, proof_url, access_token, owner_id, organization_id")
       .eq("access_token", token)
       .maybeSingle();
 
@@ -98,11 +99,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (comment.trim() && task.owner_id) {
-      await supabase.from("engagement_events").insert({
-        user_id: task.owner_id,
-        event_type: "task_done",
+      await addEngagementEvent(supabase, {
+        userId: task.owner_id as string,
+        organizationId: (task as { organization_id?: string | null }).organization_id ?? null,
+        eventType: "task_done",
         points: 0,
-        source_id: task.id
+        sourceId: task.id,
+        taskId: task.id,
+        category: "task"
       });
     }
 

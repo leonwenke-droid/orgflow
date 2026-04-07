@@ -17,12 +17,14 @@ type AddMaterialAction = (
 
 export default function MaterialsWizard({
   orgId,
+  orgSlug,
   resourceCategoriesInitial,
   profiles,
   addMaterialProcurement,
   events
 }: {
   orgId: string | null;
+  orgSlug?: string | null;
   resourceCategoriesInitial: ResourceCategoryOption[] | null;
   profiles: Profile[];
   addMaterialProcurement: AddMaterialAction;
@@ -109,6 +111,8 @@ export default function MaterialsWizard({
           addMaterialProcurement={addMaterialProcurement}
           resourceCategories={resourceCategoriesInitial ?? undefined}
           events={events}
+          organizationIdHidden={orgId ?? undefined}
+          orgSlugHidden={orgSlug ?? undefined}
         />
         <div className="mt-4 flex justify-end">
           <button

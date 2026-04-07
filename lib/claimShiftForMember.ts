@@ -1,5 +1,6 @@
 import { getCurrentOrganization, getOrgIdForData } from "./getOrganization";
 import { createSupabaseServiceRoleClient } from "./supabaseServer";
+import { effectiveAssignmentKind } from "./shiftAssignmentKind";
 
 export type ClaimShiftForMemberResult =
   | { ok: true; profileId: string; organizationId: string }
@@ -59,7 +60,7 @@ export async function claimShiftForAuthenticatedMember(opts: {
 
   const { data: shift, error: shiftErr } = await service
     .from("shifts")
-    .select("id, organization_id, claimable, auto_assign, required_slots")
+    .select("id, organization_id, claimable, auto_assign, assignment_kind, required_slots")
     .eq("id", shiftId)
     .maybeSingle();
 
@@ -71,7 +72,7 @@ export async function claimShiftForAuthenticatedMember(opts: {
     return { ok: false, code: "wrong_org" };
   }
 
-  if (shift.auto_assign === true || shift.claimable === false) {
+  if (effectiveAssignmentKind(shift as { assignment_kind?: string | null; claimable?: boolean | null; auto_assign?: boolean | null }) !== "self_signup") {
     return { ok: false, code: "not_claimable" };
   }
 

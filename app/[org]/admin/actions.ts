@@ -24,7 +24,7 @@ export async function getEngagementScoresAction(
 ): Promise<{ error: string | null; errorKey?: string; scores?: ScoreRow[] }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { error: null, errorKey: "common.unauthorized" };
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) return { error: null, errorKey: "common.unauthorized" };
 
   const supabase = createSupabaseServiceRoleClient();
 
@@ -120,7 +120,7 @@ export async function getEngagementLogForProfileAction(
 ): Promise<{ errorKey?: string; entries?: EngagementLogRow[] }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return { errorKey: "common.unauthorized" };
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) return { errorKey: "common.unauthorized" };
 
   const supabase = createSupabaseServiceRoleClient();
   const { data: prof } = await supabase

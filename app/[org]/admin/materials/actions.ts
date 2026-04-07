@@ -1,8 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { requireOrgAdminAction } from "../../../../lib/permissionsServer";
 import { getCurrentOrganization, getOrgIdForData } from "../../../../lib/getOrganization";
@@ -13,23 +11,10 @@ export async function createResourceAction(
 ): Promise<{ error?: string }> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const actor = await requireOrgAdminAction(orgIdForData);
+  const actor = await requireOrgAdminAction(orgIdForData, orgSlug);
   if (!actor) return { error: "Not authorized." };
 
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not signed in." };
-
   const service = createSupabaseServiceRoleClient();
-
-  const { data: profile } = await service
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .eq("organization_id", orgIdForData)
-    .maybeSingle();
 
   const description = String(formData.get("item_description") ?? "").trim();
   if (!description) return { error: "Description required." };
@@ -50,7 +35,7 @@ export async function createResourceAction(
   }
 
   const { error } = await service.from("material_procurements").insert({
-    user_id: (profile as any)?.id ?? user.id,
+    user_id: actor.actorProfileId,
     organization_id: orgIdForData,
     item_description: description,
     event_name: eventName || description,
@@ -81,7 +66,7 @@ export async function updateResourceStatusAction(
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const actor = await requireOrgAdminAction(orgIdForData);
+  const actor = await requireOrgAdminAction(orgIdForData, orgSlug);
   if (!actor) return { error: "Not authorized." };
 
   const service = createSupabaseServiceRoleClient();

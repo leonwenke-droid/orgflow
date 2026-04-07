@@ -1,25 +1,25 @@
-import { NextResponse } from "next/server";
-import * as XLSX from "xlsx";
+import { readFile } from "fs/promises";
+import path from "path";
+import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
 /**
- * Excel-Vorlage für Mitglieder-Import.
- * Sheet "Engagement Overview": Name (A), Score (B), leer, Komitees (D, kommagetrennt), Leitungen (E, kommagetrennt).
+ * Serves the official OrgFlow member list template (.xlsx) from /public/templates.
+ * ?locale=de → German column headers; ?locale=en (default) → English.
  */
-export async function GET() {
-  const ws = XLSX.utils.aoa_to_sheet([
-    ["Name", "Score", "", "Komitees (kommagetrennt)", "Leitungen (kommagetrennt)"],
-    ["Max Mustermann", 0, "", "Marketing, Technik", "Marketing"],
-    ["Anna Beispiel", 10, "", "Catering, Aufbau", "Catering"]
-  ]);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Engagement Overview");
-  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+export async function GET(req: NextRequest) {
+  const raw = req.nextUrl.searchParams.get("locale")?.trim().toLowerCase();
+  const locale = raw === "de" ? "de" : "en";
+  const fileBase = locale === "de" ? "orgflow-members-de.xlsx" : "orgflow-members-en.xlsx";
+  const downloadName =
+    locale === "de" ? "OrgFlow_Mitgliederliste.xlsx" : "OrgFlow_Members.xlsx";
+  const filePath = path.join(process.cwd(), "public", "templates", fileBase);
+  const buf = await readFile(filePath);
   return new NextResponse(buf, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": 'attachment; filename="Mitglieder-Vorlage.xlsx"'
+      "Content-Disposition": `attachment; filename="${downloadName}"`
     }
   });
 }

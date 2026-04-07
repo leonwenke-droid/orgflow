@@ -1,0 +1,786 @@
+/* Schichtplanung v2 — layout/classes aligned with orgflow_schichtplanung_v2.html (scoped under .shifts-page) */
+
+.shifts-page {
+  position: relative;
+  font-family: var(--sp-font-sans);
+  font-size: 14px;
+  color: var(--sp-text);
+  background: transparent;
+  min-height: 0;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+.shifts-page .wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 28px 20px 56px;
+}
+
+.shifts-page .topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.shifts-page .brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.shifts-page .brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, var(--sp-accent-dim), var(--sp-violet-dim));
+  border: 1px solid var(--sp-border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.03em;
+  color: var(--sp-accent);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.shifts-page .brand h1 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--sp-text);
+}
+
+.shifts-page .brand p {
+  font-size: 12px;
+  color: var(--sp-text2);
+  margin-top: 4px;
+  max-width: 420px;
+}
+
+.shifts-page .tab-shell {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg);
+  padding: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+}
+
+.shifts-page .tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.shifts-page .tab {
+  padding: 9px 16px;
+  border-radius: var(--sp-radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--sp-text2);
+  transition: color 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  user-select: none;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.shifts-page .tab:hover {
+  color: var(--sp-text);
+  background: var(--sp-surface2);
+}
+
+.shifts-page .tab[aria-current="page"] {
+  color: var(--sp-ink-on-light, #0c0c0b);
+  background: linear-gradient(180deg, #fff 0%, #e8ebf2 100%);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(109, 158, 255, 0.35);
+}
+
+.shifts-page .sp-tab-spacer {
+  height: 20px;
+}
+
+.shifts-page .card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-lg);
+  margin-bottom: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+}
+
+.shifts-page .chd {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-bottom: 1px solid var(--sp-border);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--sp-text);
+}
+
+/* „Schichten verwalten“: Titel + Typ-Filter oben, Aktionen in zweiter Zeile */
+.shifts-page .chd-shift-manage {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.shifts-page .chd-shift-manage-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+}
+
+.shifts-page .chd-shift-manage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--sp-border);
+}
+
+.shifts-page .chd .sh-kind-select {
+  width: 140px;
+  max-width: 100%;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: var(--sp-radius-sm);
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface2);
+  color: var(--sp-text);
+}
+
+/* Selbsteintragung auffüllen: Modus neben Button, ohne abgeschnittenen Text */
+.shifts-page .chd-shift-manage-actions .sh-fill-mode-select {
+  min-width: min(100%, 12.5rem);
+  max-width: 100%;
+  flex: 0 1 auto;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: var(--sp-radius-sm);
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface2);
+  color: var(--sp-text);
+}
+
+.shifts-page .type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--sp-radius-full);
+  white-space: nowrap;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-surface2);
+  color: var(--sp-text2);
+}
+
+.shifts-page .type-badge .tdot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Admin shift list: Zeilen umbrechen auf schmalen Viewports */
+.shifts-page .admin-shift-row {
+  flex-wrap: wrap;
+}
+
+.shifts-page .admin-shift-row .rm {
+  min-width: min(100%, 200px);
+}
+
+.shifts-page .cbd {
+  padding: 16px 18px;
+}
+
+.shifts-page .g2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.shifts-page .g3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.shifts-page .g4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .shifts-page .g4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .shifts-page .g3,
+  .shifts-page .g4 {
+    grid-template-columns: 1fr;
+  }
+  .shifts-page .g2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.shifts-page .stat {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.shifts-page .stat::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 64px;
+  height: 64px;
+  background: radial-gradient(circle at 100% 0%, rgba(109, 158, 255, 0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.shifts-page .sl {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sp-text3);
+  margin-bottom: 6px;
+}
+
+.shifts-page .sv {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--sp-text);
+}
+
+.shifts-page .ss {
+  font-size: 12px;
+  color: var(--sp-text2);
+  margin-top: 6px;
+}
+
+.shifts-page .date-strip {
+  padding: 10px 18px;
+  background: linear-gradient(90deg, rgba(109, 158, 255, 0.08), transparent);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sp-text2);
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.shifts-page .filter-pills {
+  display: inline-flex;
+  padding: 4px;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-full);
+  gap: 4px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.shifts-page .filter-pills .tag {
+  cursor: pointer;
+  border: none;
+}
+
+.shifts-page .tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--sp-radius-full);
+  white-space: nowrap;
+}
+
+.shifts-page .tag.tg {
+  background: var(--sp-success-dim);
+  color: var(--sp-success);
+  border: 1px solid rgba(61, 214, 140, 0.25);
+}
+
+.shifts-page .tag.tr {
+  background: var(--sp-danger-dim);
+  color: var(--sp-danger);
+  border: 1px solid rgba(240, 113, 120, 0.25);
+}
+
+.shifts-page .tag.ta {
+  background: var(--sp-warn-dim);
+  color: var(--sp-warn);
+  border: 1px solid rgba(240, 180, 41, 0.25);
+}
+
+.shifts-page .tag.tb {
+  background: var(--sp-accent-dim);
+  color: var(--sp-accent);
+  border: 1px solid rgba(109, 158, 255, 0.3);
+}
+
+.shifts-page .tag.tn {
+  background: var(--sp-surface2);
+  color: var(--sp-text2);
+  border: 1px solid var(--sp-border);
+}
+
+.shifts-page .mwrap {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(4, 6, 10, 0.72);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: sp-fade-in 0.2s ease;
+}
+
+.shifts-page .modal {
+  background: linear-gradient(165deg, #161922 0%, #101218 100%);
+  border-radius: var(--sp-radius-lg);
+  border: 1px solid var(--sp-border-strong);
+  width: 100%;
+  max-width: 520px;
+  max-height: min(92vh, 900px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--sp-shadow-lg);
+  min-height: 0;
+}
+
+.shifts-page .modal-scroll {
+  overflow-y: auto;
+}
+
+.shifts-page .mhd {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--sp-border);
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -0.02em;
+  color: var(--sp-text);
+  flex-shrink: 0;
+}
+
+.shifts-page .mbd {
+  padding: 20px;
+  flex: 1;
+  min-height: 0;
+}
+
+.shifts-page .mft {
+  padding: 14px 20px;
+  border-top: 1px solid var(--sp-border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  background: rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.shifts-page .btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--sp-radius-sm);
+  border: 1px solid var(--sp-border-strong);
+  background: var(--sp-surface2);
+  color: var(--sp-text);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+}
+
+.shifts-page .btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.shifts-page .btn:active {
+  transform: scale(0.98);
+}
+
+.shifts-page .btnp {
+  background: linear-gradient(180deg, #fff 0%, #e2e6ef 100%);
+  color: var(--sp-ink-on-light, #0c0c0b);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.shifts-page .btnp:hover {
+  filter: brightness(1.05);
+}
+
+/* „Neue Schicht“ modal — compact grid + pill toggles */
+.shifts-page .modal .new-shift-modal-form {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.shifts-page .new-shift-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--sp-text2);
+}
+
+.shifts-page .new-shift-section-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--sp-text2);
+  opacity: 0.9;
+}
+
+.shifts-page .new-shift-input {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--sp-border) !important;
+  color: var(--sp-text) !important;
+}
+
+.shifts-page .new-shift-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shifts-page .new-shift-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--sp-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--sp-text2);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+
+.shifts-page .new-shift-pill:hover {
+  color: var(--sp-text);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.shifts-page .new-shift-pill[data-active="true"] {
+  color: var(--sp-text);
+  border-color: rgba(109, 158, 255, 0.55);
+  box-shadow: 0 0 0 1px rgba(109, 158, 255, 0.28);
+  background: rgba(109, 158, 255, 0.1);
+}
+
+.shifts-page .new-shift-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.shifts-page .new-shift-pill-dot.dot-blue {
+  background: var(--sp-accent);
+}
+
+.shifts-page .new-shift-pill-dot.dot-amber {
+  background: var(--sp-warn);
+}
+
+.shifts-page .new-shift-pill-dot.dot-green {
+  background: var(--sp-success);
+}
+
+.shifts-page .new-shift-pill-dot.dot-purple {
+  background: #a78bfa;
+}
+
+.shifts-page .new-shift-pill-dot.dot-grey {
+  background: #6b7280;
+}
+
+.shifts-page .fl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shifts-page .ml {
+  margin-left: auto;
+}
+
+@keyframes sp-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Embedded member console: neutralize outer padding from member page layout */
+.shifts-page .sp-member-embed {
+  margin: 0 -8px;
+}
+
+.shifts-page .sp-member-embed .mx-auto.max-w-5xl {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Attendance tab (reference: orgflow_schichtplanung_v2.html #p-attend) */
+.shifts-page .page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.shifts-page .page-title-row .att-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--sp-text);
+}
+
+.shifts-page .page-title-row .meta {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--sp-text2);
+}
+
+.shifts-page .mscan {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--sp-border);
+  transition: background 0.12s;
+}
+
+.shifts-page .mscan:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.shifts-page .mscan:last-child {
+  border-bottom: none;
+}
+
+.shifts-page .mss {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.shifts-page .av {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--sp-accent-dim);
+  color: var(--sp-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 1px solid rgba(109, 158, 255, 0.25);
+}
+
+.shifts-page .row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--sp-border);
+  transition: background 0.12s;
+}
+
+.shifts-page .row:last-child {
+  border-bottom: none;
+}
+
+.shifts-page .row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.shifts-page .avail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sp-text2);
+  min-width: 48px;
+}
+
+.shifts-page .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px currentColor;
+}
+
+.shifts-page .dot.dg {
+  background: var(--sp-success);
+  color: var(--sp-success);
+}
+
+.shifts-page .dot.da {
+  background: var(--sp-warn);
+  color: var(--sp-warn);
+}
+
+.shifts-page .dot.dr {
+  background: var(--sp-danger);
+  color: var(--sp-danger);
+}
+
+.shifts-page .rm {
+  flex: 1;
+  min-width: 0;
+}
+
+.shifts-page .rt {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--sp-text);
+}
+
+.shifts-page .rmt {
+  font-size: 12px;
+  color: var(--sp-text2);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.shifts-page .btng {
+  background: var(--sp-success-dim);
+  color: var(--sp-success);
+  border-color: rgba(61, 214, 140, 0.35);
+}
+
+.shifts-page .btnr {
+  background: var(--sp-danger-dim);
+  color: var(--sp-danger);
+  border-color: rgba(240, 113, 120, 0.35);
+}
+
+.shifts-page .grid-head {
+  display: grid;
+  grid-template-columns: 26px 1fr 55px 55px 60px;
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sp-text3);
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.shifts-page .grid-row {
+  display: grid;
+  grid-template-columns: 26px 1fr 55px 55px 60px;
+  gap: 10px;
+  padding: 12px 18px;
+  align-items: center;
+  border-bottom: 1px solid var(--sp-border);
+  transition: background 0.12s;
+}
+
+.shifts-page .grid-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.shifts-page .grid-row:last-child {
+  border-bottom: none;
+}
+
+.shifts-page .type-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.shifts-page .type-row:hover {
+  border-color: var(--sp-border-strong);
+  background: rgba(255, 255, 255, 0.04);
+}

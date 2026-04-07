@@ -7,6 +7,9 @@ import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganiz
 import { t } from "../../../lib/i18n";
 import { formatLocaleDateTime, formatCalendarDateYmd, formatShiftClockRange } from "../../../lib/formatDate";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import MemberUnavailabilitySection from "../../../components/MemberUnavailabilitySection";
+import { getEngagementBreakdown, getOrgScoreboard, getRecentEngagementEvents } from "../../../lib/engagement/getScore";
+import EngagementScoreWidget from "../../../components/engagement/EngagementScoreWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +75,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
     { data: myTasks },
     { data: myAssignments },
     { data: allOrgScores },
+    { data: unavailRows },
   ] = await Promise.all([
     service
       .from("engagement_scores")
@@ -101,6 +105,12 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
     engagementEnabled
       ? service.from("engagement_scores").select("user_id, score").eq("organization_id", effectiveOrgIdForData)
       : Promise.resolve({ data: [] as { user_id: string; score: number }[] }),
+    service
+      .from("member_unavailability")
+      .select("id, unavailable_from, unavailable_until, reason")
+      .eq("organization_id", org.id)
+      .eq("user_id", myProfileId)
+      .order("unavailable_from", { ascending: false }),
   ]);
 
   const score = (scoreRow as any)?.score ?? 0;
@@ -140,6 +150,14 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
 
   const displayName = (me as any)?.full_name || (locale === "de" ? "Du" : "You");
 
+  const [breakdownWidget, recentEvWidget, orgBoardWidget] = engagementEnabled
+    ? await Promise.all([
+        getEngagementBreakdown(service, myProfileId, effectiveOrgIdForData),
+        getRecentEngagementEvents(service, myProfileId, effectiveOrgIdForData, 24),
+        getOrgScoreboard(service, effectiveOrgIdForData)
+      ])
+    : [null, null, null];
+
   return (
     <div className="mx-auto max-w-3xl p-6 space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -149,23 +167,19 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
         </Link>
       </div>
 
-      {engagementEnabled ? (
-        <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+      {engagementEnabled && breakdownWidget && recentEvWidget && orgBoardWidget ? (
+        <div className="space-y-2">
           <p className="text-sm text-text-secondary dark:text-text-muted">{displayName}</p>
-          <div className="mt-2 flex items-baseline gap-3">
-            <div className="text-3xl font-bold text-text-primary dark:text-text-primary">{score}</div>
-            <div className="text-xs text-text-secondary dark:text-text-muted">{t("dashboard.engagement", locale)}</div>
-          </div>
-          {rank != null && totalRanked > 0 ? (
-            <p className="mt-2 text-sm font-medium text-text-primary dark:text-text-primary">
-              {t("me.rank_label", locale)}: {rank}{" "}
-              <span className="font-normal text-text-secondary dark:text-text-muted">
-                ({t("me.rank_of", locale).replace("{total}", String(totalRanked))})
-              </span>
-            </p>
-          ) : null}
+          <EngagementScoreWidget
+            totalScore={Math.max(0, Number(myNumeric) || 0)}
+            breakdown={breakdownWidget}
+            recentEvents={recentEvWidget}
+            orgScoreboard={orgBoardWidget}
+            profileId={myProfileId}
+            displayName={displayName}
+          />
           {updatedAt ? (
-            <p className="mt-1 text-xs text-text-secondary dark:text-text-muted">
+            <p className="text-xs text-text-secondary dark:text-text-muted">
               {(locale === "de" ? "Aktualisiert" : "Updated")}: {updatedAt}
             </p>
           ) : null}
@@ -243,6 +257,15 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
             <div className="text-lg font-bold text-text-primary dark:text-text-primary">{taskStats.overdue}</div>
             <div className="text-xs text-text-secondary dark:text-text-muted">{t("dashboard.overdue", locale)}</div>
           </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
+        <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
+          {locale === "de" ? "Rotation: Nicht verfügbar" : "Rotation: Unavailability"}
+        </h2>
+        <div className="mt-3">
+          <MemberUnavailabilitySection orgSlug={orgSlug} rows={(unavailRows ?? []) as any[]} />
         </div>
       </div>
 

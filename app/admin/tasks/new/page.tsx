@@ -28,7 +28,7 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
     .eq("auth_user_id", user.id)
     .single();
 
-  if (!profile || !["admin", "lead", "super_admin", "owner"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "teamlead", "super_admin", "owner"].includes(profile.role)) {
     return { errorKey: "tasks.not_authorized" };
   }
 
@@ -62,13 +62,13 @@ async function createTask(_prev: CreateTaskState, formData: FormData): Promise<C
 
   let orgIdForInsert: string | null = null;
   if (formOrgId) {
-    if (!(await isOrgAdmin(formOrgId))) {
+    if (!(await isOrgAdmin(formOrgId, formOrgSlug))) {
       return { errorKey: "tasks.not_authorized" };
     }
     orgIdForInsert = formOrgId;
   } else {
     const fromProfile = (profile as { organization_id?: string | null }).organization_id ?? null;
-    if (fromProfile && (await isOrgAdmin(fromProfile))) {
+    if (fromProfile && (await isOrgAdmin(fromProfile, formOrgSlug))) {
       orgIdForInsert = fromProfile;
     }
   }
@@ -145,7 +145,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
       const { getCurrentOrganization, isOrgAdmin, getOrgIdForData } = await import("../../../../lib/getOrganization");
       const org = await getCurrentOrganization(orgSlug);
       const orgIdForData = getOrgIdForData(orgSlug, org.id);
-      if (await isOrgAdmin(orgIdForData)) orgId = orgIdForData;
+      if (await isOrgAdmin(orgIdForData, orgSlug)) orgId = orgIdForData;
     } catch {
       // orgId bleibt aus Profil
     }

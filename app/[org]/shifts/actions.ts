@@ -43,6 +43,7 @@ export async function claimShiftAction(formData: FormData) {
 
   revalidatePath(`/${orgSlug}/shifts`);
   revalidatePath(`/${orgSlug}/dashboard`);
+  revalidatePath("/admin/shifts");
 }
 
 export async function offerShiftSwapAction(formData: FormData) {

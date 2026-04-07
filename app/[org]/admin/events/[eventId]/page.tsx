@@ -21,7 +21,7 @@ export default async function EventDetailPage(props: {
   const { org: orgSlug, eventId } = params;
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
 
   const supabase = createServerComponentClient({ cookies });
   const { data: event, error: eventError } = await supabase

@@ -50,12 +50,17 @@ export default function AddMaterialForm({
   profiles,
   addMaterialProcurement,
   resourceCategories,
-  events
+  events,
+  organizationIdHidden,
+  orgSlugHidden
 }: {
   profiles: Profile[];
   addMaterialProcurement: AddMaterialAction;
   resourceCategories?: ResourceCategoryOption[] | null;
   events?: EventOption[] | null;
+  /** Data-plane org id for server action auth (legacy-safe with org slug). */
+  organizationIdHidden?: string | null;
+  orgSlugHidden?: string | null;
 }) {
   const { locale } = useLocale();
   const options: ResourceCategoryOption[] = resourceCategories?.length
@@ -77,6 +82,10 @@ export default function AddMaterialForm({
 
   return (
     <form ref={formRef} action={formAction} className="space-y-4">
+      {organizationIdHidden ? (
+        <input type="hidden" name="organization_id" value={organizationIdHidden} />
+      ) : null}
+      {orgSlugHidden ? <input type="hidden" name="org_slug" value={orgSlugHidden} /> : null}
       {(state?.errorKey || state?.error) && (
         <p className="text-xs text-red-600 dark:text-red-400">
           {state?.errorKey ? t(state.errorKey, locale) : state?.error}

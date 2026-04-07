@@ -10,6 +10,9 @@ import { getGreeting, nextEngagementMilestone, formatShiftSlot, type AppLocale }
 import { t } from "../../../lib/i18n";
 
 import { claimShiftFromDashboard } from "./actions";
+import { effectiveAssignmentKind } from "../../../lib/shiftAssignmentKind";
+import { getEngagementBreakdown, getOrgScoreboard, getRecentEngagementEvents } from "../../../lib/engagement/getScore";
+import EngagementScoreWidget from "../../../components/engagement/EngagementScoreWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +26,7 @@ type ShiftRow = {
   required_slots: number | null;
   auto_assign: boolean | null;
   claimable: boolean | null;
+  assignment_kind?: string | null;
   shift_assignments: { id: string; user_id: string | null; replacement_user_id: string | null }[] | null;
 };
 
@@ -114,7 +118,7 @@ export default async function OrgDashboardPage(props: {
     service
       .from("shifts")
       .select(
-        "id, event_name, date, start_time, end_time, location, required_slots, auto_assign, claimable, shift_assignments(id, user_id, replacement_user_id)"
+        "id, event_name, date, start_time, end_time, location, required_slots, auto_assign, claimable, assignment_kind, shift_assignments(id, user_id, replacement_user_id)"
       )
       .eq("organization_id", orgIdForData)
       .gte("date", todayStr)
@@ -154,6 +158,17 @@ export default async function OrgDashboardPage(props: {
   }
   const groupedEntries = [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
+  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const engagementEnabled = orgFeatures.engagement_tracking !== false;
+
+  const [breakdown, recentEvents, orgScoreboard] = engagementEnabled
+    ? await Promise.all([
+        getEngagementBreakdown(service, myProfileId, orgIdForData),
+        getRecentEngagementEvents(service, myProfileId, orgIdForData, 24),
+        getOrgScoreboard(service, orgIdForData)
+      ])
+    : [null, null, null];
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header>
@@ -162,27 +177,38 @@ export default async function OrgDashboardPage(props: {
       </header>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="stat-card">
-          <div className="section-label">{locale === "en" ? "Your score" : "Dein Score"}</div>
-          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{myEngagementScoreDisplay} Pkt.</div>
-          <div className="mt-3 h-2 w-full rounded-full bg-bg-tertiary">
-            {(() => {
-              const next = nextEngagementMilestone(myEngagementScoreDisplay);
-              const pct = Math.max(0, Math.min(100, Math.round((myEngagementScoreDisplay / Math.max(1, next)) * 100)));
-              return <div className="h-2 rounded-full bg-brand" style={{ width: `${pct}%` }} />;
-            })()}
+        {engagementEnabled && breakdown && recentEvents && orgScoreboard ? (
+          <EngagementScoreWidget
+            totalScore={myEngagementScoreDisplay}
+            breakdown={breakdown}
+            recentEvents={recentEvents}
+            orgScoreboard={orgScoreboard}
+            profileId={myProfileId}
+            displayName={myName}
+          />
+        ) : (
+          <div className="stat-card">
+            <div className="section-label">{locale === "en" ? "Your score" : "Dein Score"}</div>
+            <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{myEngagementScoreDisplay} Pkt.</div>
+            <div className="mt-3 h-2 w-full rounded-full bg-bg-tertiary">
+              {(() => {
+                const next = nextEngagementMilestone(myEngagementScoreDisplay);
+                const pct = Math.max(0, Math.min(100, Math.round((myEngagementScoreDisplay / Math.max(1, next)) * 100)));
+                return <div className="h-2 rounded-full bg-brand" style={{ width: `${pct}%` }} />;
+              })()}
+            </div>
+            <div className="mt-2 text-xs text-text-secondary">
+              {locale === "en"
+                ? `Next milestone: ${nextEngagementMilestone(myEngagementScoreDisplay)} pts.`
+                : `Nächster Meilenstein: ${nextEngagementMilestone(myEngagementScoreDisplay)} Pkt.`}
+            </div>
+            <div className="mt-2 text-[11px] text-text-secondary">
+              {locale === "en"
+                ? "Your score increases when you complete tasks or shifts. The ranking compares scores within your organisation."
+                : "Dein Score steigt, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
+            </div>
           </div>
-          <div className="mt-2 text-xs text-text-secondary">
-            {locale === "en"
-              ? `Next milestone: ${nextEngagementMilestone(myEngagementScoreDisplay)} pts.`
-              : `Nächster Meilenstein: ${nextEngagementMilestone(myEngagementScoreDisplay)} Pkt.`}
-          </div>
-          <div className="mt-2 text-[11px] text-text-secondary">
-            {locale === "en"
-              ? "Your score increases when you complete tasks or shifts. The ranking compares scores within your organisation."
-              : "Dein Score steigt, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
-          </div>
-        </div>
+        )}
 
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Org rank" : "Rang in der Org"}</div>
@@ -258,7 +284,11 @@ export default async function OrgDashboardPage(props: {
                       const free = Math.max(0, required - taken);
                       const assigned = assignedShiftIds.has(String(s.id));
                       const isFull = free <= 0;
-                      const showButton = canClaimShifts && !assigned && free > 0 && s.auto_assign !== true && s.claimable !== false;
+                      const showButton =
+                        canClaimShifts &&
+                        !assigned &&
+                        free > 0 &&
+                        effectiveAssignmentKind(s) === "self_signup";
                       return (
                         <li key={s.id} className={`py-3 ${isFull ? "opacity-60" : ""}`}>
                           <div className="flex flex-wrap items-center justify-between gap-3">

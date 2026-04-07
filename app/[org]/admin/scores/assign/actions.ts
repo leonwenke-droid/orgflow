@@ -5,11 +5,12 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
+import { addEngagementEvent } from "../../../../../lib/engagement/addEvent";
 
 export async function getAssignPointsPreview(orgSlug: string, profileId: string) {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) {
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return { errorKey: "engagement.unauthorized" as const };
   }
   if (!profileId) {
@@ -34,7 +35,7 @@ export async function assignPoints(
 ) {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) {
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return { errorKey: "engagement.unauthorized" };
   }
   if (!profileId || typeof points !== "number") {
@@ -69,17 +70,16 @@ export async function assignPoints(
     createdBy = profile?.id ?? null;
   }
 
-  const { data: eventRow, error: eventErr } = await supabase
-    .from("engagement_events")
-    .insert({
-      user_id: profileId,
-      event_type: "score_import",
-      points,
-      source_id: null
-    })
-    .select("id")
-    .single();
-  if (eventErr || !eventRow) return { error: eventErr?.message ?? "Engagement-Event konnte nicht angelegt werden." };
+  const newEventId = await addEngagementEvent(supabase, {
+    userId: profileId,
+    organizationId: orgIdForData,
+    eventType: "score_import",
+    points,
+    sourceId: null,
+    category: "other"
+  });
+  if (!newEventId) return { error: "Engagement-Event konnte nicht angelegt werden." };
+  const eventRow = { id: newEventId };
 
   const { error: logErr } = await supabase.from("score_import_log").insert({
     organization_id: orgIdForData,
@@ -99,7 +99,7 @@ export async function assignPoints(
 export async function removeScoreImport(orgSlug: string, logId: string) {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) {
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return { errorKey: "engagement.unauthorized" };
   }
   if (!logId) return { errorKey: "engagement.entry_not_found" };

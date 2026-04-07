@@ -14,7 +14,7 @@ export async function updateTaskKanbanStatus(formData: FormData) {
   const orgSlug = String(formData.get("org_slug") ?? "").trim();
   if (!taskId || !status || !organizationId || !STATUSES.has(status)) return;
 
-  const actor = await requireOrgAdminAction(organizationId);
+  const actor = await requireOrgAdminAction(organizationId, orgSlug || null);
   if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
@@ -51,7 +51,7 @@ export async function deleteTask(formData: FormData) {
   const organizationId = String(formData.get("organization_id") ?? "").trim();
   const orgSlug = String(formData.get("org_slug") ?? "").trim();
   if (!taskId || !organizationId) return;
-  const actor = await requireOrgAdminAction(organizationId);
+  const actor = await requireOrgAdminAction(organizationId, orgSlug || null);
   if (!actor) return;
   const service = createSupabaseServiceRoleClient();
   await service
@@ -78,8 +78,9 @@ export async function deleteTask(formData: FormData) {
 export async function restoreTask(formData: FormData) {
   const taskId = String(formData.get("taskId") ?? "").trim();
   const organizationId = String(formData.get("organization_id") ?? "").trim();
+  const orgSlug = String(formData.get("org_slug") ?? "").trim();
   if (!taskId || !organizationId) return;
-  const actor = await requireOrgAdminAction(organizationId);
+  const actor = await requireOrgAdminAction(organizationId, orgSlug || null);
   if (!actor) return;
   const service = createSupabaseServiceRoleClient();
   await service

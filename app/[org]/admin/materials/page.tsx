@@ -33,7 +33,7 @@ export default async function AdminMaterialsPage(props: {
   const eventParam = (sp?.event ?? "").trim() || null;
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData)))
+  if (!(await isOrgAdmin(orgIdForData, orgSlug)))
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
 
   const locale = await getRequestLocale();

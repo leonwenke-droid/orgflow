@@ -24,7 +24,7 @@ export default async function OrgLoginPage({
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
-    const canManage = await isOrgAdmin(orgIdForData);
+    const canManage = await isOrgAdmin(orgIdForData, orgSlug);
     redirect(`/${orgSlug}/${canManage ? "admin" : "dashboard"}`);
   }
 

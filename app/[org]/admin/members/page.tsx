@@ -15,7 +15,7 @@ import AddMemberForm from "./AddMemberForm";
 import MemberRow from "./MemberRow";
 import EmptyState from "../../../../components/EmptyState";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
-import { t } from "../../../../lib/i18n";
+import { t, type Locale } from "../../../../lib/i18n";
 
 const PAGE_SIZE = 25;
 
@@ -31,7 +31,7 @@ export default async function AdminMembersPage({
     : (params as { org: string }).org;
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  if (!(await isOrgAdmin(orgIdForData))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
+  if (!(await isOrgAdmin(orgIdForData, orgSlug))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   const userRole = await getEffectiveUserRoleForOrg(orgSlug, org);
   if (!canManageMembersAndTeams(userRole)) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
@@ -48,6 +48,11 @@ export default async function AdminMembersPage({
   const pageNum = Math.max(1, parseInt(String(statusParams.page ?? "1"), 10) || 1);
 
   const locale = await getRequestLocale();
+  const orgSettings = org.settings as { locale?: string } | undefined;
+  const templateLocale: Locale =
+    orgSettings?.locale === "de" || orgSettings?.locale === "en" ? orgSettings.locale : locale;
+  const templateDownloadName =
+    templateLocale === "de" ? "OrgFlow_Mitgliederliste.xlsx" : "OrgFlow_Members.xlsx";
 
   const authClient = createServerComponentClient({ cookies });
   const {
@@ -200,7 +205,11 @@ export default async function AdminMembersPage({
           <div className="mt-3 space-y-2">
             <p className="text-sm text-text-secondary">{t("members.excel_import_hint", locale)}</p>
             <div className="flex flex-wrap items-center gap-3">
-              <a href="/api/members-template" download="Members-Template.xlsx" className="text-sm text-brand hover:underline">
+              <a
+                href={`/api/members-template?locale=${templateLocale}`}
+                download={templateDownloadName}
+                className="text-sm text-brand hover:underline"
+              >
                 {t("members.download_template", locale)}
               </a>
               <MembersExcelUpload orgSlug={orgSlug} />

@@ -39,7 +39,7 @@ async function addMaterialProcurement(
     .eq("auth_user_id", user.id)
     .single();
 
-  if (!profile || !["admin", "lead"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "super_admin", "owner", "teamlead"].includes(profile.role)) {
     return { errorKey: "materials.error_unauthorized" };
   }
 
@@ -53,9 +53,12 @@ async function addMaterialProcurement(
     return { errorKey: "materials.error_required" };
   }
 
-  const orgId = (profile as { organization_id?: string | null }).organization_id ?? null;
+  const orgIdFromForm = String(formData.get("organization_id") ?? "").trim() || null;
+  const orgSlugFromForm = String(formData.get("org_slug") ?? "").trim() || null;
+  const orgId =
+    orgIdFromForm || ((profile as { organization_id?: string | null }).organization_id ?? null);
   if (!orgId) return { errorKey: "materials.error_unauthorized" };
-  const actor = await requireOrgAdminAction(orgId);
+  const actor = await requireOrgAdminAction(orgId, orgSlugFromForm);
   if (!actor) return { errorKey: "materials.error_unauthorized" };
 
   if (eventId && orgId) {
@@ -121,7 +124,9 @@ async function addMaterialProcurement(
         user_id,
         event_type: eventType,
         points,
-        source_id: material.id
+        source_id: material.id,
+        category: "other",
+        organization_id: orgId
       }))
     );
 
@@ -158,10 +163,13 @@ async function deleteMaterialProcurement(formData: FormData) {
     .eq("auth_user_id", user.id)
     .single();
 
-  if (!profile || !["admin", "lead"].includes(profile.role)) return;
-  const orgId = (profile as { organization_id?: string | null }).organization_id ?? null;
+  if (!profile || !["admin", "lead", "super_admin", "owner", "teamlead"].includes(profile.role)) return;
+  const orgIdFromForm = String(formData.get("organization_id") ?? "").trim() || null;
+  const orgSlugFromForm = String(formData.get("org_slug") ?? "").trim() || null;
+  const orgId =
+    orgIdFromForm || ((profile as { organization_id?: string | null }).organization_id ?? null);
   if (!orgId) return;
-  const actor = await requireOrgAdminAction(orgId);
+  const actor = await requireOrgAdminAction(orgId, orgSlugFromForm);
   if (!actor) return;
 
   await service.from("engagement_events").delete().eq("source_id", materialId);
@@ -213,7 +221,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
     .eq("auth_user_id", userId)
     .single();
 
-  if (!profile || !["admin", "lead", "super_admin"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "super_admin", "owner", "teamlead"].includes(profile.role)) {
     return (
       <p className="text-sm text-red-300">
         {t("materials.access_admins_leads", locale)}
@@ -226,7 +234,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
     try {
       const org = await getCurrentOrganization(orgSlug);
       const orgIdForData = getOrgIdForData(orgSlug, org.id);
-      if (await isOrgAdmin(orgIdForData)) orgId = orgIdForData;
+      if (await isOrgAdmin(orgIdForData, orgSlug)) orgId = orgIdForData;
     } catch {
       orgId = null;
     }
@@ -308,6 +316,7 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
       )}
       <MaterialsWizard
         orgId={orgId}
+        orgSlug={effectiveOrgSlug}
         resourceCategoriesInitial={resourceCategories}
         profiles={(profiles ?? []) as { id: string; full_name: string }[]}
         addMaterialProcurement={addMaterialProcurement}
@@ -404,6 +413,8 @@ export default async function MaterialsPage(props: MaterialsPageProps) {
                       <DeleteMaterialButton
                         materialId={m.id}
                         deleteAction={deleteMaterialProcurement}
+                        organizationIdHidden={orgId ?? undefined}
+                        orgSlugHidden={effectiveOrgSlug ?? undefined}
                       />
                     </td>
                   </tr>
