@@ -3,7 +3,7 @@ import { getRequestLocale } from "../../../lib/localeServer";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
+import { getCurrentOrganization, getOrgIdForData, getOrganizationsForCurrentUser } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { t } from "../../../lib/i18n";
 import AppearanceControls from "../../../components/AppearanceControls";
@@ -52,6 +52,8 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
     );
   }
 
+  const allMemberships = await getOrganizationsForCurrentUser();
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header className="flex items-start justify-between gap-4">
@@ -79,6 +81,18 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
           <div className="text-xs text-text-secondary">{t("account.email_note", locale)}</div>
         </div>
       </section>
+
+      {allMemberships.length > 1 ? (
+        <section className="card">
+          <div className="p-4 space-y-3">
+            <div className="section-label">{t("account.all_orgs_heading", locale)}</div>
+            <p className="text-sm text-text-secondary dark:text-text-muted">{t("account.all_orgs_desc", locale)}</p>
+            <Link href="/dashboard" className="btn-primary inline-flex w-fit">
+              {t("account.all_orgs_link", locale)}
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <section className="card">
         <div className="p-4 space-y-3">

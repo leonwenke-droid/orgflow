@@ -11,6 +11,8 @@ export type UserOrgMembership = {
   slug: string;
   name: string;
   role: DbRole | null;
+  /** Optional profile.email in that org (invite); may differ from auth email. */
+  profileEmail?: string | null;
 };
 
 /**
@@ -325,8 +327,9 @@ export async function getCurrentUserRoleInOrg(
 }
 
 /**
- * Holt die Organisation des aktuell eingeloggten Users (für Redirect von /dashboard, /admin).
- * Nutzt RPC get_my_organization_id(), um RLS-Rekursion beim Profil-Lesen zu umgehen.
+ * Organisation des eingeloggten Users, nur wenn genau eine aktive Mitgliedschaft existiert.
+ * Bei mehreren Orgs (gleiche E-Mail, mehrere Profile) → null — dann /dashboard zur Auswahl nutzen.
+ * Liest über Service Role, damit RLS / get_my_organization_id() keine willkürliche „eine Org“ erzwingt.
  */
 export async function getCurrentUserOrganization(): Promise<Organization | null> {
   const supabase = createServerComponentClient({ cookies });
@@ -336,28 +339,21 @@ export async function getCurrentUserOrganization(): Promise<Organization | null>
 
   if (!user) return null;
 
-  const { data: orgId, error: rpcError } = await supabase.rpc("get_my_organization_id");
+  const service = createSupabaseServiceRoleClient();
+  const { data: profiles } = await service
+    .from("profiles")
+    .select("organization_id, status")
+    .eq("auth_user_id", user.id)
+    .neq("status", "disabled");
 
-  if (rpcError || !orgId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("organization_id, status")
-      .eq("auth_user_id", user.id)
-      .single();
-    if (!profile?.organization_id || profile.status === "disabled") return null;
-    const { data: org } = await supabase
-      .from("organizations")
-      .select("*")
-      .eq("id", profile.organization_id)
-      .eq("is_active", true)
-      .maybeSingle();
-    return (org as Organization) ?? null;
-  }
+  const rows = (profiles ?? []).filter((p) => p.organization_id);
+  const orgIds = [...new Set(rows.map((p) => String(p.organization_id)))];
+  if (orgIds.length !== 1) return null;
 
-  const { data: org } = await supabase
+  const { data: org } = await service
     .from("organizations")
     .select("*")
-    .eq("id", orgId)
+    .eq("id", orgIds[0])
     .eq("is_active", true)
     .maybeSingle();
 
@@ -448,7 +444,7 @@ export async function getOrganizationsForCurrentUser(): Promise<UserOrgMembershi
   const service = createSupabaseServiceRoleClient();
   const { data: profiles } = await service
     .from("profiles")
-    .select("organization_id, role, status")
+    .select("organization_id, role, status, email")
     .eq("auth_user_id", user.id)
     .neq("status", "disabled");
 
@@ -476,11 +472,13 @@ export async function getOrganizationsForCurrentUser(): Promise<UserOrgMembershi
     if (!o) continue;
     const displayName = String(o.school_short || o.school_name || o.name || "").trim() || o.name;
     if (!byOrg.has(oid)) {
+      const pe = (p as { email?: string | null }).email;
       byOrg.set(oid, {
         id: o.id,
         slug: o.slug,
         name: displayName,
-        role: (p.role as DbRole | undefined) ?? null
+        role: (p.role as DbRole | undefined) ?? null,
+        profileEmail: typeof pe === "string" && pe.trim() ? pe.trim() : null
       });
     }
   }

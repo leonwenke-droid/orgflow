@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "./LocaleProvider";
 import { t } from "../lib/i18n";
+import { copyTextToClipboard } from "../lib/clipboard";
 
 type Props = { token: string };
 
@@ -13,9 +14,11 @@ export default function CopyTaskLinkButton({ token }: Props) {
   const handleClick = async () => {
     try {
       const fullUrl = typeof window !== "undefined" ? `${window.location.origin}/task/${token}` : "";
-      await navigator.clipboard.writeText(fullUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      const ok = await copyTextToClipboard(fullUrl);
+      if (ok) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     } catch (e) {
       console.error(e);
     }

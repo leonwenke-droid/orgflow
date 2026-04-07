@@ -4,6 +4,7 @@ import { useState } from "react";
 import { regenerateSetupTokenAction } from "./actions";
 import { useLocale } from "../../components/LocaleProvider";
 import { t } from "../../lib/i18n";
+import { copyTextToClipboard } from "../../lib/clipboard";
 
 type Org = {
   id: string;
@@ -48,13 +49,14 @@ export default function SetupLinkBlock({
     }
   }
 
-  function handleCopy() {
+  async function handleCopy() {
     const displayLink = link ?? initialLink;
     if (!displayLink) return;
-    navigator.clipboard.writeText(displayLink).then(() => {
+    const ok = await copyTextToClipboard(displayLink);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    }
   }
 
   if (!canRegenerate && !link) return null;

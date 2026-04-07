@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link2, Copy, Check, QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { copyTextToClipboard } from "../../../../lib/clipboard";
 
 export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
   const [loading, setLoading] = useState(false);
@@ -28,11 +29,13 @@ export default function InviteLinkBlock({ orgSlug }: { orgSlug: string }) {
     }
   };
 
-  const copyLink = () => {
+  const copyLink = async () => {
     if (!inviteUrl) return;
-    navigator.clipboard.writeText(inviteUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const ok = await copyTextToClipboard(inviteUrl);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
+import { copyTextToClipboard } from "../../../../lib/clipboard";
 
 export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
   const { locale } = useLocale();
@@ -58,9 +59,12 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
     }
   }
 
-  function copyAllLinks() {
+  async function copyAllLinks() {
     const text = inviteLinks.map((l) => `${l.fullName}: ${l.inviteUrl}`).join("\n");
-    void navigator.clipboard.writeText(text).then(() => setMessage((m) => (m ? { ...m, text: m.text + " Links kopiert." } : null)));
+    const ok = await copyTextToClipboard(text);
+    if (ok) {
+      setMessage((m) => (m ? { ...m, text: m.text + " Links kopiert." } : null));
+    }
   }
 
   function doneAndReload() {

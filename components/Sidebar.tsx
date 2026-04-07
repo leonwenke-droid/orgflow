@@ -25,6 +25,7 @@ import {
   Settings2,
   PanelsTopLeft,
 } from "lucide-react";
+import SidebarMultiOrgLink from "./SidebarMultiOrgLink";
 import type { AppShellUser } from "./AppShell";
 import type { DbRole } from "../types";
 import {
@@ -168,6 +169,9 @@ export default function Sidebar({
   if (!orgSlug || !user) return null;
 
   const isActive = (href: string) => {
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
+    }
     const currentOrg = searchParams?.get("org")?.trim() || null;
     // Admin hub: nur exakte Route, nicht alle /admin/*-Unterseiten
     if (href === `/${orgSlug}/admin`) {
@@ -253,6 +257,7 @@ export default function Sidebar({
             </div>
           </div>
         ))}
+        <SidebarMultiOrgLink linkClassName={linkClassName} onClose={onClose} />
       </nav>
 
       <div className="mt-auto px-3 pb-4">

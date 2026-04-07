@@ -4,6 +4,7 @@ import { useState } from "react";
 import { addMemberAction } from "./actions";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
+import { copyTextToClipboard } from "../../../../lib/clipboard";
 
 type Committee = { id: string; name: string };
 
@@ -71,7 +72,7 @@ export default function AddMemberForm({
 
   async function copyText(text: string | null) {
     if (!text) return;
-    await navigator.clipboard.writeText(text);
+    await copyTextToClipboard(text);
   }
 
   return (

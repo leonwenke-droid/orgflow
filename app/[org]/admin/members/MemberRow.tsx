@@ -12,6 +12,7 @@ import {
 } from "./actions";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t, type Locale } from "../../../../lib/i18n";
+import { copyTextToClipboard } from "../../../../lib/clipboard";
 
 type Committee = { id: string; name: string };
 type Member = {
@@ -185,8 +186,9 @@ export default function MemberRow({
     try {
       const invite = currentInvite ?? await ensureInvite();
       if (!invite) return;
-      await navigator.clipboard.writeText(invite.inviteUrl);
-      window.alert(t("members.invite_link_copied", locale));
+      const ok = await copyTextToClipboard(invite.inviteUrl);
+      if (ok) window.alert(t("members.invite_link_copied", locale));
+      else setError(t("members.error_clipboard", locale));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invite link could not be generated.");
     }
@@ -196,8 +198,9 @@ export default function MemberRow({
     try {
       const invite = currentInvite ?? await ensureInvite();
       if (!invite) return;
-      await navigator.clipboard.writeText(invite.whatsappText);
-      window.alert(t("members.whatsapp_copied", locale));
+      const ok = await copyTextToClipboard(invite.whatsappText);
+      if (ok) window.alert(t("members.whatsapp_copied", locale));
+      else setError(t("members.error_clipboard", locale));
     } catch (err) {
       setError(err instanceof Error ? err.message : "WhatsApp text could not be generated.");
     }
