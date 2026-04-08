@@ -218,10 +218,17 @@ export default async function AdminMembersPage({
         </details>
       </div>
 
-      <div id="add-member" className="card p-4">
-        <div className="section-label">{t("members.add_member_btn", locale)}</div>
-        <AddMemberForm orgSlug={orgSlug} committees={committeeList} />
-      </div>
+      <details id="add-member" className="card p-4">
+        <summary className="cursor-pointer list-none">
+          <div className="flex items-center justify-between gap-3">
+            <div className="section-label">{t("members.add_member_btn", locale)}</div>
+            <span className="text-xs text-text-secondary">{t("common.view", locale)}</span>
+          </div>
+        </summary>
+        <div className="mt-3">
+          <AddMemberForm orgSlug={orgSlug} committees={committeeList} />
+        </div>
+      </details>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-text-secondary">

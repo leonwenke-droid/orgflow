@@ -110,15 +110,21 @@ export default function AdminTaskCard({
         </div>
         <div className="min-w-0 flex-1">
           <h4 className="break-words text-[11px] font-semibold text-text-primary">{task.title}</h4>
-          <p className="text-[10px] text-text-muted">
-            {t("tasks.team_label", locale)}: {committeeLabel(task.committees, empty)}
+          <div className="mt-1 flex flex-wrap gap-1.5 text-[9px]">
+            <span className="tag tag-compact tag-neutral">
+              {committeeLabel(task.committees, empty)}
+            </span>
             {eventLabel(task.events, empty) !== empty ? (
-              <>
-                {" · "}
-                {t("tasks.event_label", locale)}: {eventLabel(task.events, empty)}
-              </>
+              <span className="tag tag-compact tag-neutral">
+                {eventLabel(task.events, empty)}
+              </span>
             ) : null}
-          </p>
+            {!task.owner_id ? (
+              <span className="tag tag-compact tag-amber">
+                {t("tasks.unassigned", locale)}
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
       <div className="mt-1.5 flex flex-wrap items-start justify-between gap-2 text-[10px]">
@@ -152,16 +158,6 @@ export default function AdminTaskCard({
           </span>
         )}
       </div>
-      <div className="mt-1.5 space-y-0.5 text-[10px] text-text-muted">
-        <p>
-          {t("tasks.created_by", locale)}:{" "}
-          {task.created_by ? profileNames[task.created_by] ?? empty : empty}
-        </p>
-        <p>
-          {t("tasks.assigned_to", locale)}:{" "}
-          {task.owner_id ? profileNames[task.owner_id] ?? empty : t("tasks.unassigned", locale)}
-        </p>
-      </div>
       <p className="mt-1 text-[9px] text-text-muted">
         {task.proof_required
           ? task.proof_url
@@ -173,14 +169,6 @@ export default function AdminTaskCard({
         <p className="mt-1 line-clamp-2 text-[10px] text-text-muted/90">{task.description}</p>
       )}
       <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[9px]">
-        {orgSlug && (
-          <Link
-            href={`/${orgSlug}/tasks#task-${task.id}`}
-            className="rounded-[var(--radius-pill)] border border-border-subtle bg-bg-primary px-2 py-0.5 text-text-secondary hover:bg-bg-secondary dark:border-border-subtle dark:bg-bg-primary/8 dark:hover:bg-bg-tertiary/80"
-          >
-            {t("tasks.open_member_view", locale)}
-          </Link>
-        )}
         {task.proof_url && (
           <>
             <a
@@ -200,9 +188,9 @@ export default function AdminTaskCard({
           <input type="hidden" name="organization_id" value={orgId ?? ""} />
           <input type="hidden" name="org_slug" value={orgSlug ?? ""} />
           <SubmitButtonWithSpinner
-            variant="destructive"
+            variant="ghost"
             buttonSize="sm"
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[9px]"
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[9px] text-[var(--red-dark)] hover:bg-[var(--bg-danger-subtle)] dark:text-red-200"
             title={t("tasks.remove_task_title", locale)}
             loadingLabel={t("common.loading", locale)}
           >

@@ -17,6 +17,21 @@ type Props = {
   displayName?: string | null;
 };
 
+type Accent = "brand" | "success" | "warning" | "neutral";
+
+function accentStyle(accent: Accent): { solid: string; subtle: string; text: string } {
+  switch (accent) {
+    case "brand":
+      return { solid: "var(--color-brand)", subtle: "var(--bg-brand-subtle)", text: "var(--color-brand-text)" };
+    case "success":
+      return { solid: "var(--color-success)", subtle: "var(--bg-success-subtle)", text: "var(--color-success-text)" };
+    case "warning":
+      return { solid: "var(--color-warning)", subtle: "var(--bg-warning-subtle)", text: "var(--color-warning-text)" };
+    case "neutral":
+      return { solid: "var(--text-secondary)", subtle: "var(--bg-tertiary)", text: "var(--text-secondary)" };
+  }
+}
+
 function categoryLabel(category: string | null, locale: Locale): string {
   switch (category) {
     case "task":
@@ -129,7 +144,7 @@ export default function EngagementScoreWidget({
           <div
             className="relative flex h-[120px] w-[120px] shrink-0 items-center justify-center rounded-full border-[7px] border-border-default/80"
             style={{
-              background: `conic-gradient(#185FA5 0turn ${turnStart}turn, #3B6D11 ${turnStart}turn ${turnMid1}turn, #534AB7 ${turnMid1}turn ${turnMid2}turn, #b45309 ${turnMid2}turn ${turnEnd}turn, var(--bg-tertiary) ${turnEnd}turn 1turn)`
+              background: `conic-gradient(var(--color-brand) 0turn ${turnStart}turn, var(--color-success) ${turnStart}turn ${turnMid1}turn, var(--color-warning) ${turnMid1}turn ${turnMid2}turn, var(--text-secondary) ${turnMid2}turn ${turnEnd}turn, var(--bg-tertiary) ${turnEnd}turn 1turn)`
             }}
           >
             <div className="flex h-[86px] w-[86px] flex-col items-center justify-center rounded-full bg-bg-primary shadow-inner">
@@ -142,27 +157,21 @@ export default function EngagementScoreWidget({
               label={t("engagement.cat.task", locale)}
               score={breakdown.task_score}
               pct={taskPct}
-              dotClass="bg-blue-500"
-              barClass="bg-blue-600"
-              pillClass="bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/25"
+              accent="brand"
               locale={locale}
             />
             <BreakdownMini
               label={t("engagement.cat.shift_auto", locale)}
               score={breakdown.shift_auto_score}
               pct={autoPct}
-              dotClass="bg-emerald-500"
-              barClass="bg-emerald-600"
-              pillClass="bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-500/25"
+              accent="success"
               locale={locale}
             />
             <BreakdownMini
               label={t("engagement.cat.shift_rotation", locale)}
               score={breakdown.shift_rotation_score}
               pct={rotPct}
-              dotClass="bg-violet-500"
-              barClass="bg-violet-600"
-              pillClass="bg-violet-500/15 text-violet-200 ring-1 ring-violet-500/25"
+              accent="warning"
               locale={locale}
             />
             <p className="flex items-center gap-1.5 pt-1 text-xs font-medium text-brand">
@@ -243,9 +252,7 @@ export default function EngagementScoreWidget({
                     score={breakdown.task_score}
                     count={breakdown.task_count}
                     pct={taskPct}
-                    dotClass="bg-blue-500"
-                    barClass="bg-blue-500"
-                    pillClass="bg-blue-500/15 text-blue-100 ring-1 ring-blue-400/30"
+                    accent="brand"
                     locale={locale}
                   />
                   <CategoryBlock
@@ -254,9 +261,7 @@ export default function EngagementScoreWidget({
                     score={breakdown.shift_auto_score}
                     count={breakdown.shift_auto_count}
                     pct={autoPct}
-                    dotClass="bg-emerald-500"
-                    barClass="bg-emerald-500"
-                    pillClass="bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-400/30"
+                    accent="success"
                     locale={locale}
                   />
                   <CategoryBlock
@@ -265,9 +270,7 @@ export default function EngagementScoreWidget({
                     score={breakdown.shift_rotation_score}
                     count={breakdown.shift_rotation_count}
                     pct={rotPct}
-                    dotClass="bg-violet-500"
-                    barClass="bg-violet-500"
-                    pillClass="bg-violet-500/15 text-violet-100 ring-1 ring-violet-400/30"
+                    accent="warning"
                     locale={locale}
                   />
                   {(breakdown.other_count > 0 || breakdown.other_score !== 0) && (
@@ -277,9 +280,7 @@ export default function EngagementScoreWidget({
                       score={breakdown.other_score}
                       count={breakdown.other_count}
                       pct={safeTotal !== 0 ? breakdown.other_score / safeTotal : 0}
-                      dotClass="bg-amber-500"
-                      barClass="bg-amber-500"
-                      pillClass="bg-amber-500/15 text-amber-100 ring-1 ring-amber-400/30"
+                      accent="neutral"
                       locale={locale}
                     />
                   )}
@@ -391,36 +392,38 @@ function BreakdownMini({
   label,
   score,
   pct,
-  dotClass,
-  barClass,
-  pillClass,
+  accent,
   locale
 }: {
   label: string;
   score: number;
   pct: number;
-  dotClass: string;
-  barClass: string;
-  pillClass: string;
+  accent: Accent;
   locale: Locale;
 }) {
   const p = Math.round(pct * 100);
+  const a = accentStyle(accent);
   return (
     <div>
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="flex min-w-0 items-center gap-2 text-text-secondary">
-          <span className={`h-2 w-2 shrink-0 rounded-full ${dotClass}`} />
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: a.solid }} />
           <span className="truncate font-medium text-text-primary">{label}</span>
         </span>
         <span className="flex shrink-0 items-center gap-2">
           <span className="tabular-nums text-text-primary">
             {score} {t("engagement.points_short", locale)}
           </span>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${pillClass}`}>{p}%</span>
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ring-1 ring-border-subtle"
+            style={{ background: a.subtle, color: a.text }}
+          >
+            {p}%
+          </span>
         </span>
       </div>
       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg-tertiary">
-        <div className={`h-full rounded-full ${barClass}`} style={{ width: `${p}%` }} />
+        <div className="h-full rounded-full" style={{ width: `${p}%`, background: a.solid }} />
       </div>
     </div>
   );
@@ -432,9 +435,7 @@ function CategoryBlock({
   score,
   count,
   pct,
-  dotClass,
-  barClass,
-  pillClass,
+  accent,
   locale
 }: {
   label: string;
@@ -442,17 +443,16 @@ function CategoryBlock({
   score: number;
   count: number;
   pct: number;
-  dotClass: string;
-  barClass: string;
-  pillClass: string;
+  accent: Accent;
   locale: Locale;
 }) {
   const p = Math.round(pct * 100);
+  const a = accentStyle(accent);
   return (
     <div className="rounded-xl border border-border-subtle bg-bg-secondary/90 p-3.5 dark:border-border-default dark:bg-bg-secondary/50">
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-2">
-          <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${dotClass}`} />
+          <span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: a.solid }} />
           <div>
             <div className="text-sm font-semibold text-text-primary">{label}</div>
             <div className="mt-0.5 text-xs text-text-secondary">
@@ -460,11 +460,16 @@ function CategoryBlock({
             </div>
           </div>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold tabular-nums ${pillClass}`}>{p}%</span>
+        <span
+          className="shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold tabular-nums ring-1 ring-border-subtle"
+          style={{ background: a.subtle, color: a.text }}
+        >
+          {p}%
+        </span>
       </div>
       <p className="mt-2 text-[11px] leading-snug text-text-secondary/90">{hint}</p>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-bg-tertiary">
-        <div className={`h-full rounded-full ${barClass}`} style={{ width: `${p}%` }} />
+        <div className="h-full rounded-full" style={{ width: `${p}%`, background: a.solid }} />
       </div>
     </div>
   );

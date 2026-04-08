@@ -92,7 +92,7 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
           {expanded && scores !== null && (
             <Link
               href={`/${orgSlug}/admin/scores/export`}
-              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+              className="btn-secondary"
             >
               {t("engagement.export", locale)}
             </Link>
@@ -130,7 +130,7 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody>
               {scores.length > 0 ? (
                 scores.map((score, index) => (
                   <tr key={score.id} className="transition hover:bg-bg-secondary dark:hover:bg-bg-primary/50">
@@ -145,7 +145,7 @@ export default function EngagementScoresBlock({ orgSlug, currentAuthUserId = nul
                         <span className="font-bold tabular-nums text-text-primary dark:text-text-primary">{score.total_score ?? 0}</span>
                         <button
                           type="button"
-                          className="rounded border border-border-default px-2 py-1 text-[11px] text-text-secondary hover:bg-bg-secondary dark:border-border-default dark:text-text-primary dark:hover:bg-bg-primary"
+                          className="btn-secondary"
                           onClick={() => setDetailsFor(score)}
                         >
                           {t("events.details", locale)}

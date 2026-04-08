@@ -3,6 +3,8 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getOrganizationsForCurrentUser } from "../../../../lib/getOrganization";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Returns how many organisations the signed-in user belongs to (for UI: sidebar link to /dashboard).
  */

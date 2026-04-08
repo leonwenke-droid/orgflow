@@ -13,7 +13,7 @@ import {
 } from "../../../../lib/getOrganization";
 import { canAccessOperationalAdmin } from "../../../../lib/permissions";
 import { t } from "../../../../lib/i18n";
-import { formatShiftSlot, type AppLocale } from "../../../../lib/formatDate";
+import { formatCalendarDateYmd, formatLocaleDateFromIso, formatShiftSlot, type AppLocale } from "../../../../lib/formatDate";
 import { DEFAULT_CURRENCY, formatCurrency } from "../../../../lib/currency";
 import AdminForbidden from "../AdminForbidden";
 
@@ -234,7 +234,7 @@ export default async function OrgOverviewPage(props: {
               <li key={task.id} className="rounded-[var(--radius-input)] border border-border-subtle bg-bg-secondary p-2 text-xs dark:border-border-subtle dark:bg-bg-primary/50">
                 <p className="truncate font-medium text-text-primary">{task.title}</p>
                 <p className="text-text-muted">
-                  {task.due_at ? `${dateOnly(task.due_at)} · ` : ""}
+                  {task.due_at ? `${formatLocaleDateFromIso(task.due_at, locale)} · ` : ""}
                   {task.owner_id ? namesById.get(task.owner_id) ?? "–" : t("admin.overview_unassigned", locale)}
                 </p>
               </li>
@@ -286,8 +286,8 @@ export default async function OrgOverviewPage(props: {
               <li key={e.id} className="rounded border border-border-subtle bg-bg-secondary p-2 text-xs dark:border-border-default dark:bg-bg-primary/40">
                 <p className="truncate font-medium text-text-primary dark:text-text-primary">{e.name}</p>
                 <p className="text-text-secondary">
-                  {dateOnly(e.start_date)}
-                  {dateOnly(e.end_date) && dateOnly(e.end_date) !== dateOnly(e.start_date) ? ` – ${dateOnly(e.end_date)}` : ""}
+                  {formatCalendarDateYmd(e.start_date, locale)}
+                  {dateOnly(e.end_date) && dateOnly(e.end_date) !== dateOnly(e.start_date) ? ` – ${formatCalendarDateYmd(e.end_date, locale)}` : ""}
                 </p>
               </li>
             ))}

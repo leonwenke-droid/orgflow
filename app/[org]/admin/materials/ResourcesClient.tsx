@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
+import { formatCalendarDateYmd } from "../../../../lib/formatDate";
 import { createResourceAction, updateResourceStatusAction } from "./actions";
 
 type Resource = {
@@ -185,9 +186,9 @@ export default function ResourcesClient({
               defaultValue="medium"
               className="rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             >
-              <option value="small">Small</option>
-              <option value="medium">Medium</option>
-              <option value="large">Large</option>
+              <option value="small">{t("resources.size_small", locale)}</option>
+              <option value="medium">{t("resources.size_medium", locale)}</option>
+              <option value="large">{t("resources.size_large", locale)}</option>
             </select>
             <select
               name="responsible_user_id"
@@ -229,21 +230,21 @@ export default function ResourcesClient({
               name="source"
               className="rounded-lg border border-border-subtle bg-bg-primary px-3 py-2 text-sm dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             >
-              <option value="">{locale === "de" ? "Quelle…" : "Source…"}</option>
-              <option value="gekauft">{locale === "de" ? "Gekauft" : "Bought"}</option>
-              <option value="geliehen">{locale === "de" ? "Geliehen" : "Borrowed"}</option>
-              <option value="vorhanden">{locale === "de" ? "Vorhanden" : "Existing"}</option>
+              <option value="">{t("resources.source_placeholder", locale)}</option>
+              <option value="gekauft">{t("resources.source_bought", locale)}</option>
+              <option value="geliehen">{t("resources.source_borrowed", locale)}</option>
+              <option value="vorhanden">{t("resources.source_existing", locale)}</option>
             </select>
             <div className="sm:col-span-2 flex gap-2">
               <button type="submit" className="btn-primary">
-                {locale === "de" ? "Erstellen" : "Create"}
+                {t("common.create", locale)}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
                 className="btn-secondary"
               >
-                {locale === "de" ? "Abbrechen" : "Cancel"}
+                {t("common.cancel", locale)}
               </button>
             </div>
           </form>
@@ -272,7 +273,7 @@ export default function ResourcesClient({
                     {locale === "de" ? "Menge" : "Qty"}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-text-secondary">
-                    Status
+                    {t("resources.status", locale)}
                   </th>
                   <th className="px-4 py-3 text-xs font-medium text-text-secondary">
                     {locale === "de" ? "Verantwortlich" : "Responsible"}
@@ -320,9 +321,9 @@ export default function ResourcesClient({
                               : "bg-[var(--bg-warning-subtle)] text-[var(--color-warning-text)]"
                         }`}
                       >
-                        <option value="offen">Offen</option>
-                        <option value="beschafft">Beschafft</option>
-                        <option value="geliehen">Geliehen</option>
+                        <option value="offen">{t("resources.status_open", locale)}</option>
+                        <option value="beschafft">{t("resources.status_procured", locale)}</option>
+                        <option value="geliehen">{t("resources.status_borrowed", locale)}</option>
                       </select>
                     </td>
                     <td className="px-4 py-3 text-text-secondary dark:text-text-muted">
@@ -331,7 +332,7 @@ export default function ResourcesClient({
                         : "—"}
                     </td>
                     <td className="px-4 py-3 text-xs text-text-secondary">
-                      {r.needed_by || "—"}
+                      {r.needed_by ? formatCalendarDateYmd(r.needed_by, locale) : "—"}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {r.source && (

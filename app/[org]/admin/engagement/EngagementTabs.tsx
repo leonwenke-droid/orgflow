@@ -249,8 +249,11 @@ export default function EngagementTabs({
                       <tr key={`${m.id}-log`}>
                         <td colSpan={7} className="bg-bg-secondary px-8 py-3 dark:bg-bg-primary/30">
                           <div className="section-label">
-                            {locale === "de" ? "Aktivitätslog" : "Activity log"}
+                            {t("engagement.protocol.title", locale)}
                           </div>
+                          <p className="mt-0.5 text-xs text-text-secondary">
+                            {t("engagement.protocol.subtitle", locale)}
+                          </p>
                           {memberEvents.length === 0 ? (
                             <p className="text-xs text-text-secondary">—</p>
                           ) : (

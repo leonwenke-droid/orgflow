@@ -14,7 +14,7 @@ import {
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { canViewFinance } from "../../../lib/permissions";
 import { DEFAULT_CURRENCY, formatCurrency } from "../../../lib/currency";
-import { formatShiftSlot, type AppLocale } from "../../../lib/formatDate";
+import { formatLocaleDateFromIso, formatShiftSlot, type AppLocale } from "../../../lib/formatDate";
 import { t } from "../../../lib/i18n";
 import { taskRowBorderClass } from "../../../lib/taskStatus";
 
@@ -177,7 +177,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-text-primary">{(myNextTask as any).title ?? "—"}</div>
                       <div className="mt-1 text-xs text-text-muted">
-                        {(myNextTask as any).due_at ? `${locale === "en" ? "Due" : "Fällig"} ${dateOnly((myNextTask as any).due_at)}` : "—"}
+                        {(myNextTask as any).due_at ? `${locale === "en" ? "Due" : "Fällig"} ${formatLocaleDateFromIso(String((myNextTask as any).due_at), locale)}` : "—"}
                       </div>
                     </div>
                     <Link href={`/${orgSlug}/tasks`} className="btn-secondary">
@@ -213,7 +213,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
                         <div className="min-w-0">
                           <div className="truncate text-sm text-text-primary">{who}</div>
                           <div className="truncate text-xs text-text-muted">
-                            {String(row.event_type ?? "").replace(/_/g, " ")} · {dateOnly(String(row.created_at ?? ""))}
+                            {String(row.event_type ?? "").replace(/_/g, " ")} · {formatLocaleDateFromIso(String(row.created_at ?? ""), locale)}
                           </div>
                         </div>
                       </li>
