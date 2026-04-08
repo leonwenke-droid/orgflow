@@ -84,6 +84,7 @@ async function addMaterialProcurement(
     .from("material_procurements")
     .insert({
       user_id: null,
+      organization_id: orgId,
       event_id: eventId,
       event_name: eventName,
       item_description: description,

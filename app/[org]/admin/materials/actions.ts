@@ -34,7 +34,7 @@ export async function createResourceAction(
     eventName = (ev as any)?.name ?? null;
   }
 
-  const { error } = await service.from("material_procurements").insert({
+  const insertPayload = {
     user_id: actor.actorProfileId,
     organization_id: orgIdForData,
     item_description: description,
@@ -48,9 +48,13 @@ export async function createResourceAction(
     needed_by: neededBy,
     source,
     event_id: eventId,
-  });
+  };
 
-  if (error) return { error: error.message };
+  const { error } = await service.from("material_procurements").insert(insertPayload);
+
+  if (error) {
+    return { error: error.message };
+  }
 
   revalidatePath(`/${orgSlug}/admin/materials`);
   return {};

@@ -1,108 +1,15 @@
 import { cookies } from "next/headers";
 import { getRequestLocale } from "../../../../lib/localeServer";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { getCurrentUserOrganization, isOrgAdmin } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import NewTaskForm from "./NewTaskForm";
 import { t } from "../../../../lib/i18n";
+import { createTask } from "../createTaskAction";
 
 export const dynamic = "force-dynamic";
-
-type CreateTaskState = { errorKey?: string; error?: string } | null;
-
-async function createTask(_prev: CreateTaskState, formData: FormData): Promise<CreateTaskState> {
-  "use server";
-
-  const supabase = createServerComponentClient({ cookies });
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-  if (!user?.id) return { errorKey: "tasks.not_logged_in" };
-  const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
-    .from("profiles")
-    .select("id, role, organization_id")
-    .eq("auth_user_id", user.id)
-    .single();
-
-  if (!profile || !["admin", "lead", "teamlead", "super_admin", "owner"].includes(profile.role)) {
-    return { errorKey: "tasks.not_authorized" };
-  }
-
-  const title = formData.get("title")?.toString().trim();
-  const description = formData.get("description")?.toString().trim() || null;
-  const committeeId = formData.get("committee_id")?.toString() || null;
-  const ownerId = formData.get("owner_id")?.toString() || null;
-  const ownerScope = formData.get("owner_scope")?.toString() === "committee" ? "committee" : "year";
-  const dueAt = formData.get("due_at")?.toString() || null;
-  const proofRequired = formData.get("proof_required") === "on";
-  const eventId = formData.get("event_id")?.toString().trim() || null;
-  const claimable = formData.get("claimable") === "on";
-
-  if (!title) {
-    return { errorKey: "tasks.title_required" };
-  }
-
-  if (dueAt && new Date(dueAt).getTime() < Date.now()) {
-    return { errorKey: "tasks.deadline_past" };
-  }
-  if (ownerScope === "committee" && !committeeId) {
-    return { errorKey: "tasks.committee_required_for_scope" };
-  }
-  if (!ownerId && !claimable) {
-    return { errorKey: "tasks.owner_or_claimable_required" };
-  }
-
-  const token = crypto.randomUUID().replace(/-/g, "");
-  const formOrgId = formData.get("organization_id")?.toString().trim() || null;
-  const formOrgSlug = formData.get("org_slug")?.toString().trim() || null;
-
-  let orgIdForInsert: string | null = null;
-  if (formOrgId) {
-    if (!(await isOrgAdmin(formOrgId, formOrgSlug))) {
-      return { errorKey: "tasks.not_authorized" };
-    }
-    orgIdForInsert = formOrgId;
-  } else {
-    const fromProfile = (profile as { organization_id?: string | null }).organization_id ?? null;
-    if (fromProfile && (await isOrgAdmin(fromProfile, formOrgSlug))) {
-      orgIdForInsert = fromProfile;
-    }
-  }
-  if (!orgIdForInsert) {
-    return { errorKey: "tasks.no_organization" };
-  }
-
-  const { error } = await service.from("tasks").insert({
-    title,
-    description,
-    committee_id: committeeId || null,
-    owner_id: ownerId || null,
-    // Unverteilte Tasks (owner_id null) sind immer claimable – unabhängig von der Checkbox.
-    // Wenn ownerId gesetzt ist, darf claimable gemäß Checkbox/Default folgen.
-    claimable: !ownerId ? true : claimable,
-    created_by: profile.id,
-    due_at: dueAt ? new Date(dueAt).toISOString() : null,
-    proof_required: proofRequired,
-    access_token: token,
-    ...(eventId ? { event_id: eventId } : {}),
-    organization_id: orgIdForInsert
-  });
-
-  if (error) {
-    console.error(error);
-    return { errorKey: "tasks.create_error" };
-  }
-
-  if (formOrgSlug) {
-    redirect(`/admin/tasks?org=${encodeURIComponent(formOrgSlug)}`);
-  }
-  const org = await getCurrentUserOrganization();
-  redirect(org?.slug ? `/admin/tasks?org=${encodeURIComponent(org.slug)}` : "/admin/tasks");
-}
 
 type NewTaskPageProps = { searchParams?: Promise<{ org?: string }> | { org?: string } };
 
@@ -124,7 +31,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
     );
   }
 
-  const { data: profile, error: profileError } = await service
+  const { data: profile } = await service
     .from("profiles")
     .select("id, role, organization_id")
     .eq("auth_user_id", userId)
@@ -132,9 +39,10 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
 
   let orgId: string | null = (profile as { organization_id?: string | null } | null)?.organization_id ?? null;
   const raw = props.searchParams;
-  const searchParams = raw && typeof (raw as Promise<unknown>).then === "function"
-    ? await (raw as Promise<{ org?: string }>)
-    : (raw ?? {}) as { org?: string };
+  const searchParams =
+    raw && typeof (raw as Promise<unknown>).then === "function"
+      ? await (raw as Promise<{ org?: string }>)
+      : (raw ?? {}) as { org?: string };
   let orgSlug = searchParams?.org?.trim() || null;
   if (!orgSlug && orgId) {
     const userOrg = await getCurrentUserOrganization();
@@ -163,7 +71,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
 
   const [
     { data: committees, error: committeesError },
-    { data: members, error: membersError },
+    { data: members },
     { data: profileCommittees },
     { data: eventsData }
   ] = await Promise.all([
@@ -206,7 +114,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
       {orgSlug && (
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("tasks.breadcrumb_new", locale)} />
       )}
-      <div className="card max-w-xl space-y-4">
+      <div className="max-w-xl space-y-4">
         <h2 className="text-sm font-semibold text-text-secondary dark:text-text-secondary">
           {t("tasks.new_task", locale)}
         </h2>

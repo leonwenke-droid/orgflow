@@ -10,6 +10,8 @@ type Props = {
   name?: string;
   defaultValue?: string; // ISO or YYYY-MM-DDTHH:mm
   className?: string;
+  /** Side-by-side date + time (e.g. new task form); avoids nested time overlay in modals */
+  layout?: "stacked" | "inline";
 };
 
 function parseDefault(val: string | undefined, todayStr: string): { date: string; time: string } {
@@ -24,7 +26,12 @@ function parseDefault(val: string | undefined, todayStr: string): { date: string
   return { date: val.slice(0, 10), time: "18:00" };
 }
 
-export default function DueDateTimePicker({ name = "due_at", defaultValue, className = "" }: Props) {
+export default function DueDateTimePicker({
+  name = "due_at",
+  defaultValue,
+  className = "",
+  layout = "stacked"
+}: Props) {
   const { locale } = useLocale();
   const todayStr = getTodayDateString();
   const parsed = parseDefault(defaultValue, todayStr);
@@ -34,6 +41,37 @@ export default function DueDateTimePicker({ name = "due_at", defaultValue, class
 
   const dueAtValue = date && time ? `${date}T${time}` : "";
   const minDate = todayStr;
+
+  if (layout === "inline") {
+    return (
+      <div className={className}>
+        <input type="hidden" name={name} value={dueAtValue} readOnly />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-text-secondary">{t("shifts.date", locale)}</label>
+            <CalendarPicker
+              defaultValue={date}
+              min={minDate}
+              omitHiddenInput
+              onChange={setDate}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-medium text-text-secondary" htmlFor={`due-time-${name}`}>
+              {t("tasks.time_label", locale)}
+            </label>
+            <input
+              id={`due-time-${name}`}
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="ui-input w-full p-2.5 text-sm"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={className}>

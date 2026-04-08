@@ -18,13 +18,13 @@ export default function FinanceSixMonthChart({ title, months }: { title: string;
   const gap = groupW * 0.06;
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-zinc-50 p-4 dark:border-border-default dark:bg-bg-primary/60">
-      <h3 className="mb-4 text-sm font-semibold text-zinc-900 dark:text-text-primary">{title}</h3>
+    <div className="rounded-xl border border-border-subtle bg-bg-secondary p-4 dark:border-border-default dark:bg-bg-primary">
+      <h3 className="mb-4 text-sm font-semibold text-text-primary">{title}</h3>
       <svg
         width="100%"
         height={H}
         viewBox={`0 0 ${W} ${H}`}
-        className="text-zinc-500 dark:text-zinc-400"
+        className="text-text-muted"
         role="img"
         aria-label={title}
       >

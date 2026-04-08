@@ -12,11 +12,12 @@ import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner
 import CommitteeFilter from "../../../components/CommitteeFilter";
 import EmptyState from "../../../components/EmptyState";
 import { t as tr } from "../../../lib/i18n";
-import { formatLocaleDateTime } from "../../../lib/formatDate";
 import { isMissingSoftDeleteColumnError } from "../../../lib/supabaseSoftDelete";
+import { getKanbanColumnForTask } from "../../../lib/taskKanbanColumns";
 import AdminTasksKanban from "./AdminTasksKanban";
-import { restoreTask } from "./kanban-actions";
 import RealtimeRefreshBridge from "../../../components/RealtimeRefreshBridge";
+import NewTaskModal from "./NewTaskModal";
+import { createTask } from "./createTaskAction";
 
 export const dynamic = "force-dynamic";
 
@@ -196,23 +197,21 @@ export default async function AdminTasksPage(props: PageProps) {
   await service.rpc("apply_task_missed_penalties");
 
   const TASK_SELECT =
-    "id, title, description, status, due_at, committee_id, owner_id, created_by, proof_required, proof_url, access_token, organization_id, event_id, committees ( name )";
+    "id, title, description, status, due_at, committee_id, owner_id, created_by, proof_required, proof_url, access_token, organization_id, event_id, committees ( name ), events ( name )";
 
   const committeeQuery = service.from("committees").select("id, name").order("name");
-  const profilesQuery = service.from("profiles").select("id, full_name");
+  const profilesQuery = service.from("profiles").select("id, full_name, committee_id").order("full_name");
   const eventsQuery = orgId
     ? service.from("events").select("id, name").eq("organization_id", orgId).order("name")
     : Promise.resolve({ data: [] as { id: string; name: string }[] });
+  const profileCommitteesQuery = service.from("profile_committees").select("user_id, committee_id");
   if (orgId) {
     committeeQuery.eq("organization_id", orgId);
     profilesQuery.eq("organization_id", orgId);
   }
 
-  const [{ data: committees }, { data: profiles }, { data: eventsList }] = await Promise.all([
-    committeeQuery,
-    profilesQuery,
-    eventsQuery
-  ]);
+  const [{ data: committees }, { data: profiles }, { data: eventsList }, { data: profileCommittees }] =
+    await Promise.all([committeeQuery, profilesQuery, eventsQuery, profileCommitteesQuery]);
 
   function buildTasksQuery(includeDeletedFilter: boolean) {
     let q = service.from("tasks").select(TASK_SELECT).order("due_at", { ascending: true });
@@ -235,20 +234,19 @@ export default async function AdminTasksPage(props: PageProps) {
   const tasks = tasksRes.data;
   const tasksLoadError = tasksRes.error && !isMissingSoftDeleteColumnError(tasksRes.error.message) ? tasksRes.error : null;
 
-  let deletedTasksQuery = service
-    .from("tasks")
-    .select("id, title, deleted_at")
-    .not("deleted_at", "is", null)
-    .order("deleted_at", { ascending: false })
-    .limit(50);
+  let deletedTrashCount = 0;
   if (orgId) {
-    deletedTasksQuery = deletedTasksQuery.eq("organization_id", orgId);
+    const deletedCountRes = await service
+      .from("tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgId)
+      .not("deleted_at", "is", null);
+    if (!deletedCountRes.error) {
+      deletedTrashCount = deletedCountRes.count ?? 0;
+    } else if (isMissingSoftDeleteColumnError(deletedCountRes.error.message)) {
+      deletedTrashCount = 0;
+    }
   }
-  const deletedTasksRes = await deletedTasksQuery;
-  const deletedTasks =
-    deletedTasksRes.error && isMissingSoftDeleteColumnError(deletedTasksRes.error.message)
-      ? []
-      : (deletedTasksRes.data ?? []);
   const events = (eventsList ?? []) as { id: string; name: string }[];
 
   const profileNames = new Map(
@@ -273,8 +271,48 @@ export default async function AdminTasksPage(props: PageProps) {
 
   const baseTasksUrl = effectiveOrgSlug ? `/admin/tasks?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks";
   const baseTasksNewUrl = effectiveOrgSlug ? `/admin/tasks/new?org=${encodeURIComponent(effectiveOrgSlug)}` : "/admin/tasks/new";
+  const baseTasksTrashUrl = effectiveOrgSlug
+    ? `/admin/tasks/trash?org=${encodeURIComponent(effectiveOrgSlug)}`
+    : "/admin/tasks/trash";
+
+  const columnCounts = {
+    offen: 0,
+    in_arbeit: 0,
+    erledigt: 0,
+    ueberfaellig: 0
+  };
+  for (const task of tasksFiltered) {
+    columnCounts[getKanbanColumnForTask(task)]++;
+  }
+  let statsLine = tr("tasks.stats_summary", locale);
+  for (const [key, val] of Object.entries({
+    open: columnCounts.offen,
+    in_progress: columnCounts.in_arbeit,
+    done: columnCounts.erledigt,
+    overdue: columnCounts.ueberfaellig
+  })) {
+    statsLine = statsLine.replace(`{${key}}`, String(val));
+  }
 
   const profileNamesObj = Object.fromEntries(profileNames) as Record<string, string>;
+
+  const userIdToCommitteeIds = new Map<string, string[]>();
+  for (const pc of profileCommittees ?? []) {
+    const uid = String((pc as { user_id: string }).user_id);
+    const cid = String((pc as { committee_id: string }).committee_id);
+    if (!userIdToCommitteeIds.has(uid)) userIdToCommitteeIds.set(uid, []);
+    userIdToCommitteeIds.get(uid)!.push(cid);
+  }
+  const committeeListForForm = (committees ?? []).map((c: { id: unknown; name?: string | null }) => ({
+    id: String(c.id),
+    name: String(c.name ?? "")
+  }));
+  const membersForForm = (profiles ?? []).map((m: { id: unknown; full_name?: string | null; committee_id?: string | null }) => ({
+    id: String(m.id),
+    full_name: String(m.full_name ?? ""),
+    committee_id: m.committee_id != null ? String(m.committee_id) : null,
+    committee_ids: userIdToCommitteeIds.get(String(m.id)) ?? []
+  }));
 
   return (
     <div className="space-y-4">
@@ -286,12 +324,53 @@ export default async function AdminTasksPage(props: PageProps) {
       {effectiveOrgSlug && (
         <AdminBreadcrumb orgSlug={effectiveOrgSlug} currentLabel={tr("dashboard.tasks", locale)} />
       )}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-4">
-          <h2 className="text-sm font-semibold text-text-secondary">
-            {tr("tasks.kanban_title", locale)}
-          </h2>
-          <Suspense fallback={<span className="text-[10px] text-text-secondary">Filter …</span>}>
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-text-secondary">
+              {tr("tasks.kanban_title", locale)}
+            </h2>
+            <p className="mt-0.5 text-xs text-text-muted">{statsLine}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {orgId && (
+              <Link
+                href={baseTasksTrashUrl}
+                className="btn-secondary px-3 py-1.5 text-xs"
+              >
+                {tr("tasks.trash_link", locale).replace("{count}", String(deletedTrashCount))}
+              </Link>
+            )}
+            {orgId && (
+              <form action={autoAssignTasks} className="inline">
+                <input type="hidden" name="organization_id" value={orgId} />
+                <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
+                <SubmitButtonWithSpinner
+                  className="btn-primary px-3 py-1.5 text-xs"
+                  loadingLabel={tr("common.loading", locale)}
+                >
+                  {tr("tasks.run_auto_assignment", locale)}
+                </SubmitButtonWithSpinner>
+              </form>
+            )}
+            {orgId ? (
+              <NewTaskModal
+                action={createTask}
+                organizationId={orgId}
+                orgSlug={effectiveOrgSlug ?? undefined}
+                committeeList={committeeListForForm}
+                members={membersForForm}
+                eventsList={events}
+              />
+            ) : (
+              <Link href={baseTasksNewUrl} className="btn-primary text-xs">
+                {tr("cta.create_task", locale)}
+              </Link>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Suspense fallback={<span className="text-[10px] text-text-secondary">{tr("common.loading", locale)}</span>}>
             <CommitteeFilter committees={committeesForFilter} />
           </Suspense>
           {events.length > 0 && (
@@ -315,41 +394,24 @@ export default async function AdminTasksPage(props: PageProps) {
               ))}
             </div>
           )}
-        </div>
-        <form method="get" className="flex flex-wrap items-center gap-2 text-xs">
-          {effectiveOrgSlug && <input type="hidden" name="org" value={effectiveOrgSlug} />}
-          {committeeId && <input type="hidden" name="committee" value={committeeId} />}
-          {eventIdFilter && <input type="hidden" name="event" value={eventIdFilter} />}
-          <label className="flex items-center gap-1 text-text-secondary">
-            <span>{tr("tasks.filter_search", locale)}</span>
-            <input
-              type="search"
-              name="q"
-              defaultValue={qInput}
-              placeholder={tr("tasks.filter_search_placeholder", locale)}
-              className="ui-input min-w-[160px] px-2 py-1 text-xs"
-            />
-          </label>
-          <button
-            type="submit"
-            className="btn-secondary px-2 py-1 text-xs"
-          >
-            {tr("common.ok", locale)}
-          </button>
-        </form>
-        <div className="flex items-center gap-2">
-          {orgId && (
-            <form action={autoAssignTasks} className="inline">
-              <input type="hidden" name="organization_id" value={orgId} />
-              <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
-              <SubmitButtonWithSpinner className="btn-primary px-3 py-1.5 text-xs" loadingLabel="…">
-                {tr("tasks.run_auto_assignment", locale)}
-              </SubmitButtonWithSpinner>
-            </form>
-          )}
-          <Link href={baseTasksNewUrl} className="btn-primary text-xs">
-            {tr("cta.create_task", locale)}
-          </Link>
+          <form method="get" className="flex flex-wrap items-center gap-2 text-xs">
+            {effectiveOrgSlug && <input type="hidden" name="org" value={effectiveOrgSlug} />}
+            {committeeId && <input type="hidden" name="committee" value={committeeId} />}
+            {eventIdFilter && <input type="hidden" name="event" value={eventIdFilter} />}
+            <label className="flex items-center gap-1 text-text-secondary">
+              <span>{tr("tasks.filter_search", locale)}</span>
+              <input
+                type="search"
+                name="q"
+                defaultValue={qInput}
+                placeholder={tr("tasks.filter_search_placeholder", locale)}
+                className="ui-input min-w-[160px] px-2 py-1 text-xs"
+              />
+            </label>
+            <button type="submit" className="btn-secondary px-2 py-1 text-xs">
+              {tr("common.ok", locale)}
+            </button>
+          </form>
         </div>
       </div>
 
@@ -364,28 +426,6 @@ export default async function AdminTasksPage(props: PageProps) {
         <AdminTasksKanban tasks={tasksFiltered} orgId={orgId} orgSlug={effectiveOrgSlug} profileNames={profileNamesObj} />
       )}
       <RealtimeRefreshBridge organizationId={orgId} table="tasks" />
-      {(deletedTasks?.length ?? 0) > 0 && orgId && (
-        <section className="card">
-          <h3 className="mb-2 text-sm font-semibold text-text-secondary dark:text-text-secondary">{tr("tasks.trash_title", locale)}</h3>
-          <div className="space-y-2">
-            {(deletedTasks ?? []).map((task: { id: string; title?: string | null; deleted_at?: string | null }) => (
-              <form key={task.id} action={restoreTask} className="flex items-center justify-between gap-2 rounded border border-border-subtle px-3 py-2 text-xs dark:border-border-default">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{task.title || "Untitled task"}</p>
-                  <p className="text-text-secondary">
-                    {task.deleted_at ? formatLocaleDateTime(task.deleted_at, locale) : "—"}
-                  </p>
-                </div>
-                <input type="hidden" name="taskId" value={task.id} />
-                <input type="hidden" name="organization_id" value={orgId} />
-                <SubmitButtonWithSpinner className="btn-secondary px-2 py-1 text-xs" loadingLabel="…">
-                  {tr("common.restore", locale)}
-                </SubmitButtonWithSpinner>
-              </form>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }

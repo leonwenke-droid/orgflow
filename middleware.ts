@@ -78,6 +78,15 @@ const PUBLIC_PREFIXES = [
   "/join"
 ];
 
+/** Root routes that are real App Router pages, not `/{org}/…` (matcher `/:org` also matches `/login`, `/super-admin`, …). */
+function isGlobalRootAppRoute(pathname: string): boolean {
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return true;
+  if (pathname === "/super-admin" || pathname.startsWith("/super-admin/")) return true;
+  if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return true;
+  if (pathname === "/signup" || pathname.startsWith("/signup/")) return true;
+  return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 // Geschützte Bereiche: Admin/Settings/Onboarding/Dashboard erfordern Login.
 function requiresAuth(pathname: string): boolean {
   if (PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/")))
@@ -137,7 +146,7 @@ export async function middleware(req: NextRequest) {
   // ----- Reserved / unknown org slugs: avoid route collisions and phantom org shells -----
   // Global App Router admin lives at /admin/* (not an organisation whose slug is "admin").
   const isGlobalAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
-  if (!isGlobalAdminPath) {
+  if (!isGlobalAdminPath && !isGlobalRootAppRoute(pathname)) {
     const segments = pathname.split("/").filter(Boolean);
     const orgSlug = segments[0] ?? null;
     const maybeOrgScoped = !!orgSlug && (segments.length === 1 || ORG_SCOPED_SEGMENTS.has(segments[1] ?? ""));

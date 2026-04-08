@@ -5,7 +5,7 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { requireOrgAdminAction } from "../../../lib/permissionsServer";
 import { writeAuditLog } from "../../../lib/audit";
 
-const STATUSES = new Set(["offen", "in_arbeit", "erledigt"]);
+const STATUSES = new Set(["offen", "in_arbeit", "erledigt", "ueberfaellig"]);
 
 export async function updateTaskKanbanStatus(formData: FormData) {
   const taskId = String(formData.get("taskId") ?? "").trim();
@@ -37,8 +37,10 @@ export async function updateTaskKanbanStatus(formData: FormData) {
   });
 
   revalidatePath("/admin/tasks");
+  revalidatePath("/admin/tasks/trash");
   if (orgSlug) {
     revalidatePath(`/admin/tasks?org=${encodeURIComponent(orgSlug)}`);
+    revalidatePath(`/admin/tasks/trash?org=${encodeURIComponent(orgSlug)}`);
     revalidatePath(`/${orgSlug}/tasks`);
     if ((taskRow as any)?.event_id) {
       revalidatePath(`/${orgSlug}/admin/events/${(taskRow as any).event_id}`);
@@ -67,8 +69,10 @@ export async function deleteTask(formData: FormData) {
     targetId: taskId
   });
   revalidatePath("/admin/tasks");
+  revalidatePath("/admin/tasks/trash");
   if (orgSlug) {
     revalidatePath(`/admin/tasks?org=${encodeURIComponent(orgSlug)}`);
+    revalidatePath(`/admin/tasks/trash?org=${encodeURIComponent(orgSlug)}`);
     revalidatePath(`/${orgSlug}/tasks`);
     revalidatePath(`/${orgSlug}/dashboard`);
     revalidatePath(`/${orgSlug}/overview`);
@@ -96,4 +100,10 @@ export async function restoreTask(formData: FormData) {
     targetId: taskId
   });
   revalidatePath("/admin/tasks");
+  revalidatePath("/admin/tasks/trash");
+  if (orgSlug) {
+    revalidatePath(`/admin/tasks?org=${encodeURIComponent(orgSlug)}`);
+    revalidatePath(`/admin/tasks/trash?org=${encodeURIComponent(orgSlug)}`);
+    revalidatePath(`/${orgSlug}/tasks`);
+  }
 }

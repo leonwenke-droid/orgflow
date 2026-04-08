@@ -1,0 +1,30 @@
+/* Modal body for „Neue Aufgabe“ — same flex pattern as Schichtplanung CreateShiftsForm */
+.shifts-page .modal .new-task-modal-form {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* schichtplanung-v2.css sets .modal { max-width: 520px } — task form needs more width */
+.shifts-page .modal.task-form-modal-wide {
+  max-width: min(42rem, 96vw);
+}
+
+/* Ensure inputs are truly dark inside the shift-styled modal (Safari tends to keep them light otherwise). */
+.shifts-page .modal.task-form-modal-wide .ui-input,
+.shifts-page .modal.task-form-modal-wide input[type="text"],
+.shifts-page .modal.task-form-modal-wide input[type="search"],
+.shifts-page .modal.task-form-modal-wide input[type="date"],
+.shifts-page .modal.task-form-modal-wide input[type="time"],
+.shifts-page .modal.task-form-modal-wide textarea,
+.shifts-page .modal.task-form-modal-wide select {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--sp-border) !important;
+  color: var(--sp-text) !important;
+}
+.shifts-page .modal.task-form-modal-wide .ui-input::placeholder,
+.shifts-page .modal.task-form-modal-wide input::placeholder,
+.shifts-page .modal.task-form-modal-wide textarea::placeholder {
+  color: var(--sp-text2) !important;
+}
