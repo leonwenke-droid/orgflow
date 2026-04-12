@@ -155,25 +155,25 @@ export async function POST(req: Request) {
       await serviceClient.from("committees").insert(committees);
     }
 
-    const { data: profile } = await serviceClient
+    // Always add a *new* membership for this org. Do not move an existing profile's
+    // organization_id — that would remove the user from their previous organisation(s).
+    const { data: existingInOrg } = await serviceClient
       .from("profiles")
       .select("id")
       .eq("auth_user_id", user.id)
-      .single();
+      .eq("organization_id", org.id)
+      .maybeSingle();
 
     let creatorProfileId: string;
-    if (profile) {
-      creatorProfileId = profile.id as string;
+    if (existingInOrg?.id) {
+      creatorProfileId = existingInOrg.id as string;
       await serviceClient
         .from("profiles")
-        .update({
-          organization_id: org.id,
-          role: "admin"
-        })
+        .update({ role: "admin" })
         .eq("id", creatorProfileId);
     } else {
       creatorProfileId = randomUUID();
-      await serviceClient.from("profiles").insert({
+      const { error: insertProfileError } = await serviceClient.from("profiles").insert({
         id: creatorProfileId,
         auth_user_id: user.id,
         full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
@@ -181,6 +181,13 @@ export async function POST(req: Request) {
         role: "admin",
         organization_id: org.id
       });
+      if (insertProfileError) {
+        console.error("create-organisation profile insert:", insertProfileError);
+        return NextResponse.json(
+          { message: insertProfileError.message || "Failed to create admin profile for organisation." },
+          { status: 500 }
+        );
+      }
     }
 
     await serviceClient

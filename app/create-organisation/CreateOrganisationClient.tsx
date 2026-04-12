@@ -71,14 +71,6 @@ export default function CreateOrganisationClient() {
     }
   }, []);
 
-  const slugFromName = (name: string) =>
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .slice(0, 50);
-
   const normalizeTeams = (teams: string[]) =>
     [...new Set(
       teams
@@ -208,11 +200,6 @@ export default function CreateOrganisationClient() {
                   required
                   className="w-full rounded-lg border border-border-default px-4 py-2.5 text-text-primary focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
-                {formData.name && (
-                  <p className="mt-1 text-xs text-text-secondary">
-                    URL: /{slugFromName(formData.name)}
-                  </p>
-                )}
               </div>
               <div className="rounded-lg border border-border-subtle bg-bg-secondary p-3">
                 <p className="text-xs font-semibold text-text-secondary">Quickstart</p>
