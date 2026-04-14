@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PaidPlanCheckoutButton from "./PaidPlanCheckoutButton";
+import StarterLockedFeatureRows from "./StarterLockedFeatureRows";
 
 export function Pricing() {
   return (
@@ -37,37 +38,14 @@ export function Pricing() {
                 </svg>
                 1 Organisation
               </div>
-              <div className="p-feature" style={{ opacity: 0.45 }}>
-                <svg className="p-check p-check-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <line x1="4" y1="8" x2="12" y2="8" />
-                </svg>
-                Finanzen &amp; Buchhaltung
-              </div>
-              <div className="p-feature" style={{ opacity: 0.45 }}>
-                <svg className="p-check p-check-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <line x1="4" y1="8" x2="12" y2="8" />
-                </svg>
-                Ressourcen
-              </div>
-              <div className="p-feature" style={{ opacity: 0.45 }}>
-                <svg className="p-check p-check-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <line x1="4" y1="8" x2="12" y2="8" />
-                </svg>
-                Engagement Score
-              </div>
-              <div className="p-feature" style={{ opacity: 0.45 }}>
-                <svg className="p-check p-check-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <line x1="4" y1="8" x2="12" y2="8" />
-                </svg>
-                Veranstaltungen
-              </div>
+              <StarterLockedFeatureRows />
             </div>
             <Link href="/create-organisation" className="btn btn-outline" style={{ width: "100%", justifyContent: "center" }}>
               Kostenlos starten
             </Link>
           </div>
 
-          <div className="p-card featured reveal">
+          <div id="pricing-team" className="p-card featured reveal scroll-mt-24">
             <div className="p-popular">Empfohlen</div>
             <div className="p-tier">Team</div>
             <div className="p-price">29 €</div>

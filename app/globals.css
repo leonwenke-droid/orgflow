@@ -540,6 +540,30 @@ html.dark .marketing .p-card.featured .p-check-white { color: rgba(0,0,0,.45); }
 .marketing .p-check-white { color: rgba(255,255,255,.6); }
 .marketing .p-check-muted { color: var(--text-disabled); }
 
+.marketing button.p-feature-locked {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  border-radius: 8px;
+  padding: 4px 6px;
+  margin: -4px -6px;
+}
+.marketing button.p-feature-locked:hover {
+  opacity: 0.88 !important;
+  background: rgba(0, 0, 0, 0.04);
+}
+html.dark .marketing button.p-feature-locked:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.marketing button.p-feature-locked:focus-visible {
+  outline: 2px solid var(--blue-mid, #185fa5);
+  outline-offset: 2px;
+}
+
 .marketing .cta-section { padding: 100px 0; background: var(--cta-bg); color: #fff; text-align: center; position: relative; overflow: hidden; }
 .marketing .cta-section::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(24,95,165,.2) 0%, transparent 70%); }
 .marketing .cta-section h2 { font-family: var(--serif); font-size: clamp(38px, 5vw, 68px); font-weight: 400; letter-spacing: -.03em; color: #fff; line-height: 1.1; margin-bottom: 20px; position: relative; }
