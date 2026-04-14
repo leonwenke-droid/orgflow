@@ -16,6 +16,8 @@ The app **requires** Supabase credentials. Set them in **Project → Settings �
 2. **Important:** After adding or changing variables, trigger a **new deployment** (Deployments → … → Redeploy). `NEXT_PUBLIC_*` values are embedded at **build** time; without redeploy, the app may still use old or empty values.
 3. Without these variables, the build fails with missing Supabase configuration.
 
+**Edge middleware:** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must be present at **build** time for the environment you deploy (Production / Preview). If they are missing in the bundle, protected routes can return **503** and Vercel logs show `[middleware] Missing NEXT_PUBLIC_SUPABASE_…`.
+
 ### App URL and auth redirects
 
 - Set `NEXT_PUBLIC_APP_URL` (or `NEXT_PUBLIC_SITE_URL`) to your app’s base URL (e.g. `https://your-app.vercel.app`).
