@@ -35,17 +35,6 @@ export async function POST(req: NextRequest) {
     const priceIdScale = process.env.STRIPE_PRICE_TEAM_SCALE?.trim();
     const priceIdLegacyPro = process.env.STRIPE_PRICE_PRO?.trim();
     const priceId = useScaleTier ? (priceIdScale || priceIdLegacyPro) : (priceIdTeam || priceIdLegacyPro);
-    log("info", "stripe_new_org_checkout_env", {
-      requestId,
-      route: "billing/create-checkout-session-new-org",
-      ip,
-      tier,
-      useScaleTier,
-      hasPriceTeam: Boolean(priceIdTeam),
-      hasPriceScale: Boolean(priceIdScale),
-      hasPriceLegacyPro: Boolean(priceIdLegacyPro),
-      hasStripeSecret: Boolean(process.env.STRIPE_SECRET_KEY?.trim())
-    });
     if (!priceId) {
       log("warn", "stripe_new_org_checkout_missing_price", {
         requestId,
@@ -88,13 +77,6 @@ export async function POST(req: NextRequest) {
     const baseUrl = await getPublicBaseUrl();
     const successUrl = `${baseUrl}/create-organisation?tier=${tier}&checkout_session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${baseUrl}/create-organisation?tier=${tier}&cancelled=1`;
-    log("info", "stripe_new_org_checkout_urls", {
-      requestId,
-      route: "billing/create-checkout-session-new-org",
-      ip,
-      tier,
-      baseUrl
-    });
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
