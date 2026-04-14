@@ -211,7 +211,7 @@ export async function POST(req: Request) {
       creatorProfileId = existingInOrg.id as string;
       await serviceClient
         .from("profiles")
-        .update({ role: "admin" })
+        .update({ role: "owner" })
         .eq("id", creatorProfileId);
     } else {
       creatorProfileId = randomUUID();
@@ -220,7 +220,7 @@ export async function POST(req: Request) {
         auth_user_id: user.id,
         full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
         email: user.email,
-        role: "admin",
+        role: "owner",
         organization_id: org.id
       });
       if (insertProfileError) {
