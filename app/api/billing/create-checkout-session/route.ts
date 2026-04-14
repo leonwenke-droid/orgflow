@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           message:
-            "Only the Pro (team) plan is available for self-service checkout. Enterprise is on request."
+            "Invalid plan."
         },
         { status: 400 }
       );
