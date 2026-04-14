@@ -39,17 +39,14 @@ export function validateProductionEnv(): void {
 
   const hasStripe = Boolean(process.env.STRIPE_SECRET_KEY?.trim());
   if (hasStripe) {
-    const stripeRequired = [
-      "STRIPE_WEBHOOK_SECRET",
-      "STRIPE_PRICE_TEAM",
-      "STRIPE_PRICE_TEAM_SCALE"
-    ];
-    const missingStripe = stripeRequired.filter((k) => !process.env[k]?.trim());
-    if (missingStripe.length > 0) {
-      throw new Error(
-        `STRIPE_SECRET_KEY is set but billing configuration is incomplete:\n${missingStripe.map((k) => `  - ${k}`).join("\n")}\n\nSee .env.example for documentation.`
-      );
-    }
+    warnMissing(
+      ["STRIPE_WEBHOOK_SECRET"],
+      "Stripe webhooks will return 500 until STRIPE_WEBHOOK_SECRET is set (Dashboard → Webhooks → signing secret)."
+    );
+    warnMissing(
+      ["STRIPE_PRICE_TEAM", "STRIPE_PRICE_TEAM_SCALE"],
+      "Checkout for paid plans needs both price IDs; see .env.example."
+    );
   } else {
     console.warn(
       "[validateProductionEnv] STRIPE_SECRET_KEY not set — Stripe checkout and webhooks will not work until configured."
