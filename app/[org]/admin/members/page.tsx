@@ -15,6 +15,7 @@ import AddMemberForm from "./AddMemberForm";
 import MemberRow from "./MemberRow";
 import EmptyState from "../../../../components/EmptyState";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { getPlanLimits } from "../../../../lib/planLimits";
 import { t, type Locale } from "../../../../lib/i18n";
 
 const PAGE_SIZE = 25;
@@ -74,6 +75,11 @@ export default async function AdminMembersPage({
     .select("id, full_name, role, committee_id, email, auth_user_id, status, invite_status, invite_expires_at, committee:committees!committee_id(name)")
     .eq("organization_id", orgIdForData)
     .order("full_name");
+
+  const activeForLimit = (orgMembers ?? []).filter((m: any) => (m as { status?: string | null }).status !== "disabled");
+  const limits = getPlanLimits((org as any).plan ?? "free");
+  const isOverLimit = limits.members !== Infinity && activeForLimit.length > limits.members;
+  const addDisabledReason = isOverLimit ? t("members.error_member_limit", locale) : null;
 
   const orgIds = new Set((orgMembers ?? []).map((m: { id: string }) => m.id));
 
@@ -159,6 +165,14 @@ export default async function AdminMembersPage({
       </header>
 
       <div className="card p-4">
+        {isOverLimit ? (
+          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+            {t("members.error_member_limit", locale)}{" "}
+            <span className="text-xs opacity-80">
+              ({activeForLimit.length}/{limits.members})
+            </span>
+          </div>
+        ) : null}
         <div className="flex flex-wrap items-center gap-2">
           <form method="get" className="flex flex-1 flex-wrap items-center gap-2">
             <input type="hidden" name="status" value={statusFilter} />
@@ -174,7 +188,12 @@ export default async function AdminMembersPage({
           <a href={`/api/member-invites/export?orgSlug=${encodeURIComponent(orgSlug)}`} className="btn-secondary">
             {t("members.download_pending", locale)}
           </a>
-          <a href="#add-member" className="btn-primary">
+          <a
+            href="#add-member"
+            className={`btn-primary ${isOverLimit ? "pointer-events-none opacity-50" : ""}`}
+            aria-disabled={isOverLimit ? true : undefined}
+            title={isOverLimit ? addDisabledReason ?? undefined : undefined}
+          >
             + {t("members.add_member_btn", locale)}
           </a>
         </div>
@@ -212,7 +231,7 @@ export default async function AdminMembersPage({
               >
                 {t("members.download_template", locale)}
               </a>
-              <MembersExcelUpload orgSlug={orgSlug} />
+              <MembersExcelUpload orgSlug={orgSlug} disabledReason={addDisabledReason} />
             </div>
           </div>
         </details>
@@ -226,7 +245,7 @@ export default async function AdminMembersPage({
           </div>
         </summary>
         <div className="mt-3">
-          <AddMemberForm orgSlug={orgSlug} committees={committeeList} />
+          <AddMemberForm orgSlug={orgSlug} committees={committeeList} disabledReason={addDisabledReason} />
         </div>
       </details>
 

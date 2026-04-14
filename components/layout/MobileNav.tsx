@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, CalendarDays, CheckSquare, UserCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LayoutDashboard, CalendarDays, CheckSquare, UserCircle, PanelsTopLeft } from "lucide-react";
 import { useLocale } from "../LocaleProvider";
 import { t } from "../../lib/i18n";
 import type { AppShellUser } from "../AppShell";
+import type { DbRole } from "../../types";
 
 type NavItem = {
   href: string;
@@ -26,20 +28,50 @@ export default function MobileNav({
 }) {
   const { locale } = useLocale();
   const pathname = usePathname() ?? "";
+  const [role, setRole] = useState<DbRole | null>(null);
+
+  useEffect(() => {
+    if (!orgSlug) {
+      setRole(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/org-settings?slug=${encodeURIComponent(orgSlug)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.role) setRole(data.role as DbRole);
+        else if (!cancelled) setRole(null);
+      })
+      .catch(() => {
+        if (!cancelled) setRole(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orgSlug]);
 
   if (!orgSlug || !user) return null;
 
   const base = `/${orgSlug}`;
-  const items: NavItem[] = [
-    { href: `${base}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
-    { href: `${base}/shifts`, labelKey: "dashboard.shifts", icon: CalendarDays },
-    { href: `${base}/tasks`, labelKey: "dashboard.tasks", icon: CheckSquare },
-    { href: `${base}/account`, labelKey: "nav.my_account", icon: UserCircle }
-  ];
+  const items: NavItem[] =
+    role === "viewer"
+      ? [
+          { href: `${base}/overview`, labelKey: "nav.org_overview", icon: PanelsTopLeft },
+          { href: `${base}/account`, labelKey: "nav.my_account", icon: UserCircle },
+        ]
+      : [
+          { href: `${base}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
+          { href: `${base}/shifts`, labelKey: "dashboard.shifts", icon: CalendarDays },
+          { href: `${base}/tasks`, labelKey: "dashboard.tasks", icon: CheckSquare },
+          { href: `${base}/account`, labelKey: "nav.my_account", icon: UserCircle },
+        ];
 
   const isActive = (href: string) => {
     if (href.includes("/account")) {
       return pathname === href || pathname.startsWith(`${href}/`);
+    }
+    if (href.endsWith("/overview")) {
+      return pathname === href;
     }
     if (href.endsWith("/dashboard")) {
       return pathname === href;

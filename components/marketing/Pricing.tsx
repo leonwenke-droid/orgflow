@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PaidPlanCheckoutButton from "./PaidPlanCheckoutButton";
 
 export function Pricing() {
   return (
@@ -8,6 +9,10 @@ export function Pricing() {
           <div className="section-label">Preise</div>
           <h2>Transparent. Fair. Skalierbar.</h2>
           <p>Für jede Organisationsgröße das passende Modell — ohne versteckte Kosten.</p>
+          <p style={{ maxWidth: 560, margin: "12px auto 0", fontSize: 14, lineHeight: 1.5, opacity: 0.88 }}>
+            <strong>Pro und 50+:</strong> Ihr werdet zuerst zur Zahlung weitergeleitet, danach richtet ihr die Organisation ein.
+            Der <strong>Starter</strong> bleibt ohne Zahlung.
+          </p>
         </div>
 
         <div className="pricing-grid">
@@ -58,21 +63,23 @@ export function Pricing() {
             <div className="p-popular">Empfohlen</div>
             <div className="p-tier">Pro</div>
             <div className="p-price">29 €</div>
-            <div className="p-period">pro Monat · jährlich</div>
-            <div className="p-desc">Für aktive Organisationen, die alles brauchen.</div>
+            <div className="p-period">pro Monat · bis 49 Mitglieder</div>
+            <div className="p-desc" style={{ marginTop: 12 }}>
+              Für aktive Organisationen — bis 49 Mitglieder. Größer? Siehe Tarif rechts (49 €).
+            </div>
             <div className="p-divider" />
             <div className="p-features">
               <div className="p-feature">
                 <svg className="p-check p-check-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                2-wöchige kostenlose Testphase
+                2-wöchige kostenlose Testphase (bei Abschluss unter 50 Mitgliedern)
               </div>
               <div className="p-feature">
                 <svg className="p-check p-check-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                Bis zu 50 Mitglieder
+                Bis zu 49 Mitglieder inklusive
               </div>
               <div className="p-feature">
                 <svg className="p-check p-check-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
@@ -99,54 +106,71 @@ export function Pricing() {
                 Prioritäts-Support
               </div>
             </div>
-            <Link href="/create-organisation" className="btn btn-white btn-lg" style={{ width: "100%", justifyContent: "center" }}>
-              Jetzt starten <span className="arrow-icon">→</span>
-            </Link>
+            <PaidPlanCheckoutButton
+              tier="base"
+              className="btn btn-white btn-lg"
+              style={{ width: "100%", justifyContent: "center" }}
+            >
+              Organisation anlegen <span className="arrow-icon">→</span>
+            </PaidPlanCheckoutButton>
+            <p className="p-note" style={{ marginTop: 14, fontSize: 12, lineHeight: 1.45, opacity: 0.9 }}>
+              Nach dem Klick folgt die Zahlung, danach der Assistent. Pro: <strong>14 Tage testen</strong>, dann Abbuchung (bis 49 Mitgl.).
+            </p>
           </div>
 
           <div className="p-card reveal">
-            <div className="p-tier">Enterprise</div>
-            <div className="p-price" style={{ fontSize: 34, paddingTop: 7 }}>
-              Auf Anfrage
+            <div className="p-tier">50+ Mitglieder</div>
+            <div className="p-price">49 €</div>
+            <div className="p-period">pro Monat · ab dem 50. Mitglied</div>
+            <div className="p-desc">
+              Derselbe Funktionsumfang wie Pro — fester Preis für große Teams. Ohne Testphase (fair bei diesem Umfang).
             </div>
-            <div className="p-period">individuelles Angebot</div>
-            <div className="p-desc">Für Dachverbände, Schulen und große Organisationen.</div>
             <div className="p-divider" />
             <div className="p-features">
               <div className="p-feature">
                 <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                Unbegrenzte Mitglieder
+                Unbegrenzt viele Mitglieder
               </div>
               <div className="p-feature">
                 <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                Mehrere Organisationen
+                Alle Pro-Features (Finanzen, Engagement, …)
               </div>
               <div className="p-feature">
                 <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                Custom Domain
+                Buchung &amp; Upgrade direkt in der Organisation
               </div>
               <div className="p-feature">
                 <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                SLA &amp; dedizierter Support
-              </div>
-              <div className="p-feature">
-                <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="3,8 7,12 13,4" />
-                </svg>
-                On-Premise möglich
+                Prioritäts-Support
               </div>
             </div>
-            <a href="mailto:hello@orgflow.de" className="btn btn-outline" style={{ width: "100%", justifyContent: "center" }}>
-              Kontakt aufnehmen
-            </a>
+            <PaidPlanCheckoutButton
+              tier="scale"
+              className="btn btn-outline"
+              style={{ width: "100%", justifyContent: "center" }}
+            >
+              Organisation anlegen
+            </PaidPlanCheckoutButton>
+            <p className="p-note" style={{ marginTop: 14, fontSize: 12, lineHeight: 1.45, opacity: 0.9 }}>
+              Nach dem Klick folgt die Zahlung (<strong>49 €</strong> ab 50 Mitgl.), danach der Assistent — ohne Testphase.
+            </p>
+            <p className="p-desc" style={{ marginTop: 16, fontSize: 13, lineHeight: 1.45, opacity: 0.88, marginBottom: 0 }}>
+              <strong>Enterprise</strong> mit mehreren Orgs, SLA, Custom Domain oder On-Premise?{" "}
+              <a
+                href="mailto:hello@orgflow.de"
+                style={{ color: "var(--color-brand)", textDecoration: "underline", textUnderlineOffset: "2px" }}
+              >
+                Kontakt
+              </a>
+            </p>
           </div>
         </div>
       </div>

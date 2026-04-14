@@ -5,6 +5,9 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { randomUUID } from "crypto";
 import { asTrimmedString, readJson } from "../../../lib/validation";
 import { checkRateLimit } from "../../../lib/rateLimit";
+import type Stripe from "stripe";
+import { getStripe } from "../../../lib/stripe";
+import { validateNewOrgCheckoutSessionForUser } from "../../../lib/stripeNewOrgCheckout";
 
 export async function POST(req: Request) {
   try {
@@ -35,6 +38,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Invalid JSON body." }, { status: 400 });
     }
     const body = parsed.data ?? {};
+    const stripeCheckoutSessionId = asTrimmedString(body.stripeCheckoutSessionId);
     const name = asTrimmedString(body.name);
     const orgType = asTrimmedString(body.orgType) || "other";
     const modules = Array.isArray(body.modules)
@@ -76,6 +80,33 @@ export async function POST(req: Request) {
         { message: "Organisation name results in a reserved URL slug. Please choose a different name." },
         { status: 400 }
       );
+    }
+
+    let billingFields: {
+      plan: "team" | "pro";
+      stripe_customer_id: string;
+      stripe_subscription_id: string;
+      billing_status: string;
+      trial_ends_at: string | null;
+    } | null = null;
+    let subscriptionForStripeMeta: Stripe.Subscription | null = null;
+
+    if (stripeCheckoutSessionId) {
+      const validated = await validateNewOrgCheckoutSessionForUser(stripeCheckoutSessionId, user.id);
+      if (!validated.ok) {
+        return NextResponse.json({ message: validated.message }, { status: 400 });
+      }
+      const { subscription, plan, customerId } = validated.data;
+      subscriptionForStripeMeta = subscription;
+      billingFields = {
+        plan,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscription.id,
+        billing_status: subscription.status,
+        trial_ends_at: subscription.trial_end
+          ? new Date(subscription.trial_end * 1000).toISOString()
+          : null
+      };
     }
 
     const serviceClient = createSupabaseServiceRoleClient();
@@ -130,6 +161,7 @@ export async function POST(req: Request) {
         contact_email: "",
         contact_phone: "",
       },
+      ...(billingFields ?? {}),
     };
 
     const { data: org, error: orgError } = await serviceClient
@@ -194,6 +226,22 @@ export async function POST(req: Request) {
       .from("organizations")
       .update({ created_by_profile_id: creatorProfileId })
       .eq("id", org.id);
+
+    if (billingFields && subscriptionForStripeMeta) {
+      try {
+        const stripe = getStripe();
+        const meta = subscriptionForStripeMeta.metadata ?? {};
+        await stripe.subscriptions.update(billingFields.stripe_subscription_id, {
+          metadata: {
+            ...meta,
+            org_id: org.id,
+            org_slug: org.slug
+          }
+        });
+      } catch (e) {
+        console.error("create-organisation: subscription metadata update failed:", e);
+      }
+    }
 
     return NextResponse.json({ slug: org.slug, orgId: org.id });
   } catch (e) {

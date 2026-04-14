@@ -3,6 +3,7 @@ import { getRequestLocale } from "../../../lib/localeServer";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
+import { redirectViewerToOrgOverview } from "../../../lib/viewerRouteGuard";
 import { t } from "../../../lib/i18n";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import MemberTasksClient from "../../../components/tasks/MemberTasksClient";
@@ -60,6 +61,7 @@ export default async function TasksViewerPage(props: {
   const myProfile = (mePrimary ?? meFallback) as { id?: string; role?: string } | null;
   const myProfileId = myProfile?.id ?? null;
   const myRole = myProfile?.role ?? null;
+  redirectViewerToOrgOverview(orgSlug, myRole);
 
   if (!myProfileId) {
     return (

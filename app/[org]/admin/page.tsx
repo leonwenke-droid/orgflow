@@ -40,6 +40,9 @@ export default async function AdminDashboard({
   const userRole = await getCurrentUserRoleInOrg(orgIdForData, org.id);
   const showFinanceCard = canViewFinance(userRole);
   const fullOrgControl = canManageMembersAndTeams(userRole);
+  const features = ((org.settings ?? {}) as { features?: Record<string, boolean> }).features ?? {};
+  const modTasks = features.tasks !== false;
+  const modShifts = features.shifts !== false;
 
   const service = createSupabaseServiceRoleClient();
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -181,12 +184,16 @@ export default async function AdminDashboard({
           <div className="p-4">
             <div className="section-label">{locale === "en" ? "Quick actions" : "Schnellaktionen"}</div>
             <div className="space-y-2">
-              <Link href={`/admin/shifts?org=${encodeURIComponent(orgSlug)}`} className="btn-primary inline-flex w-full items-center justify-center gap-2">
-                {locale === "en" ? "New shift" : "Neue Schicht anlegen"}
-              </Link>
-              <Link href={`/admin/tasks?org=${encodeURIComponent(orgSlug)}`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
-                {locale === "en" ? "New task" : "Neue Aufgabe erstellen"}
-              </Link>
+              {modShifts ? (
+                <Link href={`/admin/shifts?org=${encodeURIComponent(orgSlug)}`} className="btn-primary inline-flex w-full items-center justify-center gap-2">
+                  {locale === "en" ? "New shift" : "Neue Schicht anlegen"}
+                </Link>
+              ) : null}
+              {modTasks ? (
+                <Link href={`/admin/tasks?org=${encodeURIComponent(orgSlug)}`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                  {locale === "en" ? "New task" : "Neue Aufgabe erstellen"}
+                </Link>
+              ) : null}
               {fullOrgControl ? (
                 <>
                   <Link href={`/${orgSlug}/admin/members`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
@@ -197,12 +204,14 @@ export default async function AdminDashboard({
                   </Link>
                 </>
               ) : null}
-              <Link href={`/${orgSlug}/admin/transfers`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
-                {locale === "en" ? "Pending transfers" : "Offene Übergaben"}
-                {(pendingTransfersCount ?? 0) > 0 ? (
-                  <span className="tag tag-amber ml-1">{pendingTransfersCount}</span>
-                ) : null}
-              </Link>
+              {modTasks ? (
+                <Link href={`/${orgSlug}/admin/transfers`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                  {locale === "en" ? "Pending transfers" : "Offene Übergaben"}
+                  {(pendingTransfersCount ?? 0) > 0 ? (
+                    <span className="tag tag-amber ml-1">{pendingTransfersCount}</span>
+                  ) : null}
+                </Link>
+              ) : null}
               {showFinanceCard ? (
                 <Link href={`/${orgSlug}/admin/finanzen`} className="btn-secondary inline-flex w-full items-center justify-center">
                   {locale === "en" ? "Finance" : "Finanzen"}

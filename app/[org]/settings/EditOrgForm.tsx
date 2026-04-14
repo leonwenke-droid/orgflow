@@ -30,14 +30,22 @@ export default function EditOrgForm({
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const result = await updateOrganizationAction(orgSlug, { name, slug, logoUrl: logoUrl.trim() || null });
-    setLoading(false);
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-    if (result.error === undefined && slug === initialSlug) {
-      window.location.reload();
+    try {
+      const result = await updateOrganizationAction(orgSlug, { name, slug, logoUrl: logoUrl.trim() || null });
+      setLoading(false);
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      if (result?.error === undefined && slug === initialSlug) {
+        window.location.reload();
+      }
+    } catch (err) {
+      // Server Actions may throw on redirect (e.g. when slug changes). In that case, the navigation continues.
+      setLoading(false);
+      const msg = String(err ?? "");
+      if (msg.includes("NEXT_REDIRECT")) return;
+      setError(locale === "de" ? "Speichern fehlgeschlagen." : "Save failed.");
     }
   }
 

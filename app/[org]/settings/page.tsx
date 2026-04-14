@@ -2,7 +2,8 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { getRequestLocale } from "../../../lib/localeServer";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { getCurrentOrganization, getEffectiveUserRoleForOrg } from "../../../lib/getOrganization";
+import { getCurrentOrganization, getEffectiveUserRoleForOrg, getOrgIdForData } from "../../../lib/getOrganization";
+import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { canChangeOrgSettings } from "../../../lib/permissions";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import AdminForbidden from "../admin/AdminForbidden";
@@ -31,6 +32,20 @@ export default async function OrgSettingsPage({
   }
 
   const locale = await getRequestLocale();
+
+  const billingEmail =
+    process.env.NEXT_PUBLIC_ENTERPRISE_BILLING_EMAIL?.trim() ||
+    String((org.settings as { contact_email?: string })?.contact_email ?? "").trim();
+  const enterpriseMailto = billingEmail
+    ? `mailto:${billingEmail}?subject=${encodeURIComponent(`OrgFlow Enterprise — ${org.name}`)}`
+    : null;
+
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const service = createSupabaseServiceRoleClient();
+  const { count: billingMemberCount } = await service
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .eq("organization_id", orgIdForData);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
@@ -72,7 +87,12 @@ export default async function OrgSettingsPage({
       <section className="card">
         <div className="p-4 space-y-4">
           <div className="section-label">{t("settings.plan", locale)}</div>
-          <BillingSection orgSlug={orgSlug} currentPlan={(org as any).plan ?? "free"} />
+          <BillingSection
+            orgSlug={orgSlug}
+            currentPlan={(org as any).plan ?? "free"}
+            enterpriseMailto={enterpriseMailto}
+            memberCount={billingMemberCount ?? 0}
+          />
         </div>
       </section>
 

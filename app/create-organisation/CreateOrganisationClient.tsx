@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, ChevronLeft, Check } from "lucide-react";
 import AuthForm from "../../components/AuthForm";
+
+const CO_SESSION_KEY = "orgflow_create_org_checkout_session";
 
 const ORG_TYPES = [
   { value: "school", label: "School" },
@@ -30,11 +32,15 @@ const PENDING_KEY = "create-org-pending";
 
 export default function CreateOrganisationClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const TOTAL_STEPS = 4;
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authWall, setAuthWall] = useState(false);
+  const [paidTier, setPaidTier] = useState<null | "base" | "scale">(null);
+  const [stripeCheckoutSessionId, setStripeCheckoutSessionId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     orgType: "school",
@@ -42,6 +48,46 @@ export default function CreateOrganisationClient() {
     teams: [""],
     inviteEmails: "",
   });
+
+  useEffect(() => {
+    const tier = searchParams.get("tier");
+    const coFlag = searchParams.get("co");
+    const sessionId = searchParams.get("checkout_session_id");
+    if (tier === "base" || tier === "scale") {
+      setPaidTier(tier);
+      if (sessionId) {
+        setStripeCheckoutSessionId(sessionId);
+        try {
+          sessionStorage.setItem(CO_SESSION_KEY, sessionId);
+        } catch {
+          // ignore
+        }
+        router.replace(`/create-organisation?tier=${tier}&co=1`, { scroll: false });
+      } else if (coFlag === "1") {
+        try {
+          const s = sessionStorage.getItem(CO_SESSION_KEY);
+          if (s) setStripeCheckoutSessionId(s);
+        } catch {
+          // ignore
+        }
+      } else {
+        try {
+          sessionStorage.removeItem(CO_SESSION_KEY);
+        } catch {
+          // ignore
+        }
+        setStripeCheckoutSessionId(null);
+      }
+    } else {
+      setPaidTier(null);
+      setStripeCheckoutSessionId(null);
+      try {
+        sessionStorage.removeItem(CO_SESSION_KEY);
+      } catch {
+        // ignore
+      }
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     try {
@@ -91,19 +137,65 @@ export default function CreateOrganisationClient() {
       teams: d.teams.map((t, j) => (j === i ? v : t)),
     }));
 
+  const showPaymentFirst = paidTier !== null && !stripeCheckoutSessionId;
+
+  useEffect(() => {
+    if (!showPaymentFirst) return;
+    if (checkoutLoading || authWall || error) return;
+    startPaidCheckout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPaymentFirst]);
+
+  const startPaidCheckout = async () => {
+    if (!paidTier) return;
+    setCheckoutLoading(true);
+    setError(null);
+    setAuthWall(false);
+    try {
+      const res = await fetch("/api/billing/create-checkout-session-new-org", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: paidTier === "scale" ? "scale" : "base" }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { message?: string; url?: string };
+      if (res.status === 401) {
+        setAuthWall(true);
+        setCheckoutLoading(false);
+        return;
+      }
+      if (!res.ok) {
+        setError(data.message || "Checkout could not be started.");
+        setCheckoutLoading(false);
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setError("No redirect URL from Stripe.");
+    } catch {
+      setError("Network error.");
+    }
+    setCheckoutLoading(false);
+  };
+
   const handleFinish = async () => {
     setLoading(true);
     setError(null);
     try {
+      const payload: Record<string, unknown> = {
+        name: formData.name.trim(),
+        orgType: formData.orgType,
+        modules: formData.modules,
+        teams: normalizeTeams(formData.teams),
+      };
+      if (stripeCheckoutSessionId) {
+        payload.stripeCheckoutSessionId = stripeCheckoutSessionId;
+      }
       const res = await fetch("/api/create-organisation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          orgType: formData.orgType,
-          modules: formData.modules,
-          teams: normalizeTeams(formData.teams),
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -126,6 +218,11 @@ export default function CreateOrganisationClient() {
         return;
       }
       const slug = data.slug ?? "";
+      try {
+        sessionStorage.removeItem(CO_SESSION_KEY);
+      } catch {
+        // ignore
+      }
       if (slug) router.push(`/${slug}/onboarding`);
       else router.push("/");
     } catch {
@@ -150,6 +247,8 @@ export default function CreateOrganisationClient() {
         ? "Select at least one module to continue."
         : null;
 
+  const showCancelledBanner = searchParams.get("cancelled") === "1" && showPaymentFirst;
+
   return (
     <div className="min-h-screen bg-bg-secondary py-12">
       <div className="mx-auto max-w-xl px-6">
@@ -162,21 +261,51 @@ export default function CreateOrganisationClient() {
           </Link>
         </div>
 
-        <div className="mb-3 flex gap-2">
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
-            <div
-              key={s}
-              className={`h-2 flex-1 rounded-full ${
-                s <= step ? "bg-blue-600" : "bg-bg-tertiary"
-              }`}
-            />
-          ))}
-        </div>
-        <p className="mb-6 text-xs font-medium text-text-secondary">
-          Step {step} of {TOTAL_STEPS}
-        </p>
+        {showPaymentFirst ? (
+          <div className="rounded-xl border border-border-subtle bg-bg-primary p-8 shadow-sm">
+            <h2 className="text-xl font-semibold text-text-primary">Nächster Schritt</h2>
+            <p className="mt-2 text-sm text-text-secondary">
+              {paidTier === "scale"
+                ? "Tarif ab 50 Mitgliedern (49 €/Monat, ohne Testphase). Sie werden zur Zahlung weitergeleitet; danach richten Sie Ihre Organisation ein."
+                : "Pro bis 49 Mitglieder (29 €/Monat, 14 Tage Test vor erster Abbuchung). Sie werden zur Zahlung weitergeleitet; danach richten Sie Ihre Organisation ein."}
+            </p>
+            {showCancelledBanner ? (
+              <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+                Checkout was cancelled. Try again below, or start with the free Starter plan.
+              </p>
+            ) : null}
+            {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+            <p className="mt-6 text-sm text-text-secondary">
+              {checkoutLoading ? "Weiterleitung…" : "Einen Moment…"}
+            </p>
+            <p className="mt-4 text-center text-sm text-text-secondary">
+              <Link href="/create-organisation" className="font-medium text-blue-600 hover:text-blue-700">
+                Start with the free Starter plan instead
+              </Link>
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-3 flex gap-2">
+              {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
+                <div
+                  key={s}
+                  className={`h-2 flex-1 rounded-full ${
+                    s <= step ? "bg-blue-600" : "bg-bg-tertiary"
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="mb-6 text-xs font-medium text-text-secondary">
+              Step {step} of {TOTAL_STEPS}
+            </p>
 
-        <div className="rounded-xl border border-border-subtle bg-bg-primary p-8 shadow-sm">
+            <div className="rounded-xl border border-border-subtle bg-bg-primary p-8 shadow-sm">
+              {stripeCheckoutSessionId && paidTier ? (
+                <p className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100">
+                  Subscription started — now choose a name and modules for your organisation.
+                </p>
+              ) : null}
           {step === 1 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-text-primary">
@@ -411,7 +540,12 @@ export default function CreateOrganisationClient() {
               <button
                 type="button"
                 onClick={handleFinish}
-                disabled={loading || !formData.name.trim() || formData.modules.length === 0}
+                disabled={
+                  loading ||
+                  !formData.name.trim() ||
+                  formData.modules.length === 0 ||
+                  (paidTier !== null && !stripeCheckoutSessionId)
+                }
                 className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Creating…" : "Create organisation"}
@@ -419,7 +553,9 @@ export default function CreateOrganisationClient() {
               </button>
             )}
           </div>
-        </div>
+            </div>
+          </>
+        )}
 
         {authWall ? (
           <div className="mx-auto mt-8 max-w-xl rounded-xl border border-[var(--color-warning)]/30 bg-[var(--bg-warning-subtle)] p-6 shadow-sm">
@@ -431,7 +567,11 @@ export default function CreateOrganisationClient() {
               <strong>Create organisation</strong> again on the step above.
             </p>
             <div className="mt-4 rounded-lg border border-[var(--color-warning)]/25 bg-bg-primary p-4">
-              <AuthForm redirectTo="/create-organisation" />
+              <AuthForm
+                redirectTo={
+                  paidTier ? `/create-organisation?tier=${paidTier}` : "/create-organisation"
+                }
+              />
             </div>
           </div>
         ) : null}

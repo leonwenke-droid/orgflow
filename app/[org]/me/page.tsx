@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
+import { redirectViewerToOrgOverview } from "../../../lib/viewerRouteGuard";
 import { t } from "../../../lib/i18n";
 import { formatLocaleDateTime, formatCalendarDateYmd, formatShiftClockRange } from "../../../lib/formatDate";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -34,7 +35,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
 
   const { data: mePrimary } = await service
     .from("profiles")
-    .select("id, full_name")
+    .select("id, full_name, role")
     .eq("auth_user_id", user.id)
     .eq("organization_id", orgIdForData)
     .maybeSingle();
@@ -42,7 +43,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
   const { data: meFallback } = (!mePrimary && orgIdForData !== org.id)
     ? await service
         .from("profiles")
-        .select("id, full_name")
+        .select("id, full_name, role")
         .eq("auth_user_id", user.id)
         .eq("organization_id", org.id)
         .maybeSingle()
@@ -51,6 +52,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
   const me = (mePrimary ?? meFallback) as any;
   const effectiveOrgIdForData = mePrimary ? orgIdForData : org.id;
   const myProfileId = me?.id as string | undefined;
+  redirectViewerToOrgOverview(orgSlug, me?.role ?? null);
   if (!myProfileId) {
     return (
       <div className="mx-auto max-w-3xl p-6">

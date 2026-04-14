@@ -2,15 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { getStripe } from "../../../../lib/stripe";
+import { planFromStripePriceId } from "../../../../lib/stripePlan";
 
 export const runtime = "nodejs";
-
-function planFromPrice(priceId: string | null | undefined): "free" | "team" | "pro" {
-  if (!priceId) return "free";
-  if (priceId === process.env.STRIPE_PRICE_PRO) return "pro";
-  if (priceId === process.env.STRIPE_PRICE_TEAM) return "team";
-  return "free";
-}
 
 export async function POST(req: NextRequest) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -56,7 +50,7 @@ export async function POST(req: NextRequest) {
       const customerId = String(sub.customer ?? "");
       const status = String(sub.status ?? "");
       const priceId = String(sub.items?.data?.[0]?.price?.id ?? "");
-      const plan = planFromPrice(priceId);
+      const plan = planFromStripePriceId(priceId);
 
       // Prefer metadata org_id, fallback by customer/subscription id lookup
       const orgIdFromMeta = String(sub?.metadata?.org_id ?? "").trim();

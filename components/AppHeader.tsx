@@ -10,6 +10,7 @@ import ThemeToggle from "./ThemeToggle";
 import NotificationBell from "./NotificationBell";
 import { OrgFlowLogoLockup } from "./brand/OrgFlowLogoLockup";
 import type { AppShellUser } from "./AppShell";
+import type { DbRole } from "../types";
 
 const RESERVED = ["admin", "dashboard", "login", "super-admin", "task", "api", "claim-org", "auth", "create-organisation", "join"];
 // Public / non-organisation routes that must not be interpreted as orgSlug.
@@ -30,20 +31,26 @@ export default function AppHeader({ user, onMenuOpen }: { user: AppShellUser; on
   const pathname = usePathname() ?? "";
   const orgSlug = useOrgSlug();
   const [orgName, setOrgName] = useState<string | null>(null);
+  const [orgRole, setOrgRole] = useState<DbRole | null>(null);
 
   useEffect(() => {
     if (!orgSlug) {
       setOrgName(null);
+      setOrgRole(null);
       return;
     }
     let cancelled = false;
-    fetch(`/api/org-name?slug=${encodeURIComponent(orgSlug)}`)
+    fetch(`/api/org-settings?slug=${encodeURIComponent(orgSlug)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!cancelled && data?.name) setOrgName(data.name);
+        if (cancelled || !data) return;
+        if (typeof data.name === "string" && data.name.trim()) setOrgName(data.name.trim());
+        setOrgRole((data.role as DbRole | undefined) ?? null);
       })
       .catch(() => {});
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [orgSlug]);
 
   // Hide header on landing, auth, claim and create-organisation
@@ -68,7 +75,13 @@ export default function AppHeader({ user, onMenuOpen }: { user: AppShellUser; on
         )}
         <div className="min-w-0">
           <OrgFlowLogoLockup
-            href={orgSlug ? `/${orgSlug}/dashboard` : "/"}
+            href={
+              orgSlug
+                ? orgRole === "viewer"
+                  ? `/${orgSlug}/overview`
+                  : `/${orgSlug}/dashboard`
+                : "/"
+            }
             size="sm"
             className="max-w-full"
           />
@@ -81,7 +94,9 @@ export default function AppHeader({ user, onMenuOpen }: { user: AppShellUser; on
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />
-        {user && !pathname.startsWith("/auth") && !pathname.startsWith("/claim-org") && <NotificationBell />}
+        {user && !pathname.startsWith("/auth") && !pathname.startsWith("/claim-org") && (
+          <NotificationBell orgSlug={orgSlug} />
+        )}
         {!user && orgSlug && (
           <FullPageLink
             href={`/${orgSlug}/login`}

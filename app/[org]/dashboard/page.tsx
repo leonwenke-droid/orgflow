@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { getRequestLocale } from "../../../lib/localeServer";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
+import { redirectViewerToOrgOverview } from "../../../lib/viewerRouteGuard";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { getGreeting, nextEngagementMilestone, formatShiftSlot, type AppLocale } from "../../../lib/formatDate";
 import { t } from "../../../lib/i18n";
@@ -76,6 +77,7 @@ export default async function OrgDashboardPage(props: {
 
   const member = myProfile as { id?: string; full_name?: string | null; role?: string | null } | null;
   const myProfileId = member?.id ?? null;
+  redirectViewerToOrgOverview(orgSlug, member?.role ?? null);
   if (!myProfileId) {
     return (
       <div className="mx-auto max-w-5xl p-6">

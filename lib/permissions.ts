@@ -58,6 +58,17 @@ export function canViewFinance(role: DbRole | null | undefined): boolean {
   return role != null && FINANCE_ROLES.includes(role);
 }
 
+/**
+ * Kontostand auf der gemeinsamen Gesamtübersicht: für alle Mitgliedsrollen (inkl. Viewer) lesbar,
+ * wenn das Finanz-/Kassenmodul aktiv ist — unabhängig von `canViewFinance` (Bearbeiten/Detail).
+ */
+export function canViewOrgTreasurySummaryOnSharedOverview(
+  role: DbRole | null | undefined,
+  financeModuleEnabled: boolean
+): boolean {
+  return financeModuleEnabled === true && role != null;
+}
+
 export function isReadOnly(role: DbRole | null | undefined): boolean {
   return role != null && VIEWER_ROLES.includes(role);
 }

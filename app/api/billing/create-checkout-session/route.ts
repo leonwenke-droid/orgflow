@@ -5,6 +5,7 @@ import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer"
 import { getStripe } from "../../../../lib/stripe";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
 import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
+import { PAID_TIER_SCALE_MEMBER_THRESHOLD } from "../../../../lib/planLimits";
 import { getClientIp, getRequestId, log } from "../../../../lib/log";
 import { asTrimmedString, readJson } from "../../../../lib/validation";
 
@@ -24,8 +25,14 @@ export async function POST(req: NextRequest) {
     const parsed = await readJson<{ orgSlug?: unknown; plan?: unknown }>(req);
     const orgSlug = parsed.ok ? asTrimmedString(parsed.data.orgSlug) : "";
     const requestedPlan = (parsed.ok ? asTrimmedString(parsed.data.plan) : "") as "team" | "pro";
-    if (!orgSlug || (requestedPlan !== "team" && requestedPlan !== "pro")) {
-      return NextResponse.json({ message: "orgSlug and valid plan required." }, { status: 400 });
+    if (!orgSlug || requestedPlan !== "team") {
+      return NextResponse.json(
+        {
+          message:
+            "Only the Pro (team) plan is available for self-service checkout. Enterprise is on request."
+        },
+        { status: 400 }
+      );
     }
 
     const org = await getCurrentOrganization(orgSlug);
@@ -34,14 +41,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    // `team` = landing „Pro“ (z. B. 29 €/mo, bis 50 Mitglieder); `pro` = Enterprise / unbegrenzt
-    const priceId =
-      requestedPlan === "team" ? process.env.STRIPE_PRICE_TEAM : process.env.STRIPE_PRICE_PRO;
+    const service = createSupabaseServiceRoleClient();
+
+    const { count: memberCountRaw } = await service
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", orgIdForData);
+    const memberCount = memberCountRaw ?? 0;
+
+    const useScaleTier = memberCount >= PAID_TIER_SCALE_MEMBER_THRESHOLD;
+    const priceId = useScaleTier
+      ? process.env.STRIPE_PRICE_TEAM_SCALE?.trim()
+      : process.env.STRIPE_PRICE_TEAM?.trim();
     if (!priceId) {
-      return NextResponse.json({ message: "Stripe price not configured." }, { status: 500 });
+      return NextResponse.json(
+        {
+          message: useScaleTier
+            ? "Stripe price for 50+ members (STRIPE_PRICE_TEAM_SCALE) not configured."
+            : "Stripe price not configured."
+        },
+        { status: 500 }
+      );
     }
 
-    const service = createSupabaseServiceRoleClient();
+    const planMeta: "team" | "pro" = useScaleTier ? "pro" : "team";
+
     const { data: orgRow, error: orgErr } = await service
       .from("organizations")
       .select("id, slug, name, stripe_customer_id")
@@ -65,10 +89,6 @@ export async function POST(req: NextRequest) {
     const successUrl = `${baseUrl}/${encodeURIComponent(orgSlug)}/settings?billing=success`;
     const cancelUrl = `${baseUrl}/${encodeURIComponent(orgSlug)}/settings?billing=cancel`;
 
-    // Landing „Pro“ = `team`: 14 Tage Testphase im Checkout (Stripe).
-    const subscriptionData =
-      requestedPlan === "team" ? { trial_period_days: 14 } : undefined;
-
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
@@ -77,8 +97,12 @@ export async function POST(req: NextRequest) {
       success_url: successUrl,
       cancel_url: cancelUrl,
       client_reference_id: orgRow.id,
-      metadata: { org_id: orgRow.id, plan: requestedPlan },
-      ...(subscriptionData ? { subscription_data: subscriptionData } : {})
+      metadata: { org_id: orgRow.id, plan: planMeta },
+      subscription_data: {
+        metadata: { org_id: orgRow.id, plan: planMeta },
+        // Testphase nur für den günstigeren Tarif (unter 50 Mitglieder beim Abschluss).
+        ...(useScaleTier ? {} : { trial_period_days: 14 })
+      }
     });
 
     return NextResponse.json({ url: session.url });

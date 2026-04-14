@@ -79,7 +79,21 @@ function getNavSections(
   const tasksHref = `/${org}/tasks`;
   const shiftsHref = `/${org}/shifts`;
   const treasuryHref = `/${org}/admin/finanzen`;
-  const overviewHref = operational ? `/${org}/admin/overview` : `/${org}/overview`;
+  /** Gemeinsame Gesamtübersicht für alle Rollen (Owner, Admin, Member, Viewer). */
+  const overviewHref = `/${org}/overview`;
+
+  if (role === "viewer") {
+    const myArea: NavItem[] = [
+      { href: overviewHref, labelKey: "nav.org_overview", icon: PanelsTopLeft },
+      { href: `/${org}/account`, labelKey: "nav.my_account", icon: UserCircle },
+    ];
+    const sections: { titleKey: string; items: NavItem[] }[] = [{ titleKey: "nav.my_area", items: myArea }];
+    sections.push({
+      titleKey: "",
+      items: [{ href: `/${org}/feedback`, labelKey: "nav.feedback", icon: MessageSquare }],
+    });
+    return sections.filter((s) => s.items.length > 0);
+  }
 
   const myArea: NavItem[] = [
     { href: `/${org}/dashboard`, labelKey: "dashboard.title", icon: LayoutDashboard },
@@ -176,6 +190,9 @@ export default function Sidebar({
     // Admin hub: nur exakte Route, nicht alle /admin/*-Unterseiten
     if (href === `/${orgSlug}/admin`) {
       return pathname === `/${orgSlug}/admin`;
+    }
+    if (href === `/${orgSlug}/overview`) {
+      return pathname === `/${orgSlug}/overview`;
     }
     if (href === `/${orgSlug}/admin/overview`) {
       return pathname.startsWith(`/${orgSlug}/admin/overview`);

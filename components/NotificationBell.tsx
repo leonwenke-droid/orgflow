@@ -14,7 +14,7 @@ type NotifItem = {
   created_at: string;
 };
 
-export default function NotificationBell() {
+export default function NotificationBell({ orgSlug }: { orgSlug: string | null }) {
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotifItem[]>([]);
@@ -22,9 +22,15 @@ export default function NotificationBell() {
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
+    if (!orgSlug) {
+      setItems([]);
+      setUnread(0);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch("/api/notifications", { cache: "no-store" });
+      const res = await fetch(`/api/notifications?org=${encodeURIComponent(orgSlug)}`, { cache: "no-store" });
       if (!res.ok) {
         setItems([]);
         setUnread(0);
@@ -36,16 +42,18 @@ export default function NotificationBell() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [orgSlug]);
 
   useEffect(() => {
     load();
+    if (!orgSlug) return;
     const t = setInterval(load, 60_000);
     return () => clearInterval(t);
-  }, [load]);
+  }, [load, orgSlug]);
 
   const markRead = async (ids: string[]) => {
-    await fetch("/api/notifications", {
+    if (!orgSlug) return;
+    await fetch(`/api/notifications?org=${encodeURIComponent(orgSlug)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids })
@@ -54,7 +62,8 @@ export default function NotificationBell() {
   };
 
   const markAllRead = async () => {
-    await fetch("/api/notifications", {
+    if (!orgSlug) return;
+    await fetch(`/api/notifications?org=${encodeURIComponent(orgSlug)}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ markAllRead: true })

@@ -8,6 +8,7 @@ import { getPublicBaseUrl } from "../../../lib/publicBaseUrl";
 import { asInt, asTrimmedString, clampInt, readJson } from "../../../lib/validation";
 import { checkRateLimit } from "../../../lib/rateLimit";
 import { getClientIp, getRequestId, log } from "../../../lib/log";
+import { canAddMember } from "../../../lib/planLimits";
 
 export async function POST(req: Request) {
   try {
@@ -45,6 +46,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Admin access required." }, { status: 403 });
     }
 
+    const service = createSupabaseServiceRoleClient();
+    const { count } = await service
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", org.id);
+    const memberCount = count ?? 0;
+    const orgPlan = (org.plan ?? "free") as "free" | "team" | "pro";
+    if (!canAddMember(orgPlan, memberCount)) {
+      return NextResponse.json(
+        { message: "Member limit reached for your plan.", errorKey: "members.error_member_limit" },
+        { status: 400 }
+      );
+    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -55,7 +70,6 @@ export async function POST(req: Request) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
-    const service = createSupabaseServiceRoleClient();
     const { data: link, error } = await service
       .from("invite_links")
       .insert({

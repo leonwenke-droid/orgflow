@@ -6,6 +6,7 @@ import { getCurrentOrganization } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { checkRateLimit } from "../../../lib/rateLimit";
 import { asTrimmedString, readJson } from "../../../lib/validation";
+import { canAddMember } from "../../../lib/planLimits";
 
 export async function POST(req: Request) {
   try {
@@ -62,12 +63,26 @@ export async function POST(req: Request) {
       .eq("auth_user_id", user.id)
       .single();
 
+    const { count } = await service
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", org.id);
+    const memberCount = count ?? 0;
+    const orgPlan = (org.plan ?? "free") as "free" | "team" | "pro";
+
     if (profile) {
+      const currentOrgId = String(profile.organization_id ?? "").trim();
+      if (currentOrgId !== org.id && !canAddMember(orgPlan, memberCount)) {
+        return NextResponse.json({ message: "Member limit reached for your plan.", errorKey: "members.error_member_limit" }, { status: 400 });
+      }
       await service
         .from("profiles")
         .update({ organization_id: org.id })
         .eq("id", profile.id);
     } else {
+      if (!canAddMember(orgPlan, memberCount)) {
+        return NextResponse.json({ message: "Member limit reached for your plan.", errorKey: "members.error_member_limit" }, { status: 400 });
+      }
       await service.from("profiles").insert({
         id: randomUUID(),
         auth_user_id: user.id,

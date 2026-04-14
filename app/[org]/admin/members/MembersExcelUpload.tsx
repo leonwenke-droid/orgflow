@@ -5,7 +5,7 @@ import { useLocale } from "../../../../components/LocaleProvider";
 import { t } from "../../../../lib/i18n";
 import { copyTextToClipboard } from "../../../../lib/clipboard";
 
-export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
+export default function MembersExcelUpload({ orgSlug, disabledReason }: { orgSlug: string; disabledReason?: string | null }) {
   const { locale } = useLocale();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -16,6 +16,10 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (disabledReason) {
+      setMessage({ ok: false, text: disabledReason });
+      return;
+    }
     if (!file) {
       setMessage({ ok: false, text: "Please select a file." });
       return;
@@ -78,15 +82,21 @@ export default function MembersExcelUpload({ orgSlug }: { orgSlug: string }) {
       <p className="w-full text-xs text-text-secondary dark:text-text-muted">
         {t("members.excel_formats_hint", locale)}
       </p>
+      {disabledReason ? (
+        <p className="w-full rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+          {disabledReason}
+        </p>
+      ) : null}
       <input
         type="file"
         accept=".xlsx,.xls,.csv"
         onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        disabled={Boolean(disabledReason)}
         className="text-sm text-text-secondary file:mr-2 file:rounded file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white file:hover:bg-blue-700 dark:text-text-muted"
       />
       <button
         type="submit"
-        disabled={loading || !file}
+        disabled={loading || !file || Boolean(disabledReason)}
         className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
         {loading ? t("members.importing", locale) : t("members.import_btn", locale)}

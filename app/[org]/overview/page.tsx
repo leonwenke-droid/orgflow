@@ -12,7 +12,7 @@ import {
   isSuperAdmin
 } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import { canViewFinance } from "../../../lib/permissions";
+import { canViewOrgTreasurySummaryOnSharedOverview } from "../../../lib/permissions";
 import { DEFAULT_CURRENCY, formatCurrency } from "../../../lib/currency";
 import { formatLocaleDateFromIso, formatShiftSlot, type AppLocale } from "../../../lib/formatDate";
 import { t } from "../../../lib/i18n";
@@ -49,11 +49,9 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
   }
 
   const role = await getEffectiveUserRoleForOrg(orgSlug, org);
-  // Gesamtübersicht: ab Rolle "member" (Viewer ausgeschlossen)
-  if (!superUser && role === "viewer") {
-    redirect(`/${orgSlug}/dashboard`);
-  }
-  const showBalance = canViewFinance(role);
+  const features = ((org.settings ?? {}) as { features?: Record<string, boolean> }).features ?? {};
+  const financeModuleOn = features.treasury !== false;
+  const showBalance = canViewOrgTreasurySummaryOnSharedOverview(role, financeModuleOn);
 
   const service = createSupabaseServiceRoleClient();
   const todayStr = new Date().toISOString().slice(0, 10);

@@ -10,10 +10,12 @@ type Committee = { id: string; name: string };
 
 export default function AddMemberForm({
   orgSlug,
-  committees
+  committees,
+  disabledReason
 }: {
   orgSlug: string;
   committees: Committee[];
+  disabledReason?: string | null;
 }) {
   const { locale } = useLocale();
   const [fullName, setFullName] = useState("");
@@ -37,6 +39,10 @@ export default function AddMemberForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (disabledReason) {
+      setError(disabledReason);
+      return;
+    }
     const name = fullName.trim();
     if (!name) {
       setError(t("members.error_name_required", locale));
@@ -79,6 +85,11 @@ export default function AddMemberForm({
     <div className="rounded-lg border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
       <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">{t("members.add_manual_title", locale)}</h2>
       <p className="mt-1 text-xs text-text-secondary dark:text-text-muted">{t("members.add_manual_hint", locale)}</p>
+      {disabledReason ? (
+        <p className="mt-2 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+          {disabledReason}
+        </p>
+      ) : null}
       <form onSubmit={handleSubmit} className="mt-3 space-y-3 text-sm">
         <div>
           <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">{t("engagement.export_name", locale)}</label>
@@ -88,6 +99,7 @@ export default function AddMemberForm({
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder={t("members.placeholder_name", locale)}
+            disabled={Boolean(disabledReason)}
             className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
           />
         </div>
@@ -96,6 +108,7 @@ export default function AddMemberForm({
             type="checkbox"
             checked={asLead}
             onChange={(e) => setAsLead(e.target.checked)}
+            disabled={Boolean(disabledReason)}
             className="rounded border-border-default"
           />
           {t("members.add_as_lead", locale)}
@@ -109,6 +122,7 @@ export default function AddMemberForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="max@example.com"
+              disabled={Boolean(disabledReason)}
               className="w-full rounded border border-border-default bg-bg-primary p-2 text-xs text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
             />
           </div>
@@ -121,7 +135,13 @@ export default function AddMemberForm({
             <div className="mt-1 flex flex-wrap gap-2 rounded border border-border-subtle bg-bg-secondary p-2 dark:border-border-default dark:bg-bg-primary">
               {committees.map((c) => (
                 <label key={c.id} className="flex cursor-pointer items-center gap-1.5 text-xs text-text-secondary dark:text-text-secondary">
-                  <input type="checkbox" checked={committeeIds.has(c.id)} onChange={() => toggleCommittee(c.id)} className="rounded border-border-default" />
+                  <input
+                    type="checkbox"
+                    checked={committeeIds.has(c.id)}
+                    onChange={() => toggleCommittee(c.id)}
+                    disabled={Boolean(disabledReason)}
+                    className="rounded border-border-default"
+                  />
                   {c.name}
                 </label>
               ))}
@@ -146,7 +166,7 @@ export default function AddMemberForm({
       )}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || Boolean(disabledReason)}
           className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
           {loading ? t("members.adding", locale) : t("members.add_member_btn", locale)}
