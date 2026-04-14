@@ -111,7 +111,7 @@ Suggested schedules (UTC), matching `vercel.json` as a reference:
 
 ## Production environment validation
 
-`instrumentation.ts` calls `validateProductionEnv()` when `NODE_ENV === "production"`. Missing variables surface when the production Node/Edge runtime starts; configure them in Vercel (and use `.env.production` locally for production-like runs).
+`instrumentation.ts` calls `validateProductionEnv()` when `NODE_ENV === "production"`. **Hard failure** only if core vars are missing (`NEXT_PUBLIC_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_APP_URL`). **Stripe** vars are required only when `STRIPE_SECRET_KEY` is set. **Upstash** and **CRON_SECRET** log warnings if unset (features degrade) instead of crashing boot.
 
 ## Sentry (optional)
 

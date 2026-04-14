@@ -1,22 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
-import { createClient, type Session } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 
 // Lokal (localhost): NEXT_PUBLIC_ROOT_HOST weglassen – dann nur Pfad-URLs wie /my-org/dashboard
 const ROOT_HOST = process.env.NEXT_PUBLIC_ROOT_HOST; // z. B. "orgflow.app" (nur Produktion/Subdomain)
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// #region agent log
-function agentLog(payload: Record<string, unknown>) {
-  void fetch("http://127.0.0.1:7660/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "595982" },
-    body: JSON.stringify({ sessionId: "595982", timestamp: Date.now(), ...payload }),
-  }).catch(() => {});
-}
-// #endregion
 
 const RESERVED_ORG_SLUGS = new Set([
   "api",
@@ -112,6 +103,18 @@ function requiresAuth(pathname: string): boolean {
   return false;
 }
 
+function loginRedirect(req: NextRequest, pathname: string) {
+  const redirectUrl = req.nextUrl.clone();
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length >= 2 && (segments[1] === "admin" || segments[1] === "settings" || segments[1] === "onboarding")) {
+    redirectUrl.pathname = `/${segments[0]}/login`;
+  } else {
+    redirectUrl.pathname = "/login";
+  }
+  redirectUrl.searchParams.set("redirectTo", pathname + req.nextUrl.search);
+  return NextResponse.redirect(redirectUrl);
+}
+
 async function runMiddleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   const host = req.headers.get("host") ?? "";
@@ -154,7 +157,6 @@ async function runMiddleware(req: NextRequest) {
   }
 
   // ----- Reserved / unknown org slugs: avoid route collisions and phantom org shells -----
-  // Global App Router admin lives at /admin/* (not an organisation whose slug is "admin").
   const isGlobalAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
   if (!isGlobalAdminPath && !isGlobalRootAppRoute(pathname)) {
     const segments = pathname.split("/").filter(Boolean);
@@ -164,142 +166,76 @@ async function runMiddleware(req: NextRequest) {
       if (RESERVED_ORG_SLUGS.has(orgSlug)) {
         return NextResponse.rewrite(new URL("/404", req.url));
       }
-      // No Supabase org lookup here: `organizations` RLS usually exposes only the viewer's org row
-      // (`current_user_organization_id`). Slug-in-URL may match another row (legacy id vs canonical slug),
-      // so a middleware SELECT by slug returns empty → false 404. Server pages use getCurrentOrganization + notFound().
     }
   }
 
   // ----- Geschützte Routen: Login erforderlich -----
   if (requiresAuth(pathname)) {
-    // #region agent log
-    agentLog({
-      location: "middleware.ts:before createMiddlewareClient",
-      message: "requiresAuth branch",
-      hypothesisId: "H1",
-      data: {
-        pathname,
-        hasSupabaseUrl: Boolean(SUPABASE_URL),
-        hasSupabaseKey: Boolean(SUPABASE_ANON_KEY),
-      },
-    });
-    // #endregion
     if (!String(SUPABASE_URL ?? "").trim() || !String(SUPABASE_ANON_KEY ?? "").trim()) {
-      // #region agent log
-      agentLog({
-        location: "middleware.ts:missing supabase env",
-        message: "blocked before createMiddlewareClient",
-        hypothesisId: "H1",
-        data: { pathname },
-      });
-      // #endregion
       console.error(
         "[middleware] Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in the Edge bundle. In Vercel, assign both for Production (and Preview if needed) and redeploy so they are embedded at build time."
       );
       return new NextResponse("Service temporarily unavailable.", { status: 503 });
     }
 
-    const supabase = createMiddlewareClient({ req, res });
+    let supabase: ReturnType<typeof createMiddlewareClient>;
+    try {
+      supabase = createMiddlewareClient({ req, res });
+    } catch (clientErr) {
+      console.error("[middleware] createMiddlewareClient failed", clientErr);
+      return loginRedirect(req, pathname);
+    }
+
     let session: Session | null = null;
     try {
       const { data } = await supabase.auth.getSession();
       session = data.session;
     } catch (sessionErr) {
-      // #region agent log
-      agentLog({
-        location: "middleware.ts:getSession catch",
-        message: "getSession threw",
-        hypothesisId: "H3",
-        data: {
-          errMsg: sessionErr instanceof Error ? sessionErr.message : String(sessionErr),
-        },
-      });
-      // #endregion
       console.error("[middleware] getSession failed", sessionErr);
       session = null;
     }
 
-    // #region agent log
-    agentLog({
-      location: "middleware.ts:after getSession",
-      message: "getSession result",
-      hypothesisId: "H3",
-      data: { pathname, hasSession: Boolean(session) },
-    });
-    // #endregion
-
     if (!session) {
-      const redirectUrl = req.nextUrl.clone();
-      const segments = pathname.split("/").filter(Boolean);
-      // Org-Admin: zu [org]/login weiterleiten
-      if (segments.length >= 2 && (segments[1] === "admin" || segments[1] === "settings" || segments[1] === "onboarding")) {
-        redirectUrl.pathname = `/${segments[0]}/login`;
-      } else {
-        redirectUrl.pathname = "/login";
-      }
-      redirectUrl.searchParams.set("redirectTo", pathname + req.nextUrl.search);
-
-      return NextResponse.redirect(redirectUrl);
+      return loginRedirect(req, pathname);
     }
   }
 
-  // #region agent log
-  agentLog({
-    location: "middleware.ts:before harden cookies",
-    message: "hardenAuthCookies",
-    hypothesisId: "H4",
-    data: { pathname, secure: shouldUseSecureCookies },
-  });
-  // #endregion
-  hardenAuthCookiesOnResponse(res, { secure: shouldUseSecureCookies });
+  try {
+    hardenAuthCookiesOnResponse(res, { secure: shouldUseSecureCookies });
+  } catch (hardenErr) {
+    console.error("[middleware] hardenAuthCookiesOnResponse failed", hardenErr);
+  }
   return res;
 }
 
 export async function middleware(req: NextRequest) {
-  // #region agent log
-  agentLog({
-    location: "middleware.ts:entry",
-    message: "middleware invoked",
-    hypothesisId: "H1",
-    data: {
-      pathname: req.nextUrl.pathname,
-      host: req.headers.get("host") ?? "",
-      hasSupabaseUrl: Boolean(SUPABASE_URL),
-      hasSupabaseKey: Boolean(SUPABASE_ANON_KEY),
-      requiresAuth: requiresAuth(req.nextUrl.pathname),
-    },
-  });
-  // #endregion
   try {
     return await runMiddleware(req);
   } catch (e) {
-    // #region agent log
-    agentLog({
-      location: "middleware.ts:catch",
-      message: "middleware threw",
-      hypothesisId: "H5",
-      data: {
-        errMsg: e instanceof Error ? e.message : String(e),
-        errName: e instanceof Error ? e.name : "unknown",
-      },
-    });
-    // #endregion
     console.error(
       "[middleware fatal]",
       e instanceof Error ? e.message : e,
       e instanceof Error ? e.stack : ""
     );
-    throw e;
+    // Never rethrow: Vercel surfaces uncaught middleware errors as MIDDLEWARE_INVOCATION_FAILED.
+    if (requiresAuth(req.nextUrl.pathname)) {
+      try {
+        return loginRedirect(req, req.nextUrl.pathname);
+      } catch {
+        return NextResponse.next();
+      }
+    }
+    return NextResponse.next();
   }
 }
 
 export const config = {
   matcher: [
-    "/", // für Subdomain-Redirect (z. B. my-org.orgflow.app/ → /my-org/dashboard)
+    "/",
     "/admin",
     "/admin/:path*",
     "/dashboard",
-    "/super-admin", // exakt, damit Middleware läuft und zu /login?redirectTo=/super-admin weiterleitet
+    "/super-admin",
     "/super-admin/:path*",
     "/:org/dashboard",
     "/:org/admin",
@@ -308,7 +244,7 @@ export const config = {
     "/:org/settings/:path*",
     "/:org/onboarding",
     "/:org/onboarding/:path*",
-    "/:org/login", // Org-Login erreichbar halten
-    "/:org", // ein Segment, z. B. /my-org
+    "/:org/login",
+    "/:org",
   ]
 };
