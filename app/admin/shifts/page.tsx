@@ -45,20 +45,6 @@ import { fetchEngagementEnabledForOrgId } from "../../../lib/engagement/isEngage
 
 export const dynamic = "force-dynamic";
 
-async function isEngagementEnabledForOrgId(
-  service: ReturnType<typeof createSupabaseServiceRoleClient>,
-  orgId: string
-): Promise<boolean> {
-  const { data: row } = await service
-    .from("organizations")
-    .select("plan, settings")
-    .eq("id", orgId)
-    .maybeSingle();
-  const plan = String((row as any)?.plan ?? "free");
-  const features = (((row as any)?.settings ?? {}) as { features?: Record<string, boolean> }).features ?? {};
-  return plan !== "free" && features.engagement_tracking !== false;
-}
-
 type SimpleShift = { id: string; required_slots: number | null; date?: string };
 
 const COOLDOWN_DAYS = 3;
@@ -219,7 +205,7 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
   if (adminOk !== true) return;
 
   const service = createSupabaseServiceRoleClient();
-  if (!(await isEngagementEnabledForOrgId(service, orgId))) {
+  if (!(await fetchEngagementEnabledForOrgId(service, orgId))) {
     revalidatePath("/admin/shifts");
     if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
     return;
@@ -350,7 +336,7 @@ async function fillSelfSignupGaps(formData: FormData) {
   if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
-  if (!(await isEngagementEnabledForOrgId(service, orgId))) {
+  if (!(await fetchEngagementEnabledForOrgId(service, orgId))) {
     revalidatePath("/admin/shifts");
     if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
     return;
@@ -1228,7 +1214,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
       .eq("id", orgId)
       .maybeSingle();
     organizationName = (orgNameRow as { name?: string | null } | null)?.name?.trim() || null;
-    engagementEnabled = await isEngagementEnabledForOrgId(service, orgId);
+    engagementEnabled = await fetchEngagementEnabledForOrgId(service, orgId);
   }
 
   let effectiveOrgSlug = orgSlug;
@@ -1471,7 +1457,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
                   <div className="chd flex flex-wrap items-center justify-between gap-2">
                     <span>{t("shifts.v2_manage_shifts_title", locale)}</span>
                     {orgId ? (
-                      <NewShiftModal action={createShifts} organizationId={orgId} events={events} />
+                      <NewShiftModal action={createShifts} organizationId={orgId} events={events} engagementEnabled={engagementEnabled} />
                     ) : null}
                   </div>
                   <div className="cbd">
@@ -1492,9 +1478,10 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
                   replaceAssignment={replaceAssignment}
                   previewRotationForShift={previewRotationForShift}
                   assignRotationFairOne={assignRotationFairOne}
+                  engagementEnabled={engagementEnabled}
                   headerActions={
                     <>
-                      <NewShiftModal action={createShifts} organizationId={orgId ?? undefined} events={events} />
+                      <NewShiftModal action={createShifts} organizationId={orgId ?? undefined} events={events} engagementEnabled={engagementEnabled} />
                       {orgId && engagementEnabled ? (
                         <ShiftsAutoAssignConfirmForm action={runAutoAssignForExistingShifts} className="contents">
                           <input type="hidden" name="organization_id" value={orgId} />
@@ -1561,7 +1548,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   {orgId ? (
-                    <NewShiftModal action={createShifts} organizationId={orgId} events={events} />
+                    <NewShiftModal action={createShifts} organizationId={orgId} events={events} engagementEnabled={engagementEnabled} />
                   ) : null}
                 </div>
                 <EmptyState messageKey="empty.shifts_first" variant="admin" />

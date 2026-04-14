@@ -37,6 +37,8 @@ type Props = {
   assignRotationFairOne?: (shiftId: string) => Promise<import("../types/rotation").AssignRotationFairOneResult>;
   /** Actions rechts neben Typ-Filter (z. B. Neue Schicht, PDF, Batch Auto-Zuteilung) */
   headerActions?: ReactNode;
+  /** When false, filter and help copy hide engagement-based assignment types (org module off). */
+  engagementEnabled?: boolean;
 };
 
 function timeStr(t: string | null | undefined): string {
@@ -97,7 +99,7 @@ function buildSubline(
   return [time, loc, namePart].filter(Boolean).join(" · ");
 }
 
-const KIND_OPTIONS = ["all", "self_signup", "auto_assign", "rotation", "fixed"] as const;
+const KIND_OPTIONS_FULL = ["all", "self_signup", "auto_assign", "rotation", "fixed"] as const;
 
 export default function ShiftPlanTableWithEdit({
   orgSlug,
@@ -112,11 +114,13 @@ export default function ShiftPlanTableWithEdit({
   replaceAssignment,
   previewRotationForShift,
   assignRotationFairOne,
-  headerActions
+  headerActions,
+  engagementEnabled = true
 }: Props) {
   const { locale } = useLocale();
   const router = useRouter();
-  const [kindFilter, setKindFilter] = useState<(typeof KIND_OPTIONS)[number]>("all");
+  const kindOptions = engagementEnabled ? KIND_OPTIONS_FULL : (["all", "self_signup", "fixed"] as const);
+  const [kindFilter, setKindFilter] = useState<(typeof KIND_OPTIONS_FULL)[number]>("all");
   const [editingShifts, setEditingShifts] = useState<any[] | null>(null);
 
   useEffect(() => {
@@ -132,6 +136,11 @@ export default function ShiftPlanTableWithEdit({
     if (kindFilter === "all") return shifts;
     return (shifts as any[]).filter((s) => effectiveAssignmentKind(s) === kindFilter);
   }, [shifts, kindFilter]);
+
+  useEffect(() => {
+    if (engagementEnabled) return;
+    if (kindFilter === "auto_assign" || kindFilter === "rotation") setKindFilter("all");
+  }, [engagementEnabled, kindFilter]);
 
   const byDate = useMemo(() => {
     const acc: Record<string, any[]> = {};
@@ -162,9 +171,9 @@ export default function ShiftPlanTableWithEdit({
             className="sh-kind-select"
             value={kindFilter}
             aria-label={t("shifts.filter_assignment_kind", locale)}
-            onChange={(e) => setKindFilter(e.target.value as (typeof KIND_OPTIONS)[number])}
+            onChange={(e) => setKindFilter(e.target.value as (typeof KIND_OPTIONS_FULL)[number])}
           >
-            {KIND_OPTIONS.map((k) => (
+            {kindOptions.map((k) => (
               <option key={k} value={k}>
                 {t(`shifts.assignment_kind_short_${k}` as "shifts.assignment_kind_short_all", locale)}
               </option>
@@ -199,6 +208,7 @@ export default function ShiftPlanTableWithEdit({
                 const sub = buildSubline(s, assignments, profileNames, locale);
                 const title = String(s.event_name ?? "").trim() || t("shifts.untitled_shift", locale);
                 const showRotationOnly =
+                  engagementEnabled &&
                   taken < required &&
                   kind === "rotation" &&
                   previewRotationForShift &&
@@ -217,7 +227,7 @@ export default function ShiftPlanTableWithEdit({
                         <span className="type-badge inline-flex items-center gap-1">
                           <span className="tdot" style={{ background: dotCol }} />
                           {t(`shifts.assignment_kind_short_${kind}` as "shifts.assignment_kind_short_self_signup", locale)}
-                          <AssignmentKindHelpIcon kind={kind} />
+                          <AssignmentKindHelpIcon kind={kind} engagementBased={engagementEnabled} />
                         </span>
                       </div>
                       <div className="rmt">{sub}</div>
@@ -274,6 +284,7 @@ export default function ShiftPlanTableWithEdit({
 
       {editingShifts != null && editingShifts.length > 0 && (
         <ShiftEditModal
+          engagementEnabled={engagementEnabled}
           shift={{
             id: editingShifts[0].id,
             event_name: editingShifts[0].event_name ?? "",

@@ -10,6 +10,7 @@ import { t } from "../../../lib/i18n";
 import { nextEngagementMilestone } from "../../../lib/formatDate";
 import { getEngagementBreakdown, getOrgScoreboard, getRecentEngagementEvents } from "../../../lib/engagement/getScore";
 import EngagementScoreWidget from "../../../components/engagement/EngagementScoreWidget";
+import { isEngagementEnabledFromOrgRow } from "../../../lib/engagement/isEngagementEnabled";
 
 export const dynamic = "force-dynamic";
 
@@ -65,20 +66,21 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
     );
   }
 
-  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
+  const engagementEnabled = isEngagementEnabledFromOrgRow(org as any);
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const since = thirtyDaysAgo.toISOString();
 
-  const [{ data: scoreRow }, { data: myEvents }, { data: myTasks }, { data: allOrgScores }] = await Promise.all([
-    service
-      .from("engagement_scores")
-      .select("score")
-      .eq("user_id", myProfileId)
-      .eq("organization_id", effectiveOrgIdForData)
-      .maybeSingle(),
+  const [{ data: scoreRow }, { data: myEvents }, { data: myTasks }] = await Promise.all([
+    engagementEnabled
+      ? service
+          .from("engagement_scores")
+          .select("score")
+          .eq("user_id", myProfileId)
+          .eq("organization_id", effectiveOrgIdForData)
+          .maybeSingle()
+      : Promise.resolve({ data: null as { score?: number } | null }),
     service
       .from("engagement_events")
       .select("event_type, created_at")
@@ -90,23 +92,13 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
       .from("tasks")
       .select("id, status, due_at")
       .eq("organization_id", effectiveOrgIdForData)
-      .eq("owner_id", myProfileId),
-    engagementEnabled
-      ? service.from("engagement_scores").select("user_id, score").eq("organization_id", effectiveOrgIdForData)
-      : Promise.resolve({ data: [] as { user_id: string; score: number }[] })
+      .eq("owner_id", myProfileId)
   ]);
 
   const rawScore = Number((scoreRow as any)?.score ?? 0) || 0;
   const score = Math.max(0, rawScore);
   const next = nextEngagementMilestone(score);
   const progressPct = next > 0 ? Math.max(0, Math.min(100, Math.round((score / next) * 100))) : 0;
-
-  const rankRows = (allOrgScores ?? []) as { user_id: string; score: number }[];
-  const totalRanked = rankRows.length;
-  const rank =
-    engagementEnabled && totalRanked > 0
-      ? rankRows.filter((r) => Number(r.score) > Number(rawScore)).length + 1
-      : null;
 
   const events = (myEvents ?? []) as any[];
   const shifts30d = events.filter((e) => e.event_type === "shift_done").length;
@@ -138,9 +130,9 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
         <p className="page-sub">{org.name}</p>
       </header>
 
-      <section className="card">
-        <div className="p-4">
-          {engagementEnabled && breakdownWidget && recentEvWidget && orgBoardWidget ? (
+      {engagementEnabled && breakdownWidget && recentEvWidget && orgBoardWidget ? (
+        <section className="card">
+          <div className="p-4">
             <div className="space-y-2">
               <div className="text-sm font-medium text-text-primary">{displayName}</div>
               <EngagementScoreWidget
@@ -160,40 +152,9 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
                 <div className="h-2 rounded-full bg-brand" style={{ width: `${progressPct}%` }} />
               </div>
             </div>
-          ) : (
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-light text-xl font-semibold text-brand-dark">
-                {Number(score) || 0}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-text-primary">{displayName}</div>
-                <div className="mt-1 text-xs text-text-secondary">
-                  {locale === "en"
-                    ? rank != null
-                      ? `Rank #${rank} of ${totalRanked}`
-                      : "Not ranked"
-                    : rank != null
-                      ? `Rang #${rank} von ${totalRanked}`
-                      : "Nicht gerankt"}
-                </div>
-                <div className="mt-3 h-2 w-full rounded-full bg-bg-tertiary">
-                  <div className="h-2 rounded-full bg-brand" style={{ width: `${progressPct}%` }} />
-                </div>
-                <div className="mt-2 text-xs text-text-secondary">
-                  {locale === "en"
-                    ? `${Number(score) || 0} / ${next} pts. until next milestone`
-                    : `${Number(score) || 0} / ${next} Pkt. bis nächster Meilenstein`}
-                </div>
-                <div className="mt-2 text-[11px] text-text-secondary">
-                  {locale === "en"
-                    ? "Scores increase when you complete tasks or shifts. Ranking compares scores inside your organisation."
-                    : "Scores steigen, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      ) : null}
 
       <section className="grid gap-4 md:grid-cols-3">
         <div className="stat-card">

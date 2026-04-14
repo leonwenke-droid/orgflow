@@ -107,8 +107,7 @@ export async function POST(req: NextRequest) {
       metadata: { org_id: orgRow.id, plan: planMeta },
       subscription_data: {
         metadata: { org_id: orgRow.id, plan: planMeta },
-        // Testphase nur für den günstigeren Tarif (unter 50 Mitglieder beim Abschluss).
-        ...(useScaleTier ? {} : { trial_period_days: 14 })
+        trial_period_days: 14
       }
     });
 

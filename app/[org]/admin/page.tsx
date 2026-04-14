@@ -13,6 +13,7 @@ import { canManageMembersAndTeams, canViewFinance } from "../../../lib/permissio
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import AdminForbidden from "./AdminForbidden";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { isEngagementEnabledFromOrgRow } from "../../../lib/engagement/isEngagementEnabled";
 
 export default async function AdminDashboard({
   params
@@ -43,6 +44,7 @@ export default async function AdminDashboard({
   const features = ((org.settings ?? {}) as { features?: Record<string, boolean> }).features ?? {};
   const modTasks = features.tasks !== false;
   const modShifts = features.shifts !== false;
+  const engagementEnabled = isEngagementEnabledFromOrgRow(org as any);
 
   const service = createSupabaseServiceRoleClient();
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -54,7 +56,7 @@ export default async function AdminDashboard({
     { count: memberCount },
     { count: openTasksCount },
     { count: overdueTasksCount },
-    { count: activeMembersCount },
+    activeMembersResult,
     { data: shifts7d },
     { data: committees },
     { count: pendingTransfersCount }
@@ -73,11 +75,13 @@ export default async function AdminDashboard({
       .is("deleted_at", null)
       .neq("status", "erledigt")
       .lt("due_at", new Date().toISOString()),
-    service
-      .from("engagement_scores")
-      .select("user_id", { count: "exact", head: true })
-      .eq("organization_id", orgIdForData)
-      .gt("score", 0),
+    engagementEnabled
+      ? service
+          .from("engagement_scores")
+          .select("user_id", { count: "exact", head: true })
+          .eq("organization_id", orgIdForData)
+          .gt("score", 0)
+      : Promise.resolve({ count: null as number | null }),
     service
       .from("shifts")
       .select("id, committee_id, required_slots, shift_assignments(id)")
@@ -91,6 +95,8 @@ export default async function AdminDashboard({
       .eq("organization_id", orgIdForData)
       .eq("status", "pending")
   ]);
+
+  const activeMembersCount = activeMembersResult?.count ?? null;
 
   const shiftsSlots7d = (shifts7d ?? []).reduce((sum, s: any) => sum + (Number(s.required_slots ?? 0) || 0), 0);
 
@@ -125,7 +131,7 @@ export default async function AdminDashboard({
         </div>
       ) : null}
 
-      <section className="grid gap-4 md:grid-cols-4">
+      <section className={`grid gap-4 ${engagementEnabled ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
         <div className="stat-card">
           <div className="section-label">{t("dashboard.members", locale)}</div>
           <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{memberCount ?? 0}</div>
@@ -138,10 +144,12 @@ export default async function AdminDashboard({
           <div className="section-label">{locale === "en" ? "Shift slots (7d)" : "Schichten (7d)"}</div>
           <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{shiftsSlots7d}</div>
         </div>
-        <div className="stat-card">
-          <div className="section-label">{locale === "en" ? "Active members" : "Aktive Mitglieder"}</div>
-          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{activeMembersCount ?? 0}</div>
-        </div>
+        {engagementEnabled ? (
+          <div className="stat-card">
+            <div className="section-label">{locale === "en" ? "Active members" : "Aktive Mitglieder"}</div>
+            <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{activeMembersCount ?? 0}</div>
+          </div>
+        ) : null}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">

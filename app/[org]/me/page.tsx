@@ -11,6 +11,7 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import MemberUnavailabilitySection from "../../../components/MemberUnavailabilitySection";
 import { getEngagementBreakdown, getOrgScoreboard, getRecentEngagementEvents } from "../../../lib/engagement/getScore";
 import EngagementScoreWidget from "../../../components/engagement/EngagementScoreWidget";
+import { isEngagementEnabledFromOrgRow } from "../../../lib/engagement/isEngagementEnabled";
 
 export const dynamic = "force-dynamic";
 
@@ -64,27 +65,22 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
     );
   }
 
-  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
+  const engagementEnabled = isEngagementEnabledFromOrgRow(org as any);
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const since = thirtyDaysAgo.toISOString();
 
-  const [
-    { data: scoreRow },
-    { data: myEvents },
-    { data: myTasks },
-    { data: myAssignments },
-    { data: allOrgScores },
-    { data: unavailRows },
-  ] = await Promise.all([
-    service
-      .from("engagement_scores")
-      .select("score, updated_at")
-      .eq("user_id", myProfileId)
-      .eq("organization_id", effectiveOrgIdForData)
-      .maybeSingle(),
+  const [{ data: scoreRow }, { data: myEvents }, { data: myTasks }, { data: myAssignments }, { data: unavailRows }] =
+    await Promise.all([
+    engagementEnabled
+      ? service
+          .from("engagement_scores")
+          .select("score, updated_at")
+          .eq("user_id", myProfileId)
+          .eq("organization_id", effectiveOrgIdForData)
+          .maybeSingle()
+      : Promise.resolve({ data: null as { score?: number; updated_at?: string } | null }),
     service
       .from("engagement_events")
       .select("event_type, created_at, points")
@@ -104,9 +100,6 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
       .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)
       .order("created_at", { ascending: false })
       .limit(200),
-    engagementEnabled
-      ? service.from("engagement_scores").select("user_id, score").eq("organization_id", effectiveOrgIdForData)
-      : Promise.resolve({ data: [] as { user_id: string; score: number }[] }),
     service
       .from("member_unavailability")
       .select("id, unavailable_from, unavailable_until, reason")
@@ -120,13 +113,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
     ? formatLocaleDateTime(String((scoreRow as any).updated_at), locale)
     : null;
 
-  const rankRows = (allOrgScores ?? []) as { user_id: string; score: number }[];
-  const totalRanked = rankRows.length;
   const myNumeric = Number(score);
-  const rank =
-    engagementEnabled && totalRanked > 0
-      ? rankRows.filter((r) => Number(r.score) > myNumeric).length + 1
-      : null;
 
   const events = (myEvents ?? []) as any[];
   const counts = {
@@ -186,11 +173,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
             </p>
           ) : null}
         </div>
-      ) : (
-        <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
-          <p className="text-sm text-text-secondary dark:text-text-muted">{t("me.engagement_disabled", locale)}</p>
-        </div>
-      )}
+      ) : null}
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">

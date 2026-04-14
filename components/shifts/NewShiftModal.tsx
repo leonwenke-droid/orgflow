@@ -10,11 +10,13 @@ type CreateShiftsAction = ComponentProps<typeof CreateShiftsForm>["action"];
 export default function NewShiftModal({
   action,
   organizationId,
-  events
+  events,
+  engagementEnabled = true
 }: {
   action: CreateShiftsAction;
   organizationId?: string;
   events: { id: string; name: string }[];
+  engagementEnabled?: boolean;
 }) {
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
@@ -44,6 +46,7 @@ export default function NewShiftModal({
               events={events}
               onCancel={closeModal}
               onSuccess={closeModal}
+              engagementEnabled={engagementEnabled}
             />
           </div>
         </div>

@@ -268,8 +268,8 @@ export default function CreateOrganisationClient() {
             <h2 className="text-xl font-semibold text-text-primary">Nächster Schritt</h2>
             <p className="mt-2 text-sm text-text-secondary">
               {paidTier === "scale"
-                ? "Tarif ab 50 Mitgliedern (49 €/Monat, ohne Testphase). Sie werden zur Zahlung weitergeleitet; danach richten Sie Ihre Organisation ein."
-                : "Pro bis 49 Mitglieder (29 €/Monat, 14 Tage Test vor erster Abbuchung). Sie werden zur Zahlung weitergeleitet; danach richten Sie Ihre Organisation ein."}
+                ? "Tarif ab 50 Mitgliedern (49 €/Monat, 14 Tage Test vor erster Abbuchung). Sie werden zur Zahlung weitergeleitet; danach richten Sie Ihre Organisation ein."
+                : "Team bis 49 Mitglieder (29 €/Monat, 14 Tage Test vor erster Abbuchung). Sie werden zur Zahlung weitergeleitet; danach richten Sie Ihre Organisation ein."}
             </p>
             {showCancelledBanner ? (
               <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">

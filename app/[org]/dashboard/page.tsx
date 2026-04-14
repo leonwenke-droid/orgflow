@@ -7,13 +7,14 @@ import { getRequestLocale } from "../../../lib/localeServer";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { redirectViewerToOrgOverview } from "../../../lib/viewerRouteGuard";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import { getGreeting, nextEngagementMilestone, formatShiftSlot, type AppLocale } from "../../../lib/formatDate";
+import { getGreeting, formatShiftSlot, type AppLocale } from "../../../lib/formatDate";
 import { t } from "../../../lib/i18n";
 
 import { claimShiftFromDashboard } from "./actions";
 import { effectiveAssignmentKind } from "../../../lib/shiftAssignmentKind";
 import { getEngagementBreakdown, getOrgScoreboard, getRecentEngagementEvents } from "../../../lib/engagement/getScore";
 import EngagementScoreWidget from "../../../components/engagement/EngagementScoreWidget";
+import { isEngagementEnabledFromOrgRow } from "../../../lib/engagement/isEngagementEnabled";
 
 export const dynamic = "force-dynamic";
 
@@ -104,7 +105,9 @@ export default async function OrgDashboardPage(props: {
   in7.setDate(in7.getDate() + 7);
   const in7Str = in7.toISOString().slice(0, 10);
 
-  const [{ count: openTaskCount }, { data: engagementRows }, { data: shifts }, { data: myAssignments }] = await Promise.all([
+  const engagementEnabled = isEngagementEnabledFromOrgRow(org as any);
+
+  const [{ count: openTaskCount }, engagementRowsResult, { data: shifts }, { data: myAssignments }] = await Promise.all([
     service
       .from("tasks")
       .select("id", { count: "exact", head: true })
@@ -112,11 +115,13 @@ export default async function OrgDashboardPage(props: {
       .eq("owner_id", myProfileId)
       .is("deleted_at", null)
       .neq("status", "erledigt"),
-    service
-      .from("engagement_scores")
-      .select("user_id, score")
-      .eq("organization_id", orgIdForData)
-      .order("score", { ascending: false }),
+    engagementEnabled
+      ? service
+          .from("engagement_scores")
+          .select("user_id, score")
+          .eq("organization_id", orgIdForData)
+          .order("score", { ascending: false })
+      : Promise.resolve({ data: null as { user_id: string; score: number }[] | null }),
     service
       .from("shifts")
       .select(
@@ -133,6 +138,8 @@ export default async function OrgDashboardPage(props: {
       .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)
       .eq("shifts.organization_id", orgIdForData)
   ]);
+
+  const engagementRows = engagementRowsResult?.data ?? null;
 
   const myScoreRow = (engagementRows ?? []).find((row: any) => row.user_id === myProfileId);
   const myEngagementScore = typeof myScoreRow?.score === "number" ? myScoreRow.score : 0;
@@ -160,9 +167,6 @@ export default async function OrgDashboardPage(props: {
   }
   const groupedEntries = [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
-  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
-
   const [breakdown, recentEvents, orgScoreboard] = engagementEnabled
     ? await Promise.all([
         getEngagementBreakdown(service, myProfileId, orgIdForData),
@@ -178,53 +182,34 @@ export default async function OrgDashboardPage(props: {
         <p className="page-sub">{locale === "en" ? "Here is what matters today." : "Hier ist, was heute noch wichtig ist."}</p>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section
+        className={`grid gap-4 ${engagementEnabled ? "md:grid-cols-3" : "md:grid-cols-1"}`}
+      >
         {engagementEnabled && breakdown && recentEvents && orgScoreboard ? (
-          <EngagementScoreWidget
-            totalScore={myEngagementScoreDisplay}
-            breakdown={breakdown}
-            recentEvents={recentEvents}
-            orgScoreboard={orgScoreboard}
-            profileId={myProfileId}
-            displayName={myName}
-          />
-        ) : (
-          <div className="stat-card">
-            <div className="section-label">{locale === "en" ? "Your score" : "Dein Score"}</div>
-            <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">{myEngagementScoreDisplay} Pkt.</div>
-            <div className="mt-3 h-2 w-full rounded-full bg-bg-tertiary">
-              {(() => {
-                const next = nextEngagementMilestone(myEngagementScoreDisplay);
-                const pct = Math.max(0, Math.min(100, Math.round((myEngagementScoreDisplay / Math.max(1, next)) * 100)));
-                return <div className="h-2 rounded-full bg-brand" style={{ width: `${pct}%` }} />;
-              })()}
+          <>
+            <EngagementScoreWidget
+              totalScore={myEngagementScoreDisplay}
+              breakdown={breakdown}
+              recentEvents={recentEvents}
+              orgScoreboard={orgScoreboard}
+              profileId={myProfileId}
+              displayName={myName}
+            />
+            <div className="stat-card">
+              <div className="section-label">{locale === "en" ? "Org rank" : "Rang in der Org"}</div>
+              <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">
+                {myEngagementRank != null ? `#${myEngagementRank}` : "—"}
+                {myEngagementRank != null ? <span className="text-sm font-medium text-text-secondary"> / {engagementTotal}</span> : null}
+              </div>
+              <div className="mt-2 text-xs text-text-secondary">{org.name}</div>
+              <div className="mt-2 text-[11px] text-text-secondary">
+                {locale === "en"
+                  ? "Tip: If you just joined, your rank may take a moment to reflect new activity."
+                  : "Tipp: Wenn du gerade erst beigetreten bist, kann es kurz dauern, bis neue Aktivität im Rang sichtbar wird."}
+              </div>
             </div>
-            <div className="mt-2 text-xs text-text-secondary">
-              {locale === "en"
-                ? `Next milestone: ${nextEngagementMilestone(myEngagementScoreDisplay)} pts.`
-                : `Nächster Meilenstein: ${nextEngagementMilestone(myEngagementScoreDisplay)} Pkt.`}
-            </div>
-            <div className="mt-2 text-[11px] text-text-secondary">
-              {locale === "en"
-                ? "Your score increases when you complete tasks or shifts. The ranking compares scores within your organisation."
-                : "Dein Score steigt, wenn du Aufgaben oder Schichten erledigst. Das Ranking vergleicht Scores innerhalb deiner Organisation."}
-            </div>
-          </div>
-        )}
-
-        <div className="stat-card">
-          <div className="section-label">{locale === "en" ? "Org rank" : "Rang in der Org"}</div>
-          <div className="text-2xl font-semibold text-text-primary dark:text-foreground-dark">
-            {myEngagementRank != null ? `#${myEngagementRank}` : "—"}
-            {myEngagementRank != null ? <span className="text-sm font-medium text-text-secondary"> / {engagementTotal}</span> : null}
-          </div>
-          <div className="mt-2 text-xs text-text-secondary">{org.name}</div>
-          <div className="mt-2 text-[11px] text-text-secondary">
-            {locale === "en"
-              ? "Tip: If you just joined, your rank may take a moment to reflect new activity."
-              : "Tipp: Wenn du gerade erst beigetreten bist, kann es kurz dauern, bis neue Aktivität im Rang sichtbar wird."}
-          </div>
-        </div>
+          </>
+        ) : null}
 
         <div className="stat-card">
           <div className="section-label">{locale === "en" ? "Open tasks" : "Offene Aufgaben"}</div>

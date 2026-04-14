@@ -81,7 +81,7 @@ export function Pricing() {
                 <svg className="p-check p-check-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                2-wöchige kostenlose Testphase (bei Abschluss unter 50 Mitgliedern)
+                2-wöchige kostenlose Testphase vor erster Abbuchung
               </div>
               <div className="p-feature">
                 <svg className="p-check p-check-white" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
@@ -128,10 +128,16 @@ export function Pricing() {
             <div className="p-price">49 €</div>
             <div className="p-period">pro Monat · ab dem 50. Mitglied</div>
             <div className="p-desc">
-              Derselbe Funktionsumfang wie Team — fester Preis für große Teams. Ohne Testphase (fair bei diesem Umfang).
+              Derselbe Funktionsumfang wie Team — fester Preis für große Teams.
             </div>
             <div className="p-divider" />
             <div className="p-features">
+              <div className="p-feature">
+                <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="3,8 7,12 13,4" />
+                </svg>
+                2-wöchige kostenlose Testphase vor erster Abbuchung
+              </div>
               <div className="p-feature">
                 <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />

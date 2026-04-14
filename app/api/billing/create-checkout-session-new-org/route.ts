@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
           supabase_user_id: user.id,
           tier
         },
-        ...(useScaleTier ? {} : { trial_period_days: 14 })
+        trial_period_days: 14
       }
     });
 

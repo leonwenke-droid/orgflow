@@ -617,7 +617,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.billing_enterprise_cta": "Enterprise (on request)",
     "settings.billing_enterprise_hint": "Unlimited members and custom terms — contact us.",
     "settings.billing_stripe_when_intro":
-      "Upgrades from Free use Stripe below. New Pro / 50+ signups complete Stripe checkout before creating the organisation (Pro: 14-day trial before the first charge; 50+ tier: no trial).",
+      "Upgrades from Free use Stripe below. New Team / Pro (50+) signups complete Stripe checkout before creating the organisation (14-day trial before the first charge on both paid tiers).",
     "settings.billing_two_tier_blurb":
       "The correct price is chosen from your member count. Limits are enforced server-side.",
     "settings.billing_checkout_cta_base": "Upgrade: Team (up to 49 members)",
@@ -834,8 +834,12 @@ export const translations: Record<Locale, Record<string, string>> = {
       "Members claim open slots themselves on the shifts page.",
     "shifts.assignment_kind_tooltip_auto_assign":
       "Weighted random by engagement score; optional cooldown so the same people are not picked too often. Admins can trigger batch assignment from the shifts console.",
+    "shifts.assignment_kind_tooltip_auto_assign_neutral":
+      "Admins fill slots using the batch auto-assignment action in the shift console.",
     "shifts.assignment_kind_tooltip_rotation":
       "Fair rotation: lowest engagement score is picked first. Admin assigns from the rotation preview; check-in updates scores.",
+    "shifts.assignment_kind_tooltip_rotation_neutral":
+      "Admins assign from a fair rotation (who was scheduled least recently).",
     "shifts.assignment_kind_tooltip_fixed": "Only admins assign people to this shift manually.",
     "shifts.attendance_mode_field": "Attendance",
     "shifts.attendance_mode_label_qr": "QR check-in (member shows code)",
@@ -1844,8 +1848,12 @@ export const translations: Record<Locale, Record<string, string>> = {
       "Mitglieder übernehmen freie Plätze selbst auf der Schichtseite.",
     "shifts.assignment_kind_tooltip_auto_assign":
       "Gewichteter Zufall nach Engagement-Score; optional Cooldown, damit nicht immer dieselben genommen werden. Admins starten die Zuteilung über den Button in der Schichtverwaltung.",
+    "shifts.assignment_kind_tooltip_auto_assign_neutral":
+      "Admins füllen freie Plätze über die Auto-Zuteilung in der Schichtverwaltung.",
     "shifts.assignment_kind_tooltip_rotation":
       "Faire Rotation: niedrigster Engagement-Score zuerst. Admin weist über die Rotations-Vorschau zu; Check-in passt die Punkte an.",
+    "shifts.assignment_kind_tooltip_rotation_neutral":
+      "Admins weisen nach Rotationsreihenfolge zu (wer am längsten nicht mehr dran war).",
     "shifts.assignment_kind_tooltip_fixed":
       "Nur Admins weisen Mitglieder manuell dieser Schicht zu.",
     "shifts.attendance_mode_field": "Anwesenheit",
@@ -2046,7 +2054,7 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.billing_enterprise_cta": "Enterprise (auf Anfrage)",
     "settings.billing_enterprise_hint": "Unbegrenzte Mitglieder und individuelle Konditionen — bitte Kontakt aufnehmen.",
     "settings.billing_stripe_when_intro":
-      "Upgrades von Free laufen über Stripe (Button unten). Neue Pro-/50+-Konten schließen den Stripe-Checkout vor dem Anlegen der Organisation ab (Pro: 14 Tage Test vor erster Abbuchung; 50+-Tarif: ohne Testphase).",
+      "Upgrades von Free laufen über Stripe (Button unten). Neue Abonnements für Team oder Pro schließen den Stripe-Checkout vor dem Anlegen der Organisation ab (14 Tage Test vor erster Abbuchung bei beiden kostenpflichtigen Tarifen).",
     "settings.billing_two_tier_blurb":
       "Der passende Preis wird aus der Mitgliederzahl ermittelt. Limits werden serverseitig erzwungen.",
     "settings.billing_checkout_cta_base": "Upgrade: Team (bis 49 Mitgl.)",

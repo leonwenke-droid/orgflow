@@ -11,15 +11,24 @@ type Props = {
   className?: string;
   /** Larger tap target on touch UIs */
   size?: "sm" | "md";
+  /** When false, auto/rotation tooltips omit engagement-score wording (module off in org settings). */
+  engagementBased?: boolean;
 };
 
 /**
  * Help icon: hover (fine pointer) shows tooltip; tap toggles on touch.
  */
-export default function AssignmentKindHelpIcon({ kind, className, size = "sm" }: Props) {
+export default function AssignmentKindHelpIcon({ kind, className, size = "sm", engagementBased = true }: Props) {
   const { locale } = useLocale();
   const k = parseAssignmentKind(kind);
-  const text = t(`shifts.assignment_kind_tooltip_${k}` as "shifts.assignment_kind_tooltip_self_signup", locale);
+  const useNeutral =
+    engagementBased === false && (k === "auto_assign" || k === "rotation");
+  const text = t(
+    (useNeutral
+      ? (`shifts.assignment_kind_tooltip_${k}_neutral` as const)
+      : (`shifts.assignment_kind_tooltip_${k}` as const)) as "shifts.assignment_kind_tooltip_self_signup",
+    locale
+  );
   const [prefersHover, setPrefersHover] = useState(false);
   const [hoverOpen, setHoverOpen] = useState(false);
   const [tapOpen, setTapOpen] = useState(false);

@@ -42,6 +42,8 @@ type Props = {
   allShiftsWithAssignments?: ShiftWithAssignments[];
   /** Beim Speichern alle Schichten mit Ort/Infos aktualisieren (erste voll) */
   updateEventGroup?: (shiftIds: string[], formData: FormData) => Promise<void>;
+  /** When false, hide auto/rotation assignment options (Engagement module off). Legacy kinds stay editable via read-only + hidden field. */
+  engagementEnabled?: boolean;
 };
 
 function timeForInput(t: string | null | undefined): string {
@@ -77,13 +79,23 @@ export default function ShiftEditModal({
   onRefresh,
   personsOnly = false,
   allShiftsWithAssignments,
-  updateEventGroup
+  updateEventGroup,
+  engagementEnabled = true
 }: Props) {
   const { locale } = useLocale();
   const [assignmentKindLocal, setAssignmentKindLocal] = useState(shift.assignment_kind ?? "self_signup");
   useEffect(() => {
     setAssignmentKindLocal(shift.assignment_kind ?? "self_signup");
   }, [shift.id, shift.assignment_kind]);
+
+  const kindParsed = String(shift.assignment_kind ?? "self_signup");
+  const legacyEngagementKind =
+    !engagementEnabled && (kindParsed === "auto_assign" || kindParsed === "rotation");
+
+  useEffect(() => {
+    if (!legacyEngagementKind) return;
+    setAssignmentKindLocal("self_signup");
+  }, [legacyEngagementKind, shift.id]);
   const isEventGroup = (allShiftsWithAssignments?.length ?? 0) > 1 && updateEventGroup;
   const totalAssignments = allShiftsWithAssignments?.reduce((sum, s) => sum + s.assignments.length, 0) ?? assignments.length;
 
@@ -202,8 +214,15 @@ export default function ShiftEditModal({
                     <label className="text-[10px] font-semibold text-text-secondary dark:text-text-secondary block">
                       {t("shifts.assignment_kind_field", locale)}
                     </label>
-                    <AssignmentKindHelpIcon kind={assignmentKindLocal} />
+                    <AssignmentKindHelpIcon kind={assignmentKindLocal} engagementBased={engagementEnabled} />
                   </div>
+                  {legacyEngagementKind ? (
+                    <p className="mb-1.5 rounded border border-amber-200/80 bg-amber-50 px-2 py-1.5 text-[10px] text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+                      {locale === "de"
+                        ? `Bisher: ${t(`shifts.assignment_kind_label_${kindParsed}` as "shifts.assignment_kind_label_auto_assign", locale)}. Engagement ist aus — Speichern setzt die Zuteilung auf die unten gewählte Option.`
+                        : `Was: ${t(`shifts.assignment_kind_label_${kindParsed}` as "shifts.assignment_kind_label_auto_assign", locale)}. Engagement is off — saving applies the mode selected below.`}
+                    </p>
+                  ) : null}
                   <select
                     name="assignment_kind"
                     value={assignmentKindLocal}
@@ -211,8 +230,12 @@ export default function ShiftEditModal({
                     className="w-full rounded border border-border-default bg-bg-primary p-2.5 text-xs min-h-[44px] dark:border-border-default dark:bg-bg-primary dark:text-text-primary sm:min-h-0 sm:p-2"
                   >
                     <option value="self_signup">{t("shifts.assignment_kind_label_self_signup", locale)}</option>
-                    <option value="auto_assign">{t("shifts.assignment_kind_label_auto_assign", locale)}</option>
-                    <option value="rotation">{t("shifts.assignment_kind_label_rotation", locale)}</option>
+                    {engagementEnabled ? (
+                      <>
+                        <option value="auto_assign">{t("shifts.assignment_kind_label_auto_assign", locale)}</option>
+                        <option value="rotation">{t("shifts.assignment_kind_label_rotation", locale)}</option>
+                      </>
+                    ) : null}
                     <option value="fixed">{t("shifts.assignment_kind_label_fixed", locale)}</option>
                   </select>
                 </div>

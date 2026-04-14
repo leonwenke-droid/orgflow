@@ -67,7 +67,8 @@ export default function CreateShiftsForm({
   events = [],
   variant = "default",
   onCancel,
-  onSuccess
+  onSuccess,
+  engagementEnabled = true
 }: {
   action: CreateShiftsAction;
   organizationId?: string;
@@ -76,6 +77,8 @@ export default function CreateShiftsForm({
   onCancel?: () => void;
   /** Called after a successful create (e.g. close modal). */
   onSuccess?: () => void;
+  /** When false, auto/rotation assignment modes are hidden (Engagement module off). */
+  engagementEnabled?: boolean;
 }) {
   const { locale } = useLocale();
   const router = useRouter();
@@ -85,6 +88,11 @@ export default function CreateShiftsForm({
     "self_signup" | "auto_assign" | "rotation" | "fixed"
   >("self_signup");
   const [attendanceMode, setAttendanceMode] = useState<"qr" | "admin_only" | "none">("qr");
+
+  useEffect(() => {
+    if (engagementEnabled) return;
+    if (assignmentKind === "auto_assign" || assignmentKind === "rotation") setAssignmentKind("self_signup");
+  }, [engagementEnabled, assignmentKind]);
 
   const [modalStart, setModalStart] = useState("09:00");
   const [modalEnd, setModalEnd] = useState("12:00");
@@ -262,12 +270,17 @@ export default function CreateShiftsForm({
             <span className="new-shift-section-label">{t("shifts.v2_assignment", locale)}</span>
             <div className="new-shift-pill-row" role="group" aria-label={t("shifts.v2_assignment", locale)}>
               {(
-                [
-                  ["self_signup", "shifts.assignment_kind_label_self_signup", "dot-blue"],
-                  ["auto_assign", "shifts.assignment_kind_label_auto_assign", "dot-amber"],
-                  ["rotation", "shifts.assignment_kind_label_rotation", "dot-green"],
-                  ["fixed", "shifts.assignment_kind_label_fixed", "dot-purple"]
-                ] as const
+                engagementEnabled
+                  ? ([
+                      ["self_signup", "shifts.assignment_kind_label_self_signup", "dot-blue"],
+                      ["auto_assign", "shifts.assignment_kind_label_auto_assign", "dot-amber"],
+                      ["rotation", "shifts.assignment_kind_label_rotation", "dot-green"],
+                      ["fixed", "shifts.assignment_kind_label_fixed", "dot-purple"]
+                    ] as const)
+                  : ([
+                      ["self_signup", "shifts.assignment_kind_label_self_signup", "dot-blue"],
+                      ["fixed", "shifts.assignment_kind_label_fixed", "dot-purple"]
+                    ] as const)
               ).map(([value, key, dot]) => (
                 <button
                   key={value}
@@ -279,7 +292,7 @@ export default function CreateShiftsForm({
                   <span className={`new-shift-pill-dot ${dot}`} aria-hidden />
                   <span className="inline-flex items-center gap-1">
                     {t(key, locale)}
-                    <AssignmentKindHelpIcon kind={value} size="md" />
+                    <AssignmentKindHelpIcon kind={value} size="md" engagementBased={engagementEnabled} />
                   </span>
                 </button>
               ))}
@@ -522,12 +535,17 @@ export default function CreateShiftsForm({
         <span className="text-[11px] font-semibold text-text-secondary">{t("shifts.assignment_kind_field", locale)}</span>
         <div className="mt-1 flex flex-col gap-1.5 text-[11px] text-text-muted">
           {(
-            [
-              ["self_signup", "shifts.assignment_kind_label_self_signup"],
-              ["auto_assign", "shifts.assignment_kind_label_auto_assign"],
-              ["rotation", "shifts.assignment_kind_label_rotation"],
-              ["fixed", "shifts.assignment_kind_label_fixed"]
-            ] as const
+            engagementEnabled
+              ? ([
+                  ["self_signup", "shifts.assignment_kind_label_self_signup"],
+                  ["auto_assign", "shifts.assignment_kind_label_auto_assign"],
+                  ["rotation", "shifts.assignment_kind_label_rotation"],
+                  ["fixed", "shifts.assignment_kind_label_fixed"]
+                ] as const)
+              : ([
+                  ["self_signup", "shifts.assignment_kind_label_self_signup"],
+                  ["fixed", "shifts.assignment_kind_label_fixed"]
+                ] as const)
           ).map(([value, key]) => (
             <label key={value} className="inline-flex items-center gap-2">
               <input
@@ -540,7 +558,7 @@ export default function CreateShiftsForm({
               />
               <span className="inline-flex items-center gap-1">
                 {t(key, locale)}
-                <AssignmentKindHelpIcon kind={value} />
+                <AssignmentKindHelpIcon kind={value} engagementBased={engagementEnabled} />
               </span>
             </label>
           ))}
