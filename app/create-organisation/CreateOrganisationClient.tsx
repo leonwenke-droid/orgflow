@@ -106,7 +106,7 @@ export default function CreateOrganisationClient() {
           const parsed = JSON.parse(legacy);
           if (parsed?.name) {
             setFormData(parsed);
-            setStep(6);
+            setStep(TOTAL_STEPS);
             setAuthWall(false);
           }
           sessionStorage.removeItem("create-org-form");

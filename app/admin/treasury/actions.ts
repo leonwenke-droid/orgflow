@@ -26,6 +26,14 @@ export async function addTreasuryEntryAction(
   const orgSlug = formData.get("org_slug")?.toString()?.trim() || "";
 
   const service = createSupabaseServiceRoleClient();
+  const { data: orgRow } = await service
+    .from("organizations")
+    .select("plan")
+    .eq("id", orgId)
+    .maybeSingle();
+  if (String((orgRow as any)?.plan ?? "free") === "free") {
+    return { error: "Finance is not available on Starter." };
+  }
   const { data: profileInOrg } = await service
     .from("profiles")
     .select("id, role, organization_id")

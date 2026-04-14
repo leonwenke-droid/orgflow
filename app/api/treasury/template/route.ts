@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { cookies } from "next/headers";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const cookieStore = await cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ message: "Sign in required." }, { status: 401 });
+
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([
     ["OrgFlow Finanzen-Vorlage"],
