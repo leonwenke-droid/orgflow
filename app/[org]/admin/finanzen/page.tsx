@@ -54,20 +54,38 @@ export default async function FinanzenPage({
 
   let orgId: string | null = null;
   let orgIdForData: string | null = null;
+  let orgPlan: string | null = null;
   try {
     const org = await getCurrentOrganization(orgSlug);
     orgId = org.id;
     orgIdForData = getOrgIdForData(orgSlug, org.id);
+    orgPlan = (org as any).plan ?? null;
   } catch {
     orgId = null;
     orgIdForData = null;
+    orgPlan = null;
   }
   if (!orgId) {
     const userOrg = await getCurrentUserOrganization();
     if (userOrg) {
       orgId = userOrg.id;
       orgIdForData = getOrgIdForData(userOrg.slug, userOrg.id);
+      orgPlan = (userOrg as any).plan ?? null;
     }
+  }
+  if (orgPlan === "free") {
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default bg-card">
+          <h1 className="text-lg font-semibold text-text-primary dark:text-text-primary">
+            {locale === "de" ? "Finanzen sind im Starter nicht enthalten." : "Finance is not available on Starter."}
+          </h1>
+          <p className="mt-2 text-sm text-text-secondary dark:text-text-muted">
+            {locale === "de" ? "Upgrade in den Einstellungen, um das Finanzmodul zu nutzen." : "Upgrade in settings to enable finance."}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const service = createSupabaseServiceRoleClient();

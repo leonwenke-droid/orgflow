@@ -41,6 +41,11 @@ export function canChangeOrgSettings(role: DbRole | null | undefined): boolean {
   return role === "super_admin" || role === "admin" || role === "owner";
 }
 
+/** Billing: only organisation owners (and platform super admins). */
+export function canManageBilling(role: DbRole | null | undefined): boolean {
+  return role === "super_admin" || role === "owner";
+}
+
 /** Admin hub, planning tools, engagement — includes Teamleads, excludes finance-only. */
 export function canAccessOperationalAdmin(role: DbRole | null | undefined): boolean {
   return role != null && OPERATIONAL_ADMIN_ROLES.includes(role);

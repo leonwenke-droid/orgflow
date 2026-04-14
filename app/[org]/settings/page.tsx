@@ -30,6 +30,7 @@ export default async function OrgSettingsPage({
   if (!canChangeOrgSettings(settingsRole)) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
   }
+  const canSeeBilling = settingsRole === "owner" || settingsRole === "super_admin";
 
   const locale = await getRequestLocale();
 
@@ -87,12 +88,20 @@ export default async function OrgSettingsPage({
       <section className="card">
         <div className="p-4 space-y-4">
           <div className="section-label">{t("settings.plan", locale)}</div>
-          <BillingSection
-            orgSlug={orgSlug}
-            currentPlan={(org as any).plan ?? "free"}
-            enterpriseMailto={enterpriseMailto}
-            memberCount={billingMemberCount ?? 0}
-          />
+          {canSeeBilling ? (
+            <BillingSection
+              orgSlug={orgSlug}
+              currentPlan={(org as any).plan ?? "free"}
+              enterpriseMailto={enterpriseMailto}
+              memberCount={billingMemberCount ?? 0}
+            />
+          ) : (
+            <p className="text-sm text-text-secondary">
+              {locale === "de"
+                ? "Nur der Inhaber (Owner) kann Abos und Rechnungen verwalten."
+                : "Only the organisation owner can manage subscriptions and invoices."}
+            </p>
+          )}
         </div>
       </section>
 

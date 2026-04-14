@@ -17,7 +17,11 @@ export default async function LoginPage({
   const redirectTo = q?.redirectTo?.trim();
 
   const allowedRedirects = ["/super-admin", "/create-organisation", "/dashboard"];
-  const isValidRedirect = redirectTo && allowedRedirects.some((p) => redirectTo === p || redirectTo.startsWith(p + "/"));
+  const isValidRedirect =
+    redirectTo &&
+    allowedRedirects.some(
+      (p) => redirectTo === p || redirectTo.startsWith(p + "/") || redirectTo.startsWith(p + "?")
+    );
   if (!isValidRedirect) {
     redirect("/");
   }

@@ -16,10 +16,12 @@ export default function PaidPlanCheckoutButton({
   children: React.ReactNode;
 }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const start = async () => {
     if (loading) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/billing/create-checkout-session-new-org", {
         method: "POST",
@@ -33,7 +35,7 @@ export default function PaidPlanCheckoutButton({
       const data = (await res.json().catch(() => ({}))) as { url?: string; message?: string };
       if (!res.ok) {
         setLoading(false);
-        alert(data.message || "Checkout konnte nicht gestartet werden.");
+        setError(data.message || "Checkout konnte nicht gestartet werden.");
         return;
       }
       if (data.url) {
@@ -41,17 +43,20 @@ export default function PaidPlanCheckoutButton({
         return;
       }
       setLoading(false);
-      alert("Keine Checkout-URL erhalten.");
+      setError("Keine Checkout-URL erhalten.");
     } catch {
       setLoading(false);
-      alert("Netzwerkfehler.");
+      setError("Netzwerkfehler.");
     }
   };
 
   return (
-    <button type="button" onClick={start} className={className} style={style} disabled={loading}>
-      {loading ? "Weiterleitung…" : children}
-    </button>
+    <div className="space-y-2">
+      <button type="button" onClick={start} className={className} style={style} disabled={loading}>
+        {loading ? "Weiterleitung…" : children}
+      </button>
+      {error ? <p className="text-xs text-red-600 dark:text-red-400">{error}</p> : null}
+    </div>
   );
 }
 

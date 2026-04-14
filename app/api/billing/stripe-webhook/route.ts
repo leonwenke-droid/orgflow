@@ -29,6 +29,9 @@ export async function POST(req: NextRequest) {
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as any;
+      if (String(session?.metadata?.flow ?? "").trim() === "new_org") {
+        return NextResponse.json({ received: true });
+      }
       const orgId = String(session?.metadata?.org_id ?? session?.client_reference_id ?? "").trim();
       const subscriptionId = String(session?.subscription ?? "").trim() || null;
       const customerId = String(session?.customer ?? "").trim() || null;

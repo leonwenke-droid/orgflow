@@ -36,6 +36,8 @@ export async function GET(req: NextRequest) {
   const logoUrl =
     typeof branding.logo_url === "string" && branding.logo_url.trim() ? branding.logo_url.trim() : undefined;
   const orgIdForData = getOrgIdForData(slug, o.id);
+  const plan = String((resolved as any)?.plan ?? "free").trim() as "free" | "team" | "pro";
+  const paid = plan !== "free";
 
   let role: DbRole | null = null;
   let profileId: string | null = null;
@@ -73,9 +75,9 @@ export async function GET(req: NextRequest) {
     modules: {
       tasks: features.tasks !== false,
       shifts: features.shifts !== false,
-      finance: features.treasury !== false,
+      finance: paid && features.treasury !== false,
       resources: (features.resources ?? features.materials ?? true) !== false,
-      engagement: features.engagement_tracking !== false,
+      engagement: paid && features.engagement_tracking !== false,
       events: features.events !== false,
     },
     role: role ?? undefined,

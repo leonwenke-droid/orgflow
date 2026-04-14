@@ -616,12 +616,11 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.plan_contact": "Contact support to change plan.",
     "settings.billing_enterprise_cta": "Enterprise (on request)",
     "settings.billing_enterprise_hint": "Unlimited members and custom terms — contact us.",
-    "settings.billing_webhook_hint": "Webhook endpoint: `/api/billing/stripe-webhook`.",
     "settings.billing_stripe_when_intro":
       "Upgrades from Free use Stripe below. New Pro / 50+ signups complete Stripe checkout before creating the organisation (Pro: 14-day trial before the first charge; 50+ tier: no trial).",
     "settings.billing_two_tier_blurb":
       "The correct price is chosen from your member count. Limits are enforced server-side.",
-    "settings.billing_checkout_cta_base": "Upgrade: Pro (up to 49 members, lower tier)",
+    "settings.billing_checkout_cta_base": "Upgrade: Pro (up to 49 members)",
     "settings.billing_checkout_cta_scale": "Upgrade: Pro (50+ members, extended tier)",
     "common.verify": "Confirm",
     "common.verifying": "Verifying…",
@@ -2046,12 +2045,11 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.plan_contact": "Kontaktieren Sie den Support, um den Tarif zu ändern.",
     "settings.billing_enterprise_cta": "Enterprise (auf Anfrage)",
     "settings.billing_enterprise_hint": "Unbegrenzte Mitglieder und individuelle Konditionen — bitte Kontakt aufnehmen.",
-    "settings.billing_webhook_hint": "Webhook-URL: `/api/billing/stripe-webhook`.",
     "settings.billing_stripe_when_intro":
       "Upgrades von Free laufen über Stripe (Button unten). Neue Pro-/50+-Konten schließen den Stripe-Checkout vor dem Anlegen der Organisation ab (Pro: 14 Tage Test vor erster Abbuchung; 50+-Tarif: ohne Testphase).",
     "settings.billing_two_tier_blurb":
       "Der passende Preis wird aus der Mitgliederzahl ermittelt. Limits werden serverseitig erzwungen.",
-    "settings.billing_checkout_cta_base": "Upgrade: Pro (bis 49 Mitgl., günstigerer Tarif)",
+    "settings.billing_checkout_cta_base": "Upgrade: Pro (bis 49 Mitgl.)",
     "settings.billing_checkout_cta_scale": "Upgrade: Pro (ab 50 Mitgl., erweiterter Tarif)",
     "common.verify": "Bestätigen",
     "common.verifying": "Überprüfen …",

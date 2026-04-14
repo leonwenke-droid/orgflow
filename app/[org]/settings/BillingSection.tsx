@@ -160,7 +160,6 @@ export default function BillingSection({
         </div>
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-      <p className="text-[11px] text-text-secondary dark:text-text-muted">{t("settings.billing_webhook_hint", locale)}</p>
     </div>
   );
 }

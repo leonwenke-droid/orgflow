@@ -18,6 +18,11 @@ export async function GET(
   const { org: orgSlug } = await context.params;
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
+  if (!engagementEnabled) {
+    return NextResponse.json({ error: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
+  }
   if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return NextResponse.json({ error: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
   }

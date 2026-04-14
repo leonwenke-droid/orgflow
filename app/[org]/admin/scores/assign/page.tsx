@@ -19,6 +19,17 @@ export default async function AssignPointsPage({
   const locale = await getRequestLocale();
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
+  if (!engagementEnabled) {
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <div className="card p-6">
+          <h1 className="page-title">{t("common.access_denied", locale)}</h1>
+        </div>
+      </div>
+    );
+  }
 
   if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;

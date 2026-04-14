@@ -8,6 +8,15 @@ import { checkRateLimit } from "../../../lib/rateLimit";
 import type Stripe from "stripe";
 import { getStripe } from "../../../lib/stripe";
 import { validateNewOrgCheckoutSessionForUser } from "../../../lib/stripeNewOrgCheckout";
+import { canAddMember, type Plan } from "../../../lib/planLimits";
+import {
+  buildInviteUrl,
+  generateInviteToken,
+  hashInviteToken,
+  inviteExpiresAt
+} from "../../../lib/memberInvites";
+import { getPublicBaseUrl } from "../../../lib/publicBaseUrl";
+import { sendEmail as sendEmailMessage } from "../../../lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -41,6 +50,7 @@ export async function POST(req: Request) {
     const stripeCheckoutSessionId = asTrimmedString(body.stripeCheckoutSessionId);
     const name = asTrimmedString(body.name);
     const orgType = asTrimmedString(body.orgType) || "other";
+    const inviteEmailsRaw = asTrimmedString(body.inviteEmails);
     const modules = Array.isArray(body.modules)
       ? (body.modules as string[]).map((m: string) => String(m).trim()).filter(Boolean)
       : ["tasks", "shifts", "finance", "resources", "engagement"];
@@ -219,6 +229,82 @@ export async function POST(req: Request) {
           { message: insertProfileError.message || "Failed to create admin profile for organisation." },
           { status: 500 }
         );
+      }
+    }
+
+    const planForInvites = ((billingFields?.plan ?? "free") as Plan) ?? "free";
+    const parsedEmails = inviteEmailsRaw
+      ? inviteEmailsRaw
+          .split(/[\n,;]+/g)
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean)
+      : [];
+    const uniqueEmails = [...new Set(parsedEmails)]
+      .filter((e) => e.length <= 254)
+      .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))
+      .filter((e) => (user.email ? e !== String(user.email).trim().toLowerCase() : true))
+      .slice(0, 100);
+
+    if (uniqueEmails.length > 0) {
+      const { count: currentCount } = await serviceClient
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", org.id)
+        .neq("status", "disabled");
+      let memberCount = currentCount ?? 1;
+
+      const { data: existingProfiles } = await serviceClient
+        .from("profiles")
+        .select("email")
+        .eq("organization_id", org.id)
+        .in("email", uniqueEmails);
+      const existingEmailSet = new Set(
+        (existingProfiles ?? [])
+          .map((r: any) => String(r?.email ?? "").trim().toLowerCase())
+          .filter(Boolean)
+      );
+
+      const baseUrl = await getPublicBaseUrl();
+      const expiresAt = inviteExpiresAt();
+
+      for (const email of uniqueEmails) {
+        if (existingEmailSet.has(email)) continue;
+        if (!canAddMember(planForInvites, memberCount)) break;
+
+        const token = generateInviteToken();
+        const tokenHash = hashInviteToken(token);
+        const inviteUrl = buildInviteUrl(baseUrl, token);
+        const profileId = randomUUID();
+
+        const { error: insErr } = await serviceClient.from("profiles").insert({
+          id: profileId,
+          auth_user_id: null,
+          full_name: email.split("@")[0]?.slice(0, 80) || null,
+          email,
+          role: "member",
+          status: "invited",
+          invite_status: "pending",
+          invite_token_hash: tokenHash,
+          invite_expires_at: expiresAt.toISOString(),
+          invited_at: new Date().toISOString(),
+          invited_by: creatorProfileId,
+          activated_at: null,
+          organization_id: org.id
+        });
+        if (!insErr) {
+          memberCount += 1;
+          const subject = `Invite to ${org.name} on OrgFlow`;
+          const text = [
+            `Hi,`,
+            ``,
+            `you have been invited to OrgFlow for ${org.name}.`,
+            `Set your password here:`,
+            inviteUrl,
+            ``,
+            `OrgFlow`
+          ].join("\n");
+          await sendEmailMessage({ to: email, subject, text }).catch(() => null);
+        }
       }
     }
 

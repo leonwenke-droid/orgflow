@@ -5,6 +5,8 @@ import { getStripe } from "../../../../lib/stripe";
 import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
 import { getClientIp, getRequestId, log } from "../../../../lib/log";
 import { asTrimmedString, readJson } from "../../../../lib/validation";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { canManageBilling } from "../../../../lib/permissions";
 
 export const runtime = "nodejs";
 
@@ -82,6 +84,19 @@ export async function POST(req: NextRequest) {
         },
         { status: 500 }
       );
+    }
+
+    // Only allow starting paid org creation from an account that is already an Owner somewhere.
+    // (Enforced because billing should be owner-only.)
+    const service = createSupabaseServiceRoleClient();
+    const { data: ownerProfile } = await service
+      .from("profiles")
+      .select("id, role")
+      .eq("auth_user_id", user.id)
+      .in("role", ["owner", "super_admin"])
+      .maybeSingle();
+    if (!ownerProfile || !canManageBilling((ownerProfile as any).role ?? null)) {
+      return NextResponse.json({ message: "Only organisation owners can start billing." }, { status: 403 });
     }
 
     const stripe = getStripe();

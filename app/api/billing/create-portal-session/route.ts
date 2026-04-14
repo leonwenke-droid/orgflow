@@ -6,6 +6,8 @@ import { getStripe } from "../../../../lib/stripe";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
 import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
 import { asTrimmedString, readJson } from "../../../../lib/validation";
+import { getEffectiveUserRoleForOrg } from "../../../../lib/getOrganization";
+import { canManageBilling } from "../../../../lib/permissions";
 
 export const runtime = "nodejs";
 
@@ -24,6 +26,10 @@ export async function POST(req: NextRequest) {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+  const role = await getEffectiveUserRoleForOrg(orgSlug, org);
+  if (!canManageBilling(role)) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 

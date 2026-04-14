@@ -35,6 +35,14 @@ export async function POST(req: Request) {
     }
 
     const service = createSupabaseServiceRoleClient();
+    const { data: orgRow } = await service
+      .from("organizations")
+      .select("plan")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (String((orgRow as any)?.plan ?? "free") === "free") {
+      return NextResponse.json({ message: "Finance is not available on Starter." }, { status: 403 });
+    }
     const superAdmin = await isSuperAdmin();
     if (!superAdmin) {
       const { data: prof } = await service

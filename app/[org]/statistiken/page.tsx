@@ -66,7 +66,7 @@ export default async function StatisticsPage(props: { params: Promise<{ org: str
   }
 
   const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = orgFeatures.engagement_tracking !== false;
+  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

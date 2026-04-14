@@ -9,10 +9,6 @@ export function Pricing() {
           <div className="section-label">Preise</div>
           <h2>Transparent. Fair. Skalierbar.</h2>
           <p>Für jede Organisationsgröße das passende Modell — ohne versteckte Kosten.</p>
-          <p style={{ maxWidth: 560, margin: "12px auto 0", fontSize: 14, lineHeight: 1.5, opacity: 0.88 }}>
-            <strong>Pro und 50+:</strong> Ihr werdet zuerst zur Zahlung weitergeleitet, danach richtet ihr die Organisation ein.
-            Der <strong>Starter</strong> bleibt ohne Zahlung.
-          </p>
         </div>
 
         <div className="pricing-grid">
@@ -113,9 +109,6 @@ export function Pricing() {
             >
               Organisation anlegen <span className="arrow-icon">→</span>
             </PaidPlanCheckoutButton>
-            <p className="p-note" style={{ marginTop: 14, fontSize: 12, lineHeight: 1.45, opacity: 0.9 }}>
-              Nach dem Klick folgt die Zahlung, danach der Assistent. Pro: <strong>14 Tage testen</strong>, dann Abbuchung (bis 49 Mitgl.).
-            </p>
           </div>
 
           <div className="p-card reveal">
@@ -159,9 +152,6 @@ export function Pricing() {
             >
               Organisation anlegen
             </PaidPlanCheckoutButton>
-            <p className="p-note" style={{ marginTop: 14, fontSize: 12, lineHeight: 1.45, opacity: 0.9 }}>
-              Nach dem Klick folgt die Zahlung (<strong>49 €</strong> ab 50 Mitgl.), danach der Assistent — ohne Testphase.
-            </p>
             <p className="p-desc" style={{ marginTop: 16, fontSize: 13, lineHeight: 1.45, opacity: 0.88, marginBottom: 0 }}>
               <strong>Enterprise</strong> mit mehreren Orgs, SLA, Custom Domain oder On-Premise?{" "}
               <a

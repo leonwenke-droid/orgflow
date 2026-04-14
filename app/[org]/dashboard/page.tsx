@@ -161,7 +161,7 @@ export default async function OrgDashboardPage(props: {
   const groupedEntries = [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
   const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = orgFeatures.engagement_tracking !== false;
+  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
 
   const [breakdown, recentEvents, orgScoreboard] = engagementEnabled
     ? await Promise.all([

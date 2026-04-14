@@ -10,6 +10,11 @@ import { addEngagementEvent } from "../../../../../lib/engagement/addEvent";
 export async function getAssignPointsPreview(orgSlug: string, profileId: string) {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
+  if (!engagementEnabled) {
+    return { errorKey: "engagement.unauthorized" as const };
+  }
   if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return { errorKey: "engagement.unauthorized" as const };
   }
@@ -35,6 +40,11 @@ export async function assignPoints(
 ) {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
+  if (!engagementEnabled) {
+    return { errorKey: "engagement.unauthorized" };
+  }
   if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
     return { errorKey: "engagement.unauthorized" };
   }

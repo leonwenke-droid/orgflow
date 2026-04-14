@@ -189,6 +189,8 @@ export default function CreateOrganisationClient() {
         modules: formData.modules,
         teams: normalizeTeams(formData.teams),
       };
+      const inviteEmails = String(formData.inviteEmails ?? "").trim();
+      if (inviteEmails) payload.inviteEmails = inviteEmails;
       if (stripeCheckoutSessionId) {
         payload.stripeCheckoutSessionId = stripeCheckoutSessionId;
       }
