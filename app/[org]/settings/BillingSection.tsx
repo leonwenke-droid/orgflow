@@ -83,12 +83,12 @@ export default function BillingSection({
   const planLabel =
     currentPlan === "pro"
       ? locale === "de"
-        ? "50+ Mitglieder"
-        : "50+ members"
+        ? "Pro (ab 50 Mitgl.)"
+        : "Pro (50+ members)"
       : currentPlan === "team"
         ? locale === "de"
-          ? "Pro (bis 49 Mitgl.)"
-          : "Pro (up to 49 members)"
+          ? "Team (bis 49 Mitgl.)"
+          : "Team (up to 49 members)"
         : locale === "de"
           ? "Starter (Free)"
           : "Starter (Free)";

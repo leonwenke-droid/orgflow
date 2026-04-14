@@ -57,7 +57,7 @@ export function Pricing() {
 
           <div className="p-card featured reveal">
             <div className="p-popular">Empfohlen</div>
-            <div className="p-tier">Pro</div>
+            <div className="p-tier">Team</div>
             <div className="p-price">29 €</div>
             <div className="p-period">pro Monat · bis 49 Mitglieder</div>
             <div className="p-desc" style={{ marginTop: 12 }}>
@@ -112,11 +112,11 @@ export function Pricing() {
           </div>
 
           <div className="p-card reveal">
-            <div className="p-tier">50+ Mitglieder</div>
+            <div className="p-tier">Pro</div>
             <div className="p-price">49 €</div>
             <div className="p-period">pro Monat · ab dem 50. Mitglied</div>
             <div className="p-desc">
-              Derselbe Funktionsumfang wie Pro — fester Preis für große Teams. Ohne Testphase (fair bei diesem Umfang).
+              Derselbe Funktionsumfang wie Team — fester Preis für große Teams. Ohne Testphase (fair bei diesem Umfang).
             </div>
             <div className="p-divider" />
             <div className="p-features">
@@ -130,7 +130,7 @@ export function Pricing() {
                 <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3,8 7,12 13,4" />
                 </svg>
-                Alle Pro-Features (Finanzen, Engagement, …)
+                Alle Team-Features (Finanzen, Engagement, …)
               </div>
               <div className="p-feature">
                 <svg className="p-check p-check-green" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
