@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useLocale } from "../../../components/LocaleProvider";
 import { t } from "../../../lib/i18n";
@@ -17,24 +18,29 @@ const MODULE_KEYS: { key: keyof FeaturesMap; labelKey: string }[] = [
 
 export default function ModuleToggles({
   orgSlug,
-  initialFeatures
+  initialFeatures,
+  currentPlan = "free"
 }: {
   orgSlug: string;
   initialFeatures: FeaturesMap;
+  /** organisations.plan — Engagement only on paid tiers */
+  currentPlan?: string;
 }) {
   const { locale } = useLocale();
+  const isFreePlan = String(currentPlan ?? "free").trim() === "free";
   const [savedFeatures, setSavedFeatures] = useState<FeaturesMap>(() => ({
     tasks: initialFeatures.tasks !== false,
     shifts: initialFeatures.shifts !== false,
     treasury: initialFeatures.treasury !== false,
     resources: (initialFeatures.resources ?? initialFeatures.materials) !== false,
-    engagement_tracking: initialFeatures.engagement_tracking !== false,
+    engagement_tracking: isFreePlan ? false : initialFeatures.engagement_tracking !== false,
     events: initialFeatures.events === true,
   }));
   const [features, setFeatures] = useState<FeaturesMap>(() => ({ ...savedFeatures }));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [confirmEngagementOff, setConfirmEngagementOff] = useState(false);
+  const [confirmEngagementUpgrade, setConfirmEngagementUpgrade] = useState(false);
 
   const isDirty =
     Object.keys(features).some((k) => (features as any)[k] !== (savedFeatures as any)[k]);
@@ -49,6 +55,10 @@ export default function ModuleToggles({
   function requestToggle(key: string) {
     const current = features[key] !== false;
     const nextValue = !current;
+    if (key === "engagement_tracking" && isFreePlan && nextValue === true) {
+      setConfirmEngagementUpgrade(true);
+      return;
+    }
     if (key === "engagement_tracking" && current === true && nextValue === false) {
       setConfirmEngagementOff(true);
       return;
@@ -116,11 +126,20 @@ export default function ModuleToggles({
               <div className="min-w-0">
                 <div className="text-sm font-medium text-text-primary">{t(labelKey, locale)}</div>
                 {key === "engagement_tracking" ? (
-                  <div className="mt-1 text-xs text-text-secondary">{t("settings.engagement_tracking_help", locale)}</div>
+                  <>
+                    <div className="mt-1 text-xs text-text-secondary">{t("settings.engagement_tracking_help", locale)}</div>
+                    {isFreePlan ? (
+                      <p className="mt-1 text-xs font-medium text-amber-800 dark:text-amber-200/90">
+                        {t("settings.engagement_free_hint", locale)}
+                      </p>
+                    ) : null}
+                  </>
                 ) : null}
               </div>
               <Switch
-                checked={features[key] !== false}
+                checked={
+                  key === "engagement_tracking" && isFreePlan ? false : features[key] !== false
+                }
                 onToggle={() => requestToggle(String(key))}
               />
             </div>
@@ -130,6 +149,43 @@ export default function ModuleToggles({
           </li>
         ))}
       </ul>
+
+      {confirmEngagementUpgrade ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setConfirmEngagementUpgrade(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-xl dark:border-border-default dark:bg-bg-primary"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-semibold text-text-primary dark:text-text-primary">
+              {t("settings.engagement_upgrade_modal_title", locale)}
+            </h3>
+            <p className="mt-2 text-sm text-text-secondary dark:text-text-muted">
+              {t("settings.engagement_upgrade_modal_body", locale)}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmEngagementUpgrade(false)}
+                className="rounded-lg border border-border-default px-3 py-2 text-xs font-semibold text-text-primary hover:bg-bg-secondary dark:border-border-default dark:hover:bg-bg-primary"
+              >
+                {locale === "de" ? "Schließen" : "Close"}
+              </button>
+              <Link
+                href={`/${orgSlug}/settings#settings-plan`}
+                onClick={() => setConfirmEngagementUpgrade(false)}
+                className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+              >
+                {t("settings.engagement_upgrade_cta", locale)}
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {confirmEngagementOff ? (
         <div

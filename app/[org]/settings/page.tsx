@@ -74,7 +74,11 @@ export default async function OrgSettingsPage({
       <section className="card">
         <div className="p-4 space-y-4">
           <div className="section-label">{locale === "en" ? "Modules" : "Module"}</div>
-          <ModuleToggles orgSlug={orgSlug} initialFeatures={(org.settings as { features?: Record<string, boolean> })?.features ?? {}} />
+          <ModuleToggles
+            orgSlug={orgSlug}
+            initialFeatures={(org.settings as { features?: Record<string, boolean> })?.features ?? {}}
+            currentPlan={String((org as { plan?: string }).plan ?? "free")}
+          />
         </div>
       </section>
 
@@ -85,7 +89,7 @@ export default async function OrgSettingsPage({
         </div>
       </section>
 
-      <section className="card">
+      <section id="settings-plan" className="card scroll-mt-24">
         <div className="p-4 space-y-4">
           <div className="section-label">{t("settings.plan", locale)}</div>
           {canSeeBilling ? (

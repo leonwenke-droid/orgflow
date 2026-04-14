@@ -7,8 +7,10 @@ import AdminForbidden from "../AdminForbidden";
 import { getRequestLocale } from "../../../../lib/localeServer";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
 import { canAccessOperationalAdmin } from "../../../../lib/permissions";
+import Link from "next/link";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { isEngagementEnabledFromOrgRow } from "../../../../lib/engagement/isEngagementEnabled";
+import { t } from "../../../../lib/i18n";
 
 import EngagementTabs from "./EngagementTabs";
 
@@ -24,14 +26,28 @@ export default async function AdminEngagementPage(props: { params: Promise<{ org
   const org = await getCurrentOrganization(orgSlug);
   if (!isEngagementEnabledFromOrgRow(org as any)) {
     const locale = await getRequestLocale();
+    const plan = String((org as { plan?: string }).plan ?? "free").trim();
+    const features = ((org.settings as { features?: Record<string, boolean> })?.features ?? {}) as Record<
+      string,
+      boolean
+    >;
+    const moduleOn = features.engagement_tracking !== false;
+    const needPaid = plan === "free";
     return (
       <div className="mx-auto max-w-3xl p-6">
-        <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default bg-card">
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default bg-card space-y-3">
           <h1 className="text-lg font-semibold text-text-primary dark:text-text-primary">
-            {locale === "de"
-              ? "Engagement ist deaktiviert. Aktiviere es unter Einstellungen → Aktive Module."
-              : "Engagement is turned off. Enable it under Settings → Active modules."}
+            {needPaid ? t("settings.engagement_admin_need_plan", locale) : t("settings.engagement_admin_need_module", locale)}
           </h1>
+          {needPaid ? (
+            <Link href={`/${orgSlug}/settings#settings-plan`} className="btn-primary inline-flex w-fit">
+              {t("settings.engagement_upgrade_cta", locale)}
+            </Link>
+          ) : !moduleOn ? (
+            <Link href={`/${orgSlug}/settings`} className="btn-secondary inline-flex w-fit">
+              {locale === "de" ? "Zu den Einstellungen" : "Open settings"}
+            </Link>
+          ) : null}
         </div>
       </div>
     );

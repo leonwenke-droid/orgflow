@@ -132,6 +132,14 @@ export async function updateOrgFeaturesAction(
     if (typeof v === "boolean") next[k] = v;
   }
 
+  const plan = String((org as { plan?: string }).plan ?? "free").trim();
+  if (plan === "free") {
+    if (features.engagement_tracking === true) {
+      return { errorKey: "settings.engagement_requires_paid" };
+    }
+    next.engagement_tracking = false;
+  }
+
   const service = createSupabaseServiceRoleClient();
   const { error } = await service
     .from("organizations")

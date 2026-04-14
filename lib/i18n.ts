@@ -94,6 +94,14 @@ export const translations: Record<Locale, Record<string, string>> = {
     "me.rank_of": "of {total} members",
     "me.engagement_disabled": "Engagement scores are disabled for this organisation.",
     "settings.engagement_tracking_help": "When enabled, members see scores and ranks; auto-assignment for shifts/tasks can use these scores. When disabled, scoring UI is hidden for everyone.",
+    "settings.engagement_free_hint": "Requires Team or Pro — upgrade below to enable.",
+    "settings.engagement_requires_paid": "Engagement is available on Team and Pro. Upgrade your plan first.",
+    "settings.engagement_upgrade_modal_title": "Upgrade to use Engagement",
+    "settings.engagement_upgrade_modal_body":
+      "Engagement scores and rankings are included on Team and Pro. Upgrade your organisation to turn this on.",
+    "settings.engagement_upgrade_cta": "View plans & upgrade",
+    "settings.engagement_admin_need_plan": "Engagement is included on Team and Pro. Upgrade under Settings → Plan.",
+    "settings.engagement_admin_need_module": "Engagement is turned off. Enable it under Settings → Active modules.",
     "feedback.page_title": "Feedback",
     "feedback.page_intro":
       "Describe errors or improvement ideas for your organisation. You can see recent submissions below.",
@@ -1247,6 +1255,14 @@ export const translations: Record<Locale, Record<string, string>> = {
     "me.rank_of": "von {total} Mitgliedern",
     "me.engagement_disabled": "Engagement-Scores sind für diese Organisation deaktiviert.",
     "settings.engagement_tracking_help": "Wenn aktiv, sehen Mitglieder Punkte und Rang; Auto-Zuteilung von Schichten/Aufgaben kann die Scores nutzen. Wenn aus, wird die Score-UI für alle ausgeblendet.",
+    "settings.engagement_free_hint": "Nur mit Team- oder Pro-Tarif — unten upgraden.",
+    "settings.engagement_requires_paid": "Engagement ist in Team und Pro enthalten. Bitte zuerst den Tarif upgraden.",
+    "settings.engagement_upgrade_modal_title": "Upgrade für Engagement",
+    "settings.engagement_upgrade_modal_body":
+      "Engagement-Scores und Ranglisten sind in Team und Pro enthalten. Hebt den Tarif eurer Organisation an, um es zu aktivieren.",
+    "settings.engagement_upgrade_cta": "Tarife ansehen & upgraden",
+    "settings.engagement_admin_need_plan": "Engagement ist in Team und Pro enthalten. Upgrade unter Einstellungen → Tarif.",
+    "settings.engagement_admin_need_module": "Engagement ist ausgeschaltet. Aktiviere es unter Einstellungen → Aktive Module.",
     "feedback.page_title": "Feedback",
     "feedback.page_intro":
       "Beschreibt Fehler oder Verbesserungsvorschläge für eure Organisation. Letzte Einträge siehst du unten.",

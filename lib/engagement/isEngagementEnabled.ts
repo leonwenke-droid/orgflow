@@ -1,17 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Whether engagement UI and score-based features should be active for this org.
- * Driven by Settings → Active modules → Engagement (not by billing plan), so enabling
- * the toggle actually shows the dashboard widget and related UI.
+ * Engagement scores/UI: paid plan (Team/Pro) and org module toggle both required.
  */
 export function isEngagementEnabledFromOrgRow(row: {
   plan?: unknown;
   settings?: unknown;
 }): boolean {
+  const plan = String((row as any)?.plan ?? "free");
   const features =
     (((row as any)?.settings ?? {}) as { features?: Record<string, boolean> }).features ?? {};
-  return features.engagement_tracking !== false;
+  return plan !== "free" && features.engagement_tracking !== false;
 }
 
 export async function fetchEngagementEnabledForOrgId(
