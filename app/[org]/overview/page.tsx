@@ -52,6 +52,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
   const features = ((org.settings ?? {}) as { features?: Record<string, boolean> }).features ?? {};
   const financeModuleOn = features.treasury !== false;
   const showBalance = canViewOrgTreasurySummaryOnSharedOverview(role, financeModuleOn);
+  const engagementEnabled = (org as any).plan !== "free" && features.engagement_tracking !== false;
 
   const service = createSupabaseServiceRoleClient();
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -107,12 +108,14 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
           .limit(1)
           .maybeSingle()
       : Promise.resolve({ data: null as any }),
-    service
-      .from("engagement_events")
-      .select("id, user_id, event_type, created_at")
-      .eq("organization_id", orgIdForData)
-      .order("created_at", { ascending: false })
-      .limit(5)
+    engagementEnabled
+      ? service
+          .from("engagement_events")
+          .select("id, user_id, event_type, created_at")
+          .eq("organization_id", orgIdForData)
+          .order("created_at", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: [] as any[] })
   ]);
 
   const shifts = (shifts7d ?? []) as Array<{
@@ -192,7 +195,9 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
           <div className="card">
             <div className="p-4">
               <div className="section-label">{locale === "en" ? "Last activity" : "Letzte Aktivität"}</div>
-              {(activityRows ?? []).length === 0 ? (
+              {!engagementEnabled ? (
+                <div className="text-sm text-text-muted">—</div>
+              ) : (activityRows ?? []).length === 0 ? (
                 <div className="text-sm text-text-muted">—</div>
               ) : (
                 <ul className="space-y-2">

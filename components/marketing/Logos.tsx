@@ -1,5 +1,5 @@
 /**
- * Social-proof strip: regional examples (Leer / Ostfriesland) + infinite marquee.
+ * Illustrative examples (no claim to real customer count) + infinite marquee.
  */
 
 import type { ReactNode } from "react";
@@ -186,9 +186,9 @@ export function Logos() {
   return (
     <section className="logos" aria-label="Organisationen aus der Region">
       <div className="container logos-intro">
-        <p className="logos-label">
-          Über <strong>50 Teams</strong> organisieren mit OrgFlow — hier ein Auszug aus{" "}
-          <strong>Leer, Ostfriesland & dem Norden</strong>:
+               <p className="logos-label">
+          <strong>Beispielorganisationen</strong> (illustrativ) — so könnten Vereine, Schulen und Teams aus{" "}
+          <strong>Leer, Ostfriesland &amp; dem Norden</strong> heißen:
         </p>
       </div>
       <div className="logos-marquee" role="presentation">

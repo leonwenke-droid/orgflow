@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import * as Sentry from "@sentry/nextjs";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { getStripe } from "../../../../lib/stripe";
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
       ip: getClientIp(req),
       error: String(e)
     });
+    Sentry.captureException(e);
     return NextResponse.json({ message: "An error occurred." }, { status: 500 });
   }
 }

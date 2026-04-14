@@ -119,6 +119,10 @@ function RegisterForm({ redirectTo, claimToken }: { redirectTo: string; claimTok
       setError(locale === "de" ? "Bitte stimme Datenschutz & Bedingungen zu." : "Please accept Privacy & Terms.");
       return;
     }
+    if (!password || password.length < 8) {
+      setError(locale === "de" ? "Passwort mindestens 8 Zeichen." : "Password must be at least 8 characters.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -182,7 +186,7 @@ function RegisterForm({ redirectTo, claimToken }: { redirectTo: string; claimTok
         <input
           type="password"
           required
-          minLength={6}
+          minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded border border-blue-500/30 bg-card/60 p-2 text-xs text-blue-100"

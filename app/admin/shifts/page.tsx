@@ -41,8 +41,23 @@ import {
 import { qrFieldsForAttendanceMode, shiftQrValidityIso } from "../../../lib/shiftQr";
 import { assignRotationFairOne, previewRotationForShift } from "../../../lib/actions/rotation";
 import { addEngagementEvent } from "../../../lib/engagement/addEvent";
+import { fetchEngagementEnabledForOrgId } from "../../../lib/engagement/isEngagementEnabled";
 
 export const dynamic = "force-dynamic";
+
+async function isEngagementEnabledForOrgId(
+  service: ReturnType<typeof createSupabaseServiceRoleClient>,
+  orgId: string
+): Promise<boolean> {
+  const { data: row } = await service
+    .from("organizations")
+    .select("plan, settings")
+    .eq("id", orgId)
+    .maybeSingle();
+  const plan = String((row as any)?.plan ?? "free");
+  const features = (((row as any)?.settings ?? {}) as { features?: Record<string, boolean> }).features ?? {};
+  return plan !== "free" && features.engagement_tracking !== false;
+}
 
 type SimpleShift = { id: string; required_slots: number | null; date?: string };
 
@@ -204,6 +219,11 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
   if (adminOk !== true) return;
 
   const service = createSupabaseServiceRoleClient();
+  if (!(await isEngagementEnabledForOrgId(service, orgId))) {
+    revalidatePath("/admin/shifts");
+    if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
+    return;
+  }
 
   // Nur Schichten mit Auto-Zuteilung — reine Selbsteintragungs-Schichten (claimable) nicht per Knopf füllen.
   const { data: shifts } = await service
@@ -330,6 +350,11 @@ async function fillSelfSignupGaps(formData: FormData) {
   if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
+  if (!(await isEngagementEnabledForOrgId(service, orgId))) {
+    revalidatePath("/admin/shifts");
+    if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
+    return;
+  }
   const todayStr = getTodayDateString();
 
   const { data: shifts } = await service
@@ -976,6 +1001,7 @@ async function markAssignmentNotAttended(
   const actor = await requireOrgAdminAction(organizationId);
   if (!actor) return;
   const service = createSupabaseServiceRoleClient();
+  const engagementEnabled = await fetchEngagementEnabledForOrgId(service, organizationId);
   const { data: assignment } = await service
     .from("shift_assignments")
     .select("user_id, shift_id")
@@ -997,25 +1023,27 @@ async function markAssignmentNotAttended(
 
   const originalUserId = assignment.user_id as string;
   const shiftIdStr = assignment.shift_id as string;
-  if (replacementUserId) {
-    const points = await getShiftDonePoints(service, shiftIdStr);
-    await addEngagementEvent(service, {
-      userId: replacementUserId,
-      organizationId: organizationId,
-      eventType: "shift_done",
-      points,
-      sourceId: assignmentId,
-      shiftId: shiftIdStr
-    });
-  } else {
-    await addEngagementEvent(service, {
-      userId: originalUserId,
-      organizationId: organizationId,
-      eventType: "shift_missed",
-      points: SHIFT_MISSED_PENALTY,
-      sourceId: assignmentId,
-      shiftId: shiftIdStr
-    });
+  if (engagementEnabled) {
+    if (replacementUserId) {
+      const points = await getShiftDonePoints(service, shiftIdStr);
+      await addEngagementEvent(service, {
+        userId: replacementUserId,
+        organizationId: organizationId,
+        eventType: "shift_done",
+        points,
+        sourceId: assignmentId,
+        shiftId: shiftIdStr
+      });
+    } else {
+      await addEngagementEvent(service, {
+        userId: originalUserId,
+        organizationId: organizationId,
+        eventType: "shift_missed",
+        points: SHIFT_MISSED_PENALTY,
+        sourceId: assignmentId,
+        shiftId: shiftIdStr
+      });
+    }
   }
   revalidatePath("/admin/shifts");
   revalidatePath("/dashboard");
@@ -1041,6 +1069,7 @@ async function updateAssignmentStatus(
   const actor = await requireOrgAdminAction(organizationId);
   if (!actor) return;
   const service = createSupabaseServiceRoleClient();
+  const engagementEnabled = await fetchEngagementEnabledForOrgId(service, organizationId);
   const { data: assignment } = await service
     .from("shift_assignments")
     .select("user_id, shift_id")
@@ -1048,7 +1077,9 @@ async function updateAssignmentStatus(
     .single();
   if (!assignment?.user_id) return;
 
-  await service.from("engagement_events").delete().eq("source_id", assignmentId);
+  if (engagementEnabled) {
+    await service.from("engagement_events").delete().eq("source_id", assignmentId);
+  }
 
   const { error: updateErr } = await service
     .from("shift_assignments")
@@ -1061,7 +1092,7 @@ async function updateAssignmentStatus(
 
   const originalUserId = assignment.user_id as string;
   const shiftIdForEv = assignment.shift_id as string;
-  if (status === "abgesagt") {
+  if (engagementEnabled && status === "abgesagt") {
     if (replacementUserId) {
       const points = await getShiftDonePoints(service, shiftIdForEv);
       await addEngagementEvent(service, {
@@ -1189,6 +1220,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   if (!orgId && profile.organization_id) orgId = profile.organization_id;
 
   let organizationName: string | null = null;
+  let engagementEnabled = false;
   if (orgId) {
     const { data: orgNameRow } = await service
       .from("organizations")
@@ -1196,6 +1228,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
       .eq("id", orgId)
       .maybeSingle();
     organizationName = (orgNameRow as { name?: string | null } | null)?.name?.trim() || null;
+    engagementEnabled = await isEngagementEnabledForOrgId(service, orgId);
   }
 
   let effectiveOrgSlug = orgSlug;
@@ -1462,7 +1495,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
                   headerActions={
                     <>
                       <NewShiftModal action={createShifts} organizationId={orgId ?? undefined} events={events} />
-                      {orgId ? (
+                      {orgId && engagementEnabled ? (
                         <ShiftsAutoAssignConfirmForm action={runAutoAssignForExistingShifts} className="contents">
                           <input type="hidden" name="organization_id" value={orgId} />
                           <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
@@ -1471,7 +1504,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
                           </SubmitButtonWithSpinner>
                         </ShiftsAutoAssignConfirmForm>
                       ) : null}
-                      {orgId ? (
+                      {orgId && engagementEnabled ? (
                         <ShiftsAutoAssignConfirmForm
                           action={fillSelfSignupGaps}
                           confirmKey="shifts.confirm_fill_self_signup"

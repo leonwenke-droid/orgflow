@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
+import * as Sentry from "@sentry/nextjs";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { getStripe } from "../../../../lib/stripe";
 import { planFromStripePriceId } from "../../../../lib/stripePlan";
@@ -110,6 +111,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (e) {
     console.error("[billing/stripe-webhook]", e);
+    Sentry.captureException(e);
     return NextResponse.json({ message: "Webhook handler failed." }, { status: 500 });
   }
 }

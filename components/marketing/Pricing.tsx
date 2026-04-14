@@ -47,7 +47,19 @@ export function Pricing() {
                 <svg className="p-check p-check-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <line x1="4" y1="8" x2="12" y2="8" />
                 </svg>
+                Ressourcen
+              </div>
+              <div className="p-feature" style={{ opacity: 0.45 }}>
+                <svg className="p-check p-check-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <line x1="4" y1="8" x2="12" y2="8" />
+                </svg>
                 Engagement Score
+              </div>
+              <div className="p-feature" style={{ opacity: 0.45 }}>
+                <svg className="p-check p-check-muted" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <line x1="4" y1="8" x2="12" y2="8" />
+                </svg>
+                Veranstaltungen
               </div>
             </div>
             <Link href="/create-organisation" className="btn btn-outline" style={{ width: "100%", justifyContent: "center" }}>

@@ -20,10 +20,26 @@ export default async function EventDetailPage(props: {
     : (props.params as { org: string; eventId: string });
   const { org: orgSlug, eventId } = params;
   const org = await getCurrentOrganization(orgSlug);
+  const features = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const eventsEnabled = (org as any).plan !== "free" && features.events !== false;
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData, orgSlug))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
 
   const supabase = createServerComponentClient({ cookies });
+  if (!eventsEnabled) {
+    const locale = await getRequestLocale();
+    return (
+      <div className="mx-auto max-w-4xl p-6">
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("events.title", locale)} />
+        <p className="mt-4 text-sm text-text-secondary dark:text-text-muted">
+          {locale === "de" ? "Veranstaltungen sind nicht verfügbar." : "Events are not available."}
+        </p>
+        <Link href={`/${orgSlug}/dashboard`} className="mt-2 inline-block text-sm text-blue-600 dark:text-blue-400 hover:underline">
+          {locale === "de" ? "Zurück" : "Back"}
+        </Link>
+      </div>
+    );
+  }
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select("id, name, slug, start_date, end_date")

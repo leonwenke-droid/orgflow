@@ -27,7 +27,7 @@ Without this, sessions and magic links can fail in production.
 
 ### Optional: email / magic link webhook
 
-Registration confirmation can use an n8n (or similar) webhook. In Vercel, optionally set `N8N_WEBHOOK_URL_SEND_MAGIC_LINK`. The endpoint receives JSON: `email`, `confirmLink`, `fullName`, `type: "signup"`.
+Registration confirmation can use an n8n (or similar) webhook. In Vercel, optionally set `N8N_WEBHOOK_URL_SEND_MAGIC_LINK`. If unset, signup still succeeds but no confirmation email is sent via n8n (you should rely on another channel or configure the webhook). The endpoint receives JSON: `email`, `confirmLink`, `fullName`, `type: "signup"`.
 
 ### Email rate limits
 
@@ -68,3 +68,54 @@ Examples of areas covered by migrations:
 ## Local database backups
 
 Large SQL dumps and `backup_*.sql` files are gitignored; keep them under `docs/` or another non-committed location if you need them locally.
+
+## Rate limiting (Upstash Redis)
+
+Production builds **require** `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (see `.env.example`). Without Upstash, limits fall back to in-memory storage and are **not effective** across Vercel serverless instances.
+
+## Cron jobs (`CRON_SECRET`)
+
+Endpoints:
+
+- `GET /api/cron/shift-reminders`
+- `GET /api/cron/rotation-decay`
+- `GET /api/cron/process-deletions` (DSGVO: processes `deletion_requests` pending **> 30 days**)
+
+Each endpoint returns **500** if `CRON_SECRET` is unset, and **401** if the header is wrong.
+
+**Important:** Vercel’s scheduled invocations from `vercel.json` **do not automatically send** `Authorization: Bearer <CRON_SECRET>`. Options:
+
+1. Call these URLs from an external scheduler (e.g. **Upstash QStash**, **GitHub Actions**, or another cron) with   `Authorization: Bearer <same value as CRON_SECRET>`.
+2. Or adjust your hosting setup so the scheduled request includes that header.
+
+Suggested schedules (UTC), matching `vercel.json` as a reference:
+
+- Shift reminders: `0 8 * * *`
+- Rotation decay: `0 2 * * *`
+- Deletion processing: `0 3 * * *` (DSGVO)
+
+## DSGVO-Lösch-Cron
+
+`/api/cron/process-deletions` anonymisiert betroffene `profiles` (Status `disabled`, personenbezogene Felder entfernt). Gibt es **keine weiteren aktiven** Mitgliedschaften für dieselbe `auth_user_id`, wird der Supabase-Auth-User per `auth.admin.deleteUser` entfernt. Anschließend wird der `deletion_requests`-Eintrag auf `completed` gesetzt.
+
+## DSGVO-Checkliste vor Launch
+
+- [ ] AVV mit Supabase abschließen: [supabase.com/dpa](https://supabase.com/dpa)
+- [ ] AVV mit Vercel abschließen: [vercel.com/legal/dpa](https://vercel.com/legal/dpa)
+- [ ] Impressum vollständig (Name, Adresse, E-Mail, Verantwortliche Person)
+- [ ] Datenschutzerklärung aktuell (Stripe, Supabase, Vercel, Resend, N8N namentlich)
+- [ ] DSGVO-Lösch-Cron eingerichtet (`/api/cron/process-deletions`, z. B. täglich 03:00 UTC) **mit** `Authorization: Bearer CRON_SECRET`
+- [ ] Cookie-Banner: Opt-In vor Tracking-Cookies sichergestellt
+
+## Production environment validation
+
+`instrumentation.ts` calls `validateProductionEnv()` when `NODE_ENV === "production"`. Missing variables surface when the production Node/Edge runtime starts; configure them in Vercel (and use `.env.production` locally for production-like runs).
+
+## Sentry (optional)
+
+Set `NEXT_PUBLIC_SENTRY_DSN` in production to enable error reporting. Without a DSN, Sentry stays disabled.
+
+## Security headers
+
+- **HSTS** is sent only when `NODE_ENV === "production"`.
+- **CSP** is enforced in production by default unless `CSP_ENFORCE=0` (Report-Only for debugging).

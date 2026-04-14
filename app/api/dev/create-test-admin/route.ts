@@ -7,6 +7,9 @@ const EMAIL = "test2@orgflow.local";
 const PASSWORD = "TestPassword123!";
 
 export async function GET(req: NextRequest) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ message: "Not available in production." }, { status: 404 });
+  }
   const secret = process.env.ADMIN_SEED_SECRET;
   const urlSecret = req.nextUrl.searchParams.get("secret");
 

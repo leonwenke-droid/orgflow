@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const limit = checkRateLimit(`login:${ip}:${email.toLowerCase()}`, LOGIN_RATE_LIMIT);
+    const limit = await checkRateLimit(`login:${ip}:${email.toLowerCase()}`, LOGIN_RATE_LIMIT);
     if (!limit.ok) {
       log("warn", "rate_limit", { requestId, route: "auth/login", ip, key: "login" });
       return NextResponse.json(

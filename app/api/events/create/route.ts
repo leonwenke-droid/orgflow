@@ -36,6 +36,16 @@ export async function POST(req: Request) {
     }
 
     const service = createSupabaseServiceRoleClient();
+    const { data: orgRow } = await service
+      .from("organizations")
+      .select("plan, settings")
+      .eq("id", organizationId)
+      .maybeSingle();
+    const plan = String((orgRow as any)?.plan ?? "free");
+    const features = (((orgRow as any)?.settings ?? {}) as { features?: Record<string, boolean> }).features ?? {};
+    if (plan === "free" || features.events === false) {
+      return NextResponse.json({ message: "Events are not available." }, { status: 403 });
+    }
     const finalSlug = slug || name.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 50);
     const { data: event, error } = await service
       .from("events")

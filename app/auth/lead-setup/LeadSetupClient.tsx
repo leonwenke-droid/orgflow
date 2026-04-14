@@ -88,8 +88,8 @@ export default function LeadSetupClient({
 
     const pw = password.trim();
     const pw2 = passwordRepeat.trim();
-    if (!pw || pw.length < 6) {
-      setErrorMessage("Password muss mindestens 6 Zeichen lang sein.");
+    if (!pw || pw.length < 8) {
+      setErrorMessage("Password muss mindestens 8 Zeichen lang sein.");
       return;
     }
     if (pw !== pw2) {

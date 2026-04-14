@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     const ip = getClientIp(req);
-    const rl = checkRateLimit(`invite_links:create:${ip}:${orgSlug.toLowerCase()}`, 10);
+    const rl = await checkRateLimit(`invite_links:create:${ip}:${orgSlug.toLowerCase()}`, 10);
     if (!rl.ok) {
       log("warn", "rate_limit", { requestId, route: "invite-links", ip, key: "invite-links" });
       return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { addEngagementEvent } from "../../../../lib/engagement/addEvent";
+import { fetchEngagementEnabledForOrgId } from "../../../../lib/engagement/isEngagementEnabled";
 
 export const runtime = "nodejs";
 
@@ -99,6 +100,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (comment.trim() && task.owner_id) {
+      const orgId = String((task as { organization_id?: string | null }).organization_id ?? "").trim();
+      const engagementEnabled = orgId ? await fetchEngagementEnabledForOrgId(supabase, orgId) : false;
+      if (!engagementEnabled) {
+        return NextResponse.json({ message: "Aufgabe aktualisiert." });
+      }
       await addEngagementEvent(supabase, {
         userId: task.owner_id as string,
         organizationId: (task as { organization_id?: string | null }).organization_id ?? null,

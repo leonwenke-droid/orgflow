@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() || "unknown";
-    const rl = checkRateLimit(`treasury:upload:${ip}:${user.id}:${organizationId}`, 10);
+    const rl = await checkRateLimit(`treasury:upload:${ip}:${user.id}:${organizationId}`, 10);
     if (!rl.ok) {
       return NextResponse.json(
         { message: "Too many requests. Please try again later." },

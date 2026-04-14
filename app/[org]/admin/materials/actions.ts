@@ -10,6 +10,9 @@ export async function createResourceAction(
   formData: FormData
 ): Promise<{ error?: string }> {
   const org = await getCurrentOrganization(orgSlug);
+  const features = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const resourcesEnabled = (org as any).plan !== "free" && (features.resources ?? features.materials ?? true) !== false;
+  if (!resourcesEnabled) return { error: "Resources are not available." };
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   const actor = await requireOrgAdminAction(orgIdForData, orgSlug);
   if (!actor) return { error: "Not authorized." };
@@ -69,6 +72,9 @@ export async function updateResourceStatusAction(
     return { error: "Invalid status." };
 
   const org = await getCurrentOrganization(orgSlug);
+  const features = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const resourcesEnabled = (org as any).plan !== "free" && (features.resources ?? features.materials ?? true) !== false;
+  if (!resourcesEnabled) return { error: "Resources are not available." };
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   const actor = await requireOrgAdminAction(orgIdForData, orgSlug);
   if (!actor) return { error: "Not authorized." };

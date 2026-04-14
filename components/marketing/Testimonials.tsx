@@ -5,6 +5,10 @@ export function Testimonials() {
         <div className="t-head">
           <div className="section-label">Stimmen aus der Praxis</div>
           <h2>Was unsere Nutzer sagen.</h2>
+          <p className="mt-2 max-w-2xl text-sm text-text-muted">
+            Zwei der Karten sind bewusst als Platzhalter gekennzeichnet — keine echten Kundenstimmen, bis wir
+            ausdrückliche Zitate haben.
+          </p>
         </div>
         <div className="t-grid">
           <div className="t-card reveal">
@@ -28,13 +32,14 @@ export function Testimonials() {
               <span className="t-star">★</span><span className="t-star">★</span><span className="t-star">★</span><span className="t-star">★</span><span className="t-star">★</span>
             </div>
             <div className="t-quote">
-              &quot;Endlich weiß jeder im Verein, was zu tun ist. Der Engagement Score hat die Motivation komplett verändert — alle wollen Punkte sammeln.&quot;
+              &quot;Beispiel-Zitat (Platzhalter): So könnte ein Verein beschreiben, wie Aufgaben und Schichten mit OrgFlow
+              zusammenlaufen — ohne dass wir eine reale Person nennen.&quot;
             </div>
             <div className="t-author">
-              <div className="t-avatar" style={{ background: "var(--green-light)", color: "var(--green)" }}>MH</div>
+              <div className="t-avatar" style={{ background: "var(--green-light)", color: "var(--green)" }}>?</div>
               <div>
-                <div className="t-name">Maria Hoffmann</div>
-                <div className="t-role">Vorstand, SV Westfalia 1923</div>
+                <div className="t-name">Beta-Nutzer (Platzhalter)</div>
+                <div className="t-role">Ehrenamt, Deutschland</div>
               </div>
             </div>
           </div>
@@ -44,13 +49,14 @@ export function Testimonials() {
               <span className="t-star">★</span><span className="t-star">★</span><span className="t-star">★</span><span className="t-star">★</span><span className="t-star">★</span>
             </div>
             <div className="t-quote">
-              &quot;Die Finanzen-Seite hat unserer Kassenprüfung komplett gerettet. Transparente Buchungen, CSV-Export — unser Kassenprüfer war begeistert.&quot;
+              &quot;Beispiel-Zitat (Platzhalter): Transparenz bei Finanzen und klare Zuständigkeiten — rein illustrativ, bis
+              wir echte Referenzen veröffentlichen.&quot;
             </div>
             <div className="t-author">
-              <div className="t-avatar" style={{ background: "var(--amber-light)", color: "var(--amber)" }}>TK</div>
+              <div className="t-avatar" style={{ background: "var(--amber-light)", color: "var(--amber)" }}>?</div>
               <div>
-                <div className="t-name">Tobias Klein</div>
-                <div className="t-role">Schatzmeister, Jugendfeuerwehr</div>
+                <div className="t-name">Organisation (Platzhalter)</div>
+                <div className="t-role">Verein / Schule / NGO</div>
               </div>
             </div>
           </div>

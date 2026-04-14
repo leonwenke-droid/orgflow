@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { checkRateLimit } from "../../../../lib/rateLimit";
 
 export const runtime = "nodejs";
 
-const N8N_WEBHOOK_URL =
-  process.env.N8N_WEBHOOK_URL_SEND_MAGIC_LINK ||
-  "https://n8n.srv881499.hstgr.cloud/webhook/send-magic-link";
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL_SEND_MAGIC_LINK;
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() || "unknown";
+    const rl = await checkRateLimit(`signup:${ip}`, 5);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { message: "Zu viele Anfragen. Bitte warte einen Moment." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      );
+    }
+
     const { email, password, firstName, lastName, claimToken } = await req.json();
     if (!email || !password) {
       return NextResponse.json(
@@ -16,9 +24,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (String(password).length < 6) {
+    if (String(password).length < 8) {
       return NextResponse.json(
-        { message: "Passwort mindestens 6 Zeichen." },
+        { message: "Passwort mindestens 8 Zeichen." },
         { status: 400 }
       );
     }
@@ -91,25 +99,30 @@ export async function POST(req: NextRequest) {
       actionLink +
       "\n\nDanach werden Sie automatisch weitergeleitet.\n\nMit freundlichen Grüßen\nIhr OrgFlow-Team";
 
-    const webhookRes = await fetch(N8N_WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: String(email).trim(),
-        confirmLink: actionLink,
-        fullName: fullName ?? undefined,
-        type: "signup",
-        subject,
-        body
-      })
-    });
+    if (!N8N_WEBHOOK_URL) {
+      console.warn("N8N_WEBHOOK_URL_SEND_MAGIC_LINK not configured — skipping magic link");
+      return NextResponse.json({ message: "ok" });
+    } else {
+      const webhookRes = await fetch(N8N_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: String(email).trim(),
+          confirmLink: actionLink,
+          fullName: fullName ?? undefined,
+          type: "signup",
+          subject,
+          body
+        })
+      });
 
-    if (!webhookRes.ok) {
-      console.error("n8n webhook send-magic-link failed:", webhookRes.status, await webhookRes.text());
-      return NextResponse.json(
-        { message: "E-Mail konnte nicht versendet werden. Bitte später erneut versuchen." },
-        { status: 502 }
-      );
+      if (!webhookRes.ok) {
+        console.error("n8n webhook send-magic-link failed:", webhookRes.status, await webhookRes.text());
+        return NextResponse.json(
+          { message: "E-Mail konnte nicht versendet werden. Bitte später erneut versuchen." },
+          { status: 502 }
+        );
+      }
     }
 
     return NextResponse.json({ message: "ok" });

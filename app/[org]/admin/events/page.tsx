@@ -34,10 +34,25 @@ export default async function AdminEventsPage(props: {
     ? (await (params as Promise<{ org: string }>)).org
     : (params as { org: string }).org;
   const org = await getCurrentOrganization(orgSlug);
+  const features = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const eventsEnabled = (org as any).plan !== "free" && features.events !== false;
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData, orgSlug))) return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
 
   const locale = await getRequestLocale();
+  if (!eventsEnabled) {
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("events.title", locale)} />
+        <div className="card p-6">
+          <h1 className="page-title">{t("events.title", locale)}</h1>
+          <p className="page-sub">
+            {locale === "de" ? "Veranstaltungen sind nicht verfügbar." : "Events are not available."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const supabase = createServerComponentClient({ cookies });
   const { data: events } = await supabase

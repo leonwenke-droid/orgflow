@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() || "unknown";
-    const rl = checkRateLimit(`invite_links:join:${ip}:${orgSlug.toLowerCase()}`, 30);
+    const rl = await checkRateLimit(`invite_links:join:${ip}:${orgSlug.toLowerCase()}`, 30);
     if (!rl.ok) {
       return NextResponse.json(
         { message: "Too many requests. Please try again later." },

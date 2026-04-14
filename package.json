@@ -13,8 +13,11 @@
     "db:link": "supabase link --project-ref nypxmasuockdemjunzzz"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.48.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.49.1",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.37.0",
     "classnames": "^2.5.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
     const ip = getClientIp(req);
     const requestId = getRequestId(req);
-    const limit = checkRateLimit(`forgot-password:${ip}:${normalizedEmail || "unknown"}`, 5);
+    const limit = await checkRateLimit(`forgot-password:${ip}:${normalizedEmail || "unknown"}`, 5);
     if (!limit.ok) {
       log("warn", "rate_limit", { requestId, route: "auth/forgot-password", ip, key: "forgot-password" });
       return NextResponse.json({ message: "Too many reset requests. Please try again later." }, {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
     }
 
     const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() || "unknown";
-    const rl = checkRateLimit(`org:create:${ip}:${user.id}`, 5);
+    const rl = await checkRateLimit(`org:create:${ip}:${user.id}`, 5);
     if (!rl.ok) {
       return NextResponse.json(
         { message: "Too many requests. Please try again later." },
@@ -182,6 +183,7 @@ export async function POST(req: Request) {
 
     if (orgError || !org) {
       console.error("Error creating org:", orgError);
+      Sentry.captureException(orgError ?? new Error("create organisation failed"));
       return NextResponse.json(
         { message: orgError?.message || "Failed to create organisation." },
         { status: 500 }
@@ -225,6 +227,7 @@ export async function POST(req: Request) {
       });
       if (insertProfileError) {
         console.error("create-organisation profile insert:", insertProfileError);
+        Sentry.captureException(insertProfileError);
         return NextResponse.json(
           { message: insertProfileError.message || "Failed to create admin profile for organisation." },
           { status: 500 }
@@ -332,6 +335,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ slug: org.slug, orgId: org.id });
   } catch (e) {
     console.error("create-organisation error:", e);
+    Sentry.captureException(e);
     return NextResponse.json(
       { message: "An error occurred." },
       { status: 500 }

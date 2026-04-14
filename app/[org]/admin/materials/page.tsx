@@ -32,6 +32,21 @@ export default async function AdminMaterialsPage(props: {
       : ((spRaw as { event?: string } | undefined) ?? {});
   const eventParam = (sp?.event ?? "").trim() || null;
   const org = await getCurrentOrganization(orgSlug);
+  const features = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
+  const resourcesEnabled = (org as any).plan !== "free" && (features.resources ?? features.materials ?? true) !== false;
+  if (!resourcesEnabled) {
+    const locale = await getRequestLocale();
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default bg-card">
+          <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("resources.title", locale)} />
+          <h1 className="mt-3 text-lg font-semibold text-text-primary dark:text-text-primary">
+            {locale === "de" ? "Ressourcen sind nicht verfügbar." : "Resources are not available."}
+          </h1>
+        </div>
+      </div>
+    );
+  }
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await isOrgAdmin(orgIdForData, orgSlug)))
     return <AdminForbidden orgSlug={orgSlug} orgName={org.name} />;
