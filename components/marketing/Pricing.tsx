@@ -152,15 +152,6 @@ export function Pricing() {
             >
               Organisation anlegen
             </PaidPlanCheckoutButton>
-            <p className="p-desc" style={{ marginTop: 16, fontSize: 13, lineHeight: 1.45, opacity: 0.88, marginBottom: 0 }}>
-              <strong>Enterprise</strong> mit mehreren Orgs, SLA, Custom Domain oder On-Premise?{" "}
-              <a
-                href="mailto:hello@orgflow.de"
-                style={{ color: "var(--color-brand)", textDecoration: "underline", textUnderlineOffset: "2px" }}
-              >
-                Kontakt
-              </a>
-            </p>
           </div>
         </div>
       </div>

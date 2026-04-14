@@ -203,11 +203,18 @@ export default function BillingSection({
 
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               <PlanCard
+                locale={locale}
                 title={locale === "de" ? "Starter" : "Starter"}
                 subtitle={locale === "de" ? "0 € · bis 5 Mitglieder" : "€0 · up to 5 members"}
                 active={currentPlan !== "team" && currentPlan !== "pro"}
+                features={
+                  locale === "de"
+                    ? ["Aufgaben & Schichten", "1 Team · bis 5 Mitglieder", "Keine Finanzen", "Kein Engagement"]
+                    : ["Tasks & shifts", "1 team · up to 5 members", "No finance", "No engagement"]
+                }
               />
               <PlanCard
+                locale={locale}
                 title={locale === "de" ? "Team" : "Team"}
                 subtitle={locale === "de" ? "29 € · bis 49 Mitglieder" : "€29 · up to 49 members"}
                 active={currentPlan === "team"}
@@ -215,8 +222,14 @@ export default function BillingSection({
                 disabled={Boolean(currentPlan === "pro")}
                 loading={loading}
                 onAction={() => startCheckout()}
+                features={
+                  locale === "de"
+                    ? ["Alle Starter-Features", "Finanzen & CSV-Export", "Engagement Score", "Bis 49 Mitglieder"]
+                    : ["All Starter features", "Finance & CSV export", "Engagement score", "Up to 49 members"]
+                }
               />
               <PlanCard
+                locale={locale}
                 title={locale === "de" ? "Pro" : "Pro"}
                 subtitle={locale === "de" ? "49 € · ab 50 Mitglieder" : "€49 · 50+ members"}
                 active={currentPlan === "pro"}
@@ -224,6 +237,11 @@ export default function BillingSection({
                 disabled={currentPlan === "pro" || (!useScaleTier && currentPlan !== "pro")}
                 loading={loading}
                 onAction={() => startCheckout()}
+                features={
+                  locale === "de"
+                    ? ["Alle Team-Features", "Für große Teams (ab 50)", "Fester Preis (49 €)"]
+                    : ["All Team features", "For larger teams (50+)", "Flat price (€49)"]
+                }
                 note={
                   !useScaleTier && currentPlan !== "pro"
                     ? locale === "de"
@@ -258,6 +276,7 @@ export default function BillingSection({
 }
 
 function PlanCard(props: {
+  locale: "de" | "en";
   title: string;
   subtitle: string;
   active: boolean;
@@ -266,12 +285,23 @@ function PlanCard(props: {
   loading?: boolean;
   onAction?: () => void;
   note?: string | null;
+  features?: string[];
 }) {
-  const { title, subtitle, active, actionLabel, disabled, loading, onAction, note } = props;
+  const { locale, title, subtitle, active, actionLabel, disabled, loading, onAction, note, features } = props;
   return (
     <div className={`rounded-xl border p-3 ${active ? "border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/30" : "border-border-subtle bg-bg-primary dark:border-border-default dark:bg-bg-primary"}`}>
       <div className="text-sm font-semibold text-text-primary dark:text-text-primary">{title}</div>
       <div className="mt-1 text-xs text-text-secondary dark:text-text-muted">{subtitle}</div>
+      {features && features.length > 0 ? (
+        <ul className="mt-3 space-y-1 text-[11px] text-text-secondary dark:text-text-muted">
+          {features.map((f) => (
+            <li key={f} className="flex gap-2">
+              <span className="mt-[2px] inline-block h-1.5 w-1.5 rounded-full bg-text-secondary/60 dark:bg-text-muted/60" />
+              <span className="min-w-0">{f}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {actionLabel && onAction ? (
         <button
           type="button"
@@ -283,7 +313,7 @@ function PlanCard(props: {
         </button>
       ) : (
         <div className="mt-3 w-full rounded-lg border border-border-default px-3 py-2 text-center text-xs font-semibold text-text-secondary dark:border-border-default dark:text-text-muted">
-          {active ? "Aktuell" : "—"}
+          {active ? (locale === "de" ? "Aktuell" : "Current") : "—"}
         </div>
       )}
       {note ? <div className="mt-2 text-[11px] text-text-secondary dark:text-text-muted">{note}</div> : null}
