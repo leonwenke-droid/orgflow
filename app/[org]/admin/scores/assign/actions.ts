@@ -6,13 +6,12 @@ import { revalidatePath } from "next/cache";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
 import { addEngagementEvent } from "../../../../../lib/engagement/addEvent";
+import { isEngagementEnabledFromOrgRow } from "../../../../../lib/engagement/isEngagementEnabled";
 
 export async function getAssignPointsPreview(orgSlug: string, profileId: string) {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
-  if (!engagementEnabled) {
+  if (!isEngagementEnabledFromOrgRow(org as any)) {
     return { errorKey: "engagement.unauthorized" as const };
   }
   if (!(await isOrgAdmin(orgIdForData, orgSlug))) {
@@ -40,9 +39,7 @@ export async function assignPoints(
 ) {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
-  if (!engagementEnabled) {
+  if (!isEngagementEnabledFromOrgRow(org as any)) {
     return { errorKey: "engagement.unauthorized" };
   }
   if (!(await isOrgAdmin(orgIdForData, orgSlug))) {

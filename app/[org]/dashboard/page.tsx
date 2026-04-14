@@ -185,7 +185,7 @@ export default async function OrgDashboardPage(props: {
       <section
         className={`grid gap-4 ${engagementEnabled ? "md:grid-cols-3" : "md:grid-cols-1"}`}
       >
-        {engagementEnabled && breakdown && recentEvents && orgScoreboard ? (
+        {engagementEnabled && breakdown != null && recentEvents != null && orgScoreboard != null ? (
           <>
             <EngagementScoreWidget
               totalScore={myEngagementScoreDisplay}

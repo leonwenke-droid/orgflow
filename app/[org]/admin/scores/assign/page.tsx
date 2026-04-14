@@ -7,6 +7,7 @@ import AdminForbidden from "../../AdminForbidden";
 import AssignPointsForm from "./AssignPointsForm";
 import ScoreImportLog from "./ScoreImportLog";
 import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
+import { isEngagementEnabledFromOrgRow } from "../../../../../lib/engagement/isEngagementEnabled";
 
 export default async function AssignPointsPage({
   params
@@ -19,8 +20,7 @@ export default async function AssignPointsPage({
   const locale = await getRequestLocale();
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
+  const engagementEnabled = isEngagementEnabledFromOrgRow(org as any);
   if (!engagementEnabled) {
     return (
       <div className="mx-auto max-w-3xl p-6">

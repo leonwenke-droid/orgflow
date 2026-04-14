@@ -13,6 +13,7 @@ import {
 } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { canViewOrgTreasurySummaryOnSharedOverview } from "../../../lib/permissions";
+import { isEngagementEnabledFromOrgRow } from "../../../lib/engagement/isEngagementEnabled";
 import { DEFAULT_CURRENCY, formatCurrency } from "../../../lib/currency";
 import { formatLocaleDateFromIso, formatShiftSlot, type AppLocale } from "../../../lib/formatDate";
 import { t } from "../../../lib/i18n";
@@ -52,7 +53,7 @@ export default async function OrgOverviewPage(props: { params: Promise<{ org: st
   const features = ((org.settings ?? {}) as { features?: Record<string, boolean> }).features ?? {};
   const financeModuleOn = features.treasury !== false;
   const showBalance = canViewOrgTreasurySummaryOnSharedOverview(role, financeModuleOn);
-  const engagementEnabled = (org as any).plan !== "free" && features.engagement_tracking !== false;
+  const engagementEnabled = isEngagementEnabledFromOrgRow(org as any);
 
   const service = createSupabaseServiceRoleClient();
   const todayStr = new Date().toISOString().slice(0, 10);

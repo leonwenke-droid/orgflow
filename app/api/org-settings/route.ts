@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
       shifts: features.shifts !== false,
       finance: paid && features.treasury !== false,
       resources: paid && (features.resources ?? features.materials ?? true) !== false,
-      engagement: paid && features.engagement_tracking !== false,
+      engagement: features.engagement_tracking !== false,
       events: paid && features.events !== false,
     },
     role: role ?? undefined,

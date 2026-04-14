@@ -8,6 +8,7 @@ import { getRequestLocale } from "../../../../lib/localeServer";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../../lib/getOrganization";
 import { canAccessOperationalAdmin } from "../../../../lib/permissions";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { isEngagementEnabledFromOrgRow } from "../../../../lib/engagement/isEngagementEnabled";
 
 import EngagementTabs from "./EngagementTabs";
 
@@ -21,15 +22,15 @@ export default async function AdminEngagementPage(props: { params: Promise<{ org
   const orgSlug = params.org;
 
   const org = await getCurrentOrganization(orgSlug);
-  const orgFeatures = ((org.settings as any)?.features ?? {}) as Record<string, boolean>;
-  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
-  if (!engagementEnabled) {
+  if (!isEngagementEnabledFromOrgRow(org as any)) {
     const locale = await getRequestLocale();
     return (
       <div className="mx-auto max-w-3xl p-6">
         <div className="rounded-xl border border-border-subtle bg-bg-primary p-6 shadow-sm dark:border-border-default bg-card">
           <h1 className="text-lg font-semibold text-text-primary dark:text-text-primary">
-            {locale === "de" ? "Engagement ist im Starter nicht enthalten." : "Engagement is not available on Starter."}
+            {locale === "de"
+              ? "Engagement ist deaktiviert. Aktiviere es unter Einstellungen → Aktive Module."
+              : "Engagement is turned off. Enable it under Settings → Active modules."}
           </h1>
         </div>
       </div>

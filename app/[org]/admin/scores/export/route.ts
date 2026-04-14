@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import { getCurrentOrganization, isOrgAdmin, getOrgIdForData } from "../../../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../../../lib/supabaseServer";
 import { t } from "../../../../../lib/i18n";
+import { isEngagementEnabledFromOrgRow } from "../../../../../lib/engagement/isEngagementEnabled";
 
 const TASK_EVENTS = ["task_done", "task_late", "task_missed"];
 const SHIFT_EVENTS = ["shift_done", "shift_missed"];
@@ -18,8 +19,7 @@ export async function GET(
   const { org: orgSlug } = await context.params;
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
-  const orgFeatures = (org.settings?.features as Record<string, boolean> | undefined) ?? {};
-  const engagementEnabled = (org as any).plan !== "free" && orgFeatures.engagement_tracking !== false;
+  const engagementEnabled = isEngagementEnabledFromOrgRow(org as any);
   if (!engagementEnabled) {
     return NextResponse.json({ error: "Forbidden", errorKey: "common.unauthorized" }, { status: 403 });
   }
