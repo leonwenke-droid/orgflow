@@ -100,6 +100,23 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.engagement_upgrade_modal_body":
       "Engagement scores and rankings are included on Team and Pro. Upgrade your organisation to turn this on.",
     "settings.engagement_upgrade_cta": "View plans & upgrade",
+    "settings.paid_module_requires_paid":
+      "This module is available on Team and Pro. Upgrade your plan first.",
+    "settings.treasury_module_help":
+      "When enabled, treasury and finance areas for this organisation are visible. When disabled, related navigation and member finance views are hidden.",
+    "settings.resources_module_help":
+      "When enabled, materials and resource management are available. When disabled, the resources area is hidden.",
+    "settings.events_module_help":
+      "When enabled, organisation events and related tools are available. When disabled, events are hidden from the app.",
+    "settings.treasury_upgrade_modal_title": "Upgrade to use Finance",
+    "settings.treasury_upgrade_modal_body":
+      "Finance and treasury are included on Team and Pro. Upgrade your organisation to turn this on.",
+    "settings.resources_upgrade_modal_title": "Upgrade to use Resources",
+    "settings.resources_upgrade_modal_body":
+      "Materials and resources are included on Team and Pro. Upgrade your organisation to turn this on.",
+    "settings.events_upgrade_modal_title": "Upgrade to use Events",
+    "settings.events_upgrade_modal_body":
+      "Events are included on Team and Pro. Upgrade your organisation to turn this on.",
     "settings.engagement_admin_need_plan": "Engagement is included on Team and Pro. Upgrade under Settings → Plan.",
     "settings.engagement_admin_need_module": "Engagement is turned off. Enable it under Settings → Active modules.",
     "feedback.page_title": "Feedback",
@@ -1261,6 +1278,23 @@ export const translations: Record<Locale, Record<string, string>> = {
     "settings.engagement_upgrade_modal_body":
       "Engagement-Scores und Ranglisten sind in Team und Pro enthalten. Hebt den Tarif eurer Organisation an, um es zu aktivieren.",
     "settings.engagement_upgrade_cta": "Tarife ansehen & upgraden",
+    "settings.paid_module_requires_paid":
+      "Dieses Modul ist in Team und Pro enthalten. Bitte zuerst den Tarif upgraden.",
+    "settings.treasury_module_help":
+      "Wenn aktiv, sind Kasse/Finanzen und zugehörige Ansichten für diese Organisation verfügbar. Wenn aus, wird die Navigation und Mitglieder-Finanzansichten ausgeblendet.",
+    "settings.resources_module_help":
+      "Wenn aktiv, sind Materialien und Ressourcen-Verwaltung verfügbar. Wenn aus, wird der Bereich Ressourcen ausgeblendet.",
+    "settings.events_module_help":
+      "Wenn aktiv, sind Veranstaltungen und zugehörige Tools verfügbar. Wenn aus, werden Veranstaltungen in der App ausgeblendet.",
+    "settings.treasury_upgrade_modal_title": "Upgrade für Finanzen",
+    "settings.treasury_upgrade_modal_body":
+      "Kasse und Finanzen sind in Team und Pro enthalten. Hebt den Tarif eurer Organisation an, um sie zu aktivieren.",
+    "settings.resources_upgrade_modal_title": "Upgrade für Ressourcen",
+    "settings.resources_upgrade_modal_body":
+      "Materialien und Ressourcen sind in Team und Pro enthalten. Hebt den Tarif eurer Organisation an, um sie zu aktivieren.",
+    "settings.events_upgrade_modal_title": "Upgrade für Veranstaltungen",
+    "settings.events_upgrade_modal_body":
+      "Veranstaltungen sind in Team und Pro enthalten. Hebt den Tarif eurer Organisation an, um sie zu aktivieren.",
     "settings.engagement_admin_need_plan": "Engagement ist in Team und Pro enthalten. Upgrade unter Einstellungen → Tarif.",
     "settings.engagement_admin_need_module": "Engagement ist ausgeschaltet. Aktiviere es unter Einstellungen → Aktive Module.",
     "feedback.page_title": "Feedback",

@@ -134,10 +134,20 @@ export async function updateOrgFeaturesAction(
 
   const plan = String((org as { plan?: string }).plan ?? "free").trim();
   if (plan === "free") {
-    if (features.engagement_tracking === true) {
-      return { errorKey: "settings.engagement_requires_paid" };
+    const triedPaidOnly =
+      features.engagement_tracking === true ||
+      features.treasury === true ||
+      features.resources === true ||
+      features.materials === true ||
+      features.events === true;
+    if (triedPaidOnly) {
+      return { errorKey: "settings.paid_module_requires_paid" };
     }
     next.engagement_tracking = false;
+    next.treasury = false;
+    next.resources = false;
+    next.materials = false;
+    next.events = false;
   }
 
   const service = createSupabaseServiceRoleClient();

@@ -16,6 +16,20 @@ const MODULE_KEYS: { key: keyof FeaturesMap; labelKey: string }[] = [
   { key: "events", labelKey: "events.title" },
 ];
 
+/** Tasks/shifts stay available on Free; these need a paid plan to turn on. */
+const PAID_MODULE_KEYS = new Set<string>([
+  "treasury",
+  "resources",
+  "engagement_tracking",
+  "events",
+]);
+
+function isModuleEnabled(key: string, f: FeaturesMap): boolean {
+  if (key === "events") return f.events === true;
+  if (key === "resources") return (f.resources ?? f.materials) !== false;
+  return f[key] !== false;
+}
+
 export default function ModuleToggles({
   orgSlug,
   initialFeatures,
@@ -31,19 +45,38 @@ export default function ModuleToggles({
   const [savedFeatures, setSavedFeatures] = useState<FeaturesMap>(() => ({
     tasks: initialFeatures.tasks !== false,
     shifts: initialFeatures.shifts !== false,
-    treasury: initialFeatures.treasury !== false,
-    resources: (initialFeatures.resources ?? initialFeatures.materials) !== false,
+    treasury: isFreePlan ? false : initialFeatures.treasury !== false,
+    resources: isFreePlan ? false : (initialFeatures.resources ?? initialFeatures.materials) !== false,
     engagement_tracking: isFreePlan ? false : initialFeatures.engagement_tracking !== false,
-    events: initialFeatures.events === true,
+    events: isFreePlan ? false : initialFeatures.events === true,
   }));
   const [features, setFeatures] = useState<FeaturesMap>(() => ({ ...savedFeatures }));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [confirmEngagementOff, setConfirmEngagementOff] = useState(false);
-  const [confirmEngagementUpgrade, setConfirmEngagementUpgrade] = useState(false);
+  const [confirmPaidUpgradeFor, setConfirmPaidUpgradeFor] = useState<string | null>(null);
+
+  function paidUpgradeModalKeys(modKey: string): { title: string; body: string } {
+    if (modKey === "engagement_tracking") {
+      return { title: "settings.engagement_upgrade_modal_title", body: "settings.engagement_upgrade_modal_body" };
+    }
+    if (modKey === "treasury") {
+      return { title: "settings.treasury_upgrade_modal_title", body: "settings.treasury_upgrade_modal_body" };
+    }
+    if (modKey === "resources") {
+      return { title: "settings.resources_upgrade_modal_title", body: "settings.resources_upgrade_modal_body" };
+    }
+    if (modKey === "events") {
+      return { title: "settings.events_upgrade_modal_title", body: "settings.events_upgrade_modal_body" };
+    }
+    return { title: "settings.engagement_upgrade_modal_title", body: "settings.engagement_upgrade_modal_body" };
+  }
 
   const isDirty =
     Object.keys(features).some((k) => (features as any)[k] !== (savedFeatures as any)[k]);
+
+  const paidUpgradeCopy =
+    confirmPaidUpgradeFor != null ? paidUpgradeModalKeys(confirmPaidUpgradeFor) : null;
 
   function stageToggle(key: string, value: boolean) {
     const next = { ...features, [key]: value };
@@ -53,10 +86,10 @@ export default function ModuleToggles({
   }
 
   function requestToggle(key: string) {
-    const current = features[key] !== false;
+    const current = isModuleEnabled(key, features);
     const nextValue = !current;
-    if (key === "engagement_tracking" && isFreePlan && nextValue === true) {
-      setConfirmEngagementUpgrade(true);
+    if (isFreePlan && PAID_MODULE_KEYS.has(key) && nextValue === true) {
+      setConfirmPaidUpgradeFor(key);
       return;
     }
     if (key === "engagement_tracking" && current === true && nextValue === false) {
@@ -125,6 +158,26 @@ export default function ModuleToggles({
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <div className="text-sm font-medium text-text-primary">{t(labelKey, locale)}</div>
+                {key === "treasury" ? (
+                  <>
+                    <div className="mt-1 text-xs text-text-secondary">{t("settings.treasury_module_help", locale)}</div>
+                    {isFreePlan ? (
+                      <p className="mt-1 text-xs font-medium text-amber-800 dark:text-amber-200/90">
+                        {t("settings.engagement_free_hint", locale)}
+                      </p>
+                    ) : null}
+                  </>
+                ) : null}
+                {key === "resources" ? (
+                  <>
+                    <div className="mt-1 text-xs text-text-secondary">{t("settings.resources_module_help", locale)}</div>
+                    {isFreePlan ? (
+                      <p className="mt-1 text-xs font-medium text-amber-800 dark:text-amber-200/90">
+                        {t("settings.engagement_free_hint", locale)}
+                      </p>
+                    ) : null}
+                  </>
+                ) : null}
                 {key === "engagement_tracking" ? (
                   <>
                     <div className="mt-1 text-xs text-text-secondary">{t("settings.engagement_tracking_help", locale)}</div>
@@ -135,10 +188,20 @@ export default function ModuleToggles({
                     ) : null}
                   </>
                 ) : null}
+                {key === "events" ? (
+                  <>
+                    <div className="mt-1 text-xs text-text-secondary">{t("settings.events_module_help", locale)}</div>
+                    {isFreePlan ? (
+                      <p className="mt-1 text-xs font-medium text-amber-800 dark:text-amber-200/90">
+                        {t("settings.engagement_free_hint", locale)}
+                      </p>
+                    ) : null}
+                  </>
+                ) : null}
               </div>
               <Switch
                 checked={
-                  key === "engagement_tracking" && isFreePlan ? false : features[key] !== false
+                  isFreePlan && PAID_MODULE_KEYS.has(String(key)) ? false : isModuleEnabled(String(key), features)
                 }
                 onToggle={() => requestToggle(String(key))}
               />
@@ -150,34 +213,34 @@ export default function ModuleToggles({
         ))}
       </ul>
 
-      {confirmEngagementUpgrade ? (
+      {confirmPaidUpgradeFor ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           role="dialog"
           aria-modal="true"
-          onClick={() => setConfirmEngagementUpgrade(false)}
+          onClick={() => setConfirmPaidUpgradeFor(null)}
         >
           <div
             className="w-full max-w-lg rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-xl dark:border-border-default dark:bg-bg-primary"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-semibold text-text-primary dark:text-text-primary">
-              {t("settings.engagement_upgrade_modal_title", locale)}
+              {paidUpgradeCopy ? t(paidUpgradeCopy.title, locale) : null}
             </h3>
             <p className="mt-2 text-sm text-text-secondary dark:text-text-muted">
-              {t("settings.engagement_upgrade_modal_body", locale)}
+              {paidUpgradeCopy ? t(paidUpgradeCopy.body, locale) : null}
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setConfirmEngagementUpgrade(false)}
+                onClick={() => setConfirmPaidUpgradeFor(null)}
                 className="rounded-lg border border-border-default px-3 py-2 text-xs font-semibold text-text-primary hover:bg-bg-secondary dark:border-border-default dark:hover:bg-bg-primary"
               >
                 {locale === "de" ? "Schließen" : "Close"}
               </button>
               <Link
                 href={`/${orgSlug}/settings#settings-plan`}
-                onClick={() => setConfirmEngagementUpgrade(false)}
+                onClick={() => setConfirmPaidUpgradeFor(null)}
                 className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
               >
                 {t("settings.engagement_upgrade_cta", locale)}
