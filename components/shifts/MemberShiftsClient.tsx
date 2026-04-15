@@ -68,6 +68,7 @@ export default function MemberShiftsClient({
   shifts,
   claimShiftAction,
   embeddedInAdminConsole = false,
+  claimShiftNotice,
 }: {
   orgSlug: string;
   locale: Locale;
@@ -79,6 +80,8 @@ export default function MemberShiftsClient({
   claimShiftAction: (formData: FormData) => Promise<void>;
   /** Schichtplanung admin console: compact layout, prototype filter-pills */
   embeddedInAdminConsole?: boolean;
+  /** Set after server redirect from failed self-signup (query `claimShift`) */
+  claimShiftNotice?: "unavailable" | "error";
 }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [qrFor, setQrFor] = useState<{ assignmentId: string; title: string; qrValue: string } | null>(null);
@@ -311,6 +314,17 @@ export default function MemberShiftsClient({
           <h1 className="page-title">{t("dashboard.shifts", locale)}</h1>
           <p className="page-sub">{t("shifts.member_page_intro", locale)}</p>
         </header>
+      ) : null}
+
+      {!embeddedInAdminConsole && claimShiftNotice ? (
+        <div
+          className="rounded-lg border border-[var(--color-danger)]/30 bg-[var(--bg-danger-subtle)] px-4 py-3 text-sm text-[var(--color-danger-text)]"
+          role="alert"
+        >
+          {claimShiftNotice === "unavailable"
+            ? t("shifts.claim_blocked_unavailable", locale)
+            : t("dashboard.claim_shift_failed", locale)}
+        </div>
       ) : null}
 
       <div className={embeddedInAdminConsole ? "filter-pills" : "flex flex-wrap gap-2"}>

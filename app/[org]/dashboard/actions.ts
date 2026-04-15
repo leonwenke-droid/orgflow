@@ -30,6 +30,9 @@ export async function claimShiftFromDashboard(formData: FormData) {
 
   if (!result.ok) {
     console.error("[claimShiftFromDashboard]", result.code);
+    if (result.code === "unavailable") {
+      redirect(`/${orgSlug}/dashboard?claimShift=unavailable`);
+    }
     redirect(`/${orgSlug}/dashboard?claimShift=error`);
   }
 

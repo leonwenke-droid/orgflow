@@ -29,6 +29,9 @@ export async function claimShiftAction(formData: FormData) {
   });
   if (!result.ok) {
     console.error("[claimShiftAction]", result.code);
+    if (result.code === "unavailable") {
+      redirect(`/${orgSlug}/shifts?claimShift=unavailable`);
+    }
     redirect(`/${orgSlug}/shifts?claimShift=error`);
   }
 

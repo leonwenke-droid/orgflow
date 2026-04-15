@@ -50,11 +50,20 @@ function dotClass(free: number) {
 
 export default async function OrgDashboardPage(props: {
   params: Promise<{ org: string }> | { org: string };
+  searchParams?: Promise<Record<string, string | string[] | undefined>> | Record<string, string | string[] | undefined>;
 }) {
   const params =
     typeof (props.params as Promise<{ org: string }>).then === "function"
       ? await (props.params as Promise<{ org: string }>)
       : (props.params as { org: string });
+
+  const sp =
+    props.searchParams && typeof (props.searchParams as Promise<unknown>).then === "function"
+      ? await (props.searchParams as Promise<Record<string, string | string[] | undefined>>)
+      : ((props.searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
+  const claimRaw = Array.isArray(sp.claimShift) ? sp.claimShift[0] : sp.claimShift;
+  const claimShiftNotice =
+    claimRaw === "unavailable" || claimRaw === "error" ? claimRaw : undefined;
 
   const orgSlug = params.org;
   const org = await getCurrentOrganization(orgSlug);
@@ -181,6 +190,17 @@ export default async function OrgDashboardPage(props: {
         <h1 className="page-title">{myName ? `${getGreeting(fl)}, ${myName}` : getGreeting(fl)}</h1>
         <p className="page-sub">{locale === "en" ? "Here is what matters today." : "Hier ist, was heute noch wichtig ist."}</p>
       </header>
+
+      {claimShiftNotice ? (
+        <div
+          className="rounded-lg border border-[var(--color-danger)]/30 bg-[var(--bg-danger-subtle)] px-4 py-3 text-sm text-[var(--color-danger-text)]"
+          role="alert"
+        >
+          {claimShiftNotice === "unavailable"
+            ? t("shifts.claim_blocked_unavailable", locale)
+            : t("dashboard.claim_shift_failed", locale)}
+        </div>
+      ) : null}
 
       <section
         className={`grid gap-4 ${engagementEnabled ? "md:grid-cols-3" : "md:grid-cols-1"}`}

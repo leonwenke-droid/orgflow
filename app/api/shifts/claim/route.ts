@@ -51,6 +51,12 @@ export async function POST(req: Request) {
       if (code === "not_member" || code === "viewer") {
         return NextResponse.json({ message: "You are not a member of this organisation." }, { status: 403 });
       }
+      if (code === "unavailable") {
+        return NextResponse.json(
+          { message: "You are marked unavailable for this shift time.", code: "unavailable" },
+          { status: 400 }
+        );
+      }
       return NextResponse.json({ message: "Failed to sign up." }, { status: 500 });
     }
 

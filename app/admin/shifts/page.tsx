@@ -36,6 +36,7 @@ import ShiftsAttendanceConsole from "../../../components/shifts/ShiftsAttendance
 import ShiftsQrFlowTimeline from "../../../components/shifts/ShiftsQrFlowTimeline";
 import ShiftsStatsPanel from "../../../components/shifts/ShiftsStatsPanel";
 import ShiftsAutoAssignConfirmForm from "../../../components/shifts/ShiftsAutoAssignConfirmForm";
+import { getProfileIdsBlockedByApprovedUnavailability } from "../../../lib/shiftUnavailability";
 import { computeShiftConsoleStats, addCalendarDays } from "../../../lib/shiftStats";
 import { filterShiftsByTime, type ShiftTimeFilter } from "../../../lib/shiftTimeFilter";
 import {
@@ -172,12 +173,14 @@ async function autoAssignForShifts(
       (existing ?? []).map((a: any) => a.user_id as string)
     );
 
-    const eligible = membersWithScore.filter(
+    const pool = membersWithScore.filter(
       (m) =>
         !alreadyAssigned.has(m.id) &&
         !globallyUsed.has(m.id) &&
         !cooldownUsers.has(m.id)
     );
+    const blocked = await getProfileIdsBlockedByApprovedUnavailability(service, shift.id, pool.map((p) => p.id));
+    const eligible = pool.filter((m) => !blocked.has(m.id));
     const toAssign = weightedRandomSelect(eligible, required);
 
     if (!toAssign.length) continue;
@@ -278,11 +281,15 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
     const missing = Math.max(0, required - already.size);
     if (missing <= 0) continue;
 
+    const candidateIds = eligible.filter((m) => !already.has(m.id) && !usedThisRun.has(m.id)).map((m) => m.id);
+    const blockedByUnavail = await getProfileIdsBlockedByApprovedUnavailability(service, sid, candidateIds);
+
     let filled = 0;
     for (const m of eligible) {
       if (filled >= missing) break;
       if (already.has(m.id)) continue;
       if (usedThisRun.has(m.id)) continue;
+      if (blockedByUnavail.has(m.id)) continue;
       toInsert.push({ shift_id: sid, user_id: m.id, status: "zugewiesen" });
       usedThisRun.add(m.id);
       increments.set(m.id, (increments.get(m.id) ?? 0) + 1);
@@ -422,9 +429,15 @@ async function fillSelfSignupGaps(formData: FormData) {
 
     const cooldownUsers = await getUsersInCooldown(service, shift.date);
 
-    const eligible = members.filter(
+    const pool = members.filter(
       (m) => !already.has(m.id) && !globallyUsed.has(m.id) && !cooldownUsers.has(m.id)
     );
+    const blockedUnavail = await getProfileIdsBlockedByApprovedUnavailability(
+      service,
+      shift.id,
+      pool.map((m) => m.id)
+    );
+    const eligible = pool.filter((m) => !blockedUnavail.has(m.id));
     if (eligible.length === 0) continue;
 
     let picked: { id: string }[] = [];
@@ -716,6 +729,9 @@ async function assignToShift(shiftId: string, formData: FormData) {
   const actor = await requireOrgAdminAction(organizationId);
   if (!actor) return;
   const service = createSupabaseServiceRoleClient();
+  if ((await getProfileIdsBlockedByApprovedUnavailability(service, shiftId, [userId])).has(userId)) {
+    return;
+  }
   const { error } = await service.from("shift_assignments").insert({
     shift_id: shiftId,
     user_id: userId,
@@ -911,6 +927,19 @@ async function replaceAssignment(assignmentId: string, formData: FormData) {
   if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
+  const { data: assRow } = await service
+    .from("shift_assignments")
+    .select("shift_id")
+    .eq("id", assignmentId)
+    .maybeSingle();
+  const shiftIdForReplace = (assRow as { shift_id?: string } | null)?.shift_id;
+  if (
+    shiftIdForReplace &&
+    (await getProfileIdsBlockedByApprovedUnavailability(service, shiftIdForReplace, [newUserId])).has(newUserId)
+  ) {
+    return;
+  }
+
   const { error } = await service
     .from("shift_assignments")
     .update({ user_id: newUserId })

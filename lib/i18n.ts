@@ -372,6 +372,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "common.remove": "Remove",
     "shifts.help_text": "Recurring shifts or one-off event.",
     "shifts.error_create": "Shifts could not be created. Check that required_slots exists on the shifts table.",
+    "shifts.claim_blocked_unavailable":
+      "You have an approved absence that overlaps this shift — you cannot self-assign.",
     "shifts.placeholder_title_recurring": "e.g. Entrance, setup, cashier",
     "shifts.placeholder_title_event": "e.g. Summer festival, conference",
     "shifts.setup_teardown_note": "First shift starts 30 min earlier (setup), last ends 30 min later (teardown). Extra engagement points.",
@@ -1589,6 +1591,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "common.remove": "Entfernen",
     "shifts.help_text": "Wiederkehrende Schichten oder Einzelveranstaltung.",
     "shifts.error_create": "Schichten konnten nicht angelegt werden. Prüfen Sie, ob required_slots in der Tabelle shifts vorhanden ist.",
+    "shifts.claim_blocked_unavailable":
+      "Du hast eine genehmigte Abwesenheit, die mit dieser Schicht überlappt — Selbsteintrag ist nicht möglich.",
     "shifts.placeholder_title_recurring": "z. B. Einlass, Aufbau, Kasse",
     "shifts.placeholder_title_event": "z. B. Sommerfest, Konferenz",
     "shifts.setup_teardown_note": "Erste Schicht startet 30 Min. früher (Aufbau), letzte endet 30 Min. später (Abbau). Zusätzliche Engagement-Punkte.",

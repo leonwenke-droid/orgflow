@@ -1,6 +1,7 @@
 import { getCurrentOrganization, getOrgIdForData } from "./getOrganization";
 import { createSupabaseServiceRoleClient } from "./supabaseServer";
 import { effectiveAssignmentKind } from "./shiftAssignmentKind";
+import { isProfileBlockedByApprovedUnavailability } from "./shiftUnavailability";
 
 export type ClaimShiftForMemberResult =
   | { ok: true; profileId: string; organizationId: string }
@@ -14,6 +15,7 @@ export type ClaimShiftErrorCode =
   | "full"
   | "not_member"
   | "viewer"
+  | "unavailable"
   | "insert_failed";
 
 /** Exported for check-in and other server routes that resolve a member profile in org context. */
@@ -110,6 +112,10 @@ export async function claimShiftForAuthenticatedMember(opts: {
   }
   if ((profile.role ?? "") === "viewer") {
     return { ok: false, code: "viewer" };
+  }
+
+  if (await isProfileBlockedByApprovedUnavailability(service, shiftId, profile.id)) {
+    return { ok: false, code: "unavailable" };
   }
 
   const { error: insErr } = await service.from("shift_assignments").insert({

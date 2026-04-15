@@ -24,7 +24,9 @@ export default async function ShiftsViewerPage(props: {
       ? await (props.searchParams as Promise<Record<string, string | string[] | undefined>>)
       : ((props.searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
   const shiftsFreeOnly = sp.free === "1" || sp.free === "true";
-  // claim errors / swaps are handled on the full shifts flow; redesign focuses on sign-up list UI
+  const claimRaw = Array.isArray(sp.claimShift) ? sp.claimShift[0] : sp.claimShift;
+  const claimShiftNotice =
+    claimRaw === "unavailable" || claimRaw === "error" ? claimRaw : undefined;
 
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
@@ -123,6 +125,7 @@ export default async function ShiftsViewerPage(props: {
       organizationId={effectiveOrgIdForData}
       shifts={upcomingShifts as any}
       claimShiftAction={claimShiftAction}
+      claimShiftNotice={claimShiftNotice}
     />
   );
 
