@@ -5,6 +5,8 @@ import { getClientIp, getRequestId, log } from "../../../../lib/log";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { sendPasswordReset } from "../../../../lib/n8n";
 
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
   try {
     const parsed = await readJson<{ email?: unknown }>(req);
@@ -39,8 +41,24 @@ export async function POST(req: Request) {
     const service = createSupabaseServiceRoleClient();
 
     // Benutzer-Lookup – falls kein Account existiert, still beenden (kein User-Enumeration)
-    const { data: userData } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    const existingUser = (userData?.users ?? []).find((u) => (u.email ?? "").toLowerCase() === normalizedEmail);
+    let existingUser: any | null = null;
+    try {
+      // Prefer direct lookup (avoids paging limits)
+      const res = await (service.auth.admin as any).getUserByEmail?.(normalizedEmail);
+      existingUser = (res?.data?.user as any) ?? null;
+    } catch {
+      existingUser = null;
+    }
+    if (!existingUser) {
+      // Fallback: page through users (anti-enumeration response regardless)
+      for (let page = 1; page <= 10 && !existingUser; page++) {
+        const { data: userData } = await service.auth.admin.listUsers({ page, perPage: 1000 });
+        const hit = (userData?.users ?? []).find((u) => (u.email ?? "").toLowerCase() === normalizedEmail);
+        if (hit) existingUser = hit as any;
+        // Stop early if fewer than perPage users returned
+        if ((userData?.users ?? []).length < 1000) break;
+      }
+    }
     if (!existingUser) {
       // Kein Fehler loggen, kein Hinweis nach außen – anti-enumeration
       return NextResponse.json({ message: "If an account exists for this email, you'll receive a reset link shortly." });
@@ -63,6 +81,8 @@ export async function POST(req: Request) {
       await sendPasswordReset({ email: normalizedEmail, resetLink, fullName }).catch((err) =>
         log("error", "forgot_password_n8n_failed", { requestId, error: String(err) })
       );
+    } else {
+      log("warn", "forgot_password_missing_reset_link", { requestId, route: "auth/forgot-password" });
     }
 
     return NextResponse.json({ message: "If an account exists for this email, you'll receive a reset link shortly." });
