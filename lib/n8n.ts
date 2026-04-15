@@ -4,6 +4,7 @@
  */
 
 const WEBHOOK_SECRET = process.env.N8N_WEBHOOK_SECRET ?? "";
+const WEBHOOK_AUTH_HEADER = (process.env.N8N_WEBHOOK_AUTHORIZATION ?? "").trim();
 
 async function callWebhook(
   url: string | undefined,
@@ -14,16 +15,22 @@ async function callWebhook(
     console.warn(`[n8n] ${label}: Webhook URL not configured — skipping`);
     return;
   }
-  if (!WEBHOOK_SECRET) {
-    console.warn(`[n8n] ${label}: N8N_WEBHOOK_SECRET not configured — skipping`);
+  // Either a shared secret (in body) OR an Authorization header can secure the webhook.
+  if (!WEBHOOK_SECRET && !WEBHOOK_AUTH_HEADER) {
+    console.warn(
+      `[n8n] ${label}: neither N8N_WEBHOOK_SECRET nor N8N_WEBHOOK_AUTHORIZATION configured — skipping`
+    );
     return;
   }
-  const payload = { secret: WEBHOOK_SECRET, ...body };
+  const payload = { ...(WEBHOOK_SECRET ? { secret: WEBHOOK_SECRET } : {}), ...body };
   let res: Response;
   try {
     res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(WEBHOOK_AUTH_HEADER ? { Authorization: WEBHOOK_AUTH_HEADER } : {})
+      },
       body: JSON.stringify(payload)
     });
   } catch (e) {
