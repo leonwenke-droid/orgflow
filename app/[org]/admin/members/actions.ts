@@ -394,8 +394,8 @@ export async function setMemberAsLeadAction(
 }
 
 /**
- * Mitglied manuell anlegen (nur Name erforderlich, Komitees optional).
- * Bei Lead mit E-Mail: Einladungs-Mail mit Link zum Passwort setzen wird versendet.
+ * Mitglied manuell anlegen (Name und E-Mail erforderlich, Komitees optional).
+ * Einladung wird für die angegebene E-Mail erzeugt; optional Rolle Teamleitung (lead).
  */
 export async function addMemberAction(
   orgSlug: string,
@@ -408,6 +408,9 @@ export async function addMemberAction(
 
   const name = (fullName || "").trim();
   if (!name) return { error: null, errorKey: "members.error_name_required" };
+
+  const emailTrimmed = (options?.email || "").trim() || null;
+  if (!emailTrimmed) return { error: null, errorKey: "members.error_email_required" };
 
   const supabase = createSupabaseServiceRoleClient();
 
@@ -422,7 +425,6 @@ export async function addMemberAction(
   const { randomUUID } = await import("crypto");
   const id = randomUUID();
   const role = options?.asLead ? "lead" : "member";
-  const emailTrimmed = (options?.email || "").trim() || null;
   const committeeIds = (options?.committeeIds ?? []).filter(Boolean);
   const primaryCommitteeId = committeeIds[0] || null;
 

@@ -84,7 +84,7 @@ export async function PATCH(
       .update(patch)
       .eq("id", params.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Supabase update error:", error);
@@ -102,6 +102,13 @@ export async function PATCH(
         );
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { errorKey: "tasks.not_authorized", error: "Task not found or not allowed." },
+        { status: 403 }
+      );
     }
 
     return NextResponse.json({ task: data });

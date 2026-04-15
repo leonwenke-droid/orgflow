@@ -11,7 +11,7 @@ import { canManageMembersAndTeams } from "../../../../lib/permissions";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import AdminForbidden from "../AdminForbidden";
 import MembersExcelUpload from "./MembersExcelUpload";
-import AddMemberForm from "./AddMemberForm";
+import AddMemberModal from "./AddMemberModal";
 import MemberRow from "./MemberRow";
 import EmptyState from "../../../../components/EmptyState";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
@@ -188,14 +188,7 @@ export default async function AdminMembersPage({
           <a href={`/api/member-invites/export?orgSlug=${encodeURIComponent(orgSlug)}`} className="btn-secondary">
             {t("members.download_pending", locale)}
           </a>
-          <a
-            href="#add-member"
-            className={`btn-primary ${isOverLimit ? "pointer-events-none opacity-50" : ""}`}
-            aria-disabled={isOverLimit ? true : undefined}
-            title={isOverLimit ? addDisabledReason ?? undefined : undefined}
-          >
-            + {t("members.add_member_btn", locale)}
-          </a>
+          <AddMemberModal orgSlug={orgSlug} committees={committeeList} disabledReason={addDisabledReason} />
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -236,18 +229,6 @@ export default async function AdminMembersPage({
           </div>
         </details>
       </div>
-
-      <details id="add-member" className="card p-4">
-        <summary className="cursor-pointer list-none">
-          <div className="flex items-center justify-between gap-3">
-            <div className="section-label">{t("members.add_member_btn", locale)}</div>
-            <span className="text-xs text-text-secondary">{t("common.view", locale)}</span>
-          </div>
-        </summary>
-        <div className="mt-3">
-          <AddMemberForm orgSlug={orgSlug} committees={committeeList} disabledReason={addDisabledReason} />
-        </div>
-      </details>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-text-secondary">

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   updateMemberNameAction,
   updateMemberCommitteesAction,
@@ -78,6 +79,64 @@ export default function MemberRow({
   const [pendingLeadEmail, setPendingLeadEmail] = useState(false);
   const [currentInvite, setCurrentInvite] = useState<{ inviteUrl: string; whatsappText: string } | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const actionsAnchorRef = useRef<HTMLButtonElement>(null);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [actionsMenuPos, setActionsMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+
+  const MENU_WIDTH = 288;
+
+  const updateActionsMenuPosition = useCallback(() => {
+    const anchor = actionsAnchorRef.current;
+    const menu = actionsMenuRef.current;
+    if (!anchor) return;
+    const ar = anchor.getBoundingClientRect();
+    const margin = 8;
+    const estHeight = menu?.offsetHeight ?? 360;
+    let top = ar.bottom + margin;
+    if (top + estHeight > window.innerHeight - margin) {
+      top = ar.top - estHeight - margin;
+    }
+    top = Math.max(margin, Math.min(top, window.innerHeight - estHeight - margin));
+    let left = ar.right - MENU_WIDTH;
+    left = Math.max(margin, Math.min(left, window.innerWidth - MENU_WIDTH - margin));
+    setActionsMenuPos({ top, left });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!actionsMenuOpen) return;
+    updateActionsMenuPosition();
+    const menu = actionsMenuRef.current;
+    if (!menu) return;
+    const ro = new ResizeObserver(() => updateActionsMenuPosition());
+    ro.observe(menu);
+    window.addEventListener("scroll", updateActionsMenuPosition, true);
+    window.addEventListener("resize", updateActionsMenuPosition);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("scroll", updateActionsMenuPosition, true);
+      window.removeEventListener("resize", updateActionsMenuPosition);
+    };
+  }, [actionsMenuOpen, updateActionsMenuPosition]);
+
+  useEffect(() => {
+    if (!actionsMenuOpen) return;
+    function handlePointerDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (actionsAnchorRef.current?.contains(t)) return;
+      if (actionsMenuRef.current?.contains(t)) return;
+      setActionsMenuOpen(false);
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setActionsMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [actionsMenuOpen]);
 
   useEffect(() => {
     setSelectRole(String(member.role ?? "member"));
@@ -291,132 +350,162 @@ export default function MemberRow({
       </td>
 
       <td className="px-4 py-3">
-        <details className="relative inline-block">
-          <summary className="cursor-pointer select-none rounded-lg border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary">
+        <div className="inline-block">
+          <button
+            ref={actionsAnchorRef}
+            type="button"
+            aria-expanded={actionsMenuOpen}
+            aria-haspopup="dialog"
+            className="cursor-pointer select-none rounded-lg border border-border-subtle px-2 py-1 text-xs text-text-secondary hover:bg-bg-secondary"
+            onClick={() => setActionsMenuOpen((o) => !o)}
+          >
             ···
-          </summary>
-          <div className="absolute right-0 z-10 mt-2 w-72 rounded-xl border border-border-subtle bg-bg-primary p-3 shadow-lg">
-            <div className="space-y-3">
-              {role !== "super_admin" ? (
-                <div className="border-b border-border-subtle pb-3">
-                  <div className="text-xs font-medium text-text-secondary">{t("members.role_label", locale)}</div>
-                  <p className="mt-1 text-[10px] leading-snug text-text-secondary">{t("members.role_hint", locale)}</p>
-                  <select
-                    className="mt-2 w-full rounded-lg border border-border-subtle bg-bg-primary px-2 py-1.5 text-xs text-text-primary"
-                    value={selectRole}
-                    disabled={loading}
-                    onChange={async (e) => {
-                      const v = e.target.value as AssignableOrgRole;
-                      setPendingLeadEmail(false);
-                      setSelectRole(v);
-                      if (v === "lead" && !(member.email?.trim()) && !leadEmailDraft.trim()) {
-                        setPendingLeadEmail(true);
-                        setSelectRole(String(member.role ?? "member"));
-                        return;
-                      }
-                      await applyRoleChange(v);
-                    }}
-                  >
-                    {ASSIGNABLE_ROLES.map((r) => (
-                      <option key={r} value={r}>
-                        {memberRoleLabel(r, locale)}
-                      </option>
-                    ))}
-                  </select>
-                  {pendingLeadEmail ? (
-                    <div className="mt-2 space-y-2">
-                      <input
-                        type="email"
-                        value={leadEmailDraft}
-                        onChange={(ev) => setLeadEmailDraft(ev.target.value)}
-                        placeholder={t("members.lead_email_label", locale)}
-                        className="w-full rounded-lg border border-border-subtle bg-bg-primary px-2 py-1.5 text-xs"
-                      />
-                      <button
-                        type="button"
+          </button>
+        </div>
+
+        {typeof document !== "undefined" && actionsMenuOpen
+          ? createPortal(
+              <div
+                ref={actionsMenuRef}
+                role="dialog"
+                aria-modal="true"
+                className="fixed z-[200] w-72 max-h-[min(420px,calc(100vh-16px))] overflow-y-auto rounded-xl border border-border-subtle bg-bg-primary p-3 shadow-lg"
+                style={{ top: actionsMenuPos.top, left: actionsMenuPos.left }}
+              >
+                <div className="space-y-3">
+                  {role !== "super_admin" ? (
+                    <div className="border-b border-border-subtle pb-3">
+                      <div className="text-xs font-medium text-text-secondary">{t("members.role_label", locale)}</div>
+                      <p className="mt-1 text-[10px] leading-snug text-text-secondary">{t("members.role_hint", locale)}</p>
+                      <select
+                        className="mt-2 w-full rounded-lg border border-border-subtle bg-bg-primary px-2 py-1.5 text-xs text-text-primary"
+                        value={selectRole}
                         disabled={loading}
-                        className="btn-primary text-xs"
-                        onClick={() => applyRoleChange("lead")}
+                        onChange={async (e) => {
+                          const v = e.target.value as AssignableOrgRole;
+                          setPendingLeadEmail(false);
+                          setSelectRole(v);
+                          if (v === "lead" && !(member.email?.trim()) && !leadEmailDraft.trim()) {
+                            setPendingLeadEmail(true);
+                            setSelectRole(String(member.role ?? "member"));
+                            return;
+                          }
+                          await applyRoleChange(v);
+                        }}
                       >
-                        {t("common.save", locale)}
-                      </button>
+                        {ASSIGNABLE_ROLES.map((r) => (
+                          <option key={r} value={r}>
+                            {memberRoleLabel(r, locale)}
+                          </option>
+                        ))}
+                      </select>
+                      {pendingLeadEmail ? (
+                        <div className="mt-2 space-y-2">
+                          <input
+                            type="email"
+                            value={leadEmailDraft}
+                            onChange={(ev) => setLeadEmailDraft(ev.target.value)}
+                            placeholder={t("members.lead_email_label", locale)}
+                            className="w-full rounded-lg border border-border-subtle bg-bg-primary px-2 py-1.5 text-xs"
+                          />
+                          <button
+                            type="button"
+                            disabled={loading}
+                            className="btn-primary text-xs"
+                            onClick={() => applyRoleChange("lead")}
+                          >
+                            {t("common.save", locale)}
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="border-b border-border-subtle pb-3 text-xs text-text-secondary">
-                  {memberRoleLabel(role, locale)}
-                </p>
-              )}
+                  ) : (
+                    <p className="border-b border-border-subtle pb-3 text-xs text-text-secondary">
+                      {memberRoleLabel(role, locale)}
+                    </p>
+                  )}
 
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => setEditingName(true)} className="btn-secondary">
-                  {t("common.edit", locale)}
-                </button>
-                <button type="button" onClick={() => setShowCommittees(true)} className="btn-secondary">
-                  {t("dashboard.teams", locale)}
-                </button>
-                <button type="button" onClick={handleToggleDisabled} disabled={loading} className="btn-secondary">
-                  {effectiveStatus === "disabled" ? t("members.reactivate", locale) : t("members.disable", locale)}
-                </button>
-                <button type="button" onClick={handleDelete} disabled={loading} className="btn-danger">
-                  {t("common.remove", locale)}
-                </button>
-              </div>
-
-              {(effectiveStatus !== "active") && (
-                <div className="border-t border-border-subtle pt-3">
-                  <div className="text-xs font-medium text-text-secondary">{t("members.invite_pending", locale)}</div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <button type="button" onClick={handleCopyInviteLink} disabled={loading} className="btn-secondary">
-                      {t("members.copy_invite_link", locale)}
-                    </button>
-                    <button type="button" onClick={handleCopyWhatsAppText} disabled={loading} className="btn-secondary">
-                      {t("members.copy_whatsapp_invite", locale)}
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActionsMenuOpen(false);
+                        setEditingName(true);
+                      }}
+                      className="btn-secondary"
+                    >
+                      {t("common.edit", locale)}
                     </button>
                     <button
                       type="button"
-                      disabled={loading}
-                      className="btn-secondary"
-                      onClick={async () => {
-                        const invite = currentInvite ?? await ensureInvite();
-                        if (!invite) return;
-                        window.open(
-                          `https://wa.me/?text=${encodeURIComponent(invite.whatsappText)}`,
-                          "_blank"
-                        );
+                      onClick={() => {
+                        setActionsMenuOpen(false);
+                        setShowCommittees(true);
                       }}
+                      className="btn-secondary"
                     >
-                      WhatsApp
+                      {t("dashboard.teams", locale)}
                     </button>
-                    {typeof navigator !== "undefined" && "share" in navigator && (
-                      <button
-                        type="button"
-                        disabled={loading}
-                        className="btn-secondary"
-                        onClick={async () => {
-                          const invite = currentInvite ?? await ensureInvite();
-                          if (!invite) return;
-                          try {
-                            await navigator.share({
-                              title: "OrgFlow Invite",
-                              text: invite.whatsappText,
-                              url: invite.inviteUrl,
-                            });
-                          } catch {}
-                        }}
-                      >
-                        {locale === "de" ? "Teilen" : "Share"}
-                      </button>
-                    )}
+                    <button type="button" onClick={handleToggleDisabled} disabled={loading} className="btn-secondary">
+                      {effectiveStatus === "disabled" ? t("members.reactivate", locale) : t("members.disable", locale)}
+                    </button>
+                    <button type="button" onClick={handleDelete} disabled={loading} className="btn-danger">
+                      {t("common.remove", locale)}
+                    </button>
                   </div>
-                </div>
-              )}
 
-              {error ? <div className="text-xs text-danger">{error}</div> : null}
-            </div>
-          </div>
-        </details>
+                  {effectiveStatus !== "active" ? (
+                    <div className="border-t border-border-subtle pt-3">
+                      <div className="text-xs font-medium text-text-secondary">{t("members.invite_pending", locale)}</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button type="button" onClick={handleCopyInviteLink} disabled={loading} className="btn-secondary">
+                          {t("members.copy_invite_link", locale)}
+                        </button>
+                        <button type="button" onClick={handleCopyWhatsAppText} disabled={loading} className="btn-secondary">
+                          {t("members.copy_whatsapp_invite", locale)}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={loading}
+                          className="btn-secondary"
+                          onClick={async () => {
+                            const invite = currentInvite ?? (await ensureInvite());
+                            if (!invite) return;
+                            window.open(`https://wa.me/?text=${encodeURIComponent(invite.whatsappText)}`, "_blank");
+                          }}
+                        >
+                          WhatsApp
+                        </button>
+                        {typeof navigator !== "undefined" && "share" in navigator && (
+                          <button
+                            type="button"
+                            disabled={loading}
+                            className="btn-secondary"
+                            onClick={async () => {
+                              const invite = currentInvite ?? (await ensureInvite());
+                              if (!invite) return;
+                              try {
+                                await navigator.share({
+                                  title: "OrgFlow Invite",
+                                  text: invite.whatsappText,
+                                  url: invite.inviteUrl,
+                                });
+                              } catch {}
+                            }}
+                          >
+                            {locale === "de" ? "Teilen" : "Share"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {error ? <div className="text-xs text-danger">{error}</div> : null}
+                </div>
+              </div>,
+              document.body
+            )
+          : null}
 
         {editingName ? (
           <div className="mt-2 flex flex-wrap items-center gap-2">
