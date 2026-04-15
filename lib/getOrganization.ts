@@ -298,6 +298,41 @@ export async function isOrgAdmin(orgId: string, orgSlug?: string | null): Promis
   return false;
 }
 
+const PLANNING_CONSOLE_ROLES = new Set<string>(["admin", "owner", "lead", "teamlead", "super_admin"]);
+
+/**
+ * Profile row for `/admin/tasks` and `/admin/shifts` gate + org fallback.
+ * Uses all memberships: `.single()` on `profiles` fails when a user belongs to multiple orgs,
+ * which incorrectly blocked owners/admins.
+ */
+export async function resolvePlanningConsoleProfile(
+  userId: string,
+  orgSlug: string | null
+): Promise<{ id: string; role: string; organization_id: string } | null> {
+  const service = createSupabaseServiceRoleClient();
+  const { data: rows } = await service
+    .from("profiles")
+    .select("id, role, organization_id, status")
+    .eq("auth_user_id", userId);
+  const active = (rows ?? []).filter((p) => (p as { status?: string }).status !== "disabled") as {
+    id: string;
+    role: string;
+    organization_id: string;
+  }[];
+  const allowed = active.filter((p) => PLANNING_CONSOLE_ROLES.has(String(p.role)));
+  if (allowed.length === 0) return null;
+  const slug = String(orgSlug ?? "").trim();
+  if (!slug) return allowed[0] ?? null;
+  const org = await fetchActiveOrganizationBySlug(slug);
+  if (!org) return allowed[0] ?? null;
+  const orgIdForData = getOrgIdForData(slug, org.id);
+  const match = allowed.find(
+    (p) =>
+      String(p.organization_id) === String(orgIdForData) || String(p.organization_id) === String(org.id)
+  );
+  return match ?? allowed[0] ?? null;
+}
+
 /**
  * Role in the org from the URL. Pass both data org id and canonical org row id when they can differ (legacy).
  */

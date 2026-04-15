@@ -5,7 +5,13 @@ import Link from "next/link";
 import { revalidatePath, unstable_noStore } from "next/cache";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import { getCurrentOrganization, getCurrentUserOrganization, getOrgIdForData, isOrgAdmin } from "../../../lib/getOrganization";
+import {
+  getCurrentOrganization,
+  getCurrentUserOrganization,
+  getOrgIdForData,
+  isOrgAdmin,
+  resolvePlanningConsoleProfile
+} from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import { removePastShifts } from "../../../lib/cleanupShifts";
 import ShiftPlanTableWithEdit from "../../../components/ShiftPlanTableWithEdit";
@@ -1179,13 +1185,9 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   }
 
   const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
-    .from("profiles")
-    .select("id, role, organization_id")
-    .eq("auth_user_id", userId)
-    .single();
+  const profile = await resolvePlanningConsoleProfile(userId, orgSlug);
 
-  if (!profile || !["admin", "lead", "super_admin", "owner", "teamlead"].includes(profile.role)) {
+  if (!profile) {
     return (
       <p className="text-sm text-red-300 dark:text-red-200">
         {t("tasks.access_admin_only", locale)}

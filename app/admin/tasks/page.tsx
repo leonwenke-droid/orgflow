@@ -6,7 +6,13 @@ import { revalidatePath } from "next/cache";
 import { Suspense } from "react";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { createUserNotification } from "../../../lib/notifications";
-import { getCurrentOrganization, isOrgAdmin, getOrgIdForData, getCurrentUserOrganization } from "../../../lib/getOrganization";
+import {
+  getCurrentOrganization,
+  isOrgAdmin,
+  getOrgIdForData,
+  getCurrentUserOrganization,
+  resolvePlanningConsoleProfile
+} from "../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../components/AdminBreadcrumb";
 import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import CommitteeFilter from "../../../components/CommitteeFilter";
@@ -161,13 +167,9 @@ export default async function AdminTasksPage(props: PageProps) {
   }
 
   const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
-    .from("profiles")
-    .select("id, role, organization_id")
-    .eq("auth_user_id", userId)
-    .single();
+  const profile = await resolvePlanningConsoleProfile(userId, orgSlug);
 
-  if (!profile || !["admin", "lead", "super_admin", "owner", "teamlead"].includes(profile.role)) {
+  if (!profile) {
     return (
       <p className="text-sm text-red-300">
         {tr("tasks.access_admin_only", locale)}
