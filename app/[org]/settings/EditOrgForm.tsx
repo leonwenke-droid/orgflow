@@ -18,7 +18,6 @@ export default function EditOrgForm({
 }) {
   const { locale } = useLocale();
   const [name, setName] = useState(initialName);
-  const [slug, setSlug] = useState(initialSlug);
   const [logoUrl, setLogoUrl] = useState(initialLogoUrl);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -31,13 +30,13 @@ export default function EditOrgForm({
     setLoading(true);
     setError(null);
     try {
-      const result = await updateOrganizationAction(orgSlug, { name, slug, logoUrl: logoUrl.trim() || null });
+      const result = await updateOrganizationAction(orgSlug, { name, logoUrl: logoUrl.trim() || null });
       setLoading(false);
       if (result?.error) {
         setError(result.error);
         return;
       }
-      if (result?.error === undefined && slug === initialSlug) {
+      if (result?.error === undefined) {
         window.location.reload();
       }
     } catch (err) {
@@ -104,16 +103,11 @@ export default function EditOrgForm({
         <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">
           {t("settings.org_slug", locale)}
         </label>
-        <input
-          type="text"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
-          required
-          placeholder="my-org"
-          className="w-full rounded border border-border-default bg-bg-primary px-3 py-2 font-mono text-text-primary dark:border-border-default dark:bg-bg-primary dark:text-text-primary"
-        />
+        <div className="rounded border border-border-default bg-bg-secondary px-3 py-2 font-mono text-sm text-text-primary dark:border-border-default dark:bg-bg-primary/80 dark:text-text-primary">
+          {initialSlug}
+        </div>
         <p className="mt-1 text-[11px] text-text-secondary dark:text-text-muted">
-          URL will be /{slug || "…"}/…
+          {t("settings.org_slug_locked_hint", locale)}
         </p>
       </div>
       <div>

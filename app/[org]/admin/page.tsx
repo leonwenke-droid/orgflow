@@ -59,7 +59,8 @@ export default async function AdminDashboard({
     activeMembersResult,
     { data: shifts7d },
     { data: committees },
-    { count: pendingTransfersCount }
+    { count: pendingTransfersCount },
+    { count: pendingUnavailCount }
   ] = await Promise.all([
     service.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData),
     service
@@ -93,7 +94,14 @@ export default async function AdminDashboard({
       .from("task_transfer_requests")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
-      .eq("status", "pending")
+      .eq("status", "pending"),
+    modShifts
+      ? service
+          .from("member_unavailability")
+          .select("id", { count: "exact", head: true })
+          .eq("organization_id", orgIdForData)
+          .eq("status", "pending")
+      : Promise.resolve({ count: null as number | null })
   ]);
 
   const activeMembersCount = activeMembersResult?.count ?? null;
@@ -217,6 +225,14 @@ export default async function AdminDashboard({
                   {locale === "en" ? "Pending transfers" : "Offene Übergaben"}
                   {(pendingTransfersCount ?? 0) > 0 ? (
                     <span className="tag tag-amber ml-1">{pendingTransfersCount}</span>
+                  ) : null}
+                </Link>
+              ) : null}
+              {modShifts ? (
+                <Link href={`/${orgSlug}/admin/unavailability`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                  {t("unavailability.quick_action", locale)}
+                  {(pendingUnavailCount ?? 0) > 0 ? (
+                    <span className="tag tag-amber ml-1">{pendingUnavailCount}</span>
                   ) : null}
                 </Link>
               ) : null}

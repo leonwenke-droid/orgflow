@@ -7,6 +7,7 @@ import { getCurrentOrganization, getOrgIdForData, getOrganizationsForCurrentUser
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { t } from "../../../lib/i18n";
 import AppearanceControls from "../../../components/AppearanceControls";
+import MemberUnavailabilityPlanner from "../../../components/MemberUnavailabilityPlanner";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,13 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
 
   const allMemberships = await getOrganizationsForCurrentUser();
 
+  const { data: unavailRows } = await service
+    .from("member_unavailability")
+    .select("id, unavailable_from, unavailable_until, reason, status")
+    .eq("organization_id", org.id)
+    .eq("user_id", (prof as { id: string }).id)
+    .order("unavailable_from", { ascending: false });
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <header className="flex items-start justify-between gap-4">
@@ -66,6 +74,13 @@ export default async function OrgAccountPage(props: { params: Promise<{ org: str
           {t("common.back", locale)}
         </Link>
       </header>
+
+      <section className="card">
+        <div className="p-4 space-y-4">
+          <div className="section-label">{t("unavailability.account_section", locale)}</div>
+          <MemberUnavailabilityPlanner orgSlug={orgSlug} rows={(unavailRows ?? []) as any[]} />
+        </div>
+      </section>
 
       <section className="card">
         <div className="p-4 space-y-4">

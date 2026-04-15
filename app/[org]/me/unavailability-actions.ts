@@ -8,7 +8,9 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 
 async function resolveMyProfileId(orgSlug: string, orgId: string, orgIdForData: string) {
   const supabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
   if (!user) return null;
   const service = createSupabaseServiceRoleClient();
   const { data: primary } = await service
@@ -27,6 +29,14 @@ async function resolveMyProfileId(orgSlug: string, orgId: string, orgIdForData: 
   return (fallback?.id as string) ?? null;
 }
 
+function rangeToIso(fromYmd: string, untilYmd: string): { unavailable_from: string; unavailable_until: string } | null {
+  const unavailable_from = new Date(fromYmd + "T12:00:00.000Z").toISOString();
+  const unavailable_until = new Date(untilYmd + "T23:59:59.999Z").toISOString();
+  if (new Date(unavailable_until).getTime() <= new Date(unavailable_from).getTime()) return null;
+  return { unavailable_from, unavailable_until };
+}
+
+/** Legacy single-range submit — creates one pending request. */
 export async function addMemberUnavailabilityAction(
   orgSlug: string,
   formData: FormData
@@ -42,24 +52,70 @@ export async function addMemberUnavailabilityAction(
 
   if (!fromStr || !untilStr) return { error: "dates_required" };
 
-  const unavailable_from = new Date(fromStr + "T12:00:00.000Z").toISOString();
-  const unavailable_until = new Date(untilStr + "T23:59:59.999Z").toISOString();
-
-  if (unavailable_until <= unavailable_from) {
-    return { error: "invalid_range" };
-  }
+  const iso = rangeToIso(fromStr, untilStr);
+  if (!iso) return { error: "invalid_range" };
 
   const service = createSupabaseServiceRoleClient();
   const { error } = await service.from("member_unavailability").insert({
     user_id: profileId,
     organization_id: org.id,
-    unavailable_from,
-    unavailable_until,
-    reason
+    unavailable_from: iso.unavailable_from,
+    unavailable_until: iso.unavailable_until,
+    reason,
+    status: "pending"
   });
 
   if (error) return { error: error.message };
   revalidatePath(`/${orgSlug}/me`);
+  revalidatePath(`/${orgSlug}/account`);
+  return {};
+}
+
+export type UnavailabilityRangeYmd = { from: string; until: string };
+
+/** Calendar planner: multiple contiguous ranges → pending rows (one DB row per range). */
+export async function submitMemberUnavailabilityRangesAction(
+  orgSlug: string,
+  ranges: UnavailabilityRangeYmd[],
+  reason: string | null
+): Promise<{ error?: string }> {
+  const org = await getCurrentOrganization(orgSlug);
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
+  const profileId = await resolveMyProfileId(orgSlug, org.id, orgIdForData);
+  if (!profileId) return { error: "not_signed_in" };
+
+  const clean = (ranges ?? []).filter((r) => r.from && r.until);
+  if (clean.length === 0) return { error: "dates_required" };
+
+  const rows: {
+    user_id: string;
+    organization_id: string;
+    unavailable_from: string;
+    unavailable_until: string;
+    reason: string | null;
+    status: string;
+  }[] = [];
+
+  for (const r of clean) {
+    const iso = rangeToIso(r.from.trim(), r.until.trim());
+    if (!iso) return { error: "invalid_range" };
+    rows.push({
+      user_id: profileId,
+      organization_id: org.id,
+      unavailable_from: iso.unavailable_from,
+      unavailable_until: iso.unavailable_until,
+      reason: reason?.trim() || null,
+      status: "pending"
+    });
+  }
+
+  const service = createSupabaseServiceRoleClient();
+  const { error } = await service.from("member_unavailability").insert(rows);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/${orgSlug}/me`);
+  revalidatePath(`/${orgSlug}/account`);
+  revalidatePath(`/${orgSlug}/admin/unavailability`);
   return {};
 }
 
@@ -87,5 +143,7 @@ export async function deleteMemberUnavailabilityAction(
   const { error } = await service.from("member_unavailability").delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath(`/${orgSlug}/me`);
+  revalidatePath(`/${orgSlug}/account`);
+  revalidatePath(`/${orgSlug}/admin/unavailability`);
   return {};
 }

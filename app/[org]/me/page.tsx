@@ -8,7 +8,6 @@ import { redirectViewerToOrgOverview } from "../../../lib/viewerRouteGuard";
 import { t } from "../../../lib/i18n";
 import { formatLocaleDateTime, formatCalendarDateYmd, formatShiftClockRange } from "../../../lib/formatDate";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import MemberUnavailabilitySection from "../../../components/MemberUnavailabilitySection";
 import { getEngagementBreakdown, getOrgScoreboard, getRecentEngagementEvents } from "../../../lib/engagement/getScore";
 import EngagementScoreWidget from "../../../components/engagement/EngagementScoreWidget";
 import { isEngagementEnabledFromOrgRow } from "../../../lib/engagement/isEngagementEnabled";
@@ -71,7 +70,7 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const since = thirtyDaysAgo.toISOString();
 
-  const [{ data: scoreRow }, { data: myEvents }, { data: myTasks }, { data: myAssignments }, { data: unavailRows }] =
+  const [{ data: scoreRow }, { data: myEvents }, { data: myTasks }, { data: myAssignments }] =
     await Promise.all([
     engagementEnabled
       ? service
@@ -100,12 +99,6 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
       .or(`user_id.eq.${myProfileId},replacement_user_id.eq.${myProfileId}`)
       .order("created_at", { ascending: false })
       .limit(200),
-    service
-      .from("member_unavailability")
-      .select("id, unavailable_from, unavailable_until, reason")
-      .eq("organization_id", org.id)
-      .eq("user_id", myProfileId)
-      .order("unavailable_from", { ascending: false }),
   ]);
 
   const score = (scoreRow as any)?.score ?? 0;
@@ -155,6 +148,11 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
           {t("common.back", locale)}
         </Link>
       </div>
+      <p className="text-xs text-text-secondary dark:text-text-muted">
+        <Link className="text-blue-600 hover:underline" href={`/${orgSlug}/account`}>
+          {t("me.absence_account_hint", locale)}
+        </Link>
+      </p>
 
       {engagementEnabled && breakdownWidget && recentEvWidget && orgBoardWidget ? (
         <div className="space-y-2">
@@ -242,15 +240,6 @@ export default async function MyStatsPage(props: { params: Promise<{ org: string
             <div className="text-lg font-bold text-text-primary dark:text-text-primary">{taskStats.overdue}</div>
             <div className="text-xs text-text-secondary dark:text-text-muted">{t("dashboard.overdue", locale)}</div>
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border-subtle bg-bg-primary p-4 shadow-sm dark:border-border-default bg-card">
-        <h2 className="text-sm font-semibold text-text-primary dark:text-text-primary">
-          {locale === "de" ? "Rotation: Nicht verfügbar" : "Rotation: Unavailability"}
-        </h2>
-        <div className="mt-3">
-          <MemberUnavailabilitySection orgSlug={orgSlug} rows={(unavailRows ?? []) as any[]} />
         </div>
       </div>
 

@@ -17,6 +17,7 @@ export type MemberUnavailability = {
   unavailable_from: string;
   unavailable_until: string;
   reason: string | null;
+  status?: "pending" | "approved" | "rejected";
 };
 
 export type RotationPreviewBlocked = "already_assigned" | "unavailable" | null;
