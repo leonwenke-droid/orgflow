@@ -10,7 +10,7 @@ import {
   hashInviteToken,
   inviteExpiresAt
 } from "../../../lib/memberInvites";
-import { sendEmail as sendEmailMessage } from "../../../lib/email";
+import { sendMemberInvite } from "../../../lib/n8n";
 import { writeAuditLog } from "../../../lib/audit";
 import { getPublicBaseUrl } from "../../../lib/publicBaseUrl";
 import { checkRateLimit } from "../../../lib/rateLimit";
@@ -106,17 +106,18 @@ export async function POST(req: Request) {
   });
 
   if (sendEmail && member.email) {
-    const subject = `Invite to ${org.name} on OrgFlow`;
-    const text = [
-      `Hi${member.full_name ? ` ${String(member.full_name).split(" ")[0]}` : ""},`,
-      ``,
-      `you have been invited to OrgFlow for ${org.name}.`,
-      `Set your password here:`,
+    const inviterProfile = invitedBy
+      ? await service.from("profiles").select("full_name").eq("id", invitedBy).maybeSingle()
+      : null;
+    const inviterName = (inviterProfile?.data as { full_name?: string | null } | null)?.full_name ?? undefined;
+
+    await sendMemberInvite({
+      email: member.email,
       inviteUrl,
-      ``,
-      `OrgFlow`
-    ].join("\n");
-    await sendEmailMessage({ to: member.email, subject, text });
+      organizationName: org.name,
+      inviterName,
+      role: "Mitglied"
+    }).catch((err) => console.error("[member-invites] n8n invite failed:", err));
   }
 
   await writeAuditLog({

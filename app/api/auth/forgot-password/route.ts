@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
 import { checkRateLimit } from "../../../../lib/rateLimit";
 import { asTrimmedString, isValidEmail, readJson } from "../../../../lib/validation";
 import { getClientIp, getRequestId, log } from "../../../../lib/log";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { sendPasswordReset } from "../../../../lib/n8n";
 
 export async function POST(req: Request) {
   try {
@@ -27,8 +27,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "If an account exists for this email, you'll receive a reset link shortly." });
     }
 
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     let baseUrl: string;
     try {
       const { getPublicBaseUrl } = await import("../../../../lib/publicBaseUrl");
@@ -38,13 +36,33 @@ export async function POST(req: Request) {
     }
     const redirectTo = `${baseUrl.replace(/\/$/, "")}/auth/callback?next=${encodeURIComponent("/auth/reset-password?next=/login")}`;
 
-    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-      redirectTo,
-    });
+    const service = createSupabaseServiceRoleClient();
 
-    if (error) {
+    // Benutzer-Lookup – falls kein Account existiert, still beenden (kein User-Enumeration)
+    const { data: userData } = await service.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const existingUser = (userData?.users ?? []).find((u) => (u.email ?? "").toLowerCase() === normalizedEmail);
+    if (!existingUser) {
+      // Kein Fehler loggen, kein Hinweis nach außen – anti-enumeration
+      return NextResponse.json({ message: "If an account exists for this email, you'll receive a reset link shortly." });
+    }
+
+    const { data: linkData, error: linkError } = await service.auth.admin.generateLink({
+      type: "recovery",
+      email: normalizedEmail,
+      options: { redirectTo }
+    });
+    if (linkError) {
       log("warn", "forgot_password_error", { requestId, route: "auth/forgot-password", ip });
       return NextResponse.json({ message: "If an account exists for this email, you'll receive a reset link shortly." });
+    }
+
+    const resetLink = linkData?.properties?.action_link ?? (linkData as { action_link?: string } | null)?.action_link;
+
+    if (resetLink && typeof resetLink === "string") {
+      const fullName = (existingUser.user_metadata?.full_name as string | undefined) ?? undefined;
+      await sendPasswordReset({ email: normalizedEmail, resetLink, fullName }).catch((err) =>
+        log("error", "forgot_password_n8n_failed", { requestId, error: String(err) })
+      );
     }
 
     return NextResponse.json({ message: "If an account exists for this email, you'll receive a reset link shortly." });

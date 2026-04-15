@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { checkRateLimit } from "../../../../lib/rateLimit";
+import { sendSignupConfirmation } from "../../../../lib/n8n";
 
 export const runtime = "nodejs";
-
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL_SEND_MAGIC_LINK;
 
 export async function POST(req: NextRequest) {
   try {
@@ -91,40 +90,11 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
-
-    const subject = "E-Mail bestätigen – OrgFlow";
-    const body =
-      (fullName ? `Hallo ${fullName},\n\n` : "Hallo,\n\n") +
-      "bitte bestätigen Sie Ihre E-Mail-Adresse, indem Sie auf den folgenden Link klicken:\n\n" +
-      actionLink +
-      "\n\nDanach werden Sie automatisch weitergeleitet.\n\nMit freundlichen Grüßen\nIhr OrgFlow-Team";
-
-    if (!N8N_WEBHOOK_URL) {
-      console.warn("N8N_WEBHOOK_URL_SEND_MAGIC_LINK not configured — skipping magic link");
-      return NextResponse.json({ message: "ok" });
-    } else {
-      const webhookRes = await fetch(N8N_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: String(email).trim(),
-          confirmLink: actionLink,
-          fullName: fullName ?? undefined,
-          type: "signup",
-          subject,
-          body
-        })
-      });
-
-      if (!webhookRes.ok) {
-        console.error("n8n webhook send-magic-link failed:", webhookRes.status, await webhookRes.text());
-        return NextResponse.json(
-          { message: "E-Mail konnte nicht versendet werden. Bitte später erneut versuchen." },
-          { status: 502 }
-        );
-      }
-    }
-
+    await sendSignupConfirmation({
+      email: String(email).trim(),
+      magicLink: actionLink,
+      fullName: fullName ?? undefined
+    });
     return NextResponse.json({ message: "ok" });
   } catch (e) {
     console.error(e);

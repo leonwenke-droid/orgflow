@@ -17,7 +17,7 @@ import {
   inviteExpiresAt
 } from "../../../lib/memberInvites";
 import { getPublicBaseUrl } from "../../../lib/publicBaseUrl";
-import { sendEmail as sendEmailMessage } from "../../../lib/email";
+import { sendMemberInvite } from "../../../lib/n8n";
 
 export async function POST(req: Request) {
   try {
@@ -296,17 +296,12 @@ export async function POST(req: Request) {
         });
         if (!insErr) {
           memberCount += 1;
-          const subject = `Invite to ${org.name} on OrgFlow`;
-          const text = [
-            `Hi,`,
-            ``,
-            `you have been invited to OrgFlow for ${org.name}.`,
-            `Set your password here:`,
+          await sendMemberInvite({
+            email,
             inviteUrl,
-            ``,
-            `OrgFlow`
-          ].join("\n");
-          await sendEmailMessage({ to: email, subject, text }).catch(() => null);
+            organizationName: org.name,
+            role: "Mitglied"
+          }).catch(() => null); // non-blocking, Org-Erstellung soll nicht scheitern
         }
       }
     }

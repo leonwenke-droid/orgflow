@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
-import { sendEmail } from "../../../../lib/email";
+import { sendShiftReminder } from "../../../../lib/n8n";
 
 /**
  * Cron endpoint: send reminders for shifts starting in the next 24h.
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
 
   const { data: shifts } = await supabase
     .from("shifts")
-    .select("id, date, start_time, event_name, organization_id")
+    .select("id, date, start_time, event_name, organization_id, organizations!inner(name)")
     .gte("date", now.toISOString().slice(0, 10))
     .lte("date", tomorrow.toISOString().slice(0, 10));
 
@@ -40,7 +40,15 @@ export async function GET(req: Request) {
     .select("id, shift_id, user_id")
     .in("shift_id", shiftIds);
 
-  const reminders: { assignmentId: string; userId: string; shiftId: string; eventName: string; date: string; startTime: string }[] = [];
+  const reminders: {
+    assignmentId: string;
+    userId: string;
+    shiftId: string;
+    eventName: string;
+    date: string;
+    startTime: string;
+    orgName: string;
+  }[] = [];
   for (const a of assignments ?? []) {
     const shift = shifts.find((s) => s.id === (a as { shift_id: string }).shift_id);
     if (shift) {
@@ -51,6 +59,7 @@ export async function GET(req: Request) {
         eventName: (shift as { event_name?: string }).event_name ?? "",
         date: (shift as { date: string }).date,
         startTime: (shift as { start_time: string }).start_time ?? "",
+        orgName: (shift as any).organizations?.name ?? "",
       });
     }
   }
@@ -74,30 +83,29 @@ export async function GET(req: Request) {
         .in("id", userIds)
     : { data: [] as any[] };
   const emailByProfileId = new Map((profiles ?? []).map((p: any) => [String(p.id), String(p.email ?? "")]));
+  const nameByProfileId = new Map((profiles ?? []).map((p: any) => [String(p.id), String(p.full_name ?? "")]));
 
   let sent = 0;
   for (const r of toSend) {
     const to = emailByProfileId.get(r.userId) ?? "";
     if (!to || !to.includes("@")) continue;
-    const subject = `Shift reminder: ${r.eventName || "Upcoming shift"}`;
-    const text = [
-      `Hi,`,
-      ``,
-      `this is a reminder for your shift: ${r.eventName || "Shift"}`,
-      `Date: ${r.date}`,
-      `Start: ${r.startTime || "–"}`,
-      ``,
-      `OrgFlow`
-    ].join("\n");
-
-    const result = await sendEmail({ to, subject, text });
-    if (result.ok) {
+    try {
+      await sendShiftReminder({
+        email: to,
+        fullName: nameByProfileId.get(r.userId) ?? undefined,
+        eventName: r.eventName,
+        date: r.date,
+        startTime: r.startTime || undefined,
+        orgName: r.orgName ?? "OrgFlow"
+      });
       sent += 1;
       try {
         await supabase.from("shift_reminder_logs").insert({ assignment_id: r.assignmentId });
       } catch {
         // ignore
       }
+    } catch (err) {
+      console.error("[shift-reminders] n8n failed:", err);
     }
   }
 

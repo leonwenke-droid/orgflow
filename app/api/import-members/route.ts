@@ -11,7 +11,7 @@ import {
   hashInviteToken,
   inviteExpiresAt
 } from "../../../lib/memberInvites";
-import { sendEmail as sendEmailMessage } from "../../../lib/email";
+import { sendMemberInvite } from "../../../lib/n8n";
 import { getOrgIdForData } from "../../../lib/getOrganization";
 import { assertCanManageMembersAndTeams } from "../../../lib/permissionsServer";
 import { canAddMember, type Plan } from "../../../lib/planLimits";
@@ -337,17 +337,12 @@ export async function POST(req: NextRequest) {
         inviteLinks.push({ fullName, email: email || undefined, inviteUrl, whatsappText });
 
         if (email) {
-          const subject = `Invite to ${orgName} on OrgFlow`;
-          const text = [
-            `Hi${fullName ? ` ${fullName.split(" ")[0]}` : ""},`,
-            ``,
-            `you have been invited to OrgFlow for ${orgName}.`,
-            `Set your password here:`,
+          await sendMemberInvite({
+            email,
             inviteUrl,
-            ``,
-            `OrgFlow`
-          ].join("\n");
-          await sendEmailMessage({ to: email, subject, text });
+            organizationName: orgName,
+            role: "Mitglied"
+          }).catch((err) => console.error("[import-members] n8n invite failed:", err));
         }
       }
     } else if (genericModeFirstRow) {
@@ -457,17 +452,12 @@ export async function POST(req: NextRequest) {
         inviteLinks.push({ fullName, email: email || undefined, inviteUrl, whatsappText });
 
         if (email) {
-          const subject = `Invite to ${orgName} on OrgFlow`;
-          const text = [
-            `Hi${fullName ? ` ${fullName.split(" ")[0]}` : ""},`,
-            ``,
-            `you have been invited to OrgFlow for ${orgName}.`,
-            `Set your password here:`,
+          await sendMemberInvite({
+            email,
             inviteUrl,
-            ``,
-            `OrgFlow`
-          ].join("\n");
-          await sendEmailMessage({ to: email, subject, text });
+            organizationName: orgName,
+            role: "Mitglied"
+          }).catch((err) => console.error("[import-members] n8n invite failed:", err));
         }
       }
     } else {
