@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganization";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
+import { memberUnavailabilityRangeToIso } from "../../../lib/berlinCalendarRange";
 
 async function resolveMyProfileId(orgSlug: string, orgId: string, orgIdForData: string) {
   const supabase = createServerComponentClient({ cookies });
@@ -29,12 +30,6 @@ async function resolveMyProfileId(orgSlug: string, orgId: string, orgIdForData: 
   return (fallback?.id as string) ?? null;
 }
 
-function rangeToIso(fromYmd: string, untilYmd: string): { unavailable_from: string; unavailable_until: string } | null {
-  const unavailable_from = new Date(fromYmd + "T12:00:00.000Z").toISOString();
-  const unavailable_until = new Date(untilYmd + "T23:59:59.999Z").toISOString();
-  if (new Date(unavailable_until).getTime() <= new Date(unavailable_from).getTime()) return null;
-  return { unavailable_from, unavailable_until };
-}
 
 /** Legacy single-range submit — creates one pending request. */
 export async function addMemberUnavailabilityAction(
@@ -52,7 +47,7 @@ export async function addMemberUnavailabilityAction(
 
   if (!fromStr || !untilStr) return { error: "dates_required" };
 
-  const iso = rangeToIso(fromStr, untilStr);
+  const iso = memberUnavailabilityRangeToIso(fromStr, untilStr);
   if (!iso) return { error: "invalid_range" };
 
   const service = createSupabaseServiceRoleClient();
@@ -97,7 +92,7 @@ export async function submitMemberUnavailabilityRangesAction(
   }[] = [];
 
   for (const r of clean) {
-    const iso = rangeToIso(r.from.trim(), r.until.trim());
+    const iso = memberUnavailabilityRangeToIso(r.from.trim(), r.until.trim());
     if (!iso) return { error: "invalid_range" };
     rows.push({
       user_id: profileId,
