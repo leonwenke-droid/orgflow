@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { getCurrentOrganization, getOrgIdForData, isOrgAdmin } from "../../../lib/getOrganization";
-import AuthForm from "../../../components/AuthForm";
 import AuthPageShell from "../../../components/auth/AuthPageShell";
+import AuthLoginRegisterCard from "../../../components/auth/AuthLoginRegisterCard";
 
 /**
  * Login nur für diese Organisation (Admin-Board). Nach Login → redirectTo oder /[org]/admin.
@@ -35,18 +35,7 @@ export default async function OrgLoginPage({
 
   return (
     <AuthPageShell>
-      <div className="auth-card space-y-5">
-        <div>
-          <h1 className="auth-title">Sign in</h1>
-          <p className="auth-sub">
-            <span className="font-medium text-text-secondary">{org.name}</span>
-            <span className="mt-1 block font-normal">
-              Sign in to your organisation account.
-            </span>
-          </p>
-        </div>
-        <AuthForm redirectTo={redirectTo} />
-      </div>
+      <AuthLoginRegisterCard redirectTo={redirectTo} orgName={org.name} />
     </AuthPageShell>
   );
 }

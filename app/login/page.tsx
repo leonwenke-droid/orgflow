@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import AuthForm from "../../components/AuthForm";
 import AuthPageShell from "../../components/auth/AuthPageShell";
+import AuthLoginRegisterCard from "../../components/auth/AuthLoginRegisterCard";
 
 /**
  * Nur noch für Super-Admin genutzt. Jahrgangs-Login erfolgt über /[org]/login.
@@ -28,15 +28,7 @@ export default async function LoginPage({
 
   return (
     <AuthPageShell>
-      <div className="auth-card space-y-5">
-        <div>
-          <h1 className="auth-title">Sign in</h1>
-          <p className="auth-sub">
-            Sign in to access your organisation or create a new one.
-          </p>
-        </div>
-        <AuthForm redirectTo={redirectTo} />
-      </div>
+      <AuthLoginRegisterCard redirectTo={redirectTo} orgName={null} />
     </AuthPageShell>
   );
 }

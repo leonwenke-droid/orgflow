@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AuthPageShell from "../../../components/auth/AuthPageShell";
 
 export default async function ClaimOrgCheckEmailPage({
   searchParams
@@ -12,23 +13,22 @@ export default async function ClaimOrgCheckEmailPage({
   const safeNext = nextUrl && nextUrl.startsWith("/") ? nextUrl : "/";
 
   return (
-    <div className="mx-auto max-w-md p-6 text-center">
-      <h1 className="text-xl font-bold text-blue-100">Check email</h1>
-      <p className="mt-4 text-sm text-blue-300">
-        Wir haben dir eine Verifikations-E-Mail geschickt.
-      </p>
-      <p className="mt-2 text-sm text-blue-300/90">
-        Please check your inbox (including spam folder) and click the link in the email to confirm your account.
-      </p>
-      <p className="mt-4 text-sm text-blue-400/90">
-        Sobald du das erledigt hast, kannst du hier fortfahren:
-      </p>
-      <Link
-        href={safeNext}
-        className="mt-6 inline-block rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-      >
-        Weiter zum Einrichten
-      </Link>
-    </div>
+    <AuthPageShell>
+      <div className="auth-card space-y-5 text-center">
+        <div>
+          <h1 className="auth-title">Check email</h1>
+          <p className="auth-sub">
+            Wir haben dir eine Verifikations-E-Mail geschickt. Bitte prüfe auch den Spam-Ordner und klicke den Link,
+            um dein Konto zu bestätigen.
+          </p>
+        </div>
+        <Link href={safeNext} className="btn-primary inline-flex w-full justify-center py-2.5 text-sm">
+          Weiter zum Einrichten
+        </Link>
+        <p className="text-[11px] text-text-muted">
+          Tipp: Wenn du keine E‑Mail bekommst, versuche es nach 1–2 Minuten erneut oder nutze eine andere Adresse.
+        </p>
+      </div>
+    </AuthPageShell>
   );
 }

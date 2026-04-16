@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentOrganization, isOrgAdmin } from "../../../lib/getOrganization";
 import { t } from "../../../lib/i18n";
+import OnboardingQuickSetupModal from "./OnboardingQuickSetupModal";
 
 /**
  * Onboarding for a new organisation: authorised person sets up –
@@ -29,6 +30,7 @@ export default async function OnboardingPage(props: {
 
   return (
     <div className="mx-auto max-w-2xl p-6">
+      <OnboardingQuickSetupModal orgSlug={orgSlug} />
       <h1 className="text-2xl font-bold text-text-primary">
         {t("onboarding.setup_title", locale).replace("{name}", org.name)}
       </h1>

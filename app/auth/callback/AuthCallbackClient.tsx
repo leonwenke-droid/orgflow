@@ -28,6 +28,9 @@ export default function AuthCallbackClient({
     async function run() {
       const supabase = createSupabaseBrowserClient();
       const redirectTo = nextUrl && nextUrl.startsWith("/") ? nextUrl : "/";
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'595982'},body:JSON.stringify({sessionId:'595982',runId:'pre-fix',hypothesisId:'H10',location:'app/auth/callback/AuthCallbackClient.tsx:run:start',message:'Auth callback run start',data:{hasNextUrl:!!nextUrl,nextUrlLen:(nextUrl??'').length,redirectToLen:redirectTo.length,hasTokenHash:!!tokenHash,hasCode:!!code,type:type??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       // 1) code in Query (PKCE-Flow)
       if (code) {
