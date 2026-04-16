@@ -44,6 +44,8 @@ type Props = {
   updateEventGroup?: (shiftIds: string[], formData: FormData) => Promise<void>;
   /** When false, hide auto/rotation assignment options (Engagement module off). Legacy kinds stay editable via read-only + hidden field. */
   engagementEnabled?: boolean;
+  /** When false, hide `auto_assign` even if engagement is enabled (e.g. Free plan). */
+  allowAutoAssign?: boolean;
 };
 
 function timeForInput(t: string | null | undefined): string {
@@ -80,7 +82,8 @@ export default function ShiftEditModal({
   personsOnly = false,
   allShiftsWithAssignments,
   updateEventGroup,
-  engagementEnabled = true
+  engagementEnabled = true,
+  allowAutoAssign = true
 }: Props) {
   const { locale } = useLocale();
   const [assignmentKindLocal, setAssignmentKindLocal] = useState(shift.assignment_kind ?? "self_signup");
@@ -96,6 +99,10 @@ export default function ShiftEditModal({
     if (!legacyEngagementKind) return;
     setAssignmentKindLocal("self_signup");
   }, [legacyEngagementKind, shift.id]);
+
+  useEffect(() => {
+    if (!allowAutoAssign && assignmentKindLocal === "auto_assign") setAssignmentKindLocal("self_signup");
+  }, [allowAutoAssign, assignmentKindLocal]);
   const isEventGroup = (allShiftsWithAssignments?.length ?? 0) > 1 && updateEventGroup;
   const totalAssignments = allShiftsWithAssignments?.reduce((sum, s) => sum + s.assignments.length, 0) ?? assignments.length;
 
@@ -232,7 +239,9 @@ export default function ShiftEditModal({
                     <option value="self_signup">{t("shifts.assignment_kind_label_self_signup", locale)}</option>
                     {engagementEnabled ? (
                       <>
-                        <option value="auto_assign">{t("shifts.assignment_kind_label_auto_assign", locale)}</option>
+                        {allowAutoAssign ? (
+                          <option value="auto_assign">{t("shifts.assignment_kind_label_auto_assign", locale)}</option>
+                        ) : null}
                         <option value="rotation">{t("shifts.assignment_kind_label_rotation", locale)}</option>
                       </>
                     ) : null}

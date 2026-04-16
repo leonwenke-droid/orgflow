@@ -86,7 +86,7 @@ export default async function AdminMaterialsPage(props: {
       : null;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 p-6">
+    <div className="mx-auto max-w-6xl space-y-5 p-4 sm:p-6">
       <header>
         <AdminBreadcrumb
           orgSlug={orgSlug}

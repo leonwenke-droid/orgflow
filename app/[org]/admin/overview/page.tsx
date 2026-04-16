@@ -70,7 +70,7 @@ export default async function OrgOverviewPage(props: {
   } = await supabase.auth.getUser();
   if (!user) {
     return (
-      <div className="mx-auto max-w-6xl p-6">
+      <div className="mx-auto max-w-6xl p-4 sm:p-6">
         <p className="text-sm text-text-secondary dark:text-text-muted">
           {t("feedback.sign_in_hint", locale)}{" "}
           <Link href={`/${orgSlug}/login`} className="text-blue-600 underline dark:text-blue-400">
@@ -88,7 +88,7 @@ export default async function OrgOverviewPage(props: {
 
   if (!superUser && !memberProf) {
     return (
-      <div className="mx-auto max-w-6xl p-6">
+      <div className="mx-auto max-w-6xl p-4 sm:p-6">
         <p className="text-sm text-red-600 dark:text-red-400">{t("feedback.error_not_member", locale)}</p>
       </div>
     );
@@ -158,7 +158,7 @@ export default async function OrgOverviewPage(props: {
     : `/${orgSlug}/shifts`;
 
   return (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="mx-auto max-w-6xl p-4 sm:p-6">
       <AdminBreadcrumb
         orgSlug={orgSlug}
         currentLabel={t("admin.card.overview_title", locale)}

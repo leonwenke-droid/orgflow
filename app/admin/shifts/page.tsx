@@ -7,6 +7,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import {
   getCurrentOrganization,
+  getEffectiveUserRoleForOrg,
   getCurrentUserOrganization,
   getOrgIdForData,
   isOrgAdmin,
@@ -47,8 +48,10 @@ import {
 } from "../../../lib/shiftAssignmentKind";
 import { qrFieldsForAttendanceMode, shiftQrValidityIso } from "../../../lib/shiftQr";
 import { assignRotationFairOne, previewRotationForShift } from "../../../lib/actions/rotation";
+import { assignAutoAssignForShift, previewAutoAssignForShift } from "../../../lib/actions/autoAssign";
 import { addEngagementEvent } from "../../../lib/engagement/addEvent";
 import { fetchEngagementEnabledForOrgId } from "../../../lib/engagement/isEngagementEnabled";
+import { canAccessOperationalAdmin } from "../../../lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -214,6 +217,9 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
   if (adminOk !== true) return;
 
   const service = createSupabaseServiceRoleClient();
+  const { data: orgRow } = await service.from("organizations").select("plan").eq("id", orgId).maybeSingle();
+  if ((orgRow as { plan?: string | null } | null)?.plan === "free") return;
+
   if (!(await fetchEngagementEnabledForOrgId(service, orgId))) {
     revalidatePath("/admin/shifts");
     if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
@@ -336,7 +342,6 @@ async function fillSelfSignupGaps(formData: FormData) {
   "use server";
   const orgId = formData.get("organization_id")?.toString() || null;
   const orgSlug = formData.get("org_slug")?.toString() || null;
-  const mode = formData.get("mode")?.toString() === "rotation" ? "rotation" : "auto";
   if (!orgId) return;
 
   const supabase = createServerComponentClient({ cookies });
@@ -349,6 +354,11 @@ async function fillSelfSignupGaps(formData: FormData) {
   if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
+  const { data: orgRow } = await service.from("organizations").select("plan").eq("id", orgId).maybeSingle();
+  const plan = (orgRow as { plan?: string | null } | null)?.plan ?? null;
+  const requested = formData.get("mode")?.toString() === "rotation" ? "rotation" : "auto";
+  const mode = plan === "free" && requested === "auto" ? "rotation" : requested;
+
   if (!(await fetchEngagementEnabledForOrgId(service, orgId))) {
     revalidatePath("/admin/shifts");
     if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
@@ -1214,7 +1224,33 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
   }
 
   const service = createSupabaseServiceRoleClient();
-  const profile = await resolvePlanningConsoleProfile(userId, orgSlug);
+  let orgIdFromSlug: string | null = null;
+  if (orgSlug) {
+    const org = await getCurrentOrganization(orgSlug);
+    const effectiveRole = await getEffectiveUserRoleForOrg(orgSlug, org);
+    if (!canAccessOperationalAdmin(effectiveRole)) {
+      return (
+        <p className="text-sm text-red-300 dark:text-red-200">
+          {t("tasks.access_admin_only", locale)}
+        </p>
+      );
+    }
+    orgIdFromSlug = getOrgIdForData(orgSlug, org.id);
+  }
+
+  const profile = (await resolvePlanningConsoleProfile(userId, orgSlug)) ?? (orgIdFromSlug
+    ? (
+        (
+          await service
+            .from("profiles")
+            .select("id, role, organization_id, status")
+            .eq("auth_user_id", userId)
+            .in("organization_id", [orgIdFromSlug])
+            .neq("status", "disabled")
+            .maybeSingle()
+        ).data as { id: string; role: string; organization_id: string } | null
+      )
+    : null);
 
   if (!profile) {
     return (
@@ -1238,15 +1274,18 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
 
   let organizationName: string | null = null;
   let engagementEnabled = false;
+  let orgPlan: "free" | "team" | "pro" | null = null;
   if (orgId) {
     const { data: orgNameRow } = await service
       .from("organizations")
-      .select("name")
+      .select("name, plan")
       .eq("id", orgId)
       .maybeSingle();
     organizationName = (orgNameRow as { name?: string | null } | null)?.name?.trim() || null;
+    orgPlan = ((orgNameRow as { plan?: string | null } | null)?.plan as "free" | "team" | "pro" | null) ?? null;
     engagementEnabled = await fetchEngagementEnabledForOrgId(service, orgId);
   }
+  const allowAutoAssign = engagementEnabled && orgPlan !== "free";
 
   let effectiveOrgSlug = orgSlug;
   if (!effectiveOrgSlug && orgId) {
@@ -1488,7 +1527,13 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
                   <div className="chd flex flex-wrap items-center justify-between gap-2">
                     <span>{t("shifts.v2_manage_shifts_title", locale)}</span>
                     {orgId ? (
-                      <NewShiftModal action={createShifts} organizationId={orgId} events={events} engagementEnabled={engagementEnabled} />
+                      <NewShiftModal
+                        action={createShifts}
+                        organizationId={orgId}
+                        events={events}
+                        engagementEnabled={engagementEnabled}
+                        allowAutoAssign={allowAutoAssign}
+                      />
                     ) : null}
                   </div>
                   <div className="cbd">
@@ -1509,58 +1554,67 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
                   replaceAssignment={replaceAssignment}
                   previewRotationForShift={previewRotationForShift}
                   assignRotationFairOne={assignRotationFairOne}
+                  previewAutoAssignForShift={previewAutoAssignForShift}
+                  assignAutoAssignForShift={assignAutoAssignForShift}
                   engagementEnabled={engagementEnabled}
+                  allowAutoAssign={allowAutoAssign}
                   headerActions={
-                    <>
-                      <NewShiftModal action={createShifts} organizationId={orgId ?? undefined} events={events} engagementEnabled={engagementEnabled} />
-                      {orgId && engagementEnabled ? (
-                        <ShiftsAutoAssignConfirmForm action={runAutoAssignForExistingShifts} className="contents">
-                          <input type="hidden" name="organization_id" value={orgId} />
-                          <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
-                          <SubmitButtonWithSpinner className="btn btnp" loadingLabel="…">
-                            {t("shifts.run_auto_assignment", locale)}
-                          </SubmitButtonWithSpinner>
-                        </ShiftsAutoAssignConfirmForm>
-                      ) : null}
-                      {orgId && engagementEnabled ? (
-                        <ShiftsAutoAssignConfirmForm
-                          action={fillSelfSignupGaps}
-                          confirmKey="shifts.confirm_fill_self_signup"
-                          className="flex flex-wrap items-center gap-2"
-                        >
-                          <input type="hidden" name="organization_id" value={orgId} />
-                          <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
-                          <select
-                            name="mode"
-                            defaultValue="auto"
-                            className="sh-fill-mode-select"
-                            aria-label={t("shifts.fill_self_signup_mode_label", locale)}
-                            title={t("shifts.fill_self_signup_mode_tooltip", locale)}
-                          >
-                            <option value="auto">{t("shifts.fill_self_signup_mode_auto", locale)}</option>
-                            <option value="rotation">{t("shifts.fill_self_signup_mode_rotation", locale)}</option>
-                          </select>
-                          <SubmitButtonWithSpinner
-                            className="btn btnp"
-                            loadingLabel="…"
-                            aria-label={t("shifts.fill_self_signup_run_aria", locale)}
-                          >
-                            {t("shifts.fill_self_signup_run", locale)}
-                          </SubmitButtonWithSpinner>
-                        </ShiftsAutoAssignConfirmForm>
-                      ) : null}
-                      {orgId && shifts && shifts.length > 0 ? (
-                        <ShiftAttendancePdfExport
-                          organizationId={orgId}
-                          shifts={shifts}
-                          profileNames={Object.fromEntries(profileNames)}
-                          profileRoles={Object.fromEntries(profileRoles)}
-                          organizationName={organizationName ?? undefined}
-                          organizationSlug={effectiveOrgSlug ?? undefined}
-                          buttonClassName="btn"
+                    <div className="flex w-full flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <NewShiftModal
+                          action={createShifts}
+                          organizationId={orgId ?? undefined}
+                          events={events}
+                          engagementEnabled={engagementEnabled}
+                          allowAutoAssign={allowAutoAssign}
                         />
-                      ) : null}
-                    </>
+                        {orgId && engagementEnabled ? (
+                          <ShiftsAutoAssignConfirmForm
+                            action={fillSelfSignupGaps}
+                            confirmKey="shifts.confirm_fill_self_signup"
+                            className="flex flex-wrap items-center gap-2"
+                          >
+                            <input type="hidden" name="organization_id" value={orgId} />
+                            <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
+                            {allowAutoAssign ? (
+                              <select
+                                name="mode"
+                                defaultValue="auto"
+                                className="sh-fill-mode-select"
+                                aria-label={t("shifts.fill_self_signup_mode_label", locale)}
+                                title={t("shifts.fill_self_signup_mode_tooltip", locale)}
+                              >
+                                <option value="auto">{t("shifts.fill_self_signup_mode_auto", locale)}</option>
+                                <option value="rotation">{t("shifts.fill_self_signup_mode_rotation", locale)}</option>
+                              </select>
+                            ) : (
+                              <input type="hidden" name="mode" value="rotation" />
+                            )}
+                            <SubmitButtonWithSpinner
+                              className="btn btnp"
+                              loadingLabel="…"
+                              aria-label={t("shifts.fill_self_signup_run_aria", locale)}
+                            >
+                              {t("shifts.fill_self_signup_run", locale)}
+                            </SubmitButtonWithSpinner>
+                          </ShiftsAutoAssignConfirmForm>
+                        ) : null}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {orgId && shifts && shifts.length > 0 ? (
+                          <ShiftAttendancePdfExport
+                            organizationId={orgId}
+                            shifts={shifts}
+                            profileNames={Object.fromEntries(profileNames)}
+                            profileRoles={Object.fromEntries(profileRoles)}
+                            organizationName={organizationName ?? undefined}
+                            organizationSlug={effectiveOrgSlug ?? undefined}
+                            buttonClassName="btn"
+                          />
+                        ) : null}
+                      </div>
+                    </div>
                   }
                 />
               )}

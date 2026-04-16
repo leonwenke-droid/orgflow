@@ -89,7 +89,7 @@ export default async function AdminEventsPage(props: {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 p-6">
+    <div className="mx-auto max-w-6xl space-y-5 p-4 sm:p-6">
       <header>
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("events.title", locale)} />
         <h1 className="page-title">{t("events.title", locale)}</h1>

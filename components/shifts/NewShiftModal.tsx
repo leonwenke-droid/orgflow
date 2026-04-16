@@ -11,12 +11,14 @@ export default function NewShiftModal({
   action,
   organizationId,
   events,
-  engagementEnabled = true
+  engagementEnabled = true,
+  allowAutoAssign = true
 }: {
   action: CreateShiftsAction;
   organizationId?: string;
   events: { id: string; name: string }[];
   engagementEnabled?: boolean;
+  allowAutoAssign?: boolean;
 }) {
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
@@ -47,6 +49,7 @@ export default function NewShiftModal({
               onCancel={closeModal}
               onSuccess={closeModal}
               engagementEnabled={engagementEnabled}
+              allowAutoAssign={allowAutoAssign}
             />
           </div>
         </div>

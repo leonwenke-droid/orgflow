@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, ChevronLeft, Check } from "lucide-react";
-import AuthLoginRegisterCard from "../../components/auth/AuthLoginRegisterCard";
 import { createSupabaseBrowserClient } from "../../lib/supabaseClient";
 
 const CO_SESSION_KEY = "orgflow_create_org_checkout_session";
@@ -35,13 +34,11 @@ const PENDING_KEY_PERSISTED = "create-org-pending-persisted";
 export default function CreateOrganisationClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 4;
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Auth is handled as step 5 (not as a wall at the bottom).
-  const [authWall, setAuthWall] = useState(false);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [planChoice, setPlanChoice] = useState<null | "starter" | "base" | "scale">(null);
   const [paidTier, setPaidTier] = useState<null | "base" | "scale">(null);
@@ -104,7 +101,6 @@ export default function CreateOrganisationClient() {
         if (parsed?.formData && typeof parsed.step === "number") {
           setFormData(parsed.formData);
           setStep(Math.min(TOTAL_STEPS, Math.max(1, parsed.step)));
-          setAuthWall(false);
         }
         sessionStorage.removeItem(PENDING_KEY);
         localStorage.removeItem(PENDING_KEY_PERSISTED);
@@ -115,7 +111,6 @@ export default function CreateOrganisationClient() {
           if (parsed?.name) {
             setFormData(parsed);
             setStep(TOTAL_STEPS);
-            setAuthWall(false);
           }
           sessionStorage.removeItem("create-org-form");
         }
@@ -139,22 +134,10 @@ export default function CreateOrganisationClient() {
     };
   }, []);
 
-  useEffect(() => {
-    if (step !== 5) return;
-    try {
-      const payload = JSON.stringify({ step, formData });
-      sessionStorage.setItem(PENDING_KEY, payload);
-      localStorage.setItem(PENDING_KEY_PERSISTED, payload);
-    } catch {
-      // ignore quota / private mode
-    }
-  }, [step, formData]);
-
   const startPaidCheckout = async () => {
     if (!paidTier) return;
     setCheckoutLoading(true);
     setError(null);
-    setAuthWall(false);
       try {
         const res = await fetch("/api/billing/create-checkout-session-new-org", {
         method: "POST",
@@ -163,7 +146,7 @@ export default function CreateOrganisationClient() {
       });
       const data = (await res.json().catch(() => ({}))) as { message?: string; url?: string };
       if (res.status === 401) {
-          setStep(5);
+        setError("Please sign in to continue.");
         setCheckoutLoading(false);
         return;
       }
@@ -224,9 +207,8 @@ export default function CreateOrganisationClient() {
           } catch {
             // ignore quota / private mode
           }
-          setStep(5);
           setLoading(false);
-          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+          setError("Please sign in to continue.");
           return;
         }
         setError(data.message || "Failed to create organisation.");
@@ -268,8 +250,8 @@ export default function CreateOrganisationClient() {
   const showCancelledBanner = searchParams.get("cancelled") === "1";
 
   return (
-    <div className="min-h-screen bg-bg-secondary py-12">
-      <div className="mx-auto max-w-5xl px-6">
+    <div className="min-h-screen bg-bg-secondary py-12 pb-28">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6">
         <div className="mb-8">
           <Link
             href="/"
@@ -571,26 +553,6 @@ export default function CreateOrganisationClient() {
             </div>
           )}
 
-          {step === 5 && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-text-primary">Anmelden</h2>
-              <p className="text-sm text-text-secondary">
-                Melde dich an oder erstelle ein Konto, um deine Organisation zu erstellen.
-              </p>
-
-              {signedIn ? (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100">
-                  Du bist angemeldet. Du kannst jetzt deine Organisation erstellen.
-                </div>
-              ) : (
-                <AuthLoginRegisterCard
-                  orgName={null}
-                  redirectTo={paidTier ? `/create-organisation?tier=${paidTier}` : "/create-organisation"}
-                />
-              )}
-            </div>
-          )}
-
           <div className="mt-8 flex items-center justify-between">
             <button
               type="button"
@@ -626,7 +588,6 @@ export default function CreateOrganisationClient() {
                   loading ||
                   !formData.name.trim() ||
                   formData.modules.length === 0 ||
-                  !signedIn ||
                   (paidTier !== null && !stripeCheckoutSessionId)
                 }
                 className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -639,8 +600,6 @@ export default function CreateOrganisationClient() {
             </div>
           </>
         )}
-
-        {authWall ? null : null}
       </div>
     </div>
   );

@@ -16,13 +16,20 @@ export async function createTask(_prev: CreateTaskState, formData: FormData): Pr
   } = await supabase.auth.getUser();
   if (!user?.id) return { errorKey: "tasks.not_logged_in" };
   const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
-    .from("profiles")
-    .select("id, role, organization_id")
-    .eq("auth_user_id", user.id)
-    .single();
+  const formOrgId = formData.get("organization_id")?.toString().trim() || null;
+  const formOrgSlug = formData.get("org_slug")?.toString().trim() || null;
 
-  if (!profile || !["admin", "lead", "teamlead", "super_admin", "owner"].includes(profile.role)) {
+  const { data: profiles } = await service
+    .from("profiles")
+    .select("id, role, organization_id, status")
+    .eq("auth_user_id", user.id)
+    .neq("status", "disabled");
+
+  const profile =
+    (formOrgId ? (profiles ?? []).find((p: any) => String(p.organization_id ?? "") === formOrgId) : null) ??
+    ((profiles ?? []).length === 1 ? (profiles ?? [])[0] : null);
+
+  if (!profile || !["admin", "lead", "teamlead", "super_admin", "owner"].includes((profile as any).role)) {
     return { errorKey: "tasks.not_authorized" };
   }
 
@@ -52,9 +59,6 @@ export async function createTask(_prev: CreateTaskState, formData: FormData): Pr
   }
 
   const token = crypto.randomUUID().replace(/-/g, "");
-  const formOrgId = formData.get("organization_id")?.toString().trim() || null;
-  const formOrgSlug = formData.get("org_slug")?.toString().trim() || null;
-
   let orgIdForInsert: string | null = null;
   if (formOrgId) {
     if (!(await isOrgAdmin(formOrgId, formOrgSlug))) {

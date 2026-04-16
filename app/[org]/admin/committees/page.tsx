@@ -114,7 +114,7 @@ export default async function AdminCommitteesPage(props: {
   );
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 p-6">
+    <div className="mx-auto max-w-6xl space-y-5 p-4 sm:p-6">
       <header className="flex items-start justify-between gap-4">
         <div>
           <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Teams" />

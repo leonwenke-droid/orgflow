@@ -117,7 +117,7 @@ export default async function AdminDashboard({
   });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6">
+    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
       <header>
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel={t("admin.page_title", locale)} />
         <h1 className="page-title">{t("admin.page_title", locale)}</h1>

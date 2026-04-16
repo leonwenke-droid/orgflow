@@ -68,7 +68,8 @@ export default function CreateShiftsForm({
   variant = "default",
   onCancel,
   onSuccess,
-  engagementEnabled = true
+  engagementEnabled = true,
+  allowAutoAssign = true
 }: {
   action: CreateShiftsAction;
   organizationId?: string;
@@ -79,6 +80,8 @@ export default function CreateShiftsForm({
   onSuccess?: () => void;
   /** When false, auto/rotation assignment modes are hidden (Engagement module off). */
   engagementEnabled?: boolean;
+  /** When false, hides `auto_assign` even if engagement is enabled (e.g. Free plan). */
+  allowAutoAssign?: boolean;
 }) {
   const { locale } = useLocale();
   const router = useRouter();
@@ -93,6 +96,10 @@ export default function CreateShiftsForm({
     if (engagementEnabled) return;
     if (assignmentKind === "auto_assign" || assignmentKind === "rotation") setAssignmentKind("self_signup");
   }, [engagementEnabled, assignmentKind]);
+
+  useEffect(() => {
+    if (!allowAutoAssign && assignmentKind === "auto_assign") setAssignmentKind("self_signup");
+  }, [allowAutoAssign, assignmentKind]);
 
   const [modalStart, setModalStart] = useState("09:00");
   const [modalEnd, setModalEnd] = useState("12:00");
@@ -273,7 +280,7 @@ export default function CreateShiftsForm({
                 engagementEnabled
                   ? ([
                       ["self_signup", "shifts.assignment_kind_label_self_signup", "dot-blue"],
-                      ["auto_assign", "shifts.assignment_kind_label_auto_assign", "dot-amber"],
+                      ...(allowAutoAssign ? ([["auto_assign", "shifts.assignment_kind_label_auto_assign", "dot-amber"]] as const) : ([] as const)),
                       ["rotation", "shifts.assignment_kind_label_rotation", "dot-green"],
                       ["fixed", "shifts.assignment_kind_label_fixed", "dot-purple"]
                     ] as const)
@@ -535,13 +542,13 @@ export default function CreateShiftsForm({
         <span className="text-[11px] font-semibold text-text-secondary">{t("shifts.assignment_kind_field", locale)}</span>
         <div className="mt-1 flex flex-col gap-1.5 text-[11px] text-text-muted">
           {(
-            engagementEnabled
-              ? ([
-                  ["self_signup", "shifts.assignment_kind_label_self_signup"],
-                  ["auto_assign", "shifts.assignment_kind_label_auto_assign"],
-                  ["rotation", "shifts.assignment_kind_label_rotation"],
-                  ["fixed", "shifts.assignment_kind_label_fixed"]
-                ] as const)
+              engagementEnabled
+                ? ([
+                    ["self_signup", "shifts.assignment_kind_label_self_signup"],
+                    ...(allowAutoAssign ? ([["auto_assign", "shifts.assignment_kind_label_auto_assign"]] as const) : ([] as const)),
+                    ["rotation", "shifts.assignment_kind_label_rotation"],
+                    ["fixed", "shifts.assignment_kind_label_fixed"]
+                  ] as const)
               : ([
                   ["self_signup", "shifts.assignment_kind_label_self_signup"],
                   ["fixed", "shifts.assignment_kind_label_fixed"]

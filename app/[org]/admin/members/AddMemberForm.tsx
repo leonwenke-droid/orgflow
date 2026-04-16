@@ -54,17 +54,13 @@ export default function AddMemberForm({
       return;
     }
     const emailTrim = email.trim();
-    if (!emailTrim) {
-      setError(t("members.error_email_required", locale));
-      return;
-    }
     setLoading(true);
     setError(null);
     setSuccess(false);
     setInviteUrl(null);
     setWhatsappText(null);
     const result = await addMemberAction(orgSlug, name, {
-      email: emailTrim,
+      email: emailTrim || undefined,
       committeeIds: Array.from(committeeIds),
       asLead
     });
@@ -128,7 +124,6 @@ export default function AddMemberForm({
           <label className="mb-1 block text-xs font-semibold text-text-secondary dark:text-text-secondary">{t("members.email_label", locale)}</label>
           <input
             type="email"
-            required
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}

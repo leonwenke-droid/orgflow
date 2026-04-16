@@ -175,7 +175,7 @@ export default async function AdminEngagementPage(props: { params: Promise<{ org
   const locale = await getRequestLocale();
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6">
+    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
       <header>
         <AdminBreadcrumb orgSlug={orgSlug} currentLabel="Engagement" />
         <h1 className="page-title">Engagement</h1>

@@ -3,7 +3,7 @@ import { getRequestLocale } from "../../../../lib/localeServer";
 import Link from "next/link";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
-import { getCurrentUserOrganization, isOrgAdmin } from "../../../../lib/getOrganization";
+import { getCurrentUserOrganization, getOrgIdForData, getCurrentOrganization, isOrgAdmin, resolvePlanningConsoleProfile } from "../../../../lib/getOrganization";
 import AdminBreadcrumb from "../../../../components/AdminBreadcrumb";
 import NewTaskForm from "./NewTaskForm";
 import { t } from "../../../../lib/i18n";
@@ -31,26 +31,20 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
     );
   }
 
-  const { data: profile } = await service
-    .from("profiles")
-    .select("id, role, organization_id")
-    .eq("auth_user_id", userId)
-    .single();
-
-  let orgId: string | null = (profile as { organization_id?: string | null } | null)?.organization_id ?? null;
   const raw = props.searchParams;
   const searchParams =
     raw && typeof (raw as Promise<unknown>).then === "function"
       ? await (raw as Promise<{ org?: string }>)
       : (raw ?? {}) as { org?: string };
   let orgSlug = searchParams?.org?.trim() || null;
+  const profile = await resolvePlanningConsoleProfile(userId, orgSlug);
+  let orgId: string | null = (profile as { organization_id?: string | null } | null)?.organization_id ?? null;
   if (!orgSlug && orgId) {
     const userOrg = await getCurrentUserOrganization();
     orgSlug = userOrg?.slug ?? null;
   }
   if (orgSlug) {
     try {
-      const { getCurrentOrganization, isOrgAdmin, getOrgIdForData } = await import("../../../../lib/getOrganization");
       const org = await getCurrentOrganization(orgSlug);
       const orgIdForData = getOrgIdForData(orgSlug, org.id);
       if (await isOrgAdmin(orgIdForData, orgSlug)) orgId = orgIdForData;
@@ -90,7 +84,7 @@ export default async function NewTaskPage(props: NewTaskPageProps) {
     userIdToCommitteeIds.get(uid)!.push(cid);
   }
 
-  if (!profile || !["admin", "lead", "super_admin", "owner"].includes(profile.role)) {
+  if (!profile || !["admin", "lead", "super_admin", "owner"].includes((profile as any).role)) {
     const locale = await getRequestLocale();
     return (
       <p className="text-sm text-red-300 dark:text-red-200">

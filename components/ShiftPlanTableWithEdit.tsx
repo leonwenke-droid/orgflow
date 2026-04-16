@@ -10,6 +10,7 @@ import { t, type Locale } from "../lib/i18n";
 import { effectiveAssignmentKind, type ShiftAssignmentKind } from "../lib/shiftAssignmentKind";
 import AssignmentKindHelpIcon from "./shifts/AssignmentKindHelpIcon";
 import RotationAssignButton from "./shifts/RotationAssignButton";
+import AutoAssignButton from "./shifts/AutoAssignButton";
 
 type Member = { id: string; full_name: string; load_index?: number; responsibility_malus?: number };
 
@@ -35,10 +36,18 @@ type Props = {
     import("../types/rotation").PreviewRotationForShiftResult
   >;
   assignRotationFairOne?: (shiftId: string) => Promise<import("../types/rotation").AssignRotationFairOneResult>;
+  previewAutoAssignForShift?: (shiftId: string) => Promise<
+    import("../types/autoAssign").PreviewAutoAssignForShiftResult
+  >;
+  assignAutoAssignForShift?: (shiftId: string) => Promise<
+    import("../types/autoAssign").AssignAutoAssignForShiftResult
+  >;
   /** Actions rechts neben Typ-Filter (z. B. Neue Schicht, PDF, Batch Auto-Zuteilung) */
   headerActions?: ReactNode;
   /** When false, filter and help copy hide engagement-based assignment types (org module off). */
   engagementEnabled?: boolean;
+  /** When false, hides `auto_assign` even if engagement is enabled (e.g. Free plan). */
+  allowAutoAssign?: boolean;
 };
 
 function timeStr(t: string | null | undefined): string {
@@ -114,12 +123,17 @@ export default function ShiftPlanTableWithEdit({
   replaceAssignment,
   previewRotationForShift,
   assignRotationFairOne,
+  previewAutoAssignForShift,
+  assignAutoAssignForShift,
   headerActions,
-  engagementEnabled = true
+  engagementEnabled = true,
+  allowAutoAssign = true
 }: Props) {
   const { locale } = useLocale();
   const router = useRouter();
-  const kindOptions = engagementEnabled ? KIND_OPTIONS_FULL : (["all", "self_signup", "fixed"] as const);
+  const kindOptions = engagementEnabled
+    ? (allowAutoAssign ? KIND_OPTIONS_FULL : (["all", "self_signup", "rotation", "fixed"] as const))
+    : (["all", "self_signup", "fixed"] as const);
   const [kindFilter, setKindFilter] = useState<(typeof KIND_OPTIONS_FULL)[number]>("all");
   const [editingShifts, setEditingShifts] = useState<any[] | null>(null);
 
@@ -141,6 +155,11 @@ export default function ShiftPlanTableWithEdit({
     if (engagementEnabled) return;
     if (kindFilter === "auto_assign" || kindFilter === "rotation") setKindFilter("all");
   }, [engagementEnabled, kindFilter]);
+
+  useEffect(() => {
+    if (allowAutoAssign) return;
+    if (kindFilter === "auto_assign") setKindFilter("all");
+  }, [allowAutoAssign, kindFilter]);
 
   const byDate = useMemo(() => {
     const acc: Record<string, any[]> = {};
@@ -215,6 +234,15 @@ export default function ShiftPlanTableWithEdit({
                   assignRotationFairOne &&
                   required > 0;
 
+                const showAutoAssignOnly =
+                  engagementEnabled &&
+                  allowAutoAssign &&
+                  taken < required &&
+                  kind === "auto_assign" &&
+                  previewAutoAssignForShift &&
+                  assignAutoAssignForShift &&
+                  required > 0;
+
                 return (
                   <div key={s.id} className="row admin-shift-row">
                     <div className="avail">
@@ -238,6 +266,14 @@ export default function ShiftPlanTableWithEdit({
                           shiftId={s.id}
                           previewRotationForShift={previewRotationForShift}
                           assignRotationFairOne={assignRotationFairOne}
+                        />
+                      </div>
+                    ) : showAutoAssignOnly ? (
+                      <div className="ml">
+                        <AutoAssignButton
+                          shiftId={s.id}
+                          previewAutoAssignForShift={previewAutoAssignForShift}
+                          assignAutoAssignForShift={assignAutoAssignForShift}
                         />
                       </div>
                     ) : (
@@ -285,6 +321,7 @@ export default function ShiftPlanTableWithEdit({
       {editingShifts != null && editingShifts.length > 0 && (
         <ShiftEditModal
           engagementEnabled={engagementEnabled}
+          allowAutoAssign={allowAutoAssign}
           shift={{
             id: editingShifts[0].id,
             event_name: editingShifts[0].event_name ?? "",
