@@ -30,6 +30,7 @@ const MODULES = [
 ];
 
 const PENDING_KEY = "create-org-pending";
+const PENDING_KEY_PERSISTED = "create-org-pending-persisted";
 
 export default function CreateOrganisationClient() {
   const router = useRouter();
@@ -93,7 +94,11 @@ export default function CreateOrganisationClient() {
 
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem(PENDING_KEY);
+      // sessionStorage can be empty after email verification (new tab).
+      // Use localStorage as fallback so wizard state survives that.
+      const saved =
+        sessionStorage.getItem(PENDING_KEY) ??
+        (typeof window !== "undefined" ? localStorage.getItem(PENDING_KEY_PERSISTED) : null);
       if (saved) {
         const parsed = JSON.parse(saved) as { step?: number; formData?: typeof formData };
         if (parsed?.formData && typeof parsed.step === "number") {
@@ -102,6 +107,7 @@ export default function CreateOrganisationClient() {
           setAuthWall(false);
         }
         sessionStorage.removeItem(PENDING_KEY);
+        localStorage.removeItem(PENDING_KEY_PERSISTED);
       } else {
         const legacy = sessionStorage.getItem("create-org-form");
         if (legacy) {
@@ -136,7 +142,9 @@ export default function CreateOrganisationClient() {
   useEffect(() => {
     if (step !== 5) return;
     try {
-      sessionStorage.setItem(PENDING_KEY, JSON.stringify({ step, formData }));
+      const payload = JSON.stringify({ step, formData });
+      sessionStorage.setItem(PENDING_KEY, payload);
+      localStorage.setItem(PENDING_KEY_PERSISTED, payload);
     } catch {
       // ignore quota / private mode
     }
@@ -182,7 +190,9 @@ export default function CreateOrganisationClient() {
       // Paid tiers: run Stripe checkout AFTER setup, right before creating the org.
       if (paidTier && !stripeCheckoutSessionId) {
         try {
-          sessionStorage.setItem(PENDING_KEY, JSON.stringify({ step, formData }));
+          const payload = JSON.stringify({ step, formData });
+          sessionStorage.setItem(PENDING_KEY, payload);
+          localStorage.setItem(PENDING_KEY_PERSISTED, payload);
         } catch {
           // ignore quota / private mode
         }
@@ -208,10 +218,9 @@ export default function CreateOrganisationClient() {
       if (!res.ok) {
         if (res.status === 401) {
           try {
-            sessionStorage.setItem(
-              PENDING_KEY,
-              JSON.stringify({ step, formData })
-            );
+            const payload = JSON.stringify({ step, formData });
+            sessionStorage.setItem(PENDING_KEY, payload);
+            localStorage.setItem(PENDING_KEY_PERSISTED, payload);
           } catch {
             // ignore quota / private mode
           }
