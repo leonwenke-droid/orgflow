@@ -79,7 +79,8 @@ export default function MemberRow({
   const [pendingLeadEmail, setPendingLeadEmail] = useState(false);
   const [currentInvite, setCurrentInvite] = useState<{ inviteUrl: string; whatsappText: string } | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const actionsAnchorRef = useRef<HTMLButtonElement>(null);
+  const actionsAnchorMobileRef = useRef<HTMLButtonElement>(null);
+  const actionsAnchorDesktopRef = useRef<HTMLButtonElement>(null);
   const actionsMenuRef = useRef<HTMLDivElement>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const [actionsMenuPos, setActionsMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -87,7 +88,10 @@ export default function MemberRow({
   const MENU_WIDTH = 288;
 
   const updateActionsMenuPosition = useCallback(() => {
-    const anchor = actionsAnchorRef.current;
+    const anchor =
+      typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches
+        ? actionsAnchorMobileRef.current
+        : actionsAnchorDesktopRef.current;
     const menu = actionsMenuRef.current;
     if (!anchor) return;
     const ar = anchor.getBoundingClientRect();
@@ -123,7 +127,8 @@ export default function MemberRow({
     if (!actionsMenuOpen) return;
     function handlePointerDown(e: MouseEvent) {
       const t = e.target as Node;
-      if (actionsAnchorRef.current?.contains(t)) return;
+      if (actionsAnchorMobileRef.current?.contains(t)) return;
+      if (actionsAnchorDesktopRef.current?.contains(t)) return;
       if (actionsMenuRef.current?.contains(t)) return;
       setActionsMenuOpen(false);
     }
@@ -322,7 +327,18 @@ export default function MemberRow({
     <tr className="border-b border-border-subtle last:border-0 hover:bg-bg-secondary">
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold ${avatarClass}`}>
+          <button
+            ref={actionsAnchorMobileRef}
+            type="button"
+            aria-expanded={actionsMenuOpen}
+            aria-haspopup="dialog"
+            aria-label={t("common.actions", locale)}
+            className="md:hidden shrink-0 cursor-pointer select-none rounded-lg border border-border-subtle px-2 py-1.5 text-xs text-text-secondary hover:bg-bg-secondary"
+            onClick={() => setActionsMenuOpen((o) => !o)}
+          >
+            ···
+          </button>
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ${avatarClass}`}>
             {initials}
           </div>
           <div className="min-w-0">
@@ -349,10 +365,10 @@ export default function MemberRow({
         <span className="text-sm text-text-secondary">{committeeNames || "—"}</span>
       </td>
 
-      <td className="px-4 py-3">
+      <td className="hidden px-4 py-3 md:table-cell">
         <div className="inline-block">
           <button
-            ref={actionsAnchorRef}
+            ref={actionsAnchorDesktopRef}
             type="button"
             aria-expanded={actionsMenuOpen}
             aria-haspopup="dialog"

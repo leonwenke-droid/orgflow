@@ -250,7 +250,9 @@ export default async function AdminMembersPage({
               <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">{t("engagement.export_name", locale)}</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">{t("members.lead_column", locale)}</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">{t("dashboard.teams", locale)}</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary">{t("common.actions", locale)}</th>
+              <th className="hidden px-4 py-3 text-left text-xs font-medium text-text-secondary md:table-cell">
+                {t("common.actions", locale)}
+              </th>
             </tr>
           </thead>
           <tbody>

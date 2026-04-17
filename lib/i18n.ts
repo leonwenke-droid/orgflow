@@ -841,6 +841,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.attend_qr_scanner_modal_title": "QR code scanner",
     "shifts.attend_confirm_absent_warning":
       "Mark as absent? This may apply engagement penalties for your organisation.",
+    "shifts.attend_absent_confirm_action": "Confirm absent",
+    "shifts.attend_revert_check_in": "Undo check-in",
     "shifts.attend_tag_present": "Present",
     "shifts.attend_tag_absent": "Absent",
     "shifts.attend_row_checkin": "Check-in",
@@ -1957,6 +1959,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.attend_qr_scanner_modal_title": "QR-Code Scanner",
     "shifts.attend_confirm_absent_warning":
       "Als abwesend markieren? Für die Organisation können Engagement-Abzüge anfallen.",
+    "shifts.attend_absent_confirm_action": "Abwesend bestätigen",
+    "shifts.attend_revert_check_in": "Check-in zurücknehmen",
     "shifts.attend_tag_present": "Anwesend",
     "shifts.attend_tag_absent": "Abwesend",
     "shifts.attend_row_checkin": "Check-in",

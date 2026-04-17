@@ -1072,6 +1072,60 @@ async function markAssignmentAttended(assignmentId: string) {
   }
 }
 
+/** Check-in / „Anwesend“ zurücknehmen (z. B. Verdrücken); entfernt shift_done-Engagement für diese Zuweisung. */
+async function revertAssignmentPresentCheckIn(assignmentId: string) {
+  "use server";
+  const organizationId = await resolveAssignmentOrganizationId(assignmentId);
+  if (!organizationId) return;
+  const actor = await requireOrgAdminAction(organizationId);
+  if (!actor) return;
+  const service = createSupabaseServiceRoleClient();
+  const engagementEnabled = await fetchEngagementEnabledForOrgId(service, organizationId);
+  const { data: row } = await service
+    .from("shift_assignments")
+    .select("user_id, status, checked_in_at")
+    .eq("id", assignmentId)
+    .single();
+  if (!row?.user_id) return;
+  const userId = row.user_id as string;
+  const hadCheckIn =
+    String(row.status ?? "") === "erledigt" ||
+    (row.checked_in_at != null && String(row.checked_in_at).trim() !== "");
+  if (!hadCheckIn) return;
+
+  if (engagementEnabled) {
+    await service
+      .from("engagement_events")
+      .delete()
+      .eq("source_id", assignmentId)
+      .eq("event_type", "shift_done")
+      .eq("user_id", userId);
+  }
+
+  const { error } = await service
+    .from("shift_assignments")
+    .update({
+      status: "zugewiesen",
+      checked_in_at: null,
+      checked_in_by: null,
+      check_in_method: null,
+      attendance_status: "registered"
+    })
+    .eq("id", assignmentId);
+  if (error) return;
+
+  await writeAuditLog({
+    organizationId,
+    actorProfileId: actor.actorProfileId,
+    action: "shift.assignment_status_updated",
+    targetTable: "shift_assignments",
+    targetId: assignmentId,
+    metadata: { revertedCheckIn: true, status: "zugewiesen" }
+  });
+  revalidatePath("/admin/shifts");
+  revalidatePath("/dashboard");
+}
+
 /** Zugewiesene Person nicht angetreten. Mit Ersatz: Original keine Punkte, Ersatz +volle Punkte. Ohne Ersatz: Abzug (kein Becheid). */
 async function markAssignmentNotAttended(
   assignmentId: string,
@@ -1715,6 +1769,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
                 profileRoles={Object.fromEntries(profileRoles)}
                 markAssignmentAttended={markAssignmentAttended}
                 markAssignmentNotAttended={markAssignmentNotAttended}
+                revertAssignmentPresentCheckIn={revertAssignmentPresentCheckIn}
               />
             </Suspense>
           </>

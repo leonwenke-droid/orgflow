@@ -7,7 +7,8 @@ import {
   getCurrentOrganization,
   getCurrentUserOrganization,
   getOrgIdForData,
-  isOrgAdmin
+  isOrgAdmin,
+  resolvePlanningConsoleProfile
 } from "../../../../lib/getOrganization";
 import SubmitButtonWithSpinner from "../../../../components/SubmitButtonWithSpinner";
 import { t as tr } from "../../../../lib/i18n";
@@ -52,13 +53,12 @@ export default async function AdminTasksTrashPage(props: PageProps) {
   }
 
   const service = createSupabaseServiceRoleClient();
-  const { data: profile } = await service
-    .from("profiles")
-    .select("id, role, organization_id")
-    .eq("auth_user_id", userId)
-    .single();
+  const planningProfile = await resolvePlanningConsoleProfile(userId, orgSlug);
 
-  if (!profile || !["admin", "lead", "super_admin", "owner", "teamlead"].includes(profile.role)) {
+  if (
+    !planningProfile ||
+    !["admin", "lead", "super_admin", "owner", "teamlead"].includes(planningProfile.role)
+  ) {
     return <p className="text-sm text-red-300">{tr("tasks.access_admin_only", locale)}</p>;
   }
 
@@ -72,7 +72,7 @@ export default async function AdminTasksTrashPage(props: PageProps) {
       orgId = null;
     }
   }
-  if (!orgId && profile.organization_id) orgId = profile.organization_id;
+  if (!orgId && planningProfile.organization_id) orgId = planningProfile.organization_id;
 
   let effectiveOrgSlug = orgSlug;
   if (!effectiveOrgSlug && orgId) {

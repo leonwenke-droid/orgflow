@@ -784,3 +784,39 @@
   border-color: var(--sp-border-strong);
   background: rgba(255, 255, 255, 0.04);
 }
+
+/* Light theme: modal overlay + panel (html has no .dark class — see app/layout.tsx / next-themes) */
+:root:not(.dark) .shifts-page .mwrap {
+  background: rgba(15, 23, 42, 0.32);
+}
+
+:root:not(.dark) .shifts-page .modal {
+  background: var(--bg-primary, #ffffff);
+  border-color: var(--border-subtle, #e2e8f0);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18);
+}
+
+:root:not(.dark) .shifts-page .mhd {
+  color: var(--text-primary, #0f172a);
+  border-bottom-color: var(--border-subtle, #e2e8f0);
+}
+
+:root:not(.dark) .shifts-page .mbd {
+  color: var(--text-primary, #0f172a);
+}
+
+:root:not(.dark) .shifts-page .mft {
+  background: var(--bg-secondary, #f8fafc);
+  border-top-color: var(--border-subtle, #e2e8f0);
+}
+
+:root:not(.dark) .shifts-page .btn {
+  background: var(--bg-secondary, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+  border-color: var(--border-default, #cbd5e1);
+}
+
+:root:not(.dark) .shifts-page .btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}

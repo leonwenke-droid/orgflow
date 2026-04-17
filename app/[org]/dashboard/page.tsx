@@ -12,6 +12,7 @@ import { t } from "../../../lib/i18n";
 
 import { claimShiftFromDashboard } from "./actions";
 import { effectiveAssignmentKind } from "../../../lib/shiftAssignmentKind";
+import SubmitButtonWithSpinner from "../../../components/SubmitButtonWithSpinner";
 import { getEngagementBreakdown, getOrgScoreboard, getRecentEngagementEvents } from "../../../lib/engagement/getScore";
 import EngagementScoreWidget from "../../../components/engagement/EngagementScoreWidget";
 import { isEngagementEnabledFromOrgRow } from "../../../lib/engagement/isEngagementEnabled";
@@ -321,7 +322,12 @@ export default async function OrgDashboardPage(props: {
                                 <input type="hidden" name="orgSlug" value={orgSlug} />
                                 <input type="hidden" name="organization_id" value={orgIdForData} />
                                 <input type="hidden" name="shiftId" value={s.id} />
-                                <button type="submit" className="btn-primary">{locale === "en" ? "Sign up" : "Eintragen"}</button>
+                                <SubmitButtonWithSpinner
+                                  className="btn-primary"
+                                  loadingLabel={t("common.loading", locale)}
+                                >
+                                  {t("shifts.claim", locale)}
+                                </SubmitButtonWithSpinner>
                               </form>
                             ) : null}
                           </div>

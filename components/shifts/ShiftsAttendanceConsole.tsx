@@ -45,7 +45,8 @@ export default function ShiftsAttendanceConsole({
   profileNames,
   profileRoles,
   markAssignmentAttended,
-  markAssignmentNotAttended
+  markAssignmentNotAttended,
+  revertAssignmentPresentCheckIn
 }: {
   orgSlug: string;
   organizationId?: string;
@@ -55,6 +56,7 @@ export default function ShiftsAttendanceConsole({
   profileRoles?: Record<string, string | null | undefined>;
   markAssignmentAttended: (assignmentId: string) => Promise<void>;
   markAssignmentNotAttended: (assignmentId: string, replacementUserId: string | null) => Promise<void>;
+  revertAssignmentPresentCheckIn?: (assignmentId: string) => Promise<void>;
 }) {
   const { locale } = useLocale();
   const router = useRouter();
@@ -63,12 +65,17 @@ export default function ShiftsAttendanceConsole({
   const [selectedId, setSelectedId] = useState<string>(() => shifts[0]?.id ?? "");
   const [scanLogByShift, setScanLogByShift] = useState<Record<string, { name: string; time: string }[]>>({});
   const [qrOpen, setQrOpen] = useState(false);
+  const [pendingAbsentId, setPendingAbsentId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (!shiftIdFromUrl || !shifts.some((s) => s.id === shiftIdFromUrl)) return;
     setSelectedId(shiftIdFromUrl);
   }, [shiftIdFromUrl, shifts]);
+
+  useEffect(() => {
+    setPendingAbsentId(null);
+  }, [selectedId]);
 
   const selected = useMemo(() => shifts.find((s) => s.id === selectedId) ?? shifts[0], [shifts, selectedId]);
 
@@ -113,10 +120,18 @@ export default function ShiftsAttendanceConsole({
     });
   };
 
-  const runAbsent = (assignmentId: string) => {
-    if (!window.confirm(t("shifts.attend_confirm_absent_warning", locale))) return;
+  const confirmAbsent = (assignmentId: string) => {
     startTransition(async () => {
       await markAssignmentNotAttended(assignmentId, null);
+      setPendingAbsentId(null);
+      router.refresh();
+    });
+  };
+
+  const runRevertCheckIn = (assignmentId: string) => {
+    if (!revertAssignmentPresentCheckIn) return;
+    startTransition(async () => {
+      await revertAssignmentPresentCheckIn(assignmentId);
       router.refresh();
     });
   };
@@ -300,28 +315,69 @@ export default function ShiftsAttendanceConsole({
                     <div style={{ fontSize: 12, color: "var(--sp-text2)", marginTop: 2 }}>{sub}</div>
                   </div>
                   {pending ? (
-                    <div className="fl" style={{ gap: 6 }}>
-                      <button
-                        type="button"
-                        className="btn btng"
-                        style={{ fontSize: 11, padding: "6px 12px" }}
-                        disabled={isPending}
-                        onClick={() => runConfirm(a.id)}
-                      >
-                        {t("shifts.attend_confirm_manual", locale)}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btnr"
-                        style={{ fontSize: 11, padding: "6px 12px" }}
-                        disabled={isPending}
-                        onClick={() => runAbsent(a.id)}
-                      >
-                        {t("shifts.attend_mark_absent", locale)}
-                      </button>
-                    </div>
+                    pendingAbsentId === a.id ? (
+                      <div className="fl flex-col items-end gap-1.5" style={{ maxWidth: 220 }}>
+                        <p className="text-right text-[10px] leading-snug" style={{ color: "var(--sp-text2)" }}>
+                          {t("shifts.attend_confirm_absent_warning", locale)}
+                        </p>
+                        <div className="fl" style={{ gap: 6 }}>
+                          <button
+                            type="button"
+                            className="btn"
+                            style={{ fontSize: 11, padding: "6px 12px" }}
+                            disabled={isPending}
+                            onClick={() => setPendingAbsentId(null)}
+                          >
+                            {t("common.cancel", locale)}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btnr"
+                            style={{ fontSize: 11, padding: "6px 12px" }}
+                            disabled={isPending}
+                            onClick={() => confirmAbsent(a.id)}
+                          >
+                            {t("shifts.attend_absent_confirm_action", locale)}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="fl" style={{ gap: 6 }}>
+                        <button
+                          type="button"
+                          className="btn btng"
+                          style={{ fontSize: 11, padding: "6px 12px" }}
+                          disabled={isPending}
+                          onClick={() => runConfirm(a.id)}
+                        >
+                          {t("shifts.attend_confirm_manual", locale)}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btnr"
+                          style={{ fontSize: 11, padding: "6px 12px" }}
+                          disabled={isPending}
+                          onClick={() => setPendingAbsentId(a.id)}
+                        >
+                          {t("shifts.attend_mark_absent", locale)}
+                        </button>
+                      </div>
+                    )
                   ) : checked ? (
-                    <span className="tag tg">{t("shifts.attend_tag_present", locale)}</span>
+                    <div className="fl flex-col items-end gap-1.5">
+                      <span className="tag tg">{t("shifts.attend_tag_present", locale)}</span>
+                      {revertAssignmentPresentCheckIn ? (
+                        <button
+                          type="button"
+                          className="btn"
+                          style={{ fontSize: 11, padding: "4px 10px" }}
+                          disabled={isPending}
+                          onClick={() => runRevertCheckIn(a.id)}
+                        >
+                          {t("shifts.attend_revert_check_in", locale)}
+                        </button>
+                      ) : null}
+                    </div>
                   ) : (
                     <span className="tag tr">{t("shifts.attend_tag_absent", locale)}</span>
                   )}
