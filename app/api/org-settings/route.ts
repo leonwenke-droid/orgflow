@@ -77,6 +77,10 @@ export async function GET(req: NextRequest) {
         .eq("shifts.organization_id", orgIdForData)
         .is("shifts.deleted_at", null)
         .gte("shifts.date", today)
+        // Once checked in / completed, it is no longer "open".
+        .is("checked_in_at", null)
+        .neq("status", "erledigt")
+        .neq("status", "abgesagt")
         // "Assigned to me" includes replacements as well.
         .or(`user_id.eq.${profileId},replacement_user_id.eq.${profileId}`);
       upcomingShiftCount = count ?? 0;

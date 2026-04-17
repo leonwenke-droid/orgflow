@@ -165,21 +165,34 @@ export default function Sidebar({
       return;
     }
     let cancelled = false;
-    fetch(`/api/org-settings?slug=${encodeURIComponent(orgSlug)}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled && data) {
+    const load = () => {
+      fetch(`/api/org-settings?slug=${encodeURIComponent(orgSlug)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (cancelled || !data) return;
           if (data.name) setOrgName(data.name);
           setLogoUrl(typeof data.logoUrl === "string" && data.logoUrl.trim() ? data.logoUrl.trim() : null);
           if (data.modules) setModules(data.modules);
           setRole((data.role as DbRole | undefined) ?? null);
           setOpenTaskCount(typeof data.openTaskCount === "number" ? data.openTaskCount : 0);
           setUpcomingShiftCount(typeof data.upcomingShiftCount === "number" ? data.upcomingShiftCount : 0);
-        }
-      })
-      .catch(() => {});
+        })
+        .catch(() => {});
+    };
+    load();
+
+    const onFocus = () => load();
+    const onVis = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVis);
+    const id = window.setInterval(load, 30_000);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVis);
+      window.clearInterval(id);
     };
   }, [orgSlug]);
 

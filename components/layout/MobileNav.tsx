@@ -40,24 +40,37 @@ export default function MobileNav({
       return;
     }
     let cancelled = false;
-    fetch(`/api/org-settings?slug=${encodeURIComponent(orgSlug)}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        if (data?.role) setRole(data.role as DbRole);
-        else setRole(null);
-        setOpenTaskCount(typeof data?.openTaskCount === "number" ? data.openTaskCount : 0);
-        setUpcomingShiftCount(typeof data?.upcomingShiftCount === "number" ? data.upcomingShiftCount : 0);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setRole(null);
-          setOpenTaskCount(0);
-          setUpcomingShiftCount(0);
-        }
-      });
+    const load = () => {
+      fetch(`/api/org-settings?slug=${encodeURIComponent(orgSlug)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (cancelled) return;
+          if (data?.role) setRole(data.role as DbRole);
+          else setRole(null);
+          setOpenTaskCount(typeof data?.openTaskCount === "number" ? data.openTaskCount : 0);
+          setUpcomingShiftCount(typeof data?.upcomingShiftCount === "number" ? data.upcomingShiftCount : 0);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setRole(null);
+            setOpenTaskCount(0);
+            setUpcomingShiftCount(0);
+          }
+        });
+    };
+    load();
+    const onFocus = () => load();
+    const onVis = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVis);
+    const id = window.setInterval(load, 30_000);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVis);
+      window.clearInterval(id);
     };
   }, [orgSlug]);
 
