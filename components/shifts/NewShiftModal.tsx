@@ -2,6 +2,7 @@
 
 import { useCallback, useState, type ComponentProps } from "react";
 import CreateShiftsForm from "../CreateShiftsForm";
+import ModalPortal from "../ModalPortal";
 import { useLocale } from "../LocaleProvider";
 import { t } from "../../lib/i18n";
 
@@ -30,29 +31,35 @@ export default function NewShiftModal({
         {t("shifts.v2_new_shift", locale)}
       </button>
       {open ? (
-        <div className="mwrap" role="presentation" onClick={closeModal}>
+        <ModalPortal>
           <div
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="new-shift-modal-title"
-            onClick={(e) => e.stopPropagation()}
+            className="shifts-page mwrap-portal"
+            role="presentation"
+            onClick={closeModal}
           >
-            <div className="mhd" id="new-shift-modal-title">
-              {t("shifts.v2_new_shift_modal_title", locale)}
+            <div
+              className="modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="new-shift-modal-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mhd" id="new-shift-modal-title">
+                {t("shifts.v2_new_shift_modal_title", locale)}
+              </div>
+              <CreateShiftsForm
+                variant="modal"
+                action={action}
+                organizationId={organizationId}
+                events={events}
+                onCancel={closeModal}
+                onSuccess={closeModal}
+                engagementEnabled={engagementEnabled}
+                allowAutoAssign={allowAutoAssign}
+              />
             </div>
-            <CreateShiftsForm
-              variant="modal"
-              action={action}
-              organizationId={organizationId}
-              events={events}
-              onCancel={closeModal}
-              onSuccess={closeModal}
-              engagementEnabled={engagementEnabled}
-              allowAutoAssign={allowAutoAssign}
-            />
           </div>
-        </div>
+        </ModalPortal>
       ) : null}
     </>
   );

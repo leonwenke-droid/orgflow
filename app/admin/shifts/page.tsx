@@ -57,8 +57,6 @@ import { canAccessOperationalAdmin } from "../../../lib/permissions";
 
 export const dynamic = "force-dynamic";
 
-type SimpleShift = { id: string; required_slots: number | null; date?: string };
-
 const COOLDOWN_DAYS = 3;
 
 /**
@@ -123,100 +121,6 @@ function weightedRandomSelect(
     pool = pool.slice(0, idx).concat(pool.slice(idx + 1));
   }
   return result;
-}
-
-/**
- * Auto-Zuteilung: Unter allen infrage kommenden Personen (nicht im Cooldown, noch nicht zugeteilt)
- * wird per gewichteter Zufall eingeteilt – geringerer Engagement-Score = höhere Wahrscheinlichkeit.
- * So ist die Einteilung fair (wenig engagierte werden eher dran genommen), aber nicht deterministisch.
- * globallyUsed verhindert Mehrfach-Zuteilung innerhalb derselben Batch.
- * Cooldown: Wer in den letzten 3 Tagen eine Schicht hatte, wird nicht erneut eingeteilt.
- * orgId: nur Personen dieses Jahrgangs berücksichtigen.
- */
-async function autoAssignForShifts(
-  service: ReturnType<typeof createSupabaseServiceRoleClient>,
-  shifts: SimpleShift[],
-  orgId: string | null,
-  orgSlug: string | null = null
-): Promise<{ assigned: number; total: number }> {
-  if (!shifts.length) return { assigned: 0, total: 0 };
-
-  const slugForNotify =
-    orgId != null ? await resolveOrgSlugForNotify(service, orgId, orgSlug) : null;
-
-  const profilesQuery = service.from("profiles").select("id").order("full_name");
-  if (orgId) profilesQuery.eq("organization_id", orgId);
-  const scoresQuery = service.from("engagement_scores").select("user_id, score");
-  if (orgId) scoresQuery.eq("organization_id", orgId);
-
-  const [{ data: profiles }, { data: scores }] = await Promise.all([
-    profilesQuery,
-    scoresQuery
-  ]);
-
-  const scoreMap = new Map(
-    (scores ?? []).map((s) => [s.user_id as string, Number(s.score) ?? 0])
-  );
-  const membersWithScore: MemberWithScore[] = (profiles ?? []).map((p) => ({
-    id: p.id as string,
-    score: scoreMap.get(p.id as string) ?? 0
-  }));
-
-  const globallyUsed = new Set<string>();
-
-  for (const shift of shifts) {
-    const required = shift.required_slots ?? 0;
-    if (required <= 0) continue;
-
-    const shiftDate = shift.date;
-    const cooldownUsers =
-      shiftDate != null
-        ? await getUsersInCooldown(service, shiftDate)
-        : new Set<string>();
-
-    const { data: existing } = await service
-      .from("shift_assignments")
-      .select("user_id")
-      .eq("shift_id", shift.id);
-    const alreadyAssigned = new Set<string>(
-      (existing ?? []).map((a: any) => a.user_id as string)
-    );
-
-    const pool = membersWithScore.filter(
-      (m) =>
-        !alreadyAssigned.has(m.id) &&
-        !globallyUsed.has(m.id) &&
-        !cooldownUsers.has(m.id)
-    );
-    const blocked = await getProfileIdsBlockedByApprovedUnavailability(service, shift.id, pool.map((p) => p.id));
-    const eligible = pool.filter((m) => !blocked.has(m.id));
-    const toAssign = weightedRandomSelect(eligible, required);
-
-    if (!toAssign.length) continue;
-
-    const rows = toAssign.map((m) => ({
-      shift_id: shift.id,
-      user_id: m.id,
-      status: "zugewiesen"
-    }));
-
-    const { error } = await service.from("shift_assignments").insert(rows);
-    if (!error) {
-      toAssign.forEach((m) => globallyUsed.add(m.id));
-      if (slugForNotify) {
-        for (const m of toAssign) {
-          await notifyShiftAssignedByEmail({
-            service,
-            profileId: m.id,
-            shiftId: shift.id,
-            orgSlug: slugForNotify
-          }).catch(() => {});
-        }
-      }
-    }
-  }
-
-  return { assigned: globallyUsed.size, total: shifts.reduce((s, sh) => s + (sh.required_slots ?? 0), 0) };
 }
 
 async function runAutoAssignForExistingShifts(formData: FormData) {
@@ -663,10 +567,7 @@ async function createShifts(
           errorKey: "shifts.error_create",
         };
       }
-      // Nur bei Modus „Auto-Zuteilung“ sofort Personen eintragen — nicht bei Selbsteintragung (claim).
-      if (autoAssign) {
-        await autoAssignForShifts(service, created as SimpleShift[], organizationId, formOrgSlug);
-      }
+      // Keine sofortige Auto-Zuteilung beim Anlegen — Zuweisung über Schichtliste (Button „Auto-Zuteilung“) oder Batch.
     } else {
       if (!startTime || !endTime) {
         return { errorKey: "shifts.error_timeframe" };
@@ -756,9 +657,6 @@ async function createShifts(
           error: error?.message ?? undefined,
           errorKey: "shifts.error_create",
         };
-      }
-      if (autoAssign) {
-        await autoAssignForShifts(service, created as SimpleShift[], organizationId, formOrgSlug);
       }
     }
 

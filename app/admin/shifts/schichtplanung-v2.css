@@ -368,7 +368,8 @@
   border: 1px solid var(--sp-border);
 }
 
-.shifts-page .mwrap {
+.shifts-page .mwrap,
+.mwrap-portal {
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -381,7 +382,13 @@
   animation: sp-fade-in 0.2s ease;
 }
 
-.shifts-page .modal {
+/* createPortal(document.body): über Mobile-Nav (z-30) — gleiche Optik wie .shifts-page .mwrap */
+.mwrap-portal {
+  z-index: 200;
+}
+
+.shifts-page .modal,
+.mwrap-portal .modal {
   background: linear-gradient(165deg, #161922 0%, #101218 100%);
   border-radius: var(--sp-radius-lg);
   border: 1px solid var(--sp-border-strong);
@@ -786,11 +793,13 @@
 }
 
 /* Light theme: modal overlay + panel (html has no .dark class — see app/layout.tsx / next-themes) */
-:root:not(.dark) .shifts-page .mwrap {
+:root:not(.dark) .shifts-page .mwrap,
+:root:not(.dark) .mwrap-portal {
   background: rgba(15, 23, 42, 0.32);
 }
 
-:root:not(.dark) .shifts-page .modal {
+:root:not(.dark) .shifts-page .modal,
+:root:not(.dark) .mwrap-portal .modal {
   background: var(--bg-primary, #ffffff);
   border-color: var(--border-subtle, #e2e8f0);
   box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18);
