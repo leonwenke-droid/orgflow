@@ -6,6 +6,7 @@ import { writeAuditLog } from "../../../../lib/audit";
 import { claimShiftForAuthenticatedMember } from "../../../../lib/claimShiftForMember";
 import { createUserNotification } from "../../../../lib/notifications";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
+import { notifyShiftAssignedByEmail } from "../../../../lib/shiftAssignmentNotifications";
 
 export async function POST(req: Request) {
   try {
@@ -78,6 +79,13 @@ export async function POST(req: Request) {
       body: "Du hast dich für eine Schicht eingetragen.",
       link: `/${orgSlug}/shifts`
     });
+
+    await notifyShiftAssignedByEmail({
+      service: svc,
+      profileId: result.profileId,
+      shiftId,
+      orgSlug
+    }).catch(() => {});
 
     return NextResponse.json({ ok: true });
   } catch (e) {

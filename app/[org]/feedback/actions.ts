@@ -8,6 +8,7 @@ import {
   isSuperAdmin,
   resolveMemberProfileForOrganization
 } from "../../../lib/getOrganization";
+import { sendSupportRequest } from "../../../lib/n8n";
 
 export async function submitMemberFeatureRequest(
   orgSlug: string,
@@ -51,6 +52,18 @@ export async function submitMemberFeatureRequest(
   });
 
   if (error) return { errorKey: "feedback.error_save" };
+
+  const supportType =
+    type === "bug" ? "bug" : type === "question" ? "question" : "idea";
+  void sendSupportRequest({
+    email: user.email ?? "",
+    name: (prof as { full_name?: string | null } | null)?.full_name ?? undefined,
+    type: supportType,
+    subject: title,
+    message: description ?? title,
+    orgName: org.name,
+    orgSlug: slug
+  }).catch((err) => console.error("[feedback] n8n support failed:", err));
 
   revalidatePath(`/${slug}/feedback`);
   return { ok: true };

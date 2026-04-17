@@ -93,6 +93,36 @@ export async function uploadOrgLogoAction(
   return { url: publicUrl };
 }
 
+export async function updateOrganizationCurrencyAction(
+  orgSlug: string,
+  currencyRaw: string
+): Promise<{ error?: string }> {
+  const org = await getCurrentOrganization(orgSlug);
+  if (!(await assertCanChangeOrgSettings(orgSlug, org))) {
+    return { error: "Not authorized." };
+  }
+
+  const code = String(currencyRaw ?? "")
+    .trim()
+    .toUpperCase();
+  if (!/^[A-Z]{3}$/.test(code)) {
+    return { error: "Use a 3-letter ISO 4217 code (e.g. EUR, USD, GBP)." };
+  }
+
+  const prev = { ...(org.settings as Record<string, unknown>) };
+  const service = createSupabaseServiceRoleClient();
+  const { error } = await service
+    .from("organizations")
+    .update({ settings: { ...prev, currency: code } })
+    .eq("id", org.id);
+
+  if (error) return { error: error.message };
+  revalidatePath(`/${orgSlug}`);
+  revalidatePath(`/${orgSlug}/settings`);
+  revalidatePath(`/${orgSlug}/admin`);
+  return {};
+}
+
 export type FeaturesMap = Record<string, boolean>;
 
 export async function updateOrgFeaturesAction(

@@ -7,6 +7,7 @@ import { formatShiftSlot, type AppLocale } from "../../lib/formatDate";
 import { effectiveAssignmentKind, memberMaySelfCheckIn } from "../../lib/shiftAssignmentKind";
 import { isShiftQrWindowActive } from "../../lib/shiftQr";
 import { MemberQrCode } from "./MemberQrCode";
+import SubmitButtonWithSpinner from "../SubmitButtonWithSpinner";
 
 type ShiftRow = {
   id: string;
@@ -164,8 +165,9 @@ export default function MemberShiftsClient({
     const taken = (s.shift_assignments ?? []).length;
     const free = Math.max(0, required - taken);
     const assigned = isAssignedToMe(s);
-    const showButton =
-      canClaim && !assigned && free > 0 && effectiveAssignmentKind(s) === "self_signup";
+    // Members may sign up as long as the shift has free slots, regardless of assignment kind.
+    // Auto/rotation can be executed later and should only fill remaining slots.
+    const showButton = canClaim && !assigned && free > 0;
     const myAssignment = (s.shift_assignments ?? []).find(
       (a) => a.user_id === myProfileId || a.replacement_user_id === myProfileId
     );
@@ -222,9 +224,9 @@ export default function MemberShiftsClient({
                 <input type="hidden" name="orgSlug" value={orgSlug} />
                 <input type="hidden" name="organization_id" value={organizationId} />
                 <input type="hidden" name="shiftId" value={s.id} />
-                <button type="submit" className="btn btnp">
+                <SubmitButtonWithSpinner className="btn btnp" loadingLabel="…">
                   {t("shifts.claim", locale)}
-                </button>
+                </SubmitButtonWithSpinner>
               </form>
             ) : null}
             {showQr ? (
@@ -275,9 +277,9 @@ export default function MemberShiftsClient({
                 <input type="hidden" name="orgSlug" value={orgSlug} />
                 <input type="hidden" name="organization_id" value={organizationId} />
                 <input type="hidden" name="shiftId" value={s.id} />
-                <button type="submit" className="btn-primary">
+                <SubmitButtonWithSpinner className="btn-primary" loadingLabel="…">
                   {t("shifts.claim", locale)}
-                </button>
+                </SubmitButtonWithSpinner>
               </form>
             ) : null}
             {showQr ? (

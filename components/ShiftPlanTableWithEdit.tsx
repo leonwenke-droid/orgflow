@@ -131,9 +131,9 @@ export default function ShiftPlanTableWithEdit({
 }: Props) {
   const { locale } = useLocale();
   const router = useRouter();
-  const kindOptions = engagementEnabled
-    ? (allowAutoAssign ? KIND_OPTIONS_FULL : (["all", "self_signup", "rotation", "fixed"] as const))
-    : (["all", "self_signup", "fixed"] as const);
+  const kindOptions = (allowAutoAssign && engagementEnabled)
+    ? KIND_OPTIONS_FULL
+    : (["all", "self_signup", "rotation", "fixed"] as const);
   const [kindFilter, setKindFilter] = useState<(typeof KIND_OPTIONS_FULL)[number]>("all");
   const [editingShifts, setEditingShifts] = useState<any[] | null>(null);
 
@@ -153,7 +153,7 @@ export default function ShiftPlanTableWithEdit({
 
   useEffect(() => {
     if (engagementEnabled) return;
-    if (kindFilter === "auto_assign" || kindFilter === "rotation") setKindFilter("all");
+    if (kindFilter === "auto_assign") setKindFilter("all");
   }, [engagementEnabled, kindFilter]);
 
   useEffect(() => {
@@ -227,7 +227,6 @@ export default function ShiftPlanTableWithEdit({
                 const sub = buildSubline(s, assignments, profileNames, locale);
                 const title = String(s.event_name ?? "").trim() || t("shifts.untitled_shift", locale);
                 const showRotationOnly =
-                  engagementEnabled &&
                   taken < required &&
                   kind === "rotation" &&
                   previewRotationForShift &&
@@ -242,6 +241,9 @@ export default function ShiftPlanTableWithEdit({
                   previewAutoAssignForShift &&
                   assignAutoAssignForShift &&
                   required > 0;
+
+                const showAutoAssignDisabledHint =
+                  !engagementEnabled && kind === "auto_assign" && taken === 0 && required > 0;
 
                 return (
                   <div key={s.id} className="row admin-shift-row">
@@ -259,6 +261,13 @@ export default function ShiftPlanTableWithEdit({
                         </span>
                       </div>
                       <div className="rmt">{sub}</div>
+                      {showAutoAssignDisabledHint ? (
+                        <div className="mt-1 text-[11px] text-amber-700 dark:text-amber-200">
+                          {locale === "de"
+                            ? "Engagement-Score ist deaktiviert — Auto-Zuteilung kann nicht ausgeführt werden. Bitte Zuteilungsart ändern."
+                            : "Engagement scoring is disabled — auto assignment cannot run. Please change the assignment type."}
+                        </div>
+                      ) : null}
                     </div>
                     {showRotationOnly ? (
                       <div className="ml">

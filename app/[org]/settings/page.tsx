@@ -11,6 +11,7 @@ import EditOrgForm from "./EditOrgForm";
 import ModuleToggles from "./ModuleToggles";
 import PrivacyActions from "./PrivacyActions";
 import { t } from "../../../lib/i18n";
+import { DEFAULT_CURRENCY } from "../../../lib/currency";
 import BillingSection from "./BillingSection";
 import AppearanceControls from "../../../components/AppearanceControls";
 import RotationSettingsForm from "../../../components/RotationSettingsForm";
@@ -47,6 +48,9 @@ export default async function OrgSettingsPage({
     .from("profiles")
     .select("*", { count: "exact", head: true })
     .eq("organization_id", orgIdForData);
+
+  const currencyCode =
+    String((org.settings as { currency?: string })?.currency ?? "").trim() || DEFAULT_CURRENCY;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
@@ -85,7 +89,10 @@ export default async function OrgSettingsPage({
       <section className="card">
         <div className="p-4 space-y-4">
           <div className="section-label">{locale === "en" ? "Appearance & language" : "Darstellung & Sprache"}</div>
-          <AppearanceControls showSectionLabels={false} />
+          <AppearanceControls
+            showSectionLabels={false}
+            orgCurrencyEditor={{ orgSlug, initialCurrency: currencyCode }}
+          />
         </div>
       </section>
 

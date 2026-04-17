@@ -7,19 +7,9 @@ const WEBHOOK_SECRET = process.env.N8N_WEBHOOK_SECRET ?? "";
 const WEBHOOK_AUTH_HEADER = (process.env.N8N_WEBHOOK_AUTHORIZATION ?? "").trim();
 const HAS_WEBHOOK_AUTH = !!WEBHOOK_SECRET || !!WEBHOOK_AUTH_HEADER;
 
-async function callWebhook(
-  url: string | undefined,
-  body: Record<string, unknown>,
-  label: string
-): Promise<void> {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'595982'},body:JSON.stringify({sessionId:'595982',runId:'pre-fix',hypothesisId:'H1',location:'lib/n8n.ts:callWebhook:entry',message:'callWebhook invoked',data:{label,hasUrl:!!url,hasSecret:!!WEBHOOK_SECRET,hasAuthHeader:!!WEBHOOK_AUTH_HEADER},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
+async function callWebhook(url: string | undefined, body: Record<string, unknown>, label: string): Promise<void> {
   if (!url) {
     console.warn(`[n8n] ${label}: Webhook URL not configured — skipping`);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'595982'},body:JSON.stringify({sessionId:'595982',runId:'pre-fix',hypothesisId:'H2',location:'lib/n8n.ts:callWebhook:noUrl',message:'Webhook skipped: missing URL',data:{label},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return;
   }
   // Either a shared secret (in body) OR an Authorization header can secure the webhook.
@@ -27,9 +17,6 @@ async function callWebhook(
     console.warn(
       `[n8n] ${label}: neither N8N_WEBHOOK_SECRET nor N8N_WEBHOOK_AUTHORIZATION configured — skipping`
     );
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'595982'},body:JSON.stringify({sessionId:'595982',runId:'pre-fix',hypothesisId:'H2',location:'lib/n8n.ts:callWebhook:noAuth',message:'Webhook skipped: missing auth config',data:{label},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return;
   }
   const payload = { ...(WEBHOOK_SECRET ? { secret: WEBHOOK_SECRET } : {}), ...body };
@@ -45,22 +32,13 @@ async function callWebhook(
     });
   } catch (e) {
     console.error(`[n8n] ${label}: fetch failed`, e);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'595982'},body:JSON.stringify({sessionId:'595982',runId:'pre-fix',hypothesisId:'H3',location:'lib/n8n.ts:callWebhook:fetchCatch',message:'Webhook fetch threw',data:{label,name:(e as any)?.name??null,hasMessage:!!(e as any)?.message},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     throw e instanceof Error ? e : new Error(String(e));
   }
   if (!res.ok) {
     const msg = await res.text().catch(() => "");
     console.error(`[n8n] ${label}: webhook failed`, { status: res.status, body: msg.slice(0, 2000) });
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'595982'},body:JSON.stringify({sessionId:'595982',runId:'pre-fix',hypothesisId:'H4',location:'lib/n8n.ts:callWebhook:notOk',message:'Webhook responded not ok',data:{label,status:res.status,hasBody:!!msg},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     throw new Error(`n8n webhook failed (${res.status}): ${msg}`);
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'595982'},body:JSON.stringify({sessionId:'595982',runId:'pre-fix',hypothesisId:'H1',location:'lib/n8n.ts:callWebhook:ok',message:'Webhook ok',data:{label,status:res.status},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 }
 
 /** E-Mail-Bestätigung nach Registrierung */
@@ -70,9 +48,6 @@ export async function sendSignupConfirmation(params: {
   fullName?: string;
 }): Promise<void> {
   const url = process.env.N8N_WEBHOOK_URL_SEND_MAGIC_LINK;
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/d8a4d5cc-1252-4b30-be66-acb41eda1386',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'595982'},body:JSON.stringify({sessionId:'595982',runId:'post-fix',hypothesisId:'H2',location:'lib/n8n.ts:sendSignupConfirmation:precheck',message:'sendSignupConfirmation precheck',data:{hasUrl:!!url,hasAuth:HAS_WEBHOOK_AUTH,hasFullName:!!params.fullName,magicLinkLen:(params.magicLink??'').length,magicLinkHasRedirectTo:(params.magicLink??'').includes('redirect_to='),magicLinkHasAuthCallback:(params.magicLink??'').includes('/auth/callback'),magicLinkHasNext:(params.magicLink??'').includes('next=')},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   if (!url) {
     throw new Error("Signup email webhook is not configured (N8N_WEBHOOK_URL_SEND_MAGIC_LINK).");
   }
@@ -127,6 +102,100 @@ export async function sendMemberInvite(params: {
     },
     "send-invite"
   );
+}
+
+/** Support / Feedback / Löschanfrage → n8n (z. B. info@lyniqmedia.com) */
+export async function sendSupportRequest(params: {
+  email: string;
+  name?: string;
+  type: "support" | "bug" | "idea" | "delete" | "question";
+  subject?: string;
+  message: string;
+  orgName?: string;
+  orgSlug?: string;
+}): Promise<void> {
+  await callWebhook(
+    process.env.N8N_WEBHOOK_URL_SEND_SUPPORT,
+    {
+      email: params.email,
+      name: params.name ?? null,
+      type: params.type,
+      subject: params.subject ?? null,
+      message: params.message,
+      orgName: params.orgName ?? null,
+      orgSlug: params.orgSlug ?? null
+    },
+    "send-support"
+  );
+}
+
+/** Sofort-Benachrichtigung bei Schicht-Zuweisung */
+export async function sendShiftAssigned(params: {
+  email: string;
+  fullName?: string;
+  eventName: string;
+  date: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  orgName: string;
+  orgSlug: string;
+}): Promise<void> {
+  await callWebhook(process.env.N8N_WEBHOOK_URL_SEND_SHIFT_ASSIGNED, {
+    email: params.email,
+    fullName: params.fullName ?? null,
+    eventName: params.eventName,
+    date: params.date,
+    startTime: params.startTime ?? null,
+    endTime: params.endTime ?? null,
+    location: params.location ?? null,
+    orgName: params.orgName,
+    orgSlug: params.orgSlug
+  }, "send-shift-assigned");
+}
+
+/** Sofort-Benachrichtigung bei Aufgaben-Zuweisung */
+export async function sendTaskAssigned(params: {
+  email: string;
+  fullName?: string;
+  taskTitle: string;
+  description?: string;
+  dueAt?: string;
+  orgName: string;
+  orgSlug: string;
+  taskUrl?: string;
+}): Promise<void> {
+  await callWebhook(process.env.N8N_WEBHOOK_URL_SEND_TASK_ASSIGNED, {
+    email: params.email,
+    fullName: params.fullName ?? null,
+    taskTitle: params.taskTitle,
+    description: params.description ?? null,
+    dueAt: params.dueAt ?? null,
+    orgName: params.orgName,
+    orgSlug: params.orgSlug,
+    taskUrl: params.taskUrl ?? null
+  }, "send-task-assigned");
+}
+
+/** 24h-Erinnerung vor Task-Deadline (Cron) */
+export async function sendTaskReminder(params: {
+  email: string;
+  fullName?: string;
+  taskTitle: string;
+  dueAt?: string;
+  orgName: string;
+  orgSlug: string;
+  taskUrl?: string;
+}): Promise<void> {
+  await callWebhook(process.env.N8N_WEBHOOK_URL_SEND_TASK_REMINDER, {
+    email: params.email,
+    fullName: params.fullName ?? null,
+    taskTitle: params.taskTitle,
+    dueAt: params.dueAt ?? null,
+    orgName: params.orgName,
+    orgSlug: params.orgSlug,
+    taskUrl: params.taskUrl ?? null
+  }, "send-task-reminder");
 }
 
 /** Schicht-Erinnerung (Cron) */

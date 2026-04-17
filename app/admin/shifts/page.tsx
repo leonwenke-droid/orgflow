@@ -49,6 +49,7 @@ import {
 import { qrFieldsForAttendanceMode, shiftQrValidityIso } from "../../../lib/shiftQr";
 import { assignRotationFairOne, previewRotationForShift } from "../../../lib/actions/rotation";
 import { assignAutoAssignForShift, previewAutoAssignForShift } from "../../../lib/actions/autoAssign";
+import { notifyShiftAssignedByEmail } from "../../../lib/shiftAssignmentNotifications";
 import { addEngagementEvent } from "../../../lib/engagement/addEvent";
 import { fetchEngagementEnabledForOrgId } from "../../../lib/engagement/isEngagementEnabled";
 import { canAccessOperationalAdmin } from "../../../lib/permissions";
@@ -134,7 +135,8 @@ function weightedRandomSelect(
 async function autoAssignForShifts(
   service: ReturnType<typeof createSupabaseServiceRoleClient>,
   shifts: SimpleShift[],
-  orgId: string | null
+  orgId: string | null,
+  orgSlug: string | null = null
 ): Promise<{ assigned: number; total: number }> {
   if (!shifts.length) return { assigned: 0, total: 0 };
 
@@ -197,6 +199,16 @@ async function autoAssignForShifts(
     const { error } = await service.from("shift_assignments").insert(rows);
     if (!error) {
       toAssign.forEach((m) => globallyUsed.add(m.id));
+      if (orgSlug) {
+        for (const m of toAssign) {
+          await notifyShiftAssignedByEmail({
+            service,
+            profileId: m.id,
+            shiftId: shift.id,
+            orgSlug
+          }).catch(() => {});
+        }
+      }
     }
   }
 
@@ -305,6 +317,16 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
 
   if (toInsert.length > 0) {
     await service.from("shift_assignments").insert(toInsert);
+    if (orgSlug) {
+      for (const row of toInsert) {
+        await notifyShiftAssignedByEmail({
+          service,
+          profileId: row.user_id,
+          shiftId: row.shift_id,
+          orgSlug
+        }).catch(() => {});
+      }
+    }
     for (const [uid, inc] of increments.entries()) {
       const current = loadMap.get(uid)?.load ?? 0;
       await service
@@ -470,6 +492,16 @@ async function fillSelfSignupGaps(formData: FormData) {
 
   if (toInsert.length > 0) {
     await service.from("shift_assignments").insert(toInsert);
+    if (orgSlug) {
+      for (const row of toInsert) {
+        await notifyShiftAssignedByEmail({
+          service,
+          profileId: row.user_id,
+          shiftId: row.shift_id,
+          orgSlug
+        }).catch(() => {});
+      }
+    }
     for (const [uid, inc] of increments.entries()) {
       const current = loadMap.get(uid) ?? 0;
       await service
@@ -618,7 +650,7 @@ async function createShifts(
       }
       // Nur bei Modus „Auto-Zuteilung“ sofort Personen eintragen — nicht bei Selbsteintragung (claim).
       if (autoAssign) {
-        await autoAssignForShifts(service, created as SimpleShift[], organizationId);
+        await autoAssignForShifts(service, created as SimpleShift[], organizationId, formOrgSlug);
       }
     } else {
       if (!startTime || !endTime) {
@@ -711,7 +743,7 @@ async function createShifts(
         };
       }
       if (autoAssign) {
-        await autoAssignForShifts(service, created as SimpleShift[], organizationId);
+        await autoAssignForShifts(service, created as SimpleShift[], organizationId, formOrgSlug);
       }
     }
 
@@ -748,6 +780,16 @@ async function assignToShift(shiftId: string, formData: FormData) {
     status: "zugewiesen"
   });
   if (!error) {
+    const { data: orgRow } = await service.from("organizations").select("slug").eq("id", organizationId).maybeSingle();
+    const slugForEmail = String((orgRow as { slug?: string } | null)?.slug ?? "").trim();
+    if (slugForEmail) {
+      await notifyShiftAssignedByEmail({
+        service,
+        profileId: userId,
+        shiftId,
+        orgSlug: slugForEmail
+      }).catch(() => {});
+    }
     await writeAuditLog({
       organizationId,
       actorProfileId: actor.actorProfileId,

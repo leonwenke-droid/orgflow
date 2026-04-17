@@ -1,6 +1,5 @@
 import { getCurrentOrganization, getOrgIdForData } from "./getOrganization";
 import { createSupabaseServiceRoleClient } from "./supabaseServer";
-import { effectiveAssignmentKind } from "./shiftAssignmentKind";
 import { isProfileBlockedByApprovedUnavailability } from "./shiftUnavailability";
 
 export type ClaimShiftForMemberResult =
@@ -62,7 +61,7 @@ export async function claimShiftForAuthenticatedMember(opts: {
 
   const { data: shift, error: shiftErr } = await service
     .from("shifts")
-    .select("id, organization_id, claimable, auto_assign, assignment_kind, required_slots")
+    .select("id, organization_id, required_slots")
     .eq("id", shiftId)
     .maybeSingle();
 
@@ -72,10 +71,6 @@ export async function claimShiftForAuthenticatedMember(opts: {
 
   if (shift.organization_id !== organizationIdFromForm) {
     return { ok: false, code: "wrong_org" };
-  }
-
-  if (effectiveAssignmentKind(shift as { assignment_kind?: string | null; claimable?: boolean | null; auto_assign?: boolean | null }) !== "self_signup") {
-    return { ok: false, code: "not_claimable" };
   }
 
   const required = Math.max(1, Number(shift.required_slots ?? 1) || 1);

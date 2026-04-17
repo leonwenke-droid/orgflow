@@ -1,69 +1,75 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   const cookieStore = await cookies();
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ message: "Sign in required." }, { status: 401 });
 
-  const { data: profile } = await supabase
+  const service = createSupabaseServiceRoleClient();
+  const { data: profiles, error: profErr } = await service
     .from("profiles")
     .select("id, full_name, email, phone, role, status, organization_id, created_at")
     .eq("auth_user_id", user.id)
-    .maybeSingle();
+    .order("created_at", { ascending: true });
 
-  if (!profile) return NextResponse.json({ message: "Profile not found." }, { status: 404 });
+  if (profErr) {
+    return NextResponse.json({ message: profErr.message }, { status: 500 });
+  }
+  if (!profiles?.length) return NextResponse.json({ message: "Profile not found." }, { status: 404 });
 
-  const orgId = (profile as { organization_id: string }).organization_id;
-  const profileId = (profile as { id: string }).id;
+  const profileIds = profiles.map((p) => p.id as string);
 
   const [assignmentsRes, eventsRes, tasksRes, consentsRes] = await Promise.all([
-    supabase
+    service
       .from("shift_assignments")
       .select("id, shift_id, status, replacement_user_id, created_at")
-      .eq("user_id", profileId)
+      .in("user_id", profileIds)
       .order("created_at", { ascending: false })
       .limit(500),
-    supabase
+    service
       .from("engagement_events")
       .select("id, event_type, points, created_at, source_id")
-      .eq("user_id", profileId)
+      .in("user_id", profileIds)
       .order("created_at", { ascending: false })
       .limit(1000),
-    supabase
+    service
       .from("tasks")
-      .select("id, title, status, due_at, owner_id, created_at")
-      .eq("organization_id", orgId)
-      .eq("owner_id", profileId)
+      .select("id, title, status, due_at, owner_id, organization_id, created_at")
+      .in("owner_id", profileIds)
       .order("created_at", { ascending: false })
       .limit(500),
-    supabase
+    service
       .from("user_consents")
       .select("id, consent_type, consent_value, metadata, created_at")
       .eq("auth_user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(200),
+      .limit(200)
   ]);
 
+  const primary = profiles[0] as { id: string };
   const payload = {
     exported_at: new Date().toISOString(),
-    profile,
+    profiles,
+    profile: primary,
     shift_assignments: assignmentsRes.data ?? [],
     engagement_events: eventsRes.data ?? [],
     owned_tasks: tasksRes.data ?? [],
-    consents: consentsRes.data ?? [],
+    consents: consentsRes.data ?? []
   };
 
-  const filename = `orgflow-export-${profileId}.json`;
+  const filename = `orgflow-export-${primary.id}.json`;
   return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Content-Disposition": `attachment; filename=\"${filename}\"`,
-    },
+      "Content-Disposition": `attachment; filename=\"${filename}\"`
+    }
   });
 }
-

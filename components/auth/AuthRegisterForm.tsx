@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useLocale } from "../LocaleProvider";
 import { setPendingConsent } from "../ConsentSync";
@@ -123,9 +124,31 @@ export default function AuthRegisterForm({
           className="mt-0.5 rounded border-border-default"
         />
         <span>
-          {locale === "de"
-            ? "Ich stimme Datenschutz und Bedingungen zu."
-            : "I accept Privacy & Terms."}
+          {locale === "de" ? (
+            <>
+              Ich stimme dem{" "}
+              <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-primary">
+                Datenschutzhinweis
+              </Link>{" "}
+              und den{" "}
+              <Link href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-primary">
+                Nutzungsbedingungen
+              </Link>{" "}
+              zu.
+            </>
+          ) : (
+            <>
+              I accept the{" "}
+              <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-primary">
+                Privacy Policy
+              </Link>{" "}
+              and{" "}
+              <Link href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-primary">
+                Terms of Use
+              </Link>
+              .
+            </>
+          )}
         </span>
       </label>
 

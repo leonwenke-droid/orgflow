@@ -42,7 +42,7 @@ type Props = {
   allShiftsWithAssignments?: ShiftWithAssignments[];
   /** Beim Speichern alle Schichten mit Ort/Infos aktualisieren (erste voll) */
   updateEventGroup?: (shiftIds: string[], formData: FormData) => Promise<void>;
-  /** When false, hide auto/rotation assignment options (Engagement module off). Legacy kinds stay editable via read-only + hidden field. */
+  /** When false, hide auto-assignment option (Engagement module off). Rotation remains available. */
   engagementEnabled?: boolean;
   /** When false, hide `auto_assign` even if engagement is enabled (e.g. Free plan). */
   allowAutoAssign?: boolean;
@@ -92,13 +92,7 @@ export default function ShiftEditModal({
   }, [shift.id, shift.assignment_kind]);
 
   const kindParsed = String(shift.assignment_kind ?? "self_signup");
-  const legacyEngagementKind =
-    !engagementEnabled && (kindParsed === "auto_assign" || kindParsed === "rotation");
-
-  useEffect(() => {
-    if (!legacyEngagementKind) return;
-    setAssignmentKindLocal("self_signup");
-  }, [legacyEngagementKind, shift.id]);
+  const legacyEngagementKind = !engagementEnabled && kindParsed === "auto_assign";
 
   useEffect(() => {
     if (!allowAutoAssign && assignmentKindLocal === "auto_assign") setAssignmentKindLocal("self_signup");
@@ -237,14 +231,13 @@ export default function ShiftEditModal({
                     className="w-full rounded border border-border-default bg-bg-primary p-2.5 text-xs min-h-[44px] dark:border-border-default dark:bg-bg-primary dark:text-text-primary sm:min-h-0 sm:p-2"
                   >
                     <option value="self_signup">{t("shifts.assignment_kind_label_self_signup", locale)}</option>
-                    {engagementEnabled ? (
-                      <>
-                        {allowAutoAssign ? (
-                          <option value="auto_assign">{t("shifts.assignment_kind_label_auto_assign", locale)}</option>
-                        ) : null}
-                        <option value="rotation">{t("shifts.assignment_kind_label_rotation", locale)}</option>
-                      </>
+                    {allowAutoAssign ? (
+                      <option value="auto_assign" disabled={!engagementEnabled}>
+                        {t("shifts.assignment_kind_label_auto_assign", locale)}
+                        {!engagementEnabled ? (locale === "de" ? " (deaktiviert)" : " (disabled)") : ""}
+                      </option>
                     ) : null}
+                    <option value="rotation">{t("shifts.assignment_kind_label_rotation", locale)}</option>
                     <option value="fixed">{t("shifts.assignment_kind_label_fixed", locale)}</option>
                   </select>
                 </div>

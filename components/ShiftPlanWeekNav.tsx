@@ -251,9 +251,8 @@ export default function ShiftPlanWeekNav({
               {day.shifts.map((s) => {
                 const required = s.required_slots ?? 1;
                 const count = s.assignments?.length ?? 0;
-                const claimOk = s.claimable !== false && s.auto_assign !== true;
                 const hasFreeSlot =
-                  showClaimButton && orgSlug && count < required && claimOk;
+                  showClaimButton && orgSlug && count < required;
                 return (
                 <div key={s.id} className="rounded bg-bg-secondary px-1.5 py-1 text-[10px] dark:bg-bg-primary">
                   <span className="text-text-secondary dark:text-text-secondary">{slotLabel(s, appLocale)}</span>
@@ -404,9 +403,8 @@ export default function ShiftPlanWeekNav({
                     {currentDay.shifts.map((s) => {
                       const required = s.required_slots ?? 1;
                       const count = s.assignments?.length ?? 0;
-                      const claimOk = s.claimable !== false && s.auto_assign !== true;
                       const hasFreeSlot =
-                        showClaimButton && orgSlug && count < required && claimOk;
+                        showClaimButton && orgSlug && count < required;
                       return (
                       <li
                         key={s.id}

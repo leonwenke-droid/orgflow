@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { Suspense } from "react";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { createUserNotification } from "../../../lib/notifications";
+import { sendTaskAssigned } from "../../../lib/n8n";
+import { getPublicOriginSync } from "../../../lib/publicBaseUrl";
 import {
   getCurrentOrganization,
   isOrgAdmin,
@@ -107,6 +109,9 @@ async function autoAssignTasks(formData: FormData) {
     }
   }
 
+  const base = getPublicOriginSync();
+  const taskUrl = orgSlug ? `${base}/${orgSlug}/tasks` : undefined;
+
   for (const u of updates) {
     await service.from("tasks").update({ owner_id: u.ownerId }).eq("id", u.taskId).eq("organization_id", orgId);
     await createUserNotification(service, {
@@ -117,6 +122,30 @@ async function autoAssignTasks(formData: FormData) {
       body: taskTitles.get(u.taskId) || "Du hast eine neue Aufgabe erhalten.",
       link: orgSlug ? `/${orgSlug}/tasks` : null
     });
+
+    const [{ data: assignedProfile }, { data: taskRow }, { data: orgRow }] = await Promise.all([
+      service.from("profiles").select("email, full_name").eq("id", u.ownerId).maybeSingle(),
+      service.from("tasks").select("title, description, due_at").eq("id", u.taskId).maybeSingle(),
+      service.from("organizations").select("name").eq("id", orgId).maybeSingle()
+    ]);
+    const em = (assignedProfile as { email?: string | null } | null)?.email;
+    if (em) {
+      void sendTaskAssigned({
+        email: em,
+        fullName: (assignedProfile as { full_name?: string | null } | null)?.full_name ?? undefined,
+        taskTitle: (taskRow as { title?: string } | null)?.title ?? "Aufgabe",
+        description: (taskRow as { description?: string | null } | null)?.description ?? undefined,
+        dueAt: (taskRow as { due_at?: string | null } | null)?.due_at
+          ? new Date(String((taskRow as { due_at: string }).due_at)).toLocaleString("de-DE", {
+              dateStyle: "medium",
+              timeStyle: "short"
+            })
+          : undefined,
+        orgName: (orgRow as { name?: string } | null)?.name ?? "OrgFlow",
+        orgSlug: orgSlug ?? "",
+        taskUrl
+      }).catch(() => {});
+    }
   }
 
   for (const [uid, inc] of increments.entries()) {

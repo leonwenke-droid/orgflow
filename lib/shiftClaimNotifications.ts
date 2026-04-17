@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createUserNotification } from "./notifications";
+import { notifyShiftAssignedByEmail } from "./shiftAssignmentNotifications";
 
 const ADMIN_NOTIFY_ROLES = ["admin", "owner", "lead", "super_admin"] as const;
 
@@ -29,6 +30,13 @@ export async function notifyAfterShiftSelfClaim(opts: {
     body: `Du hast dich für „${eventLabel}“ eingetragen.`,
     link: `/${orgSlug}/shifts`
   });
+
+  await notifyShiftAssignedByEmail({
+    service,
+    profileId: claimerProfileId,
+    shiftId,
+    orgSlug
+  }).catch(() => {});
 
   const { data: admins } = await service
     .from("profiles")

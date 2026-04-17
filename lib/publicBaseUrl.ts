@@ -1,5 +1,21 @@
 import { headers } from "next/headers";
 
+/**
+ * Sync origin for emails/cron when there is no Request (no headers).
+ * Prefer NEXT_PUBLIC_APP_URL in production.
+ */
+export function getPublicOriginSync(): string {
+  const fromEnv = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "")
+    .trim()
+    .replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  const rootHost = (process.env.NEXT_PUBLIC_ROOT_HOST || "").trim().replace(/\/$/, "");
+  if (rootHost) return `https://${rootHost}`;
+  const vercel = (process.env.VERCEL_URL || "").trim().replace(/\/$/, "");
+  if (vercel) return `https://${vercel}`;
+  return "https://www.orgflow.de";
+}
+
 function originFromHostHeader(host: string, protoHeader: string | null): string {
   const h = host.trim();
   const isLocal =

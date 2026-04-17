@@ -165,7 +165,10 @@ export default async function OrgDashboardPage(props: {
   const freeCount = upcomingShifts.filter((s) => {
     const required = Number(s.required_slots ?? 1) || 1;
     const taken = (s.shift_assignments ?? []).length;
-    return Math.max(0, required - taken) > 0;
+    const free = Math.max(0, required - taken);
+    // "Open shifts" should mean: you could still sign up (not already assigned/replacing).
+    const alreadyMine = assignedShiftIds.has(String(s.id));
+    return free > 0 && !alreadyMine;
   }).length;
 
   const grouped = new Map<string, ShiftRow[]>();
