@@ -238,15 +238,15 @@ export default function Sidebar({
   const linkClassName = (href: string) =>
     `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
       isActive(href)
-        ? "bg-[var(--bg-primary)] text-text-primary font-medium dark:bg-bg-primary/12"
-        : "text-text-muted hover:bg-bg-secondary hover:text-text-primary dark:hover:bg-bg-primary/8 dark:hover:text-text-primary"
+        ? "bg-bg-primary text-text-primary font-medium shadow-sm ring-1 ring-black/[0.07] dark:bg-bg-primary/12 dark:shadow-none dark:ring-0"
+        : "text-text-secondary hover:bg-bg-secondary hover:text-text-primary dark:text-text-muted dark:hover:bg-bg-primary/8 dark:hover:text-text-primary"
     }`;
 
   const initials = (orgName ?? orgSlug).slice(0, 2).toUpperCase();
 
   const sidebarContent = (
     <>
-      <div className="px-4 py-4">
+      <div className="border-b border-border-default px-4 py-4 dark:border-border-subtle">
         <div className="flex items-center gap-2">
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- user-supplied org logo URL
@@ -278,7 +278,7 @@ export default function Sidebar({
                 const showShiftBadge = labelKey === "dashboard.shifts" && upcomingShiftCount > 0;
                 return (
                   <Link key={href} href={href} prefetch className={linkClassName(href)} onClick={onClose}>
-                    <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+                    <Icon className="h-4 w-4 shrink-0 opacity-90 dark:opacity-80" aria-hidden />
                     <span className="min-w-0 truncate">{t(labelKey, locale)}</span>
                     {showShiftBadge && (
                       <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 font-medium">
@@ -313,11 +313,11 @@ export default function Sidebar({
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-neutral-950/25 dark:bg-black/55 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/45 dark:bg-black/60 lg:hidden"
             onClick={onClose}
             aria-hidden
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border-subtle bg-bg-app/92 shadow-xl backdrop-blur dark:border-border-subtle dark:bg-bg-app/95 lg:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-[min(16rem,88vw)] max-w-[min(16rem,88vw)] flex-col border-r border-border-default bg-bg-primary shadow-[4px_0_24px_-4px_rgba(0,0,0,0.2)] dark:border-border-subtle dark:bg-bg-app dark:shadow-2xl lg:hidden">
             {sidebarContent}
           </aside>
         </>

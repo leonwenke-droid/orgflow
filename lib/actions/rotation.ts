@@ -5,6 +5,7 @@ import { writeAuditLog } from "../audit";
 import { requireOrgAdminAction } from "../permissionsServer";
 import { createSupabaseServiceRoleClient } from "../supabaseServer";
 import { notifyShiftAssignedByEmail } from "../shiftAssignmentNotifications";
+import { fetchOrgSlugById } from "../resolveOrgSlug";
 import type {
   AssignRotationFairOneResult,
   PreviewRotationForShiftResult,
@@ -26,15 +27,36 @@ async function resolveShiftOrganizationId(shiftId: string): Promise<string | nul
 
 async function resolveOrgSlug(organizationId: string): Promise<string | null> {
   const service = createSupabaseServiceRoleClient();
-  const { data } = await service.from("organizations").select("slug").eq("id", organizationId).maybeSingle();
-  return (data as { slug?: string | null } | null)?.slug ?? null;
+  return fetchOrgSlugById(service, organizationId);
+}
+
+function unwrapRotationAssignPayload(data: unknown): Record<string, unknown> | null {
+  if (data == null) return null;
+  if (typeof data === "string") {
+    try {
+      const p = JSON.parse(data) as unknown;
+      return p && typeof p === "object" ? (p as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof data === "object") return data as Record<string, unknown>;
+  return null;
 }
 
 /** `rotation_assign` returns `members` as JSON array of UUID strings (see `to_jsonb(v_ids)` in SQL). */
 function profileIdsFromRotationRpcMembers(members: unknown): string[] {
-  if (!Array.isArray(members)) return [];
+  let raw: unknown = members;
+  if (typeof raw === "string") {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(raw)) return [];
   const out: string[] = [];
-  for (const m of members) {
+  for (const m of raw) {
     if (typeof m === "string") {
       const s = m.trim();
       if (s) out.push(s);
@@ -47,6 +69,22 @@ function profileIdsFromRotationRpcMembers(members: unknown): string[] {
     }
   }
   return [...new Set(out)];
+}
+
+async function profileIdsFallbackFromAssignments(
+  service: ReturnType<typeof createSupabaseServiceRoleClient>,
+  shiftId: string,
+  count: number
+): Promise<string[]> {
+  if (count <= 0) return [];
+  const { data, error } = await service
+    .from("shift_assignments")
+    .select("user_id")
+    .eq("shift_id", shiftId)
+    .order("created_at", { ascending: false })
+    .limit(count);
+  if (error || !data?.length) return [];
+  return [...new Set((data as { user_id: string }[]).map((r) => String(r.user_id ?? "")).filter(Boolean))];
 }
 
 function mapPreviewError(err: string): string {
@@ -150,8 +188,9 @@ export async function assignRotationFairOne(shiftId: string): Promise<AssignRota
     return { ok: false, errorKey: "rotation.error.rpc" };
   }
 
-  const assigned = (rpcResult as { assigned?: number } | null)?.assigned ?? 0;
-  const members = (rpcResult as { members?: unknown } | null)?.members;
+  const payload = unwrapRotationAssignPayload(rpcResult);
+  const assigned = Number(payload?.assigned ?? 0);
+  const members = payload?.members;
   if (assigned > 0) {
     await writeAuditLog({
       organizationId,
@@ -163,13 +202,25 @@ export async function assignRotationFairOne(shiftId: string): Promise<AssignRota
     });
     // Notify newly assigned members (non-self assignment).
     const orgSlug = await resolveOrgSlug(organizationId);
-    if (orgSlug) {
-      const ids = profileIdsFromRotationRpcMembers(members);
+    let ids = profileIdsFromRotationRpcMembers(members);
+    if (ids.length === 0) {
+      ids = await profileIdsFallbackFromAssignments(service, shiftId, assigned);
+      if (ids.length === 0) {
+        console.error(
+          "[rotation] rotation_assign reported assigned=%s but no profile ids (members=%s)",
+          assigned,
+          JSON.stringify(members)?.slice(0, 500)
+        );
+      }
+    }
+    if (orgSlug && ids.length > 0) {
       await Promise.allSettled(
         ids.map((profileId) =>
           notifyShiftAssignedByEmail({ service, profileId, shiftId, orgSlug })
         )
       );
+    } else if (!orgSlug) {
+      console.error("[rotation] no org slug for organization_id=%s — skip shift-assigned webhooks", organizationId);
     }
     revalidatePath("/admin/shifts");
   }

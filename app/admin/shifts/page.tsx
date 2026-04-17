@@ -50,6 +50,7 @@ import { qrFieldsForAttendanceMode, shiftQrValidityIso } from "../../../lib/shif
 import { assignRotationFairOne, previewRotationForShift } from "../../../lib/actions/rotation";
 import { assignAutoAssignForShift, previewAutoAssignForShift } from "../../../lib/actions/autoAssign";
 import { notifyShiftAssignedByEmail } from "../../../lib/shiftAssignmentNotifications";
+import { resolveOrgSlugForNotify } from "../../../lib/resolveOrgSlug";
 import { addEngagementEvent } from "../../../lib/engagement/addEvent";
 import { fetchEngagementEnabledForOrgId } from "../../../lib/engagement/isEngagementEnabled";
 import { canAccessOperationalAdmin } from "../../../lib/permissions";
@@ -140,6 +141,9 @@ async function autoAssignForShifts(
 ): Promise<{ assigned: number; total: number }> {
   if (!shifts.length) return { assigned: 0, total: 0 };
 
+  const slugForNotify =
+    orgId != null ? await resolveOrgSlugForNotify(service, orgId, orgSlug) : null;
+
   const profilesQuery = service.from("profiles").select("id").order("full_name");
   if (orgId) profilesQuery.eq("organization_id", orgId);
   const scoresQuery = service.from("engagement_scores").select("user_id, score");
@@ -199,13 +203,13 @@ async function autoAssignForShifts(
     const { error } = await service.from("shift_assignments").insert(rows);
     if (!error) {
       toAssign.forEach((m) => globallyUsed.add(m.id));
-      if (orgSlug) {
+      if (slugForNotify) {
         for (const m of toAssign) {
           await notifyShiftAssignedByEmail({
             service,
             profileId: m.id,
             shiftId: shift.id,
-            orgSlug
+            orgSlug: slugForNotify
           }).catch(() => {});
         }
       }
@@ -229,6 +233,7 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
   if (adminOk !== true) return;
 
   const service = createSupabaseServiceRoleClient();
+  const slugForNotify = await resolveOrgSlugForNotify(service, orgId, orgSlug);
   const { data: orgRow } = await service.from("organizations").select("plan").eq("id", orgId).maybeSingle();
   if ((orgRow as { plan?: string | null } | null)?.plan === "free") return;
 
@@ -317,13 +322,13 @@ async function runAutoAssignForExistingShifts(formData: FormData) {
 
   if (toInsert.length > 0) {
     await service.from("shift_assignments").insert(toInsert);
-    if (orgSlug) {
+    if (slugForNotify) {
       for (const row of toInsert) {
         await notifyShiftAssignedByEmail({
           service,
           profileId: row.user_id,
           shiftId: row.shift_id,
-          orgSlug
+          orgSlug: slugForNotify
         }).catch(() => {});
       }
     }
@@ -386,6 +391,7 @@ async function fillSelfSignupGaps(formData: FormData) {
   if (!actor) return;
 
   const service = createSupabaseServiceRoleClient();
+  const slugForNotify = await resolveOrgSlugForNotify(service, orgId, orgSlug);
   const { data: orgRow } = await service.from("organizations").select("plan").eq("id", orgId).maybeSingle();
   const plan = (orgRow as { plan?: string | null } | null)?.plan ?? null;
   const requestedRaw = (formData.get("mode")?.toString() || "").trim();
@@ -501,13 +507,13 @@ async function fillSelfSignupGaps(formData: FormData) {
 
   if (toInsert.length > 0) {
     await service.from("shift_assignments").insert(toInsert);
-    if (orgSlug) {
+    if (slugForNotify) {
       for (const row of toInsert) {
         await notifyShiftAssignedByEmail({
           service,
           profileId: row.user_id,
           shiftId: row.shift_id,
-          orgSlug
+          orgSlug: slugForNotify
         }).catch(() => {});
       }
     }
