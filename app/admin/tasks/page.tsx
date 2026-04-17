@@ -8,6 +8,7 @@ import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { createUserNotification } from "../../../lib/notifications";
 import { sendTaskAssigned } from "../../../lib/n8n";
 import { getPublicOriginSync } from "../../../lib/publicBaseUrl";
+import { fetchEngagementEnabledForOrgId } from "../../../lib/engagement/isEngagementEnabled";
 import {
   getCurrentOrganization,
   isOrgAdmin,
@@ -43,7 +44,7 @@ async function autoAssignTasks(formData: FormData) {
   const orgId = formData.get("organization_id")?.toString() || null;
   const orgSlug = formData.get("org_slug")?.toString() || null;
   const requestedRaw = (formData.get("mode")?.toString() || "").trim();
-  const mode: "auto" | "rotation" | "random" =
+  let mode: "auto" | "rotation" | "random" =
     requestedRaw === "rotation" ? "rotation" : requestedRaw === "random" ? "random" : "auto";
   if (!orgId) return;
 
@@ -55,6 +56,8 @@ async function autoAssignTasks(formData: FormData) {
   if (adminOk !== true) return;
 
   const service = createSupabaseServiceRoleClient();
+  const engagementEnabled = await fetchEngagementEnabledForOrgId(service, orgId).catch(() => false);
+  if (!engagementEnabled && mode === "auto") mode = "rotation";
 
   const { data: tasks } = await service
     .from("tasks")
@@ -254,6 +257,7 @@ export default async function AdminTasksPage(props: PageProps) {
     }
   }
   if (!orgId && profile.organization_id) orgId = profile.organization_id;
+  const engagementEnabled = orgId ? await fetchEngagementEnabledForOrgId(service, orgId).catch(() => false) : false;
 
   let effectiveOrgSlug = orgSlug;
   if (!effectiveOrgSlug && orgId) {
@@ -414,12 +418,14 @@ export default async function AdminTasksPage(props: PageProps) {
                 <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
                 <select
                   name="mode"
-                  defaultValue="auto"
+                  defaultValue={engagementEnabled ? "auto" : "rotation"}
                   className="sh-fill-mode-select mr-2"
                   aria-label={tr("tasks.auto_assign_mode_label", locale)}
                   title={tr("tasks.auto_assign_mode_tooltip", locale)}
                 >
-                  <option value="auto">{tr("tasks.auto_assign_mode_auto", locale)}</option>
+                  {engagementEnabled ? (
+                    <option value="auto">{tr("tasks.auto_assign_mode_auto", locale)}</option>
+                  ) : null}
                   <option value="rotation">{tr("tasks.auto_assign_mode_rotation", locale)}</option>
                   <option value="random">{tr("tasks.auto_assign_mode_random", locale)}</option>
                 </select>
