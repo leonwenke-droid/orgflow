@@ -8,6 +8,17 @@ type BarcodeDetectorCtor = new (opts?: { formats?: string[] }) => {
   detect: (image: ImageBitmapSource) => Promise<{ rawValue?: string }[]>;
 };
 
+function detectBrowser(): "safari" | "chrome" | "edge" | "firefox" | "unknown" {
+  if (typeof navigator === "undefined") return "unknown";
+  const ua = navigator.userAgent || "";
+  // Edge contains "Edg", Chrome contains "Chrome", Safari contains "Safari" but not Chrome/Edg.
+  if (/Edg\//.test(ua)) return "edge";
+  if (/Firefox\//.test(ua)) return "firefox";
+  if (/Chrome\//.test(ua)) return "chrome";
+  if (/Safari\//.test(ua) && !/Chrome\//.test(ua) && !/Edg\//.test(ua)) return "safari";
+  return "unknown";
+}
+
 function parseCheckinPayload(text: string): { orgSlug: string; assignmentId?: string; shiftId?: string } | null {
   try {
     const u = new URL(text.trim(), typeof window !== "undefined" ? window.location.origin : "https://example.com");
@@ -39,6 +50,7 @@ export default function AdminShiftQrScanner({
   const [scanning, setScanning] = useState(false);
   const scanningRef = useRef(false);
   const rafRef = useRef<number | null>(null);
+  const [permissionState, setPermissionState] = useState<"unknown" | "granted" | "denied" | "prompt">("unknown");
 
   const stopCamera = useCallback(() => {
     scanningRef.current = false;
@@ -87,11 +99,51 @@ export default function AdminShiftQrScanner({
 
   useEffect(() => () => stopCamera(), [stopCamera]);
 
+  useEffect(() => {
+    let alive = true;
+    async function checkPerm() {
+      try {
+        const p = (navigator as any)?.permissions;
+        if (!p?.query) return;
+        const res = await p.query({ name: "camera" as any });
+        if (!alive) return;
+        const state = String(res?.state || "");
+        if (state === "granted" || state === "denied" || state === "prompt") setPermissionState(state as any);
+        res?.addEventListener?.("change", () => {
+          const next = String(res?.state || "");
+          if (next === "granted" || next === "denied" || next === "prompt") setPermissionState(next as any);
+        });
+      } catch {
+        /* ignore unsupported permissions API */
+      }
+    }
+    void checkPerm();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const permissionHelp = useCallback((): string => {
+    const b = detectBrowser();
+    if (b === "safari") return t("shifts.scanner_permission_help_safari", locale);
+    if (b === "firefox") return t("shifts.scanner_permission_help_firefox", locale);
+    if (b === "edge" || b === "chrome") return t("shifts.scanner_permission_help_chrome", locale);
+    return t("shifts.scanner_permission_help_generic", locale);
+  }, [locale]);
+
   const startScan = async () => {
     setStatus(null);
     const BD = (typeof window !== "undefined" && (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector) || null;
     if (!BD || !navigator.mediaDevices?.getUserMedia) {
       setStatus(t("shifts.scanner_no_camera_api", locale));
+      return;
+    }
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setStatus(t("shifts.scanner_https_required", locale));
+      return;
+    }
+    if (permissionState === "denied") {
+      setStatus(`${t("shifts.scanner_camera_denied", locale)} ${permissionHelp()}`);
       return;
     }
     try {
@@ -124,8 +176,21 @@ export default function AdminShiftQrScanner({
         if (scanningRef.current) rafRef.current = requestAnimationFrame(tick);
       };
       rafRef.current = requestAnimationFrame(tick);
-    } catch {
-      setStatus(t("shifts.scanner_camera_denied", locale));
+    } catch (e) {
+      const name = (e as any)?.name ? String((e as any).name) : "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setStatus(`${t("shifts.scanner_camera_denied", locale)} ${permissionHelp()}`);
+        return;
+      }
+      if (name === "NotFoundError" || name === "DevicesNotFoundError") {
+        setStatus(t("shifts.scanner_no_camera_found", locale));
+        return;
+      }
+      if (name === "NotReadableError" || name === "TrackStartError") {
+        setStatus(t("shifts.scanner_camera_in_use", locale));
+        return;
+      }
+      setStatus(t("shifts.scanner_camera_failed", locale));
     }
   };
 

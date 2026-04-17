@@ -952,6 +952,18 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.scanner_invalid_qr": "No valid check-in link in QR.",
     "shifts.scanner_no_camera_api": "Camera or BarcodeDetector not available in this browser.",
     "shifts.scanner_camera_denied": "Camera access denied.",
+    "shifts.scanner_https_required": "Camera access requires HTTPS (or localhost).",
+    "shifts.scanner_no_camera_found": "No camera found on this device.",
+    "shifts.scanner_camera_in_use": "Camera is in use by another app/tab. Close other camera apps and try again.",
+    "shifts.scanner_camera_failed": "Could not start the camera. Please try again.",
+    "shifts.scanner_permission_help_chrome":
+      "Enable camera access in the site settings (lock icon in the address bar) and reload the page.",
+    "shifts.scanner_permission_help_safari":
+      "Enable camera access in Safari settings (Settings → Websites → Camera) for this site, then reload.",
+    "shifts.scanner_permission_help_firefox":
+      "Enable camera access in the site permissions (camera icon in the address bar) and reload.",
+    "shifts.scanner_permission_help_generic":
+      "Enable camera access for this site in your browser settings and reload.",
     "shifts.show_checkin_qr": "Show QR",
     "shifts.member_qr_hint": "Show this code at check-in. Admin scans it in the shift plan.",
     "shifts.attendance_page_link": "Attendance",
@@ -2051,6 +2063,18 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.scanner_invalid_qr": "Kein gültiger Check-in-Link im QR.",
     "shifts.scanner_no_camera_api": "Kamera oder BarcodeDetector in diesem Browser nicht verfügbar.",
     "shifts.scanner_camera_denied": "Kamera-Zugriff verweigert.",
+    "shifts.scanner_https_required": "Kamera-Zugriff benötigt HTTPS (oder localhost).",
+    "shifts.scanner_no_camera_found": "Keine Kamera auf diesem Gerät gefunden.",
+    "shifts.scanner_camera_in_use": "Die Kamera wird bereits von einer anderen App/Tab verwendet. Bitte schließen und erneut versuchen.",
+    "shifts.scanner_camera_failed": "Kamera konnte nicht gestartet werden. Bitte erneut versuchen.",
+    "shifts.scanner_permission_help_chrome":
+      "Kamera-Zugriff in den Website-Einstellungen erlauben (Schloss-Symbol in der Adressleiste) und Seite neu laden.",
+    "shifts.scanner_permission_help_safari":
+      "Kamera-Zugriff in Safari erlauben (Einstellungen → Websites → Kamera) und Seite neu laden.",
+    "shifts.scanner_permission_help_firefox":
+      "Kamera-Zugriff in den Website-Rechten erlauben (Kamera-Symbol in der Adressleiste) und Seite neu laden.",
+    "shifts.scanner_permission_help_generic":
+      "Bitte Kamera-Zugriff für diese Website in den Browser-Einstellungen erlauben und Seite neu laden.",
     "shifts.show_checkin_qr": "QR zeigen",
     "shifts.member_qr_hint": "Diesen Code beim Check-in zeigen. Admin scannt ihn im Schichtplan.",
     "shifts.attendance_page_link": "Anwesenheit",
