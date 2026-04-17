@@ -153,6 +153,7 @@ export default function Sidebar({
   const [modules, setModules] = useState<OrgModules | null>(null);
   const [role, setRole] = useState<DbRole | null>(null);
   const [openTaskCount, setOpenTaskCount] = useState<number>(0);
+  const [upcomingShiftCount, setUpcomingShiftCount] = useState<number>(0);
 
   useEffect(() => {
     if (!orgSlug) {
@@ -160,6 +161,7 @@ export default function Sidebar({
       setLogoUrl(null);
       setModules(null);
       setOpenTaskCount(0);
+      setUpcomingShiftCount(0);
       return;
     }
     let cancelled = false;
@@ -172,6 +174,7 @@ export default function Sidebar({
           if (data.modules) setModules(data.modules);
           setRole((data.role as DbRole | undefined) ?? null);
           setOpenTaskCount(typeof data.openTaskCount === "number" ? data.openTaskCount : 0);
+          setUpcomingShiftCount(typeof data.upcomingShiftCount === "number" ? data.upcomingShiftCount : 0);
         }
       })
       .catch(() => {});
@@ -259,10 +262,16 @@ export default function Sidebar({
             <div className="mt-2 space-y-1">
               {section.items.map(({ href, labelKey, icon: Icon }) => {
                 const showTaskBadge = labelKey === "dashboard.tasks" && openTaskCount > 0;
+                const showShiftBadge = labelKey === "dashboard.shifts" && upcomingShiftCount > 0;
                 return (
                   <Link key={href} href={href} prefetch className={linkClassName(href)} onClick={onClose}>
                     <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
                     <span className="min-w-0 truncate">{t(labelKey, locale)}</span>
+                    {showShiftBadge && (
+                      <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 font-medium">
+                        {upcomingShiftCount}
+                      </span>
+                    )}
                     {showTaskBadge && (
                       <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 font-medium">
                         {openTaskCount}

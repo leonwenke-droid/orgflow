@@ -29,21 +29,32 @@ export default function MobileNav({
   const { locale } = useLocale();
   const pathname = usePathname() ?? "";
   const [role, setRole] = useState<DbRole | null>(null);
+  const [openTaskCount, setOpenTaskCount] = useState<number>(0);
+  const [upcomingShiftCount, setUpcomingShiftCount] = useState<number>(0);
 
   useEffect(() => {
     if (!orgSlug) {
       setRole(null);
+      setOpenTaskCount(0);
+      setUpcomingShiftCount(0);
       return;
     }
     let cancelled = false;
     fetch(`/api/org-settings?slug=${encodeURIComponent(orgSlug)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!cancelled && data?.role) setRole(data.role as DbRole);
-        else if (!cancelled) setRole(null);
+        if (cancelled) return;
+        if (data?.role) setRole(data.role as DbRole);
+        else setRole(null);
+        setOpenTaskCount(typeof data?.openTaskCount === "number" ? data.openTaskCount : 0);
+        setUpcomingShiftCount(typeof data?.upcomingShiftCount === "number" ? data.upcomingShiftCount : 0);
       })
       .catch(() => {
-        if (!cancelled) setRole(null);
+        if (!cancelled) {
+          setRole(null);
+          setOpenTaskCount(0);
+          setUpcomingShiftCount(0);
+        }
       });
     return () => {
       cancelled = true;
@@ -86,6 +97,12 @@ export default function MobileNav({
     >
       {items.map(({ href, labelKey, icon: Icon }) => {
         const active = isActive(href);
+        const badge =
+          labelKey === "dashboard.tasks"
+            ? openTaskCount
+            : labelKey === "dashboard.shifts"
+              ? upcomingShiftCount
+              : 0;
         return (
           <Link
             key={href}
@@ -99,14 +116,21 @@ export default function MobileNav({
             }
             aria-current={active ? "page" : undefined}
           >
-            <Icon
-              className={
-                "h-5 w-5 shrink-0 " +
-                (active ? "text-blue-600 dark:text-blue-400" : "text-text-muted dark:text-text-secondary")
-              }
-              strokeWidth={active ? 2.25 : 2}
-              aria-hidden
-            />
+            <span className="relative">
+              <Icon
+                className={
+                  "h-5 w-5 shrink-0 " +
+                  (active ? "text-blue-600 dark:text-blue-400" : "text-text-muted dark:text-text-secondary")
+                }
+                strokeWidth={active ? 2.25 : 2}
+                aria-hidden
+              />
+              {badge > 0 ? (
+                <span className="absolute -right-2 -top-2 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-semibold leading-none text-white">
+                  {badge}
+                </span>
+              ) : null}
+            </span>
             <span className="max-w-full truncate text-center leading-tight">{t(labelKey, locale)}</span>
           </Link>
         );

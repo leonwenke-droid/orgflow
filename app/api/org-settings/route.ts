@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
   }
 
   let openTaskCount = 0;
+  let upcomingShiftCount = 0;
   if (user && profileId && orgIdForData) {
     try {
       const service = createSupabaseServiceRoleClient();
@@ -65,6 +66,22 @@ export async function GET(req: NextRequest) {
       openTaskCount = count ?? 0;
     } catch {
       openTaskCount = 0;
+    }
+
+    try {
+      const service = createSupabaseServiceRoleClient();
+      const today = new Date().toISOString().slice(0, 10);
+      const { count } = await service
+        .from("shift_assignments")
+        .select("id, shifts!inner(date, deleted_at, organization_id)", { count: "exact", head: true })
+        .eq("shifts.organization_id", orgIdForData)
+        .is("shifts.deleted_at", null)
+        .gte("shifts.date", today)
+        // "Assigned to me" includes replacements as well.
+        .or(`user_id.eq.${profileId},replacement_user_id.eq.${profileId}`);
+      upcomingShiftCount = count ?? 0;
+    } catch {
+      upcomingShiftCount = 0;
     }
   }
 
@@ -85,5 +102,6 @@ export async function GET(req: NextRequest) {
     isReadOnly: role != null ? isReadOnly(role) : false,
     canViewFinance: role != null ? canViewFinance(role) : false,
     openTaskCount,
+    upcomingShiftCount,
   });
 }
