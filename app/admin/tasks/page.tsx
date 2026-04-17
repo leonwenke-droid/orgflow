@@ -29,10 +29,22 @@ import { createTask } from "./createTaskAction";
 
 export const dynamic = "force-dynamic";
 
+function pickRandomWithoutReplacement<T>(rows: T[], count: number): T[] {
+  const a = [...rows];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, Math.max(0, Math.min(count, a.length)));
+}
+
 async function autoAssignTasks(formData: FormData) {
   "use server";
   const orgId = formData.get("organization_id")?.toString() || null;
   const orgSlug = formData.get("org_slug")?.toString() || null;
+  const requestedRaw = (formData.get("mode")?.toString() || "").trim();
+  const mode: "auto" | "rotation" | "random" =
+    requestedRaw === "rotation" ? "rotation" : requestedRaw === "random" ? "random" : "auto";
   if (!orgId) return;
 
   const supabase = createServerComponentClient({ cookies });
@@ -85,13 +97,37 @@ async function autoAssignTasks(formData: FormData) {
   const updates: { taskId: string; ownerId: string }[] = [];
   const increments = new Map<string, number>();
 
-  // Round-robin over sorted-by-load list (deterministic per run)
-  let idx = 0;
-  for (const taskId of taskIds) {
-    const member = eligible[idx % eligible.length];
-    updates.push({ taskId, ownerId: member.id });
-    increments.set(member.id, (increments.get(member.id) ?? 0) + 1);
-    idx++;
+  if (mode === "rotation") {
+    // Greedy: always pick the currently lowest-load member (updates in-memory each assignment).
+    const current = new Map<string, { load: number; malus: number }>(
+      eligible.map((m) => [m.id, { load: m.load, malus: m.malus }])
+    );
+    const order = [...eligible].map((m) => m.id);
+    for (const taskId of taskIds) {
+      order.sort((a, b) => {
+        const A = current.get(a) ?? { load: 0, malus: 0 };
+        const B = current.get(b) ?? { load: 0, malus: 0 };
+        return (A.load - B.load) || (A.malus - B.malus) || a.localeCompare(b);
+      });
+      const ownerId = order[0];
+      if (!ownerId) continue;
+      updates.push({ taskId, ownerId });
+      increments.set(ownerId, (increments.get(ownerId) ?? 0) + 1);
+      const cur = current.get(ownerId) ?? { load: 0, malus: 0 };
+      current.set(ownerId, { ...cur, load: cur.load + 1 });
+    }
+  } else {
+    // Round-robin assignment over a member list:
+    // - auto: deterministic sorted-by-load
+    // - random: shuffled once per run
+    const list = mode === "random" ? pickRandomWithoutReplacement(eligible, eligible.length) : eligible;
+    let idx = 0;
+    for (const taskId of taskIds) {
+      const member = list[idx % list.length];
+      updates.push({ taskId, ownerId: member.id });
+      increments.set(member.id, (increments.get(member.id) ?? 0) + 1);
+      idx++;
+    }
   }
 
   const taskTitles = new Map<string, string>();
@@ -376,6 +412,17 @@ export default async function AdminTasksPage(props: PageProps) {
               <form action={autoAssignTasks} className="inline">
                 <input type="hidden" name="organization_id" value={orgId} />
                 <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
+                <select
+                  name="mode"
+                  defaultValue="auto"
+                  className="sh-fill-mode-select mr-2"
+                  aria-label={tr("tasks.auto_assign_mode_label", locale)}
+                  title={tr("tasks.auto_assign_mode_tooltip", locale)}
+                >
+                  <option value="auto">{tr("tasks.auto_assign_mode_auto", locale)}</option>
+                  <option value="rotation">{tr("tasks.auto_assign_mode_rotation", locale)}</option>
+                  <option value="random">{tr("tasks.auto_assign_mode_random", locale)}</option>
+                </select>
                 <SubmitButtonWithSpinner
                   className="btn-primary px-3 py-1.5 text-xs"
                   loadingLabel={tr("common.loading", locale)}
