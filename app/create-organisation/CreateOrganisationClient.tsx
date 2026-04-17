@@ -40,7 +40,7 @@ export default function CreateOrganisationClient() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  const [planChoice, setPlanChoice] = useState<null | "starter" | "base" | "scale">(null);
+  const [planChoice, setPlanChoice] = useState<"starter" | "base" | "scale">("starter");
   const [paidTier, setPaidTier] = useState<null | "base" | "scale">(null);
   const [stripeCheckoutSessionId, setStripeCheckoutSessionId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -55,6 +55,7 @@ export default function CreateOrganisationClient() {
     const sessionId = searchParams.get("checkout_session_id");
     if (tier === "base" || tier === "scale") {
       setPaidTier(tier);
+      setPlanChoice(tier);
       if (sessionId) {
         setStripeCheckoutSessionId(sessionId);
         try {
@@ -81,6 +82,7 @@ export default function CreateOrganisationClient() {
     } else {
       setPaidTier(null);
       setStripeCheckoutSessionId(null);
+      setPlanChoice("starter");
       try {
         sessionStorage.removeItem(CO_SESSION_KEY);
       } catch {
@@ -239,13 +241,11 @@ export default function CreateOrganisationClient() {
   };
 
   const nextDisabledReason =
-    step === 2 && !formData.name.trim()
+    step === 1 && !formData.name.trim()
       ? "Enter an organisation name to continue."
-      : step === 3 && formData.modules.length === 0
+      : step === 2 && formData.modules.length === 0
         ? "Select at least one module to continue."
-      : step === 1 && !planChoice
-        ? "Please choose a plan to continue."
-        : null;
+      : null;
 
   const showCancelledBanner = searchParams.get("cancelled") === "1";
 
@@ -307,158 +307,46 @@ export default function CreateOrganisationClient() {
                 </p>
               ) : null}
               {step === 1 && (
-                <div className="space-y-8">
-                  <div className="space-y-2">
-                    <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Tarif auswählen</h2>
-                    <p className="text-sm text-text-secondary">
-                      Starter ist kostenlos. Team und Pro kannst du <span className="font-medium text-text-primary">14 Tage kostenlos testen</span> — erst danach startet die Abbuchung.
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold text-text-primary">
+                    Organisation name
+                  </h2>
+                  <p className="text-sm text-text-secondary">
+                    Give your organisation a name (e.g. &quot;Class of 2027&quot; or
+                    &quot;City FC Volunteers&quot;).
+                  </p>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-text-secondary">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData((d) => ({ ...d, name: e.target.value }))
+                      }
+                      placeholder="My Organisation"
+                      required
+                      className="w-full rounded-lg border border-border-default px-4 py-2.5 text-text-primary focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="rounded-lg border border-border-subtle bg-bg-secondary p-3">
+                    <p className="text-xs font-semibold text-text-secondary">Quickstart</p>
+                    <p className="mt-1 text-xs text-text-secondary">
+                      Create your organisation with recommended modules now, configure teams and invites later.
                     </p>
+                    <button
+                      type="button"
+                      onClick={runQuickstart}
+                      disabled={!formData.name.trim()}
+                      className="btn-secondary mt-2 text-xs"
+                    >
+                      Use quickstart
+                    </button>
                   </div>
-
-                  <div className="grid gap-6 md:grid-cols-3">
-                    <div className="flex min-h-[420px] flex-col rounded-2xl border border-border-subtle bg-bg-secondary p-8">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-base font-semibold text-text-primary">Starter</div>
-                          <div className="mt-1 text-sm text-text-secondary">0 € · für immer kostenlos</div>
-                          <div className="mt-3 text-sm text-text-secondary">
-                            Für kleine Gruppen und erste Schritte.
-                          </div>
-                        </div>
-                        <span className="tag tag-neutral">Einfach starten</span>
-                      </div>
-                      <div className="mt-6 h-px w-full bg-border-subtle" />
-                      <ul className="mt-6 space-y-3 text-sm text-text-secondary">
-                        <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>5 Personen in einem Team</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Aufgaben &amp; Schichten</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>1 Organisation</li>
-                      </ul>
-                      <button
-                        type="button"
-                        className="btn-secondary mt-auto w-full"
-                        onClick={() => {
-                          setPaidTier(null);
-                          setStripeCheckoutSessionId(null);
-                          setPlanChoice("starter");
-                          setStep(2);
-                        }}
-                      >
-                        Kostenlos starten
-                      </button>
-                    </div>
-
-                    <div className="flex min-h-[420px] flex-col rounded-2xl border border-blue-600/30 bg-bg-primary p-8 shadow-sm ring-1 ring-blue-600/10">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-base font-semibold text-text-primary">Team</div>
-                          <div className="mt-1 text-sm text-text-secondary">29 €</div>
-                          <div className="mt-1 text-sm text-text-secondary">pro Monat · bis 49 Mitglieder</div>
-                          <div className="mt-3 text-sm text-text-secondary">
-                            Für aktive Organisationen — bis 49 Mitglieder. Größer? Siehe Tarif rechts (49 €).
-                          </div>
-                        </div>
-                        <span className="tag tag-blue">Empfohlen</span>
-                      </div>
-                      <div className="mt-6 h-px w-full bg-border-subtle" />
-                      <ul className="mt-6 space-y-3 text-sm text-text-secondary">
-                        <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>2‑wöchige kostenlose Testphase vor erster Abbuchung</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Bis zu 49 Mitglieder inklusive</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Alle Features</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Finanzen &amp; CSV‑Export</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Engagement Score</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Prioritäts‑Support</li>
-                      </ul>
-                      <button
-                        type="button"
-                        className="btn-primary mt-auto w-full"
-                        onClick={() => {
-                          setPaidTier("base");
-                          setPlanChoice("base");
-                          setStep(2);
-                        }}
-                      >
-                        14 Tage kostenlos testen
-                      </button>
-                    </div>
-
-                    <div className="flex min-h-[420px] flex-col rounded-2xl border border-border-subtle bg-bg-secondary p-8">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="text-base font-semibold text-text-primary">Pro</div>
-                          <div className="mt-1 text-sm text-text-secondary">49 €</div>
-                          <div className="mt-1 text-sm text-text-secondary">pro Monat · ab dem 50. Mitglied</div>
-                          <div className="mt-3 text-sm text-text-secondary">
-                            Derselbe Funktionsumfang wie Team — fester Preis für große Teams.
-                          </div>
-                        </div>
-                        <span className="tag tag-neutral">Für große Teams</span>
-                      </div>
-                      <div className="mt-6 h-px w-full bg-border-subtle" />
-                      <ul className="mt-6 space-y-3 text-sm text-text-secondary">
-                        <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>2‑wöchige kostenlose Testphase vor erster Abbuchung</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Unbegrenzt viele Mitglieder</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Alle Team‑Features (Finanzen, Engagement, …)</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Buchung &amp; Upgrade direkt in der Organisation</li>
-                        <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Prioritäts‑Support</li>
-                      </ul>
-                      <button
-                        type="button"
-                        className="btn-secondary mt-auto w-full"
-                        onClick={() => {
-                          setPaidTier("scale");
-                          setPlanChoice("scale");
-                          setStep(2);
-                        }}
-                      >
-                        14 Tage kostenlos testen
-                      </button>
-                    </div>
-                  </div>
-
                 </div>
               )}
           {step === 2 && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-text-primary">
-                Organisation name
-              </h2>
-              <p className="text-sm text-text-secondary">
-                Give your organisation a name (e.g. &quot;Class of 2027&quot; or
-                &quot;City FC Volunteers&quot;).
-              </p>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-text-secondary">
-                  Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData((d) => ({ ...d, name: e.target.value }))
-                  }
-                  placeholder="My Organisation"
-                  required
-                  className="w-full rounded-lg border border-border-default px-4 py-2.5 text-text-primary focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-              <div className="rounded-lg border border-border-subtle bg-bg-secondary p-3">
-                <p className="text-xs font-semibold text-text-secondary">Quickstart</p>
-                <p className="mt-1 text-xs text-text-secondary">
-                  Create your organisation with recommended modules now, configure teams and invites later.
-                </p>
-                <button
-                  type="button"
-                  onClick={runQuickstart}
-                  disabled={!formData.name.trim()}
-                  className="btn-secondary mt-2 text-xs"
-                >
-                  Use quickstart
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-text-primary">
                 Setup basics
@@ -522,11 +410,11 @@ export default function CreateOrganisationClient() {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 3 && (
             <div className="space-y-6">
               <h2 className="text-xl font-semibold text-text-primary">Finish</h2>
               <p className="text-sm text-text-secondary">
-                Review and create your organisation.
+                Review your organisation setup. Next, you’ll choose the subscription (if any) and create the organisation.
               </p>
               <div className="rounded-lg bg-bg-secondary p-4 text-sm">
                 <p>
@@ -553,6 +441,114 @@ export default function CreateOrganisationClient() {
             </div>
           )}
 
+          {step === 4 && (
+            <div className="space-y-8">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold tracking-tight text-text-primary">Tarif auswählen</h2>
+                <p className="text-sm text-text-secondary">
+                  Starter ist kostenlos. Team und Pro kannst du <span className="font-medium text-text-primary">14 Tage kostenlos testen</span> — erst danach startet die Abbuchung.
+                </p>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-3">
+                <div className="flex min-h-[420px] flex-col rounded-2xl border border-border-subtle bg-bg-secondary p-8">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-base font-semibold text-text-primary">Starter</div>
+                      <div className="mt-1 text-sm text-text-secondary">0 € · für immer kostenlos</div>
+                      <div className="mt-3 text-sm text-text-secondary">
+                        Für kleine Gruppen und erste Schritte.
+                      </div>
+                    </div>
+                    <span className="tag tag-neutral">Einfach starten</span>
+                  </div>
+                  <div className="mt-6 h-px w-full bg-border-subtle" />
+                  <ul className="mt-6 space-y-3 text-sm text-text-secondary">
+                    <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>5 Personen in einem Team</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Aufgaben &amp; Schichten</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>1 Organisation</li>
+                  </ul>
+                  <button
+                    type="button"
+                    className={`btn-secondary mt-auto w-full ${planChoice === "starter" ? "ring-2 ring-blue-500" : ""}`}
+                    onClick={() => {
+                      setPaidTier(null);
+                      setStripeCheckoutSessionId(null);
+                      setPlanChoice("starter");
+                    }}
+                  >
+                    Kostenlos starten
+                  </button>
+                </div>
+
+                <div className="flex min-h-[420px] flex-col rounded-2xl border border-blue-600/30 bg-bg-primary p-8 shadow-sm ring-1 ring-blue-600/10">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-base font-semibold text-text-primary">Team</div>
+                      <div className="mt-1 text-sm text-text-secondary">29 €</div>
+                      <div className="mt-1 text-sm text-text-secondary">pro Monat · bis 49 Mitglieder</div>
+                      <div className="mt-3 text-sm text-text-secondary">
+                        Für aktive Organisationen — bis 49 Mitglieder. Größer? Siehe Tarif rechts (49 €).
+                      </div>
+                    </div>
+                    <span className="tag tag-blue">Empfohlen</span>
+                  </div>
+                  <div className="mt-6 h-px w-full bg-border-subtle" />
+                  <ul className="mt-6 space-y-3 text-sm text-text-secondary">
+                    <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>2‑wöchige kostenlose Testphase vor erster Abbuchung</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Bis zu 49 Mitglieder inklusive</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Alle Features</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Finanzen &amp; CSV‑Export</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Engagement Score</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-brand">✓</span>Prioritäts‑Support</li>
+                  </ul>
+                  <button
+                    type="button"
+                    className={`btn-primary mt-auto w-full ${planChoice === "base" ? "ring-2 ring-blue-500" : ""}`}
+                    onClick={() => {
+                      setPaidTier("base");
+                      setPlanChoice("base");
+                    }}
+                  >
+                    14 Tage kostenlos testen
+                  </button>
+                </div>
+
+                <div className="flex min-h-[420px] flex-col rounded-2xl border border-border-subtle bg-bg-secondary p-8">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-base font-semibold text-text-primary">Pro</div>
+                      <div className="mt-1 text-sm text-text-secondary">49 €</div>
+                      <div className="mt-1 text-sm text-text-secondary">pro Monat · ab dem 50. Mitglied</div>
+                      <div className="mt-3 text-sm text-text-secondary">
+                        Derselbe Funktionsumfang wie Team — fester Preis für große Teams.
+                      </div>
+                    </div>
+                    <span className="tag tag-neutral">Für große Teams</span>
+                  </div>
+                  <div className="mt-6 h-px w-full bg-border-subtle" />
+                  <ul className="mt-6 space-y-3 text-sm text-text-secondary">
+                    <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>2‑wöchige kostenlose Testphase vor erster Abbuchung</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Unbegrenzt viele Mitglieder</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Alle Team‑Features (Finanzen, Engagement, …)</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Buchung &amp; Upgrade direkt in der Organisation</li>
+                    <li className="flex gap-2"><span className="mt-[2px] text-text-muted">✓</span>Prioritäts‑Support</li>
+                  </ul>
+                  <button
+                    type="button"
+                    className={`btn-secondary mt-auto w-full ${planChoice === "scale" ? "ring-2 ring-blue-500" : ""}`}
+                    onClick={() => {
+                      setPaidTier("scale");
+                      setPlanChoice("scale");
+                    }}
+                  >
+                    14 Tage kostenlos testen
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mt-8 flex items-center justify-between">
             <button
               type="button"
@@ -570,9 +566,8 @@ export default function CreateOrganisationClient() {
                   setStep((s) => Math.min(TOTAL_STEPS, s + 1));
                 }}
                 disabled={
-                  (step === 1 && !planChoice) ||
-                  (step === 2 && !formData.name.trim()) ||
-                  (step === 3 && formData.modules.length === 0)
+                  (step === 1 && !formData.name.trim()) ||
+                  (step === 2 && formData.modules.length === 0)
                 }
                 className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 title={nextDisabledReason ?? undefined}

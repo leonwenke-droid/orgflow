@@ -1,5 +1,4 @@
 import Link from "next/link";
-import PaidPlanCheckoutButton from "./PaidPlanCheckoutButton";
 import StarterLockedFeatureRows from "./StarterLockedFeatureRows";
 
 export function Pricing() {
@@ -92,13 +91,13 @@ export function Pricing() {
                 Prioritäts-Support
               </div>
             </div>
-            <PaidPlanCheckoutButton
-              tier="base"
+            <Link
+              href="/create-organisation?tier=base"
               className="btn btn-white btn-lg"
               style={{ width: "100%", justifyContent: "center" }}
             >
               Organisation anlegen <span className="arrow-icon">→</span>
-            </PaidPlanCheckoutButton>
+            </Link>
           </div>
 
           <div className="p-card reveal">
@@ -141,13 +140,13 @@ export function Pricing() {
                 Prioritäts-Support
               </div>
             </div>
-            <PaidPlanCheckoutButton
-              tier="scale"
+            <Link
+              href="/create-organisation?tier=scale"
               className="btn btn-outline"
               style={{ width: "100%", justifyContent: "center" }}
             >
               Organisation anlegen
-            </PaidPlanCheckoutButton>
+            </Link>
           </div>
         </div>
       </div>
