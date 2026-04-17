@@ -30,6 +30,25 @@ async function resolveOrgSlug(organizationId: string): Promise<string | null> {
   return (data as { slug?: string | null } | null)?.slug ?? null;
 }
 
+/** `rotation_assign` returns `members` as JSON array of UUID strings (see `to_jsonb(v_ids)` in SQL). */
+function profileIdsFromRotationRpcMembers(members: unknown): string[] {
+  if (!Array.isArray(members)) return [];
+  const out: string[] = [];
+  for (const m of members) {
+    if (typeof m === "string") {
+      const s = m.trim();
+      if (s) out.push(s);
+      continue;
+    }
+    if (m && typeof m === "object") {
+      const o = m as Record<string, unknown>;
+      const id = String(o.user_id ?? o.id ?? "").trim();
+      if (id) out.push(id);
+    }
+  }
+  return [...new Set(out)];
+}
+
 function mapPreviewError(err: string): string {
   switch (err) {
     case "shift_not_found":
@@ -144,14 +163,8 @@ export async function assignRotationFairOne(shiftId: string): Promise<AssignRota
     });
     // Notify newly assigned members (non-self assignment).
     const orgSlug = await resolveOrgSlug(organizationId);
-    if (orgSlug && Array.isArray(members)) {
-      const ids = members
-        .map((m) => {
-          if (!m || typeof m !== "object") return "";
-          const o = m as Record<string, unknown>;
-          return String(o.user_id ?? o.id ?? "");
-        })
-        .filter(Boolean);
+    if (orgSlug) {
+      const ids = profileIdsFromRotationRpcMembers(members);
       await Promise.allSettled(
         ids.map((profileId) =>
           notifyShiftAssignedByEmail({ service, profileId, shiftId, orgSlug })

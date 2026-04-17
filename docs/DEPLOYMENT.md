@@ -85,14 +85,13 @@ Endpoints:
 
 Each endpoint returns **500** if `CRON_SECRET` is unset, and **401** if the header is wrong.
 
-**Important:** Vercel’s scheduled invocations from `vercel.json` **do not automatically send** `Authorization: Bearer <CRON_SECRET>`. Options:
+**Authorization:** Set `CRON_SECRET` in the Vercel project; scheduled invocations send `Authorization: Bearer <CRON_SECRET>` (see [Vercel Cron](https://vercel.com/docs/cron-jobs/manage-cron-jobs)). If you call the URLs manually or from an external scheduler, send the same header.
 
-1. Call these URLs from an external scheduler (e.g. **Upstash QStash**, **GitHub Actions**, or another cron) with   `Authorization: Bearer <same value as CRON_SECRET>`.
-2. Or adjust your hosting setup so the scheduled request includes that header.
+Reminder endpoints (`shift-reminders`, `task-reminders`) use a **~2h window around “24h before”**; `vercel.json` runs them **hourly** (`0 * * * *`) so that window can be hit. A **once-daily** cron would miss most shifts/tasks.
 
 Suggested schedules (UTC), matching `vercel.json` as a reference:
 
-- Shift reminders: `0 8 * * *`
+- Shift / task reminders: `0 * * * *` (hourly)
 - Rotation decay: `0 2 * * *`
 - Deletion processing: `0 3 * * *` (DSGVO)
 

@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
+import { addCalendarDaysYmd, berlinLocalDateTimeToUtcMs, formatDateYmdInBerlin } from "../../../../lib/berlinCalendarRange";
+import { isInShiftReminderWindow } from "../../../../lib/cronReminderWindow";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { sendShiftReminder } from "../../../../lib/n8n";
 
 /**
- * Cron endpoint: send reminders for shifts starting in the next 24h.
- * Call with header: Authorization: Bearer <CRON_SECRET> (set CRON_SECRET in env).
- * To actually send emails, integrate Resend (or similar) and replace the TODO below.
+ * Cron: Erinnerung ca. 24h vor Schichtbeginn (Europe/Berlin: Datum + Startzeit).
+ * Fenster: verbleibende Zeit zwischen 23h und 25h (±1h um stündlichen Cron).
+ * Authorization: Bearer <CRON_SECRET>
  */
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -22,13 +24,19 @@ export async function GET(req: Request) {
 
   const supabase = createSupabaseServiceRoleClient();
   const now = new Date();
-  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const nowMs = now.getTime();
+  const berlinToday = formatDateYmdInBerlin(now);
+  const minDate = addCalendarDaysYmd(berlinToday, -1);
+  const maxDate = addCalendarDaysYmd(berlinToday, 4);
+  if (!minDate || !maxDate) {
+    return NextResponse.json({ error: "Date range error." }, { status: 500 });
+  }
 
   const { data: shifts } = await supabase
     .from("shifts")
     .select("id, date, start_time, event_name, organization_id, organizations!inner(name)")
-    .gte("date", now.toISOString().slice(0, 10))
-    .lte("date", tomorrow.toISOString().slice(0, 10));
+    .gte("date", minDate)
+    .lte("date", maxDate);
 
   if (!shifts?.length) {
     return NextResponse.json({ ok: true, sent: 0, message: "No upcoming shifts" });
@@ -51,17 +59,21 @@ export async function GET(req: Request) {
   }[] = [];
   for (const a of assignments ?? []) {
     const shift = shifts.find((s) => s.id === (a as { shift_id: string }).shift_id);
-    if (shift) {
-      reminders.push({
-        assignmentId: (a as { id: string }).id,
-        userId: (a as { user_id: string }).user_id,
-        shiftId: shift.id,
-        eventName: (shift as { event_name?: string }).event_name ?? "",
-        date: (shift as { date: string }).date,
-        startTime: (shift as { start_time: string }).start_time ?? "",
-        orgName: (shift as any).organizations?.name ?? "",
-      });
-    }
+    if (!shift) continue;
+    const dateStr = String((shift as { date: string }).date ?? "").slice(0, 10);
+    const startTime = String((shift as { start_time: string }).start_time ?? "");
+    const startMs = berlinLocalDateTimeToUtcMs(dateStr, startTime);
+    if (startMs == null || !isInShiftReminderWindow(nowMs, startMs)) continue;
+
+    reminders.push({
+      assignmentId: (a as { id: string }).id,
+      userId: (a as { user_id: string }).user_id,
+      shiftId: shift.id,
+      eventName: (shift as { event_name?: string }).event_name ?? "",
+      date: dateStr,
+      startTime,
+      orgName: (shift as { organizations?: { name?: string } }).organizations?.name ?? ""
+    });
   }
 
   // Filter out already-sent reminders

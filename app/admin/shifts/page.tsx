@@ -1007,6 +1007,16 @@ async function replaceAssignment(assignmentId: string, formData: FormData) {
     .eq("id", assignmentId);
 
   if (!error) {
+    const { data: orgRow } = await service.from("organizations").select("slug").eq("id", organizationId).maybeSingle();
+    const slugForEmail = String((orgRow as { slug?: string } | null)?.slug ?? "").trim();
+    if (slugForEmail && shiftIdForReplace) {
+      await notifyShiftAssignedByEmail({
+        service,
+        profileId: newUserId,
+        shiftId: shiftIdForReplace,
+        orgSlug: slugForEmail
+      }).catch(() => {});
+    }
     await writeAuditLog({
       organizationId,
       actorProfileId: actor.actorProfileId,

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { reminderTargetWindowIso } from "../../../../lib/cronReminderWindow";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
 import { sendTaskReminder } from "../../../../lib/n8n";
 import { getPublicOriginSync } from "../../../../lib/publicBaseUrl";
@@ -13,16 +14,16 @@ export async function GET(req: Request) {
   if (authHeader !== `Bearer ${secret}`) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
   const supabase = createSupabaseServiceRoleClient();
-  const now = new Date();
-  const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const nowMs = Date.now();
+  const { lowIso, highIso } = reminderTargetWindowIso(nowMs);
 
   const { data: tasks } = await supabase
     .from("tasks")
     .select("id, title, description, due_at, owner_id, organization_id")
     .not("owner_id", "is", null)
     .eq("status", "offen")
-    .gte("due_at", now.toISOString())
-    .lte("due_at", in24h.toISOString());
+    .gte("due_at", lowIso)
+    .lte("due_at", highIso);
 
   if (!tasks?.length) return NextResponse.json({ ok: true, sent: 0 });
 
