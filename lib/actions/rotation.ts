@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { writeAuditLog } from "../audit";
 import { requireOrgAdminAction } from "../permissionsServer";
 import { createSupabaseServiceRoleClient } from "../supabaseServer";
+import { notifyShiftAssignedByEmail } from "../shiftAssignmentNotifications";
 import type {
   AssignRotationFairOneResult,
   PreviewRotationForShiftResult,
@@ -21,6 +22,12 @@ async function resolveShiftOrganizationId(shiftId: string): Promise<string | nul
   const service = createSupabaseServiceRoleClient();
   const { data } = await service.from("shifts").select("organization_id").eq("id", shiftId).maybeSingle();
   return (data as { organization_id?: string | null } | null)?.organization_id ?? null;
+}
+
+async function resolveOrgSlug(organizationId: string): Promise<string | null> {
+  const service = createSupabaseServiceRoleClient();
+  const { data } = await service.from("organizations").select("slug").eq("id", organizationId).maybeSingle();
+  return (data as { slug?: string | null } | null)?.slug ?? null;
 }
 
 function mapPreviewError(err: string): string {
@@ -135,6 +142,22 @@ export async function assignRotationFairOne(shiftId: string): Promise<AssignRota
       targetId: shiftId,
       metadata: { assigned, members }
     });
+    // Notify newly assigned members (non-self assignment).
+    const orgSlug = await resolveOrgSlug(organizationId);
+    if (orgSlug && Array.isArray(members)) {
+      const ids = members
+        .map((m) => {
+          if (!m || typeof m !== "object") return "";
+          const o = m as Record<string, unknown>;
+          return String(o.user_id ?? o.id ?? "");
+        })
+        .filter(Boolean);
+      await Promise.allSettled(
+        ids.map((profileId) =>
+          notifyShiftAssignedByEmail({ service, profileId, shiftId, orgSlug })
+        )
+      );
+    }
     revalidatePath("/admin/shifts");
   }
 

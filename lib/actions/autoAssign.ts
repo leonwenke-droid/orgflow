@@ -6,6 +6,7 @@ import { requireOrgAdminAction } from "../permissionsServer";
 import { createSupabaseServiceRoleClient } from "../supabaseServer";
 import { fetchEngagementEnabledForOrgId } from "../engagement/isEngagementEnabled";
 import { getProfileIdsBlockedByApprovedUnavailability } from "../shiftUnavailability";
+import { notifyShiftAssignedByEmail } from "../shiftAssignmentNotifications";
 import type { AssignAutoAssignForShiftResult, PreviewAutoAssignForShiftResult } from "../../types/autoAssign";
 
 const COOLDOWN_DAYS = 3;
@@ -34,6 +35,12 @@ async function resolveShiftOrganizationId(shiftId: string): Promise<string | nul
   const service = createSupabaseServiceRoleClient();
   const { data } = await service.from("shifts").select("organization_id").eq("id", shiftId).maybeSingle();
   return (data as { organization_id?: string | null } | null)?.organization_id ?? null;
+}
+
+async function resolveOrgSlug(organizationId: string): Promise<string | null> {
+  const service = createSupabaseServiceRoleClient();
+  const { data } = await service.from("organizations").select("slug").eq("id", organizationId).maybeSingle();
+  return (data as { slug?: string | null } | null)?.slug ?? null;
 }
 
 async function getUsersInCooldown(
@@ -190,6 +197,13 @@ export async function assignAutoAssignForShift(shiftId: string): Promise<AssignA
     targetId: shiftId,
     metadata: { assigned: picked.length, members: picked }
   });
+
+  const orgSlug = await resolveOrgSlug(organizationId);
+  if (orgSlug) {
+    await Promise.allSettled(
+      picked.map((m) => notifyShiftAssignedByEmail({ service, profileId: m.user_id, shiftId, orgSlug }))
+    );
+  }
 
   revalidatePath("/admin/shifts");
   return { ok: true, assigned: picked.length, members: picked };
