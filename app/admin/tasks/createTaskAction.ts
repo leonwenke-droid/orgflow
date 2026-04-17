@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
 import { getCurrentUserOrganization, isOrgAdmin } from "../../../lib/getOrganization";
+import { sendTaskAssigned } from "../../../lib/n8n";
+import { getPublicOriginSync } from "../../../lib/publicBaseUrl";
 
 export type CreateTaskState = { errorKey?: string; error?: string; success?: boolean } | null;
 
@@ -75,7 +77,9 @@ export async function createTask(_prev: CreateTaskState, formData: FormData): Pr
     return { errorKey: "tasks.no_organization" };
   }
 
-  const { error } = await service.from("tasks").insert({
+  const { data: insertedTask, error } = await service
+    .from("tasks")
+    .insert({
     title,
     description,
     committee_id: committeeId || null,
@@ -87,11 +91,42 @@ export async function createTask(_prev: CreateTaskState, formData: FormData): Pr
     access_token: token,
     ...(eventId ? { event_id: eventId } : {}),
     organization_id: orgIdForInsert
-  });
+    })
+    .select("id, title, description, due_at, owner_id")
+    .maybeSingle();
 
   if (error) {
     console.error(error);
     return { errorKey: "tasks.create_error" };
+  }
+
+  // If the task was assigned during creation, send the assignment webhook email.
+  if (ownerId) {
+    const [{ data: assignedProfile }, { data: orgRow }] = await Promise.all([
+      service.from("profiles").select("email, full_name").eq("id", ownerId).maybeSingle(),
+      service.from("organizations").select("name, slug").eq("id", orgIdForInsert).maybeSingle()
+    ]);
+    const em = (assignedProfile as { email?: string | null } | null)?.email;
+    const orgSlugResolved = String((orgRow as { slug?: string | null } | null)?.slug ?? "").trim();
+    if (em && orgSlugResolved) {
+      const base = getPublicOriginSync();
+      const taskUrl = `${base}/${orgSlugResolved}/tasks`;
+      void sendTaskAssigned({
+        email: em,
+        fullName: (assignedProfile as { full_name?: string | null } | null)?.full_name ?? undefined,
+        taskTitle: String((insertedTask as { title?: string } | null)?.title ?? title ?? "Aufgabe"),
+        description: (insertedTask as { description?: string | null } | null)?.description ?? description ?? undefined,
+        dueAt: (insertedTask as { due_at?: string | null } | null)?.due_at
+          ? new Date(String((insertedTask as { due_at: string }).due_at)).toLocaleString("de-DE", {
+              dateStyle: "medium",
+              timeStyle: "short"
+            })
+          : undefined,
+        orgName: String((orgRow as { name?: string | null } | null)?.name ?? "OrgFlow"),
+        orgSlug: orgSlugResolved,
+        taskUrl
+      }).catch(() => {});
+    }
   }
 
   if (modal) {

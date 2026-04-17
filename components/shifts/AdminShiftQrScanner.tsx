@@ -8,6 +8,8 @@ type BarcodeDetectorCtor = new (opts?: { formats?: string[] }) => {
   detect: (image: ImageBitmapSource) => Promise<{ rawValue?: string }[]>;
 };
 
+type JsQrModule = typeof import("jsqr");
+
 function detectBrowser(): "safari" | "chrome" | "edge" | "firefox" | "unknown" {
   if (typeof navigator === "undefined") return "unknown";
   const ua = navigator.userAgent || "";
@@ -51,6 +53,9 @@ export default function AdminShiftQrScanner({
   const scanningRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const [permissionState, setPermissionState] = useState<"unknown" | "granted" | "denied" | "prompt">("unknown");
+  const autoStartAttemptedRef = useRef(false);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const jsQrRef = useRef<JsQrModule["default"] | null>(null);
 
   const stopCamera = useCallback(() => {
     scanningRef.current = false;
@@ -131,10 +136,10 @@ export default function AdminShiftQrScanner({
     return t("shifts.scanner_permission_help_generic", locale);
   }, [locale]);
 
-  const startScan = async () => {
+  const startScan = useCallback(async () => {
     setStatus(null);
     const BD = (typeof window !== "undefined" && (window as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector) || null;
-    if (!BD || !navigator.mediaDevices?.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       setStatus(t("shifts.scanner_no_camera_api", locale));
       return;
     }
@@ -158,17 +163,49 @@ export default function AdminShiftQrScanner({
       await v.play();
       scanningRef.current = true;
       setScanning(true);
-      const detector = new BD({ formats: ["qr_code"] });
+      const detector = BD ? new BD({ formats: ["qr_code"] }) : null;
+
+      if (!detector) {
+        // Safari fallback: decode QR codes from video frames via jsQR.
+        if (!jsQrRef.current) {
+          const mod = (await import("jsqr")) as JsQrModule;
+          jsQrRef.current = mod.default;
+        }
+        if (!canvasRef.current) canvasRef.current = document.createElement("canvas");
+      }
 
       const tick = async () => {
         if (!videoRef.current || !scanningRef.current) return;
         try {
-          const codes = await detector.detect(videoRef.current);
-          const raw = codes[0]?.rawValue;
-          if (raw) {
-            onDecoded(raw);
-            stopCamera();
-            return;
+          if (detector) {
+            const codes = await detector.detect(videoRef.current);
+            const raw = codes[0]?.rawValue;
+            if (raw) {
+              onDecoded(raw);
+              stopCamera();
+              return;
+            }
+          } else if (jsQrRef.current && canvasRef.current) {
+            const video = videoRef.current;
+            const w = video.videoWidth || 0;
+            const h = video.videoHeight || 0;
+            if (w > 0 && h > 0) {
+              const canvas = canvasRef.current;
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext("2d", { willReadFrequently: true });
+              if (ctx) {
+                ctx.drawImage(video, 0, 0, w, h);
+                const img = ctx.getImageData(0, 0, w, h);
+                const code = jsQrRef.current(img.data, w, h, { inversionAttempts: "attemptBoth" } as any);
+                const raw = (code as any)?.data ? String((code as any).data) : "";
+                if (raw) {
+                  onDecoded(raw);
+                  stopCamera();
+                  return;
+                }
+              }
+            }
           }
         } catch {
           /* ignore frame errors */
@@ -192,7 +229,19 @@ export default function AdminShiftQrScanner({
       }
       setStatus(t("shifts.scanner_camera_failed", locale));
     }
-  };
+  }, [locale, onDecoded, permissionHelp, permissionState, stopCamera]);
+
+  // Try to trigger the camera permission prompt automatically.
+  // Note: Some browsers require a user gesture; in that case we fall back to the button.
+  useEffect(() => {
+    if (autoStartAttemptedRef.current) return;
+    if (scanning) return;
+    if (typeof window === "undefined") return;
+    if (!window.isSecureContext) return;
+    if (permissionState === "denied") return;
+    autoStartAttemptedRef.current = true;
+    void startScan();
+  }, [permissionState, scanning, startScan]);
 
   const submitPaste = () => {
     const parsed = parseCheckinPayload(pasteUrl);

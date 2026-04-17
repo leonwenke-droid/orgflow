@@ -61,7 +61,7 @@ export default function ShiftsAttendanceConsole({
   const searchParams = useSearchParams();
   const shiftIdFromUrl = searchParams.get("shiftId");
   const [selectedId, setSelectedId] = useState<string>(() => shifts[0]?.id ?? "");
-  const [scanLog, setScanLog] = useState<{ name: string; time: string }[]>([]);
+  const [scanLogByShift, setScanLogByShift] = useState<Record<string, { name: string; time: string }[]>>({});
   const [qrOpen, setQrOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -86,6 +86,8 @@ export default function ShiftsAttendanceConsole({
 
   const pushScanLog = useCallback(
     (assignmentId?: string, shiftId?: string) => {
+      const sid = (shiftId ?? selectedId ?? "").trim();
+      if (!sid) return;
       const a =
         assignments.find((x) => x.id === assignmentId) ??
         (shiftId ? assignments[0] : undefined);
@@ -94,10 +96,14 @@ export default function ShiftsAttendanceConsole({
         hour: "2-digit",
         minute: "2-digit"
       });
-      setScanLog((prev) => [{ name, time }, ...prev].slice(0, 8));
+      setScanLogByShift((prev) => {
+        const existing = prev[sid] ?? [];
+        const next = [{ name, time }, ...existing].slice(0, 8);
+        return { ...prev, [sid]: next };
+      });
       router.refresh();
     },
-    [assignments, profileNames, locale, router]
+    [assignments, profileNames, locale, router, selectedId]
   );
 
   const runConfirm = (assignmentId: string) => {
@@ -355,12 +361,12 @@ export default function ShiftsAttendanceConsole({
             </div>
           ) : null}
 
-          {scanLog.length > 0 ? (
+          {(scanLogByShift[selectedId] ?? []).length > 0 ? (
             <div className="card">
               <div className="chd">{t("shifts.console_scan_log", locale)}</div>
               <div className="cbd">
                 <ul className="space-y-1 text-xs" style={{ color: "var(--sp-text2)" }}>
-                  {scanLog.map((e, i) => (
+                  {(scanLogByShift[selectedId] ?? []).map((e, i) => (
                     <li key={i}>
                       {e.name} · {e.time}
                     </li>
