@@ -1,28 +1,25 @@
 /**
- * “24h vorher”-Erinnerungen: einmal auslösen, wenn die verbleibende Zeit
- * in einem Band um genau 24h liegt (Cron-toleranz).
+ * Erinnerungen „ca. einen Tag vorher“ bei **täglichem** Cron (Vercel Hobby: max. 1×/Tag).
  *
- * Halbbreite ±1h: passt zu stündlichem Cron; bei häufigerem Cron kann die
- * Fensterlogik enger gesetzt werden.
+ * Statt eines schmalen ±1h-Bands um exakt 24h (dafür bräuchte man stündliche Crons, Pro)
+ * wählen wir ein Fenster **12h–48h** vor Deadline/Schichtbeginn. Beim ersten Lauf nach
+ * Eintritt in dieses Fenster wird gesendet (Dedupe über task_reminder_logs /
+ * shift_reminder_logs). Pro-Nutzer können in vercel.json auf stündliche Schedules wechseln
+ * und optional engere Konstanten nutzen.
  */
-export const REMINDER_LEAD_MS = 24 * 60 * 60 * 1000;
-export const REMINDER_WINDOW_HALF_MS = 60 * 60 * 1000;
+export const REMINDER_MIN_REMAINING_MS = 12 * 60 * 60 * 1000;
+export const REMINDER_MAX_REMAINING_MS = 48 * 60 * 60 * 1000;
 
 export function reminderTargetWindowIso(nowMs: number): { lowIso: string; highIso: string } {
-  const lowMs = nowMs + REMINDER_LEAD_MS - REMINDER_WINDOW_HALF_MS;
-  const highMs = nowMs + REMINDER_LEAD_MS + REMINDER_WINDOW_HALF_MS;
   return {
-    lowIso: new Date(lowMs).toISOString(),
-    highIso: new Date(highMs).toISOString()
+    lowIso: new Date(nowMs + REMINDER_MIN_REMAINING_MS).toISOString(),
+    highIso: new Date(nowMs + REMINDER_MAX_REMAINING_MS).toISOString()
   };
 }
 
-/** True if `eventStartMs - nowMs` liegt im Erinnerungsfenster vor dem Start (nur zukünftige Events). */
+/** True wenn verbleibende Zeit vor Start im Erinnerungsfenster liegt (nur zukünftige Events). */
 export function isInShiftReminderWindow(nowMs: number, eventStartMs: number): boolean {
   const remaining = eventStartMs - nowMs;
   if (remaining <= 0) return false;
-  return (
-    remaining >= REMINDER_LEAD_MS - REMINDER_WINDOW_HALF_MS &&
-    remaining <= REMINDER_LEAD_MS + REMINDER_WINDOW_HALF_MS
-  );
+  return remaining >= REMINDER_MIN_REMAINING_MS && remaining <= REMINDER_MAX_REMAINING_MS;
 }

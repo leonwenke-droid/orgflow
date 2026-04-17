@@ -87,11 +87,11 @@ Each endpoint returns **500** if `CRON_SECRET` is unset, and **401** if the head
 
 **Authorization:** Set `CRON_SECRET` in the Vercel project; scheduled invocations send `Authorization: Bearer <CRON_SECRET>` (see [Vercel Cron](https://vercel.com/docs/cron-jobs/manage-cron-jobs)). If you call the URLs manually or from an external scheduler, send the same header.
 
-Reminder endpoints (`shift-reminders`, `task-reminders`) use a **~2h window around “24h before”**; `vercel.json` runs them **hourly** (`0 * * * *`) so that window can be hit. A **once-daily** cron would miss most shifts/tasks.
+Reminder endpoints use a **12–48h window** before deadline/shift start so **once-daily** cron (required on **Vercel Hobby**) still fires; dedupe tables prevent duplicates. On **Pro**, you may switch `vercel.json` to hourly and tighten `lib/cronReminderWindow.ts` if you want nearer-to-24h delivery.
 
 Suggested schedules (UTC), matching `vercel.json` as a reference:
 
-- Shift / task reminders: `0 * * * *` (hourly)
+- Shift / task reminders: `0 8 * * *` (daily; Hobby limit: once per day)
 - Rotation decay: `0 2 * * *`
 - Deletion processing: `0 3 * * *` (DSGVO)
 
