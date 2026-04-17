@@ -19,7 +19,7 @@ export default function ShiftCalendarDetailDrawer({
 
   return (
     <div
-      className="shifts-console fixed inset-0 z-[80] flex items-center justify-end bg-black/55 p-2 backdrop-blur-sm"
+      className="shifts-console fixed inset-0 z-[100] flex items-center justify-end bg-black/55 p-2 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
     >

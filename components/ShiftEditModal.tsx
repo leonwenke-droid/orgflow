@@ -102,7 +102,7 @@ export default function ShiftEditModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-neutral-950/30 p-0 sm:p-4 dark:bg-black/60"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-neutral-950/30 p-0 sm:p-4 dark:bg-black/60"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

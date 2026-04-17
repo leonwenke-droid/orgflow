@@ -307,17 +307,17 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border-subtle bg-bg-app/70 backdrop-blur dark:border-border-subtle dark:bg-bg-app/92 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-[35] hidden w-64 flex-col border-r border-border-subtle bg-bg-app/70 backdrop-blur dark:border-border-subtle dark:bg-bg-app/92 lg:flex">
         {sidebarContent}
       </aside>
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/45 dark:bg-black/60 lg:hidden"
+            className="fixed inset-0 z-[38] bg-black/45 dark:bg-black/60 lg:hidden"
             onClick={onClose}
             aria-hidden
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-[min(16rem,88vw)] max-w-[min(16rem,88vw)] flex-col border-r border-border-default bg-bg-primary shadow-[4px_0_24px_-4px_rgba(0,0,0,0.2)] dark:border-border-subtle dark:bg-bg-app dark:shadow-2xl lg:hidden">
+          <aside className="fixed inset-y-0 left-0 z-[45] flex w-[min(16rem,88vw)] max-w-[min(16rem,88vw)] flex-col border-r border-border-default bg-bg-primary shadow-[4px_0_24px_-4px_rgba(0,0,0,0.2)] dark:border-border-subtle dark:bg-bg-app dark:shadow-2xl lg:hidden">
             {sidebarContent}
           </aside>
         </>

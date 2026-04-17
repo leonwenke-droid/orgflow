@@ -18,6 +18,7 @@ type NavItem = {
 /**
  * Bottom navigation for viewports &lt; md (768px). Four primary actions: Dashboard, Schichten, Aufgaben, Konto.
  * Hidden on md+ where the desktop sidebar is available.
+ * z-30 — below modals (z-[100]) and mobile sidebar (z-[38–45]).
  */
 export default function MobileNav({
   user,
@@ -105,7 +106,7 @@ export default function MobileNav({
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 flex items-stretch justify-around gap-0 border-t border-border-subtle bg-bg-primary/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur supports-[backdrop-filter]:bg-bg-primary/80 md:hidden dark:border-border-default dark:bg-bg-primary/95 dark:supports-[backdrop-filter]:bg-bg-primary/80"
+      className="fixed bottom-0 left-0 right-0 z-30 flex items-stretch justify-around gap-0 border-t border-border-subtle bg-bg-primary/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur supports-[backdrop-filter]:bg-bg-primary/80 md:hidden dark:border-border-default dark:bg-bg-primary/95 dark:supports-[backdrop-filter]:bg-bg-primary/80"
       aria-label={t("nav.mobile_nav", locale)}
     >
       {items.map(({ href, labelKey, icon: Icon }) => {

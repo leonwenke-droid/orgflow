@@ -184,7 +184,7 @@ export default function EngagementScoreWidget({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/55 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
           onClick={(e) => e.target === e.currentTarget && setOpen(false)}
           role="dialog"
           aria-modal="true"
