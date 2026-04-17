@@ -853,9 +853,10 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.fill_self_signup_run_aria": "Fill remaining slots on self sign-up shifts",
     "shifts.fill_self_signup_mode_label": "How to fill remaining slots",
     "shifts.fill_self_signup_mode_tooltip":
-      "Random: weighted by engagement score. Lowest first: order by score and last assignment (similar to rotation).",
+      "Random (weighted): weighted by engagement score (if enabled). Lowest first: order by score and last assignment (similar to rotation). Random: pure random selection.",
     "shifts.fill_self_signup_mode_auto": "Random (weighted)",
     "shifts.fill_self_signup_mode_rotation": "Lowest score first",
+    "shifts.fill_self_signup_mode_random": "Random",
     "shifts.confirm_fill_self_signup":
       "Fill remaining slots on self sign-up shifts (from today onward)? Only empty slots are filled; existing sign-ups stay.",
     "shifts.qrflow_step1_title": "Admin creates shift and sets attendance mode",
@@ -1950,9 +1951,10 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.fill_self_signup_run_aria": "Freie Plätze bei Selbsteintragung auffüllen",
     "shifts.fill_self_signup_mode_label": "Art der Nachbesetzung",
     "shifts.fill_self_signup_mode_tooltip":
-      "Zufall: nach Engagement gewichtet. Niedrigster zuerst: nach Score und letzter Zuweisung (ähnlich Rotation).",
+      "Zufall (gewichtet): nach Engagement gewichtet (falls aktiv). Niedrigster zuerst: nach Score und letzter Zuweisung (ähnlich Rotation). Zufall: echte Zufallsauswahl.",
     "shifts.fill_self_signup_mode_auto": "Zufall (Engagement)",
     "shifts.fill_self_signup_mode_rotation": "Niedrigster zuerst",
+    "shifts.fill_self_signup_mode_random": "Zufall",
     "shifts.confirm_fill_self_signup":
       "Freie Plätze bei Selbsteintragungs-Schichten (ab heute) auffüllen? Es werden nur noch leere Plätze besetzt; bestehende Eintragungen bleiben.",
     "shifts.qrflow_step1_title": "Admin legt Schicht an und wählt Anwesenheitsmodus",

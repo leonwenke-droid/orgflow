@@ -355,10 +355,20 @@ function sortMembersForRotationFill(a: MemberFillRow, b: MemberFillRow): number 
   return (a.full_name ?? "").localeCompare(b.full_name ?? "", undefined, { sensitivity: "base" });
 }
 
+function pickRandomWithoutReplacement<T>(rows: T[], count: number): T[] {
+  const a = [...rows];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, Math.max(0, Math.min(count, a.length)));
+}
+
 /**
  * Fills remaining slots on self-sign-up shifts (not enough members claimed).
  * Mode "auto": weighted random by engagement score (like batch auto-assign for new shifts).
  * Mode "rotation": lowest engagement score first, then rotation last_assigned_at (nulls first), then name.
+ * Mode "random": pure random (no engagement weighting).
  */
 async function fillSelfSignupGaps(formData: FormData) {
   "use server";
@@ -378,14 +388,11 @@ async function fillSelfSignupGaps(formData: FormData) {
   const service = createSupabaseServiceRoleClient();
   const { data: orgRow } = await service.from("organizations").select("plan").eq("id", orgId).maybeSingle();
   const plan = (orgRow as { plan?: string | null } | null)?.plan ?? null;
-  const requested = formData.get("mode")?.toString() === "rotation" ? "rotation" : "auto";
-  const mode = plan === "free" && requested === "auto" ? "rotation" : requested;
-
-  if (!(await fetchEngagementEnabledForOrgId(service, orgId))) {
-    revalidatePath("/admin/shifts");
-    if (orgSlug) revalidatePath(`/admin/shifts?org=${encodeURIComponent(orgSlug)}`);
-    return;
-  }
+  const requestedRaw = (formData.get("mode")?.toString() || "").trim();
+  const requested = requestedRaw === "rotation" ? "rotation" : requestedRaw === "random" ? "random" : "auto";
+  const engagementEnabled = await fetchEngagementEnabledForOrgId(service, orgId);
+  const allowAuto = plan !== "free" && engagementEnabled;
+  const mode: "auto" | "rotation" | "random" = requested === "auto" && !allowAuto ? "rotation" : requested;
   const todayStr = getTodayDateString();
 
   const { data: shifts } = await service
@@ -478,6 +485,8 @@ async function fillSelfSignupGaps(formData: FormData) {
         eligible.map((m) => ({ id: m.id, score: m.score })),
         missing
       );
+    } else if (mode === "random") {
+      picked = pickRandomWithoutReplacement(eligible, missing).map((m) => ({ id: m.id }));
     } else {
       const sorted = [...eligible].sort(sortMembersForRotationFill);
       picked = sorted.slice(0, missing).map((m) => ({ id: m.id }));
@@ -1610,7 +1619,7 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
                           engagementEnabled={engagementEnabled}
                           allowAutoAssign={allowAutoAssign}
                         />
-                        {orgId && engagementEnabled ? (
+                        {orgId ? (
                           <ShiftsAutoAssignConfirmForm
                             action={fillSelfSignupGaps}
                             confirmKey="shifts.confirm_fill_self_signup"
@@ -1618,20 +1627,19 @@ export default async function ShiftsPage(props: ShiftsPageProps) {
                           >
                             <input type="hidden" name="organization_id" value={orgId} />
                             <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
-                            {allowAutoAssign ? (
-                              <select
-                                name="mode"
-                                defaultValue="auto"
-                                className="sh-fill-mode-select"
-                                aria-label={t("shifts.fill_self_signup_mode_label", locale)}
-                                title={t("shifts.fill_self_signup_mode_tooltip", locale)}
-                              >
+                            <select
+                              name="mode"
+                              defaultValue={allowAutoAssign ? "auto" : "rotation"}
+                              className="sh-fill-mode-select"
+                              aria-label={t("shifts.fill_self_signup_mode_label", locale)}
+                              title={t("shifts.fill_self_signup_mode_tooltip", locale)}
+                            >
+                              {allowAutoAssign ? (
                                 <option value="auto">{t("shifts.fill_self_signup_mode_auto", locale)}</option>
-                                <option value="rotation">{t("shifts.fill_self_signup_mode_rotation", locale)}</option>
-                              </select>
-                            ) : (
-                              <input type="hidden" name="mode" value="rotation" />
-                            )}
+                              ) : null}
+                              <option value="rotation">{t("shifts.fill_self_signup_mode_rotation", locale)}</option>
+                              <option value="random">{t("shifts.fill_self_signup_mode_random", locale)}</option>
+                            </select>
                             <SubmitButtonWithSpinner
                               className="btn btnp"
                               loadingLabel="…"
