@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import ModalPortal from "../ModalPortal";
 import { useLocale } from "../LocaleProvider";
 import { t, type Locale } from "../../lib/i18n";
 import type {
@@ -60,10 +61,13 @@ export default function AutoAssignButton({ shiftId, previewAutoAssignForShift, a
     }
   }
 
+  const [ackRandom, setAckRandom] = useState(false);
+
   function openModal() {
     setOpen(true);
     setPreview(null);
     setAssignError(null);
+    setAckRandom(false);
     void loadPreview();
   }
 
@@ -71,6 +75,7 @@ export default function AutoAssignButton({ shiftId, previewAutoAssignForShift, a
     setOpen(false);
     setPreview(null);
     setAssignError(null);
+    setAckRandom(false);
   }
 
   function confirmAssign() {
@@ -93,17 +98,18 @@ export default function AutoAssignButton({ shiftId, previewAutoAssignForShift, a
       </button>
 
       {open && (
-        <div
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4"
-          onClick={closeModal}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="auto-assign-preview-title"
-        >
+        <ModalPortal>
           <div
-            className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border-b-0 bg-bg-primary shadow-xl sm:max-h-[90vh] sm:rounded-xl sm:border-b border-border-subtle dark:bg-bg-primary dark:border-border-default pb-[env(safe-area-inset-bottom)]"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4"
+            onClick={closeModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="auto-assign-preview-title"
           >
+            <div
+              className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border-b-0 bg-bg-primary shadow-xl sm:max-h-[90vh] sm:rounded-xl sm:border-b border-border-subtle dark:bg-bg-primary dark:border-border-default pb-[env(safe-area-inset-bottom)]"
+              onClick={(e) => e.stopPropagation()}
+            >
             <div className="flex shrink-0 items-center justify-between border-b border-border-subtle bg-bg-secondary px-3 py-2.5 sm:py-2 dark:border-border-default dark:bg-bg-primary">
               <h3 id="auto-assign-preview-title" className="text-xs font-semibold text-text-primary dark:text-text-primary">
                 {t("auto_assign.preview.title", locale)}
@@ -166,6 +172,18 @@ export default function AutoAssignButton({ shiftId, previewAutoAssignForShift, a
 
               {assignError && <p className="text-sm text-red-300 dark:text-red-200">{assignError}</p>}
 
+              {!loadingPreview && preview?.ok && preview.needed > 0 && (
+                <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-border-default bg-bg-secondary/80 px-3 py-2.5 text-xs text-text-primary dark:border-border-default dark:bg-bg-secondary/40">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-border-default"
+                    checked={ackRandom}
+                    onChange={(e) => setAckRandom(e.target.checked)}
+                  />
+                  <span>{t("auto_assign.preview.ack_random", locale)}</span>
+                </label>
+              )}
+
               <div className="mt-auto flex flex-wrap justify-end gap-2 border-t border-border-subtle pt-3 dark:border-border-default">
                 <button type="button" className="btn" onClick={closeModal}>
                   {t("auto_assign.preview.cancel", locale)}
@@ -173,7 +191,13 @@ export default function AutoAssignButton({ shiftId, previewAutoAssignForShift, a
                 <button
                   type="button"
                   className="btnp btn inline-flex items-center gap-1.5"
-                  disabled={pending || loadingPreview || !preview?.ok || (preview.ok && preview.needed <= 0)}
+                  disabled={
+                    pending ||
+                    loadingPreview ||
+                    !preview?.ok ||
+                    (preview.ok && preview.needed <= 0) ||
+                    !ackRandom
+                  }
                   aria-busy={pending}
                   onClick={confirmAssign}
                 >
@@ -190,6 +214,7 @@ export default function AutoAssignButton({ shiftId, previewAutoAssignForShift, a
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </>
   );

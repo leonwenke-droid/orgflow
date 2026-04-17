@@ -741,6 +741,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "auto_assign.preview.empty": "No members in scope.",
     "auto_assign.preview.cancel": "Cancel",
     "auto_assign.preview.confirm": "Confirm auto-assignment",
+    "auto_assign.preview.ack_random":
+      "I understand that members are chosen at random (lower engagement score = higher probability).",
     "shifts.auto_assignment_done": "Auto-assignment completed.",
     "shifts.assignment_mode": "Assignment mode",
     "shifts.assignment_mode_auto": "Auto-assign (admin button)",
@@ -867,6 +869,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.fill_self_signup_mode_random": "Random",
     "shifts.confirm_fill_self_signup":
       "Fill remaining slots on self sign-up shifts (from today onward)? Only empty slots are filled; existing sign-ups stay.",
+    "shifts.batch_confirm_title": "Confirm action",
+    "shifts.batch_confirm_submit": "Confirm",
     "shifts.qrflow_step1_title": "Admin creates shift and sets attendance mode",
     "shifts.qrflow_step1_body":
       "A unique check-in flow is tied to each shift and time window. Outside the window, check-in is not accepted.",
@@ -1859,6 +1863,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "auto_assign.preview.empty": "Keine Mitglieder im Scope.",
     "auto_assign.preview.cancel": "Abbrechen",
     "auto_assign.preview.confirm": "Auto-Zuteilung bestätigen",
+    "auto_assign.preview.ack_random":
+      "Ich bestätige, dass die Zuweisung per Zufall erfolgt (niedrigerer Engagement-Score = höhere Wahrscheinlichkeit).",
     "shifts.auto_assignment_done": "Auto-Zuteilung abgeschlossen.",
     "shifts.assignment_mode": "Zuteilung",
     "shifts.assignment_mode_auto": "Auto-Zuteilung (Admin-Button)",
@@ -1985,6 +1991,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.fill_self_signup_mode_random": "Zufall",
     "shifts.confirm_fill_self_signup":
       "Freie Plätze bei Selbsteintragungs-Schichten (ab heute) auffüllen? Es werden nur noch leere Plätze besetzt; bestehende Eintragungen bleiben.",
+    "shifts.batch_confirm_title": "Aktion bestätigen",
+    "shifts.batch_confirm_submit": "Ausführen",
     "shifts.qrflow_step1_title": "Admin legt Schicht an und wählt Anwesenheitsmodus",
     "shifts.qrflow_step1_body":
       "Pro Schicht gilt ein Check-in-Fenster. Außerhalb ist kein Check-in möglich.",

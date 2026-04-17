@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ModalPortal from "./ModalPortal";
 import SubmitButtonWithSpinner from "./SubmitButtonWithSpinner";
 import AssignmentKindHelpIcon from "./shifts/AssignmentKindHelpIcon";
 import { useLocale } from "./LocaleProvider";
@@ -101,13 +102,14 @@ export default function ShiftEditModal({
   const totalAssignments = allShiftsWithAssignments?.reduce((sum, s) => sum + s.assignments.length, 0) ?? assignments.length;
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-neutral-950/30 p-0 sm:p-4 dark:bg-black/60"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={personsOnly ? t("shifts.edit_persons", locale) : t("shifts.edit_shift", locale)}
-    >
+    <ModalPortal>
+      <div
+        className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-neutral-950/30 p-0 sm:p-4 dark:bg-black/60"
+        onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-label={personsOnly ? t("shifts.edit_persons", locale) : t("shifts.edit_shift", locale)}
+      >
       <div
         className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-b-0 bg-bg-primary shadow-xl sm:max-h-[90vh] sm:rounded-xl sm:border-b border-border-subtle dark:bg-bg-primary dark:border-border-default pb-[env(safe-area-inset-bottom)]"
         onClick={(e) => e.stopPropagation()}
@@ -405,5 +407,6 @@ export default function ShiftEditModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

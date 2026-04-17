@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import ModalPortal from "../ModalPortal";
 import { useLocale } from "../LocaleProvider";
 import { t, type Locale } from "../../lib/i18n";
 import type { AssignRotationFairOneResult, PreviewRotationForShiftResult, RotationPreviewRow } from "../../types/rotation";
@@ -93,13 +94,14 @@ export default function RotationAssignButton({
       </button>
 
       {open && (
-        <div
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4"
-          onClick={closeModal}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="rotation-preview-title"
-        >
+        <ModalPortal>
+          <div
+            className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4"
+            onClick={closeModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rotation-preview-title"
+          >
           <div
             className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border-b-0 bg-bg-primary shadow-xl sm:max-h-[90vh] sm:rounded-xl sm:border-b border-border-subtle dark:bg-bg-primary dark:border-border-default pb-[env(safe-area-inset-bottom)]"
             onClick={(e) => e.stopPropagation()}
@@ -197,6 +199,7 @@ export default function RotationAssignButton({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </>
   );
