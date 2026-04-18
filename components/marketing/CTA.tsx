@@ -15,7 +15,7 @@ export function CTA() {
             Kostenlos registrieren <span className="arrow-icon">→</span>
           </Link>
           <a
-            href="mailto:hello@orgflow.de"
+            href="mailto:info@lyniqmedia.com"
             className="btn btn-lg"
             style={{ color: "rgba(255,255,255,.65)", border: "1px solid rgba(255,255,255,.18)" }}
           >

@@ -20,7 +20,7 @@ export default function ApiDocsPage() {
         API-Zugriffe erfolgen im Namen einer angemeldeten Person: Sitzungen werden über sichere Cookies bzw. das
         Auth-System eurer Organisation abgewickelt. Für maschinelle Integrationen ohne Browser-Session bieten wir
         ausgewählte, vertraglich vereinbarte Zugänge an — sprecht uns dafür unter{" "}
-        <a href="mailto:hello@orgflow.de">hello@orgflow.de</a> an.
+        <a href="mailto:info@lyniqmedia.com">info@lyniqmedia.com</a> an.
       </p>
 
       <h2>Basis-URL</h2>

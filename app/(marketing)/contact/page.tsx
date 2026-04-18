@@ -20,7 +20,7 @@ export default function ContactPage() {
         <p style={{ margin: 0 }}>
           <strong>E-Mail</strong>
           <br />
-          <a href="mailto:hello@orgflow.de">hello@orgflow.de</a>
+          <a href="mailto:info@lyniqmedia.com">info@lyniqmedia.com</a>
         </p>
         <p style={{ margin: "12px 0 0", fontSize: "14px" }}>
           Bitte Organisation (Name oder Kurzlink) und kurze Beschreibung des Anliegens angeben — bei technischen

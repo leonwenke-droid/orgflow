@@ -48,7 +48,7 @@ export default function StatusPage() {
       <h2>Incident melden</h2>
       <p>
         Wenn etwas nicht funktioniert, obwohl hier &quot;betriebsbereit&quot; steht, schreibt bitte an{" "}
-        <a href="mailto:hello@orgflow.de">hello@orgflow.de</a> mit Zeitpunkt, betroffener Organisation (Slug) und
+        <a href="mailto:info@lyniqmedia.com">info@lyniqmedia.com</a> mit Zeitpunkt, betroffener Organisation (Slug) und
         kurzer Fehlerbeschreibung.
       </p>
     </MarketingSubPage>

@@ -46,10 +46,13 @@ export default function AboutPage() {
 
       <h2>Kontakt</h2>
       <p>
-        Produkt &amp; Partnerschaften: <a href="mailto:hello@orgflow.de">hello@orgflow.de</a>
-        <br />
-        Geschäftliches (LYNIQ Media):{" "}
+        Fragen, Support und Partnerschaften:{" "}
         <a href="mailto:info@lyniqmedia.com">info@lyniqmedia.com</a>
+        <br />
+        Weitere Infos unter{" "}
+        <a href="https://www.lyniqmedia.com" target="_blank" rel="noopener noreferrer">
+          lyniqmedia.com
+        </a>
       </p>
     </MarketingSubPage>
   );

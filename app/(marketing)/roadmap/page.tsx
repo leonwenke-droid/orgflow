@@ -20,15 +20,8 @@ export default function RoadmapPage() {
         <div className="subpage-roadmap-row">
           <span className="subpage-pill subpage-pill--soon">In Arbeit</span>
           <span>
-            <strong>Erweiterte Berechtigungen</strong> — feinere Rollen für Admins und
-            Teams (z.&nbsp;B. nur Lesen, nur Schichten).
-          </span>
-        </div>
-        <div className="subpage-roadmap-row">
-          <span className="subpage-pill subpage-pill--soon">In Arbeit</span>
-          <span>
-            <strong className="text-text-primary">Benachrichtigungen</strong> — E-Mail- und In-App-Hinweise für
-            Schichten, Aufgaben und Einladungen.
+            <strong>Erweiterte Berechtigungen</strong> — feinere Rollen für Admins und Teams (z.&nbsp;B. nur Lesen, nur
+            Schichten).
           </span>
         </div>
         <div className="subpage-roadmap-row">
@@ -37,14 +30,27 @@ export default function RoadmapPage() {
             <strong>Kalender-Feeds</strong> — iCal-Abonnement für Schichten und Termine.
           </span>
         </div>
+        <div className="subpage-roadmap-row">
+          <span className="subpage-pill subpage-pill--soon">Geplant</span>
+          <span>
+            <strong>Mobile App</strong> — Native iOS- und Android-App für Mitglieder (Schichten einsehen, Check-in,
+            Aufgaben).
+          </span>
+        </div>
+        <div className="subpage-roadmap-row">
+          <span className="subpage-pill subpage-pill--soon">Geplant</span>
+          <span>
+            <strong>Öffentliche Event-Seiten</strong> — Veranstaltungen mit externem Anmeldelink für Nicht-Mitglieder.
+          </span>
+        </div>
       </div>
 
       <h2>Geplant (mittelfristig)</h2>
       <ul>
-        <li>Mobile Web-Optimierung weiter ausbauen; native Apps evaluieren.</li>
         <li>Integrationen (z.&nbsp;B. Slack, Microsoft Teams) für Status-Updates.</li>
         <li>API-Erweiterungen für ausgewählte Partner und eigene Automatisierungen.</li>
-        <li>Mehrsprachige Oberfläche vereinheitlichen (DE/EN) in allen Bereichen.</li>
+        <li>Wiederkehrende Schichten und Aufgaben (Serien).</li>
+        <li>Erweiterte Exportformate (PDF, DATEV-kompatibel).</li>
       </ul>
 
       <h2>Bereits live (Auswahl)</h2>
@@ -55,17 +61,36 @@ export default function RoadmapPage() {
         </div>
         <div className="subpage-roadmap-row">
           <span className="subpage-pill subpage-pill--live">Live</span>
+          <span>Veranstaltungen (Events) mit verknüpften Aufgaben und Schichten</span>
+        </div>
+        <div className="subpage-roadmap-row">
+          <span className="subpage-pill subpage-pill--live">Live</span>
           <span>Engagement-Punkte und Auswertungen (optional pro Organisation)</span>
         </div>
         <div className="subpage-roadmap-row">
           <span className="subpage-pill subpage-pill--live">Live</span>
-          <span>Einladungslinks, Check-in für Schichten, Exporte</span>
+          <span>Einladungslinks, QR-Check-in für Schichten, Exporte (CSV, Excel)</span>
+        </div>
+        <div className="subpage-roadmap-row">
+          <span className="subpage-pill subpage-pill--live">Live</span>
+          <span>Rotationssystem für faire Schichtzuteilung</span>
+        </div>
+        <div className="subpage-roadmap-row">
+          <span className="subpage-pill subpage-pill--live">Live</span>
+          <span>E-Mail-Benachrichtigungen: Einladung, Zuweisung, 24h-Erinnerung, Passwort-Reset</span>
+        </div>
+        <div className="subpage-roadmap-row">
+          <span className="subpage-pill subpage-pill--live">Live</span>
+          <span>Multi-Org-Mitgliedschaft (ein Konto, mehrere Organisationen)</span>
+        </div>
+        <div className="subpage-roadmap-row">
+          <span className="subpage-pill subpage-pill--live">Live</span>
+          <span>Dark Mode, DE/EN Sprachauswahl</span>
         </div>
       </div>
 
       <p className="subpage-meta" style={{ marginTop: "2rem" }}>
-        Wunsch oder Feedback?{" "}
-        <a href="mailto:hello@orgflow.de">hello@orgflow.de</a>
+        Wunsch oder Feedback? <a href="mailto:info@lyniqmedia.com">info@lyniqmedia.com</a>
       </p>
     </MarketingSubPage>
   );

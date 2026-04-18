@@ -36,7 +36,7 @@ export function Footer() {
             <h4>Unternehmen</h4>
             <Link href="/about">Über uns</Link>
             <Link href="/contact">Kontakt</Link>
-            <a href="mailto:hello@orgflow.de">hello@orgflow.de</a>
+            <a href="mailto:info@lyniqmedia.com">info@lyniqmedia.com</a>
           </div>
         </div>
 

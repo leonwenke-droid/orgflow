@@ -402,39 +402,6 @@ export default async function AdminTasksPage(props: PageProps) {
             <p className="mt-0.5 text-xs text-text-muted">{statsLine}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {orgId && (
-              <Link
-                href={baseTasksTrashUrl}
-                className="btn-secondary px-3 py-1.5 text-xs"
-              >
-                {tr("tasks.trash_link", locale).replace("{count}", String(deletedTrashCount))}
-              </Link>
-            )}
-            {orgId && (
-              <form action={autoAssignTasks} className="inline">
-                <input type="hidden" name="organization_id" value={orgId} />
-                <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
-                <select
-                  name="mode"
-                  defaultValue={engagementEnabled ? "auto" : "rotation"}
-                  className="sh-fill-mode-select mr-2"
-                  aria-label={tr("tasks.auto_assign_mode_label", locale)}
-                  title={tr("tasks.auto_assign_mode_tooltip", locale)}
-                >
-                  {engagementEnabled ? (
-                    <option value="auto">{tr("tasks.auto_assign_mode_auto", locale)}</option>
-                  ) : null}
-                  <option value="rotation">{tr("tasks.auto_assign_mode_rotation", locale)}</option>
-                  <option value="random">{tr("tasks.auto_assign_mode_random", locale)}</option>
-                </select>
-                <SubmitButtonWithSpinner
-                  className="btn-primary px-3 py-1.5 text-xs"
-                  loadingLabel={tr("common.loading", locale)}
-                >
-                  {tr("tasks.run_auto_assignment", locale)}
-                </SubmitButtonWithSpinner>
-              </form>
-            )}
             {orgId ? (
               <NewTaskModal
                 action={createTask}
@@ -445,9 +412,42 @@ export default async function AdminTasksPage(props: PageProps) {
                 eventsList={events}
               />
             ) : (
-              <Link href={baseTasksNewUrl} className="btn-primary text-xs">
+              <Link href={baseTasksNewUrl} className="btn-primary px-3 py-1.5 text-xs font-medium shadow-sm">
                 {tr("cta.create_task", locale)}
               </Link>
+            )}
+            {orgId && (
+              <Link
+                href={baseTasksTrashUrl}
+                className="btn-secondary px-3 py-1.5 text-xs"
+              >
+                {tr("tasks.trash_link", locale).replace("{count}", String(deletedTrashCount))}
+              </Link>
+            )}
+            {orgId && (
+              <form action={autoAssignTasks} className="inline flex flex-wrap items-center gap-2">
+                <input type="hidden" name="organization_id" value={orgId} />
+                <input type="hidden" name="org_slug" value={effectiveOrgSlug ?? ""} />
+                <select
+                  name="mode"
+                  defaultValue={engagementEnabled ? "auto" : "rotation"}
+                  className="sh-fill-mode-select"
+                  aria-label={tr("tasks.auto_assign_mode_label", locale)}
+                  title={tr("tasks.auto_assign_mode_tooltip", locale)}
+                >
+                  {engagementEnabled ? (
+                    <option value="auto">{tr("tasks.auto_assign_mode_auto", locale)}</option>
+                  ) : null}
+                  <option value="rotation">{tr("tasks.auto_assign_mode_rotation", locale)}</option>
+                  <option value="random">{tr("tasks.auto_assign_mode_random", locale)}</option>
+                </select>
+                <SubmitButtonWithSpinner
+                  className="btn-secondary px-3 py-1.5 text-xs font-medium"
+                  loadingLabel={tr("common.loading", locale)}
+                >
+                  {tr("tasks.run_auto_assignment", locale)}
+                </SubmitButtonWithSpinner>
+              </form>
             )}
           </div>
         </div>

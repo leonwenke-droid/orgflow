@@ -704,6 +704,8 @@ export const translations: Record<Locale, Record<string, string>> = {
       "Upgrades from Free use Stripe below. New Team / Pro (50+) signups complete Stripe checkout before creating the organisation (14-day trial before the first charge on both paid tiers).",
     "settings.billing_two_tier_blurb":
       "The correct price is chosen from your member count. Limits are enforced server-side.",
+    "settings.billing_stripe_portal_hint":
+      "Cancel or change a paid subscription in the Stripe Customer Portal (same place as payment methods and invoices). If you do not see a cancel option, check Stripe Dashboard → Settings → Billing → Customer portal.",
     "settings.billing_checkout_cta_base": "Upgrade: Team (up to 49 members)",
     "settings.billing_checkout_cta_scale": "Upgrade: Pro (50+ members)",
     "common.verify": "Confirm",
@@ -2299,6 +2301,8 @@ export const translations: Record<Locale, Record<string, string>> = {
       "Upgrades von Free laufen über Stripe (Button unten). Neue Abonnements für Team oder Pro schließen den Stripe-Checkout vor dem Anlegen der Organisation ab (14 Tage Test vor erster Abbuchung bei beiden kostenpflichtigen Tarifen).",
     "settings.billing_two_tier_blurb":
       "Der passende Preis wird aus der Mitgliederzahl ermittelt. Limits werden serverseitig erzwungen.",
+    "settings.billing_stripe_portal_hint":
+      "Kündigung oder Änderung eines kostenpflichtigen Abos erfolgt im Stripe-Kundenportal (dort auch Zahlungsmittel und Rechnungen). Fehlt die Kündigungsoption, in Stripe unter Einstellungen → Billing → Customer portal prüfen.",
     "settings.billing_checkout_cta_base": "Upgrade: Team (bis 49 Mitgl.)",
     "settings.billing_checkout_cta_scale": "Upgrade: Pro (ab 50 Mitgl.)",
     "common.verify": "Bestätigen",

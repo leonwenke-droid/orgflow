@@ -52,7 +52,7 @@ export default function BlogPage() {
 
       <p className="subpage-meta">
         Themenvorschlag?{" "}
-        <a href="mailto:hello@orgflow.de">hello@orgflow.de</a>
+        <a href="mailto:info@lyniqmedia.com">info@lyniqmedia.com</a>
       </p>
     </MarketingSubPage>
   );

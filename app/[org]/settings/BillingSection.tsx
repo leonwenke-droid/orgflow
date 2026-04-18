@@ -132,6 +132,9 @@ export default function BillingSection({
       <p className="text-xs text-text-secondary dark:text-text-muted">
         {t("settings.billing_two_tier_blurb", locale)}
       </p>
+      <p className="text-xs text-text-secondary dark:text-text-muted">
+        {t("settings.billing_stripe_portal_hint", locale)}
+      </p>
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
         <div className="flex flex-col gap-1">
           <button

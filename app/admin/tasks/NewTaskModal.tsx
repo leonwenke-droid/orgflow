@@ -28,7 +28,11 @@ export default function NewTaskModal({
 
   return (
     <>
-      <button type="button" className="btnp btn text-xs" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className="btn-primary px-3 py-1.5 text-xs font-medium shadow-sm"
+        onClick={() => setOpen(true)}
+      >
         + {t("cta.create_task", locale)}
       </button>
       {open ? (
