@@ -28,16 +28,17 @@ export default async function ShiftsViewerPage(props: {
   const claimShiftNotice =
     claimRaw === "unavailable" || claimRaw === "error" ? claimRaw : undefined;
 
-  const org = await getCurrentOrganization(orgSlug);
-  const orgIdForData = getOrgIdForData(orgSlug, org.id);
-
-  const locale = await getRequestLocale();
-
   const authSupabase = createServerComponentClient({ cookies });
-  const { data: { user } } = await authSupabase.auth.getUser();
+  const service = createSupabaseServiceRoleClient();
+
+  const [org, { data: { user } }, locale] = await Promise.all([
+    getCurrentOrganization(orgSlug),
+    authSupabase.auth.getUser(),
+    getRequestLocale()
+  ]);
   if (!user) redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/shifts`);
 
-  const service = createSupabaseServiceRoleClient();
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
   const { data: mePrimary } = await service
     .from("profiles")
     .select("id, role, full_name")

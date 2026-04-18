@@ -29,18 +29,17 @@ export default async function TasksViewerPage(props: {
       : ((props.searchParams as Record<string, string | string[] | undefined> | undefined) ?? {});
   // handled client-side via URL param read in MemberTasksClient
 
-  const org = await getCurrentOrganization(orgSlug);
-  const orgIdForData = getOrgIdForData(orgSlug, org.id);
-
-  const locale = await getRequestLocale();
-
   const authSupabase = createServerComponentClient({ cookies });
-  const {
-    data: { user }
-  } = await authSupabase.auth.getUser();
+  const service = createSupabaseServiceRoleClient();
+
+  const [org, { data: { user } }, locale] = await Promise.all([
+    getCurrentOrganization(orgSlug),
+    authSupabase.auth.getUser(),
+    getRequestLocale()
+  ]);
   if (!user) redirect(`/${orgSlug}/login?redirectTo=/${encodeURIComponent(orgSlug)}/tasks`);
 
-  const service = createSupabaseServiceRoleClient();
+  const orgIdForData = getOrgIdForData(orgSlug, org.id);
   const { data: mePrimary } = await service
     .from("profiles")
     .select("id, role")
@@ -77,7 +76,12 @@ export default async function TasksViewerPage(props: {
   const canClaim = myRole !== "viewer";
   const effectiveOrgIdForData = mePrimary ? orgIdForData : org.id;
 
-  const [{ data: tasksAll }, { data: tasksDone }, { data: pendingTransfers }] = await Promise.all([
+  const [
+    { data: tasksAll },
+    { data: tasksDone },
+    { data: pendingTransfers },
+    { data: profiles }
+  ] = await Promise.all([
     service
       .from("tasks")
       .select(TASK_SELECT)
@@ -97,17 +101,13 @@ export default async function TasksViewerPage(props: {
       .from("task_transfer_requests")
       .select("task_id")
       .eq("organization_id", effectiveOrgIdForData)
-      .eq("status", "pending")
+      .eq("status", "pending"),
+    service.from("profiles").select("id, full_name").eq("organization_id", effectiveOrgIdForData)
   ]);
 
   const pendingTaskIds = new Set(
     (pendingTransfers ?? []).map((r: { task_id: string }) => r.task_id)
   );
-
-  const { data: profiles } = await service
-    .from("profiles")
-    .select("id, full_name")
-    .eq("organization_id", effectiveOrgIdForData);
   const nameById: Record<string, string> = Object.fromEntries(
     (profiles ?? []).map((p: { id: string; full_name: string | null }) => [p.id, p.full_name ?? "–"])
   );
