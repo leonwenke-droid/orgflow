@@ -69,6 +69,31 @@ export async function offerShiftSwapAction(formData: FormData) {
   redirect(`/${orgSlug}/shifts?swap=offered`);
 }
 
+/** Request to hand off a shift assignment (requires lead/admin approval). */
+export async function requestShiftTransferAction(formData: FormData) {
+  const orgSlug = String(formData.get("orgSlug") ?? "").trim();
+  const assignmentId = String(formData.get("assignmentId") ?? "").trim();
+  if (!orgSlug || !assignmentId) return;
+
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { error } = await supabase.rpc("request_shift_transfer", {
+    p_assignment_id: assignmentId,
+    p_to_user_id: null
+  });
+  if (error) {
+    redirect(`/${orgSlug}/shifts?transfer=error`);
+  }
+  revalidatePath(`/${orgSlug}/shifts`);
+  revalidatePath(`/${orgSlug}/dashboard`);
+  revalidatePath(`/${orgSlug}/admin/shift-transfers`);
+  redirect(`/${orgSlug}/shifts?transfer=requested`);
+}
+
 export async function claimShiftSwapAction(formData: FormData) {
   const orgSlug = String(formData.get("orgSlug") ?? "").trim();
   const assignmentId = String(formData.get("assignmentId") ?? "").trim();

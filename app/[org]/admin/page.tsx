@@ -60,6 +60,7 @@ export default async function AdminDashboard({
     { data: shifts7d },
     { data: committees },
     { count: pendingTransfersCount },
+    { count: pendingShiftTransfersCount },
     { count: pendingUnavailCount }
   ] = await Promise.all([
     service.from("profiles").select("id", { count: "exact", head: true }).eq("organization_id", orgIdForData),
@@ -92,6 +93,11 @@ export default async function AdminDashboard({
     service.from("committees").select("id, name").eq("organization_id", orgIdForData).order("name"),
     service
       .from("task_transfer_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", orgIdForData)
+      .eq("status", "pending"),
+    service
+      .from("shift_transfer_requests")
       .select("id", { count: "exact", head: true })
       .eq("organization_id", orgIdForData)
       .eq("status", "pending"),
@@ -225,6 +231,14 @@ export default async function AdminDashboard({
                   {locale === "en" ? "Pending transfers" : "Offene Übergaben"}
                   {(pendingTransfersCount ?? 0) > 0 ? (
                     <span className="tag tag-amber ml-1">{pendingTransfersCount}</span>
+                  ) : null}
+                </Link>
+              ) : null}
+              {modShifts ? (
+                <Link href={`/${orgSlug}/admin/shift-transfers`} className="btn-secondary inline-flex w-full items-center justify-center gap-2">
+                  {locale === "en" ? "Shift hand-offs" : "Schicht-Übergaben"}
+                  {(pendingShiftTransfersCount ?? 0) > 0 ? (
+                    <span className="tag tag-amber ml-1">{pendingShiftTransfersCount}</span>
                   ) : null}
                 </Link>
               ) : null}

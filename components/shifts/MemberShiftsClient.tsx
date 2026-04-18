@@ -24,10 +24,23 @@ type ShiftRow = {
   qr_token?: string | null;
   qr_valid_from?: string | null;
   qr_valid_until?: string | null;
-  shift_assignments?: { id: string; user_id?: string | null; replacement_user_id?: string | null }[] | null;
+  shift_assignments?: {
+    id: string;
+    user_id?: string | null;
+    replacement_user_id?: string | null;
+    status?: string | null;
+    swap_offered?: boolean | null;
+  }[] | null;
 };
 
 type Filter = "all" | "free" | "mine";
+
+type SwapOfferRow = {
+  assignmentId: string;
+  originalOwnerId: string;
+  originalOwnerName?: string;
+  shift: ShiftRow;
+};
 
 function dotColor(free: number) {
   if (free <= 0) return "bg-[#A32D2D]";
@@ -68,6 +81,10 @@ export default function MemberShiftsClient({
   organizationId,
   shifts,
   claimShiftAction,
+  requestShiftTransferAction,
+  claimShiftSwapAction,
+  pendingTransferAssignmentIds = [],
+  swapOffers = [],
   embeddedInAdminConsole = false,
   claimShiftNotice,
 }: {
@@ -79,6 +96,12 @@ export default function MemberShiftsClient({
   organizationId: string;
   shifts: ShiftRow[];
   claimShiftAction: (formData: FormData) => Promise<void>;
+  requestShiftTransferAction?: (formData: FormData) => Promise<void>;
+  claimShiftSwapAction?: (formData: FormData) => Promise<void>;
+  /** assignment IDs where a transfer request is pending approval */
+  pendingTransferAssignmentIds?: string[];
+  /** offered swaps that can be claimed */
+  swapOffers?: SwapOfferRow[];
   /** Schichtplanung admin console: compact layout, prototype filter-pills */
   embeddedInAdminConsole?: boolean;
   /** Set after server redirect from failed self-signup (query `claimShift`) */
@@ -98,6 +121,8 @@ export default function MemberShiftsClient({
       (s.shift_assignments ?? []).some((a) => a.user_id === myProfileId || a.replacement_user_id === myProfileId),
     [myProfileId]
   );
+
+  const pendingSet = useMemo(() => new Set(pendingTransferAssignmentIds), [pendingTransferAssignmentIds]);
 
   const filtered = useMemo(() => {
     const list = [...shifts];
@@ -171,6 +196,11 @@ export default function MemberShiftsClient({
     const myAssignment = (s.shift_assignments ?? []).find(
       (a) => a.user_id === myProfileId || a.replacement_user_id === myProfileId
     );
+    const myOwnPrimary =
+      myAssignment?.user_id === myProfileId &&
+      myAssignment?.replacement_user_id == null;
+    const transferPending = myAssignment?.id ? pendingSet.has(String(myAssignment.id)) : false;
+    const alreadyOffered = Boolean(myAssignment?.swap_offered);
     const checkinUrl =
       origin && orgSlug && myAssignment?.id
         ? `${origin}/checkin?org=${encodeURIComponent(orgSlug)}&assignmentId=${encodeURIComponent(myAssignment.id)}&auto=1`
@@ -244,6 +274,19 @@ export default function MemberShiftsClient({
                 {t("shifts.show_checkin_qr", locale)}
               </button>
             ) : null}
+            {requestShiftTransferAction && myOwnPrimary ? (
+              transferPending ? (
+                <span className="tag ta">{t("transfers.badge_pending", locale)}</span>
+              ) : alreadyOffered ? null : (
+                <form action={requestShiftTransferAction}>
+                  <input type="hidden" name="orgSlug" value={orgSlug} />
+                  <input type="hidden" name="assignmentId" value={myAssignment?.id ?? ""} />
+                  <SubmitButtonWithSpinner className="btn" loadingLabel="…">
+                    {t("tasks.offer_short", locale)}
+                  </SubmitButtonWithSpinner>
+                </form>
+              )
+            ) : null}
           </div>
         </div>
       );
@@ -297,6 +340,19 @@ export default function MemberShiftsClient({
                 {t("shifts.show_checkin_qr", locale)}
               </button>
             ) : null}
+            {requestShiftTransferAction && myOwnPrimary ? (
+              transferPending ? (
+                <span className="tag tag-amber">{t("transfers.badge_pending", locale)}</span>
+              ) : alreadyOffered ? null : (
+                <form action={requestShiftTransferAction} className="inline">
+                  <input type="hidden" name="orgSlug" value={orgSlug} />
+                  <input type="hidden" name="assignmentId" value={myAssignment?.id ?? ""} />
+                  <SubmitButtonWithSpinner className="btn-secondary text-xs" loadingLabel="…">
+                    {t("tasks.offer_short", locale)}
+                  </SubmitButtonWithSpinner>
+                </form>
+              )
+            ) : null}
           </div>
         </div>
       </li>
@@ -311,6 +367,44 @@ export default function MemberShiftsClient({
           : "mx-auto max-w-5xl space-y-5 p-6"
       }
     >
+      {swapOffers.length > 0 && claimShiftSwapAction ? (
+        <section className="card">
+          <div className="p-4">
+            <div className="section-label">{t("shifts.swaps_section_title", locale)}</div>
+            <ul className="divide-y divide-border-subtle dark:divide-border-subtle">
+              {swapOffers.map((o) => {
+                const s = o.shift as any;
+                const title = s?.event_name || t("dashboard.shifts", locale);
+                return (
+                  <li key={o.assignmentId} className="py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="tag tag-amber">{t("shifts.swap_offer_badge", locale)}</span>
+                          <span className="font-medium text-text-primary">{title}</span>
+                        </div>
+                        <div className="mt-1 text-xs text-text-muted">
+                          {s?.date ? formatShiftSlot(String(s.date), s.start_time, s.end_time, fl) : "–"}
+                          {s?.location ? ` · ${s.location}` : ""}
+                          {o.originalOwnerName ? ` · ${t("transfers.from", locale)}: ${o.originalOwnerName}` : ""}
+                        </div>
+                      </div>
+                      <form action={claimShiftSwapAction} className="inline">
+                        <input type="hidden" name="orgSlug" value={orgSlug} />
+                        <input type="hidden" name="organization_id" value={organizationId} />
+                        <input type="hidden" name="assignmentId" value={o.assignmentId} />
+                        <SubmitButtonWithSpinner className="btn-primary text-xs" loadingLabel="…">
+                          {t("tasks.claim", locale)}
+                        </SubmitButtonWithSpinner>
+                      </form>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
+      ) : null}
       {!embeddedInAdminConsole ? (
         <header>
           <h1 className="page-title">{t("dashboard.shifts", locale)}</h1>

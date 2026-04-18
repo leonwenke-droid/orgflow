@@ -174,6 +174,10 @@ export const translations: Record<Locale, Record<string, string>> = {
     "transfers.status_approved": "Approved",
     "transfers.status_rejected": "Rejected",
     "transfers.badge_pending": "Transfer pending",
+    "shift_transfers.page_title": "Shift transfers",
+    "shift_transfers.page_sub": "Review and approve pending shift hand-offs.",
+    "shift_transfers.empty": "No pending shift transfers.",
+    "shift_transfers.shift": "Shift",
     "unavailability.account_section": "Shift rotation — absences",
     "unavailability.intro":
       "Mark days when you should not be assigned via fair rotation. Requests must be approved by an admin or team lead before they take effect.",
@@ -869,6 +873,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.fill_self_signup_mode_random": "Random",
     "shifts.confirm_fill_self_signup":
       "Fill remaining slots on self sign-up shifts (from today onward)? Only empty slots are filled; existing sign-ups stay.",
+    "shifts.swaps_section_title": "Shifts (takeover offers)",
+    "shifts.swap_offer_badge": "Takeover offer",
     "shifts.batch_confirm_title": "Confirm action",
     "shifts.batch_confirm_submit": "Confirm",
     "shifts.qrflow_step1_title": "Admin creates shift and sets attendance mode",
@@ -1441,6 +1447,10 @@ export const translations: Record<Locale, Record<string, string>> = {
     "transfers.status_approved": "Genehmigt",
     "transfers.status_rejected": "Abgelehnt",
     "transfers.badge_pending": "Übergabe ausstehend",
+    "shift_transfers.page_title": "Schicht-Übergaben",
+    "shift_transfers.page_sub": "Prüfe und genehmige ausstehende Schicht-Übergaben.",
+    "shift_transfers.empty": "Keine ausstehenden Schicht-Übergaben.",
+    "shift_transfers.shift": "Schicht",
     "unavailability.account_section": "Schicht-Rotation — Abwesenheiten",
     "unavailability.intro":
       "Markiere Tage, an denen du bei der fairen Rotation nicht eingeteilt werden sollst. Die Anfrage muss von einer Admin- oder Teamleitungsperson genehmigt werden, bevor sie für die Rotation gilt.",
@@ -1991,6 +2001,8 @@ export const translations: Record<Locale, Record<string, string>> = {
     "shifts.fill_self_signup_mode_random": "Zufall",
     "shifts.confirm_fill_self_signup":
       "Freie Plätze bei Selbsteintragungs-Schichten (ab heute) auffüllen? Es werden nur noch leere Plätze besetzt; bestehende Eintragungen bleiben.",
+    "shifts.swaps_section_title": "Schichten (Übernehmbar)",
+    "shifts.swap_offer_badge": "Übernahme-Angebot",
     "shifts.batch_confirm_title": "Aktion bestätigen",
     "shifts.batch_confirm_submit": "Ausführen",
     "shifts.qrflow_step1_title": "Admin legt Schicht an und wählt Anwesenheitsmodus",

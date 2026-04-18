@@ -6,7 +6,7 @@ import { getCurrentOrganization, getOrgIdForData } from "../../../lib/getOrganiz
 import { redirectViewerToOrgOverview } from "../../../lib/viewerRouteGuard";
 import { t } from "../../../lib/i18n";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
-import { claimShiftAction } from "./actions";
+import { claimShiftAction, claimShiftSwapAction, requestShiftTransferAction } from "./actions";
 import MemberShiftsClient from "../../../components/shifts/MemberShiftsClient";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +82,46 @@ export default async function ShiftsViewerPage(props: {
     .order("date", { ascending: true })
     .order("start_time", { ascending: true });
 
+  const myAssignmentIds = new Set(
+    (shifts ?? [])
+      .flatMap((s: any) => (s.shift_assignments ?? []).map((a: any) => a))
+      .filter((a: any) => a && (a.user_id === myProfileId) && a.replacement_user_id == null)
+      .map((a: any) => String(a.id))
+      .filter(Boolean)
+  );
+
+  const { data: pendingTransfers } = myAssignmentIds.size
+    ? await service
+        .from("shift_transfer_requests")
+        .select("assignment_id")
+        .eq("from_user_id", myProfileId)
+        .eq("status", "pending")
+        .in("assignment_id", [...myAssignmentIds])
+    : { data: [] as any[] };
+  const pendingAssignmentIds = new Set((pendingTransfers ?? []).map((r: any) => String(r.assignment_id)));
+
+  // Swap offers (approved hand-offs): any offered assignment not yet taken.
+  const { data: offeredRows } = await service
+    .from("shift_assignments")
+    .select("id, user_id, shift_id, shifts(id, event_name, date, start_time, end_time, location, required_slots, auto_assign, claimable, assignment_kind, attendance_mode, qr_token, qr_valid_from, qr_valid_until)")
+    .eq("swap_offered", true)
+    .is("replacement_user_id", null)
+    .neq("user_id", myProfileId);
+  const offered = (offeredRows ?? []) as any[];
+  const offeredOwnerIds = [...new Set(offered.map((r) => String(r.user_id ?? "")).filter(Boolean))];
+  const { data: offeredOwners } = offeredOwnerIds.length
+    ? await service.from("profiles").select("id, full_name").in("id", offeredOwnerIds)
+    : { data: [] as any[] };
+  const ownerNameById = new Map((offeredOwners ?? []).map((p: any) => [String(p.id), String(p.full_name ?? "")]));
+  const swapOffers = offered
+    .map((r) => ({
+      assignmentId: String(r.id),
+      originalOwnerId: String(r.user_id ?? ""),
+      originalOwnerName: ownerNameById.get(String(r.user_id ?? "")) || "",
+      shift: (r as any).shifts ?? null
+    }))
+    .filter((x) => x.shift && x.assignmentId);
+
   const isAssignedToMe = (s: any) =>
     (s.shift_assignments ?? []).some(
       (a: any) => a.user_id === myProfileId || a.replacement_user_id === myProfileId
@@ -125,6 +165,10 @@ export default async function ShiftsViewerPage(props: {
       organizationId={effectiveOrgIdForData}
       shifts={upcomingShifts as any}
       claimShiftAction={claimShiftAction}
+      requestShiftTransferAction={requestShiftTransferAction}
+      claimShiftSwapAction={claimShiftSwapAction}
+      pendingTransferAssignmentIds={[...pendingAssignmentIds]}
+      swapOffers={swapOffers as any}
       claimShiftNotice={claimShiftNotice}
     />
   );
