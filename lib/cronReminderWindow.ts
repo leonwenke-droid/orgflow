@@ -7,8 +7,8 @@
  * shift_reminder_logs). Pro-Nutzer können in vercel.json auf stündliche Schedules wechseln
  * und optional engere Konstanten nutzen.
  */
-export const REMINDER_MIN_REMAINING_MS = 12 * 60 * 60 * 1000;
-export const REMINDER_MAX_REMAINING_MS = 48 * 60 * 60 * 1000;
+export const REMINDER_MIN_REMAINING_MS = 23 * 60 * 60 * 1000;
+export const REMINDER_MAX_REMAINING_MS = 25 * 60 * 60 * 1000;
 
 export function reminderTargetWindowIso(nowMs: number): { lowIso: string; highIso: string } {
   return {
