@@ -18,7 +18,10 @@ export async function GET(req: Request) {
   if (!secret) {
     return NextResponse.json({ error: "CRON_SECRET not configured." }, { status: 500 });
   }
-  if (authHeader !== `Bearer ${secret}`) {
+  const incoming = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7).trim()
+    : (authHeader ?? "").trim();
+  if (incoming !== secret.trim()) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
