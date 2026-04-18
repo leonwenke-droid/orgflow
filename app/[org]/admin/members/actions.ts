@@ -15,6 +15,7 @@ import {
   inviteExpiresAt
 } from "../../../../lib/memberInvites";
 import { getPublicBaseUrl } from "../../../../lib/publicBaseUrl";
+import { sendMemberInvite } from "../../../../lib/n8n";
 
 function mapMemberDbError(error: { message?: string } | null): { error: string | null; errorKey?: string } {
   if (!error?.message) return { error: "Unknown error." };
@@ -401,7 +402,15 @@ export async function addMemberAction(
   orgSlug: string,
   fullName: string,
   options?: { email?: string; committeeIds?: string[]; asLead?: boolean }
-): Promise<{ error: string | null; errorKey?: string; inviteUrl?: string; whatsappText?: string; expiresAt?: string }> {
+): Promise<{
+  error: string | null;
+  errorKey?: string;
+  inviteUrl?: string;
+  whatsappText?: string;
+  expiresAt?: string;
+  /** True when an email was provided and the send-invite webhook was invoked (may still fail silently in n8n). */
+  inviteEmailSent?: boolean;
+}> {
   const org = await getCurrentOrganization(orgSlug);
   const orgIdForData = getOrgIdForData(orgSlug, org.id);
   if (!(await assertCanManageMembersAndTeams(orgIdForData, org.id, orgSlug))) return { error: null, errorKey: "common.unauthorized" };
@@ -454,6 +463,35 @@ export async function addMemberAction(
     { id, full_name: name, email: emailTrimmed }
   );
 
+  let inviteEmailSent = false;
+  if (emailTrimmed) {
+    const authClient = createServerComponentClient({ cookies });
+    const {
+      data: { user }
+    } = await authClient.auth.getUser();
+    let inviterName: string | undefined;
+    if (user?.id) {
+      const { data: actor } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("auth_user_id", user.id)
+        .eq("organization_id", orgIdForData)
+        .maybeSingle();
+      inviterName = (actor as { full_name?: string | null } | null)?.full_name ?? undefined;
+    }
+    try {
+      inviteEmailSent = await sendMemberInvite({
+        email: emailTrimmed,
+        inviteUrl: inviteResult.inviteUrl,
+        organizationName: org.name,
+        inviterName,
+        role: options?.asLead ? "Teamleitung" : "Mitglied"
+      });
+    } catch (err) {
+      console.error("[addMemberAction] n8n send-invite failed:", err);
+    }
+  }
+
   revalidatePath(`/${orgSlug}/admin/members`);
-  return { error: null, ...inviteResult };
+  return { error: null, ...inviteResult, inviteEmailSent };
 }

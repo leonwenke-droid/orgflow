@@ -30,6 +30,7 @@ export default function AddMemberForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [inviteEmailSent, setInviteEmailSent] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [whatsappText, setWhatsappText] = useState<string | null>(null);
 
@@ -57,6 +58,7 @@ export default function AddMemberForm({
     setLoading(true);
     setError(null);
     setSuccess(false);
+    setInviteEmailSent(false);
     setInviteUrl(null);
     setWhatsappText(null);
     const result = await addMemberAction(orgSlug, name, {
@@ -74,6 +76,7 @@ export default function AddMemberForm({
       return;
     }
     setSuccess(true);
+    setInviteEmailSent(Boolean(result.inviteEmailSent));
     setInviteUrl(result.inviteUrl ?? null);
     setWhatsappText(result.whatsappText ?? null);
     setFullName("");
@@ -167,7 +170,12 @@ export default function AddMemberForm({
           {t("members.add_as_lead", locale)}
         </label>
         {error && <p className="text-xs text-red-600">{error}</p>}
-        {success && <p className="text-xs text-green-600">{t("members.add_success", locale)}</p>}
+        {success && (
+          <div className="space-y-1 text-xs text-green-600">
+            <p>{t("members.add_success", locale)}</p>
+            {inviteEmailSent ? <p>{t("members.invite_email_sent", locale)}</p> : null}
+          </div>
+        )}
       {inviteUrl && (
         <div className="rounded border border-[var(--color-brand)]/25 bg-[var(--bg-brand-subtle)] p-3 text-xs text-[var(--color-brand-text)]">
           <p className="font-semibold">{t("members.invite_ready", locale)}</p>

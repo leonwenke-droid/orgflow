@@ -83,16 +83,27 @@ export async function sendPasswordReset(params: {
   );
 }
 
-/** Mitglied-Einladung (einzeln oder bulk) */
+/** Mitglied-Einladung (einzeln oder bulk). `true` nur wenn der Webhook wirklich aufgerufen wurde (nicht bei fehlender URL/Auth). */
 export async function sendMemberInvite(params: {
   email: string;
   inviteUrl: string;
   organizationName: string;
   inviterName?: string;
   role?: string;
-}): Promise<void> {
+}): Promise<boolean> {
+  const url = process.env.N8N_WEBHOOK_URL_SEND_INVITE;
+  if (!url) {
+    console.warn("[n8n] send-invite: Webhook URL not configured — skipping");
+    return false;
+  }
+  if (!WEBHOOK_SECRET && !WEBHOOK_AUTH_HEADER) {
+    console.warn(
+      "[n8n] send-invite: neither N8N_WEBHOOK_SECRET nor N8N_WEBHOOK_AUTHORIZATION configured — skipping"
+    );
+    return false;
+  }
   await callWebhook(
-    process.env.N8N_WEBHOOK_URL_SEND_INVITE,
+    url,
     {
       email: params.email,
       confirmLink: params.inviteUrl,
@@ -102,6 +113,7 @@ export async function sendMemberInvite(params: {
     },
     "send-invite"
   );
+  return true;
 }
 
 /** Support / Feedback / Löschanfrage → n8n (z. B. info@lyniqmedia.com) */
