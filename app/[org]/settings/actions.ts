@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getCurrentOrganization } from "../../../lib/getOrganization";
 import { assertCanChangeOrgSettings } from "../../../lib/permissionsServer";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -41,6 +41,7 @@ export async function updateOrganizationAction(
     return { error: error.message };
   }
 
+  revalidateTag("organizations");
   revalidatePath(`/${orgSlug}`);
   revalidatePath(`/${orgSlug}/settings`);
   revalidatePath(`/${orgSlug}/admin`);
@@ -87,6 +88,7 @@ export async function uploadOrgLogoAction(
       .update({ settings: { ...prev, branding } })
       .eq("id", org.id);
 
+    revalidateTag("organizations");
     revalidatePath(`/${orgSlug}/settings`);
   }
 
@@ -117,6 +119,7 @@ export async function updateOrganizationCurrencyAction(
     .eq("id", org.id);
 
   if (error) return { error: error.message };
+  revalidateTag("organizations");
   revalidatePath(`/${orgSlug}`);
   revalidatePath(`/${orgSlug}/settings`);
   revalidatePath(`/${orgSlug}/admin`);
@@ -165,6 +168,7 @@ export async function updateOrgFeaturesAction(
     .eq("id", org.id);
 
   if (error) return { error: error.message };
+  revalidateTag("organizations");
   revalidatePath(`/${orgSlug}`);
   revalidatePath(`/${orgSlug}/settings`);
   revalidatePath(`/${orgSlug}/admin`);

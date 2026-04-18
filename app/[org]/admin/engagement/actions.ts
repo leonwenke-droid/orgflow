@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getCurrentOrganization } from "../../../../lib/getOrganization";
 import { assertCanChangeOrgSettings } from "../../../../lib/permissionsServer";
 import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer";
@@ -32,6 +32,7 @@ export async function updateEngagementWeightsAction(
     .eq("id", org.id);
 
   if (error) return { error: error.message };
+  revalidateTag("organizations");
   revalidatePath(`/${orgSlug}/admin/engagement`);
   revalidatePath(`/${orgSlug}/me`);
   revalidatePath(`/${orgSlug}/dashboard`);

@@ -1,6 +1,7 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import type { DbRole } from "../types";
 import type { RotationConfig } from "./rotationConfig";
 import { createSupabaseServiceRoleClient } from "./supabaseServer";
@@ -142,7 +143,7 @@ export async function resolveMemberProfileForOrganization(
  * Resolve an active organisation by public URL slug, subdomain, or `slug_aliases`.
  * Uses the service role so `/[org]/login` and API routes work while logged out (RLS often hides `organizations`).
  */
-export async function fetchActiveOrganizationBySlug(
+async function _fetchActiveOrganizationBySlug(
   slugOrSubdomain: string
 ): Promise<Organization | null> {
   const service = createSupabaseServiceRoleClient();
@@ -175,6 +176,15 @@ export async function fetchActiveOrganizationBySlug(
   if (typeof o.name === "string") o.name = o.name.trim();
   return o;
 }
+
+export const fetchActiveOrganizationBySlug = unstable_cache(
+  _fetchActiveOrganizationBySlug,
+  ["org-by-slug"],
+  {
+    revalidate: 60,
+    tags: ["organizations"]
+  }
+);
 
 /**
  * Holt Organization basierend auf Slug ODER Subdomain

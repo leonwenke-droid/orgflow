@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getCurrentOrganization } from "../../../lib/getOrganization";
 import { assertCanChangeOrgSettings } from "../../../lib/permissionsServer";
 import { createSupabaseServiceRoleClient } from "../../../lib/supabaseServer";
@@ -47,6 +47,7 @@ export async function updateRotationConfigAction(
   const { error } = await service.from("organizations").update({ rotation_config: next }).eq("id", org.id);
 
   if (error) return { error: error.message };
+  revalidateTag("organizations");
   revalidatePath(`/${orgSlug}/settings`);
   revalidatePath(`/${orgSlug}/admin`);
   return {};
