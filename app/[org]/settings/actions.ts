@@ -20,7 +20,7 @@ export async function updateOrganizationAction(
     if (!name) return { error: "Name is required." };
     updates.name = name;
   }
-  // URL-Slug is not editable in self-service after creation (support can change it in the database).
+  // URL-Slug kann nach Erstellung nur vom Support geändert werden.
   if (payload.logoUrl !== undefined) {
     const prev = { ...(org.settings as Record<string, unknown>) };
     const branding = { ...((prev.branding as Record<string, unknown>) ?? {}) };

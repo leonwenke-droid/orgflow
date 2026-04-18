@@ -67,7 +67,7 @@ export default function JoinOrgClient({
   return (
     <div className="mt-6 space-y-6">
       <div className="rounded-lg border border-border-subtle bg-bg-secondary p-4">
-        <h2 className="text-sm font-semibold text-text-primary">Anmelden, um beizutreten</h2>
+        <h2 className="text-sm font-semibold text-text-primary">Sign in to join</h2>
         <p className="mt-1 text-xs text-text-secondary">
           Melde dich mit deinem Account an (oder erstelle einen), um {orgName} beizutreten.
         </p>

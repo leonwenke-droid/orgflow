@@ -70,7 +70,7 @@ export async function GET(req: Request) {
       await sendTaskReminder({
         email,
         fullName: (profile as { full_name?: string | null } | null)?.full_name ?? undefined,
-        taskTitle: String((task as { title?: string }).title ?? "Aufgabe"),
+        taskTitle: String((task as { title?: string }).title ?? "Task"),
         dueAt: (task as { due_at?: string | null }).due_at
           ? new Date(String((task as { due_at: string }).due_at)).toLocaleString("de-DE", {
               dateStyle: "medium",

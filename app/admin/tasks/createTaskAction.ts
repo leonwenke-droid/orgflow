@@ -100,7 +100,7 @@ export async function createTask(_prev: CreateTaskState, formData: FormData): Pr
     return { errorKey: "tasks.create_error" };
   }
 
-  // If the task was assigned during creation, send the assignment webhook email.
+  // Bei Zuweisung: Mitglied per E-Mail benachrichtigen.
   if (ownerId) {
     const [{ data: assignedProfile }, { data: orgRow }] = await Promise.all([
       service.from("profiles").select("email, full_name").eq("id", ownerId).maybeSingle(),
@@ -114,7 +114,7 @@ export async function createTask(_prev: CreateTaskState, formData: FormData): Pr
       void sendTaskAssigned({
         email: em,
         fullName: (assignedProfile as { full_name?: string | null } | null)?.full_name ?? undefined,
-        taskTitle: String((insertedTask as { title?: string } | null)?.title ?? title ?? "Aufgabe"),
+        taskTitle: String((insertedTask as { title?: string } | null)?.title ?? title ?? "Task"),
         description: (insertedTask as { description?: string | null } | null)?.description ?? description ?? undefined,
         dueAt: (insertedTask as { due_at?: string | null } | null)?.due_at
           ? new Date(String((insertedTask as { due_at: string }).due_at)).toLocaleString("de-DE", {

@@ -26,8 +26,8 @@ export async function notifyAfterShiftSelfClaim(opts: {
     profileId: claimerProfileId,
     organizationId,
     type: "shift_self_claimed",
-    title: "Schicht übernommen",
-    body: `Du hast dich für „${eventLabel}“ eingetragen.`,
+    title: "Shift claimed",
+    body: `You signed up for “${eventLabel}”.`,
     link: `/${orgSlug}/shifts`
   });
 
@@ -52,8 +52,8 @@ export async function notifyAfterShiftSelfClaim(opts: {
       profileId: id,
       organizationId,
       type: "shift_member_joined",
-      title: "Neue Schicht-Meldung",
-      body: `${claimerName} hat sich für „${eventLabel}“ eingetragen.`,
+      title: "New shift signup",
+      body: `${claimerName} signed up for “${eventLabel}”.`,
       link: `/${orgSlug}/admin/shifts`
     });
   }

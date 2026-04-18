@@ -5,8 +5,8 @@ import { createSupabaseServiceRoleClient } from "../../../../lib/supabaseServer"
 import { sendShiftReminder } from "../../../../lib/n8n";
 
 /**
- * Cron: Erinnerung vor Schichtbeginn (Europe/Berlin: Datum + Startzeit).
- * Fenster: 12–48h vor Start (täglicher Cron, Vercel Hobby-kompatibel); Dedupe via shift_reminder_logs.
+ * Cron: Schicht-Erinnerungen (stündlich via n8n).
+ * Fenster: 22–26h vor Schichtbeginn. Dedupe via shift_reminder_logs.
  * Authorization: Bearer <CRON_SECRET>
  */
 export const dynamic = "force-dynamic";

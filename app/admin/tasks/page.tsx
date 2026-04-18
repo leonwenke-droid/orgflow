@@ -157,8 +157,8 @@ async function autoAssignTasks(formData: FormData) {
       profileId: u.ownerId,
       organizationId: orgId,
       type: "task_assigned",
-      title: "Neue Aufgabe zugewiesen",
-      body: taskTitles.get(u.taskId) || "Du hast eine neue Aufgabe erhalten.",
+      title: "Task assigned successfully",
+      body: taskTitles.get(u.taskId) || "You have been assigned a new task.",
       link: orgSlug ? `/${orgSlug}/tasks` : null
     });
 
@@ -172,7 +172,7 @@ async function autoAssignTasks(formData: FormData) {
       void sendTaskAssigned({
         email: em,
         fullName: (assignedProfile as { full_name?: string | null } | null)?.full_name ?? undefined,
-        taskTitle: (taskRow as { title?: string } | null)?.title ?? "Aufgabe",
+        taskTitle: (taskRow as { title?: string } | null)?.title ?? "Task",
         description: (taskRow as { description?: string | null } | null)?.description ?? undefined,
         dueAt: (taskRow as { due_at?: string | null } | null)?.due_at
           ? new Date(String((taskRow as { due_at: string }).due_at)).toLocaleString("de-DE", {
@@ -324,9 +324,7 @@ export default async function AdminTasksPage(props: PageProps) {
     (profiles ?? []).map((p: { id: string; full_name: string }) => [p.id, p.full_name])
   );
 
-  const committeesForFilter = (committees ?? []).filter(
-    (c: { name?: string | null }) => !/Jahrgangssprecher/i.test(String(c.name ?? ""))
-  );
+  const committeesForFilter = committees ?? [];
 
   const tasksByCommittee = committeeId
     ? (tasks ?? []).filter((t: { committee_id?: string | null }) => t.committee_id === committeeId)

@@ -112,7 +112,7 @@ export default function LeadSetupClient({
   if (status === "checking") {
     return (
       <div className="mx-auto max-w-md p-6 text-center">
-        <p className="text-sm text-blue-300">Einladung wird geprüft …</p>
+        <p className="text-sm text-blue-300">Verifying invitation…</p>
       </div>
     );
   }
@@ -160,7 +160,7 @@ export default function LeadSetupClient({
           disabled={status === "saving"}
           className="w-full rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {status === "saving" ? "Wird gespeichert …" : "Password speichern & weiter"}
+          {status === "saving" ? "Saving…" : "Save password & continue"}
         </button>
       </form>
     </div>

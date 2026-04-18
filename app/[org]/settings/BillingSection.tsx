@@ -246,7 +246,7 @@ export default function BillingSection({
                   !useScaleTier && currentPlan !== "pro"
                     ? locale === "de"
                       ? "Pro ist ab 50 Mitgliedern verfügbar."
-                      : "Pro is available from 50 members."
+                      : "Pro plan starts at 50 members."
                     : null
                 }
               />

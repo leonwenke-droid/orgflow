@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       console.error("tasks update error", updateError);
       return NextResponse.json(
         {
-          message: "Fehler beim Aktualisieren der Aufgabe."
+          message: "Failed to update."
         },
         { status: 500 }
       );
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       const orgId = String((task as { organization_id?: string | null }).organization_id ?? "").trim();
       const engagementEnabled = orgId ? await fetchEngagementEnabledForOrgId(supabase, orgId) : false;
       if (!engagementEnabled) {
-        return NextResponse.json({ message: "Aufgabe aktualisiert." });
+        return NextResponse.json({ message: "Task updated." });
       }
       await addEngagementEvent(supabase, {
         userId: task.owner_id as string,
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { message: "Unerwarteter Fehler." },
+      { message: "Unexpected error." },
       { status: 500 }
     );
   }

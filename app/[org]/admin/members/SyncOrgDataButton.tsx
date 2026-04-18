@@ -27,8 +27,8 @@ export default function SyncOrgDataButton({ orgSlug }: { orgSlug: string }) {
     }
     setMessage(
       result.updated != null && result.updated > 0
-        ? `${result.updated} Mitglieder und Scores zugewiesen.`
-        : "Sync durchgeführt. Falls weiterhin 0: Profile haben bereits eine andere Organisation."
+        ? `${result.updated} members and scores assigned.`
+        : "Sync complete. If still 0: profiles may already belong to another organisation."
     );
     router.refresh();
   }
@@ -41,7 +41,7 @@ export default function SyncOrgDataButton({ orgSlug }: { orgSlug: string }) {
         disabled={loading}
         className="rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
       >
-        {loading ? "Wird zugewiesen…" : "Mitglieder & Scores aus DB zuweisen"}
+        {loading ? "Assigning…" : "Assign members & scores"}
       </button>
       {message && (
         <span className={message.startsWith("Sync nur") || message.includes("Berechtigung") ? "text-amber-400" : "text-green-400"}>

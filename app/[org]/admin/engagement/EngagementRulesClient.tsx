@@ -44,7 +44,7 @@ export default function EngagementRulesClient({
             </button>
           ) : (
             <button type="button" className="btn-primary" onClick={onSave} disabled={saving}>
-              {saving ? "…" : "Speichern"}
+              {saving ? "…" : "Save"}
             </button>
           )}
         </div>

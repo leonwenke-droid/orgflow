@@ -167,7 +167,7 @@ export default function ShiftPlanWeekView({ weeks, profileNames }: Props) {
           onClick={() => setOverlayDay(null)}
           role="dialog"
           aria-modal="true"
-          aria-label="Schichtdetails"
+          aria-label="Shift details"
         >
           <div
             className="rounded-xl border border-border-subtle bg-bg-primary shadow-xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col dark:border-border-default dark:bg-bg-primary"

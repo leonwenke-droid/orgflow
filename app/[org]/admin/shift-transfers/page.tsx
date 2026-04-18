@@ -44,7 +44,7 @@ export default async function AdminShiftTransfersPage(props: { params: Promise<{
   const shiftLabelByAssignmentId = new Map(
     (assignments ?? []).map((a: any) => {
       const sh = a.shifts ?? null;
-      const name = sh?.event_name ?? "Schicht";
+      const name = sh?.event_name ?? "Shift";
       const date = sh?.date ? String(sh.date).slice(0, 10) : "";
       const st = String(sh?.start_time ?? "").slice(0, 5);
       return [String(a.id), `${name}${date ? ` · ${date}` : ""}${st ? ` ${st}` : ""}`];

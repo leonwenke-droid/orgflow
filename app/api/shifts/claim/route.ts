@@ -75,8 +75,8 @@ export async function POST(req: Request) {
       profileId: result.profileId,
       organizationId: result.organizationId,
       type: "shift_self_claimed",
-      title: "Schicht übernommen",
-      body: "Du hast dich für eine Schicht eingetragen.",
+      title: "Shift claimed",
+      body: "You signed up for a shift.",
       link: `/${orgSlug}/shifts`
     });
 

@@ -39,10 +39,10 @@ export default function MembersExcelUpload({ orgSlug, disabledReason }: { orgSlu
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMessage({ ok: false, text: data.message || "Import fehlgeschlagen." });
+        setMessage({ ok: false, text: data.message || "Import failed." });
         return;
       }
-      setMessage({ ok: true, text: data.message || `${data.created} importiert.` });
+      setMessage({ ok: true, text: data.message || `${data.created} imported.` });
       setSummary({
         created: Number(data.created ?? 0),
         skipped: Number(data.skipped ?? 0),
@@ -57,7 +57,7 @@ export default function MembersExcelUpload({ orgSlug, disabledReason }: { orgSlu
         window.location.reload();
       }
     } catch (err) {
-      setMessage({ ok: false, text: "Netzwerkfehler." });
+      setMessage({ ok: false, text: "Network error. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ export default function MembersExcelUpload({ orgSlug, disabledReason }: { orgSlu
     const text = inviteLinks.map((l) => `${l.fullName}: ${l.inviteUrl}`).join("\n");
     const ok = await copyTextToClipboard(text);
     if (ok) {
-      setMessage((m) => (m ? { ...m, text: m.text + " Links kopiert." } : null));
+      setMessage((m) => (m ? { ...m, text: m.text + " Links copied." } : null));
     }
   }
 

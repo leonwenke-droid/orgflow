@@ -66,7 +66,7 @@ export async function syncOrgDataAction(orgSlug: string): Promise<{ error: strin
   const org = await getCurrentOrganization(slug);
   const settings = org.settings as { legacy_bulk_sync?: boolean } | undefined;
   if (!settings?.legacy_bulk_sync) {
-    return { error: "Sync ist für diese Organisation nicht verfügbar." };
+    return { error: "Sync is not available for this organisation." };
   }
 
   const orgIdForDataSync = getOrgIdForData(slug, org.id);
@@ -408,7 +408,7 @@ export async function addMemberAction(
   inviteUrl?: string;
   whatsappText?: string;
   expiresAt?: string;
-  /** True when an email was provided and the send-invite webhook was invoked (may still fail silently in n8n). */
+  /** True wenn eine E-Mail-Adresse vorhanden war und die Einladungsmail versendet wurde. */
   inviteEmailSent?: boolean;
 }> {
   const org = await getCurrentOrganization(orgSlug);
@@ -485,7 +485,7 @@ export async function addMemberAction(
         inviteUrl: inviteResult.inviteUrl,
         organizationName: org.name,
         inviterName,
-        role: options?.asLead ? "Teamleitung" : "Mitglied"
+        role: options?.asLead ? "lead" : "member"
       });
     } catch (err) {
       console.error("[addMemberAction] n8n send-invite failed:", err);

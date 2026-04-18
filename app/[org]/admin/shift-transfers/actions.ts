@@ -17,7 +17,7 @@ async function notifyRequester(orgSlug: string, requestId: string, kind: "approv
     .maybeSingle();
   const fromId = (req as any)?.from_user_id as string | undefined;
   const orgId = (req as any)?.organization_id as string | undefined;
-  const evName = (req as any)?.shift_assignments?.shifts?.event_name ?? "Schicht";
+  const evName = (req as any)?.shift_assignments?.shifts?.event_name ?? "Shift";
   if (!fromId || !orgId) return;
   await createUserNotification(service, {
     profileId: fromId,

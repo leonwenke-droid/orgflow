@@ -110,7 +110,7 @@ export default async function OrgSettingsPage({
             <p className="text-sm text-text-secondary">
               {locale === "de"
                 ? "Nur der Inhaber (Owner) kann Abos und Rechnungen verwalten."
-                : "Only the organisation owner can manage subscriptions and invoices."}
+                : "Only the owner can manage subscriptions and invoices."}
             </p>
           )}
         </div>

@@ -100,7 +100,7 @@ export default function NotificationBell({ orgSlug }: { orgSlug: string | null }
           />
           <div className="absolute right-0 top-full z-50 mt-1 w-[min(100vw-2rem,22rem)] rounded-xl border border-border-subtle bg-bg-primary shadow-xl dark:border-border-default dark:bg-bg-primary">
             <div className="flex items-center justify-between border-b border-border-subtle px-3 py-2 dark:border-border-default">
-              <span className="text-xs font-semibold text-text-primary dark:text-text-primary">Benachrichtigungen</span>
+              <span className="text-xs font-semibold text-text-primary dark:text-text-primary">Notifications</span>
               {unread > 0 && (
                 <button
                   type="button"

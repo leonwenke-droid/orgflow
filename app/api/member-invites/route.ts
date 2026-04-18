@@ -116,7 +116,7 @@ export async function POST(req: Request) {
       inviteUrl,
       organizationName: org.name,
       inviterName,
-      role: "Mitglied"
+      role: "Member"
     }).catch((err) => console.error("[member-invites] n8n invite failed:", err));
   }
 

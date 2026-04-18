@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     const rl = await checkRateLimit(`signup:${ip}`, 5);
     if (!rl.ok) {
       return NextResponse.json(
-        { message: "Zu viele Anfragen. Bitte warte einen Moment." },
+        { message: "Too many requests. Please wait a moment." },
         { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
       );
     }
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
     if (String(password).length < 8) {
       return NextResponse.json(
-        { message: "Passwort mindestens 8 Zeichen." },
+        { message: "Password must be at least 8 characters." },
         { status: 400 }
       );
     }
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       return NextResponse.json(
-        { message: error.message || "Registrierung fehlgeschlagen." },
+        { message: error.message || "Registration failed." },
         { status: 400 }
       );
     }
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       (linkData as { action_link?: string })?.action_link;
     if (!actionLink || typeof actionLink !== "string") {
       return NextResponse.json(
-        { message: "Verifizierungs-Link konnte nicht erzeugt werden." },
+        { message: "Could not generate verification link." },
         { status: 500 }
       );
     }
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { message: (e instanceof Error && e.message) ? e.message : "Unerwarteter Fehler." },
+      { message: (e instanceof Error && e.message) ? e.message : "Unexpected error." },
       { status: 500 }
     );
   }

@@ -50,7 +50,7 @@ export async function PATCH(
 
       if (readErr || !existing) {
         return NextResponse.json(
-          { error: "Aufgabe nicht gefunden." },
+          { error: "Task not found." },
           { status: 404 }
         );
       }

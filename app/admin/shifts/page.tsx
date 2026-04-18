@@ -953,7 +953,7 @@ async function getShiftDonePoints(
   return SHIFT_DONE_POINTS + bonus;
 }
 
-/** Zugewiesene Person ist angetreten → Status erledigt, Trigger vergibt shift_done. */
+/** Zugewiesene Person ist angetreten → Status auf erledigt setzen. */
 async function markAssignmentAttended(assignmentId: string) {
   "use server";
   const organizationId = await resolveAssignmentOrganizationId(assignmentId);
@@ -1107,7 +1107,7 @@ async function markAssignmentNotAttended(
   });
 }
 
-/** Status nachträglich ändern (z. B. von erledigt auf nicht angetreten). Entfernt alte Engagement-Einträge, setzt neuen Status, Trigger/App setzen Scores. */
+/** Status nachträglich ändern (z. B. von erledigt auf nicht angetreten). Engagement-Einträge werden entsprechend aktualisiert. */
 async function updateAssignmentStatus(
   assignmentId: string,
   status: "erledigt" | "abgesagt",

@@ -477,7 +477,7 @@ export default function ShiftPlanWeekNav({
           onClick={() => setOverlayDay(null)}
           role="dialog"
           aria-modal="true"
-          aria-label="Schichtdetails"
+          aria-label="Shift details"
         >
           <div
             ref={overlayCardRef}

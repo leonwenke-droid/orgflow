@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       metadata: {}
     });
 
-    // Treat claiming as an assignment event (member gets ownership) → trigger webhook email.
+    // Aufgaben-Übernahme: Mitglied per E-Mail benachrichtigen.
     try {
       const service = createSupabaseServiceRoleClient();
       const [{ data: taskRow }, { data: prof }, { data: orgRow }] = await Promise.all([
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         void sendTaskAssigned({
           email: em,
           fullName: (prof as { full_name?: string | null } | null)?.full_name ?? undefined,
-          taskTitle: String((taskRow as { title?: string } | null)?.title ?? "Aufgabe"),
+          taskTitle: String((taskRow as { title?: string } | null)?.title ?? "Task"),
           description: (taskRow as { description?: string | null } | null)?.description ?? undefined,
           dueAt: (taskRow as { due_at?: string | null } | null)?.due_at
             ? new Date(String((taskRow as { due_at: string }).due_at)).toLocaleString("de-DE", {

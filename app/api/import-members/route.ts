@@ -50,7 +50,7 @@ function readRowsFromExcel(buffer: ArrayBuffer): Map<
 > {
   const wb = XLSX.read(buffer, { type: "array" });
   const sheet = wb.Sheets["Engagement Overview"] ?? wb.Sheets[wb.SheetNames[0]];
-  if (!sheet) throw new Error("Kein Arbeitsblatt gefunden.");
+  if (!sheet) throw new Error("No worksheet found.");
   const data = XLSX.utils.sheet_to_json(sheet as XLSX.WorkSheet, { header: 1 }) as unknown[][];
   const out = new Map<
     string,
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       data: { user }
     } = await supabaseAuth.auth.getUser();
     if (!user) {
-      return NextResponse.json({ message: "Nicht angemeldet." }, { status: 401 });
+      return NextResponse.json({ message: "Not signed in." }, { status: 401 });
     }
 
     const formData = await req.formData();
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File | null;
     if (!orgSlug || !file) {
       return NextResponse.json(
-        { message: "orgSlug und Datei (file) sind erforderlich." },
+        { message: "orgSlug and file are required." },
         { status: 400 }
       );
     }
@@ -107,9 +107,9 @@ export async function POST(req: NextRequest) {
       .eq("is_active", true)
       .single();
     if (orgErr || !org) {
-      return NextResponse.json({ message: "Organisation nicht gefunden." }, { status: 404 });
+      return NextResponse.json({ message: "Organisation not found." }, { status: 404 });
     }
-    const orgName = (org as { id: string; name?: string }).name ?? "Organisation";
+    const orgName = (org as { id: string; name?: string }).name ?? "Organization";
     const rawPlan = (org as { plan?: string | null }).plan;
     const orgPlan: Plan | null =
       rawPlan === "free" || rawPlan === "team" || rawPlan === "pro" ? rawPlan : null;
@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
     } else {
       const wb = XLSX.read(arrayBuffer, { type: "array" });
       const sheet = wb.Sheets["Members"] ?? wb.Sheets["Mitglieder"] ?? wb.Sheets[wb.SheetNames[0]];
-      if (!sheet) throw new Error("Kein Arbeitsblatt gefunden.");
+      if (!sheet) throw new Error("No worksheet found.");
       data = XLSX.utils.sheet_to_json(sheet as XLSX.WorkSheet, { header: 1 }) as unknown[][];
     }
     const memberListHeaderIdx = findMemberListHeaderRow(data);
@@ -181,20 +181,20 @@ export async function POST(req: NextRequest) {
       const hdrs = (data[memberListHeaderIdx] as unknown[]).map((h) => normalizeHeader(h));
       if (!buildMemberListColumnMap(hdrs)) {
         return NextResponse.json(
-          { message: "Ungültige Kopfzeile: Vorname und Nachname (bzw. First/Last name) werden benötigt." },
+          { message: "Invalid header row: first name and last name (or full name) are required." },
           { status: 400 }
         );
       }
     } else if (genericModeFirstRow && data.length <= 1) {
       return NextResponse.json(
-        { message: "Keine gültigen Zeilen in der Mitglieder-Datei gefunden." },
+        { message: "No valid rows found in the members file." },
         { status: 400 }
       );
     } else if ((nameToRowEngagement?.size ?? 0) === 0) {
       return NextResponse.json(
         {
           message:
-            "Keine gültigen Zeilen in der Excel-Datei (OrgFlow-Mitgliederliste, oder Sheet „Engagement Overview“ mit Spalte A = Name)."
+            "No valid rows in the Excel file (OrgFlow member list, or “Engagement Overview” sheet with column A = name)."
         },
         { status: 400 }
       );
@@ -341,7 +341,7 @@ export async function POST(req: NextRequest) {
             email,
             inviteUrl,
             organizationName: orgName,
-            role: "Mitglied"
+            role: "Member"
           }).catch((err) => console.error("[import-members] n8n invite failed:", err));
         }
       }
@@ -456,7 +456,7 @@ export async function POST(req: NextRequest) {
             email,
             inviteUrl,
             organizationName: orgName,
-            role: "Mitglied"
+            role: "Member"
           }).catch((err) => console.error("[import-members] n8n invite failed:", err));
         }
       }
@@ -555,7 +555,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      message: `${created} Mitglieder importiert. ${skipped} übersprungen. ${failed} fehlgeschlagen.`,
+      message: `${created} members imported. ${skipped} skipped. ${failed} failed.`,
       created,
       skipped,
       failed,
@@ -565,7 +565,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { message: e instanceof Error ? e.message : "Import fehlgeschlagen." },
+      { message: e instanceof Error ? e.message : "Import failed." },
       { status: 500 }
     );
   }
