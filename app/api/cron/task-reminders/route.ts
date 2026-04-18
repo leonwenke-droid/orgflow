@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   const nowMs = Date.now();
   const { lowIso, highIso } = reminderTargetWindowIso(nowMs);
 
-  const { data: tasks } = await supabase
+  const { data: tasks, error: tasksError } = await supabase
     .from("tasks")
     .select("id, title, description, due_at, owner_id, organization_id")
     .not("owner_id", "is", null)
@@ -30,7 +30,12 @@ export async function GET(req: Request) {
     .gte("due_at", lowIso)
     .lte("due_at", highIso);
 
-  if (!tasks?.length) return NextResponse.json({ ok: true, sent: 0 });
+  if (tasksError) {
+    console.error("[task-reminders] tasks query failed:", tasksError.message);
+    return NextResponse.json({ error: tasksError.message, lowIso, highIso }, { status: 500 });
+  }
+
+  if (!tasks?.length) return NextResponse.json({ ok: true, sent: 0, lowIso, highIso });
 
   const taskIds = tasks.map((t) => t.id as string);
   const { data: alreadySent } = await supabase.from("task_reminder_logs").select("task_id").in("task_id", taskIds);
