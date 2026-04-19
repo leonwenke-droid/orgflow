@@ -1,5 +1,16 @@
 import Link from "next/link";
 
+/** Namen und Texte für das Dashboard-Mockup in der Hero-Section — hier anpassen. */
+const HERO_DEMO = {
+  greetingName: "Lars",
+  orgSubtitle: "Muster-Verein · Dashboard",
+  topMembers: [
+    { initials: "AM", name: "Anna M.", pts: 24 },
+    { initials: "TK", name: "Tom K.", pts: 18 },
+    { initials: "LS", name: "Lisa S.", pts: 12 },
+  ],
+} as const;
+
 export function Hero() {
   return (
     <section className="hero">
@@ -56,8 +67,8 @@ export function Hero() {
               <div className="mockup-body">
                 <div className="m-header">
                   <div>
-                    <div className="m-title">Guten Abend, Leon</div>
-                    <div className="m-sub">TGG Leer · Dashboard</div>
+                    <div className="m-title">Guten Abend, {HERO_DEMO.greetingName}</div>
+                    <div className="m-sub">{HERO_DEMO.orgSubtitle}</div>
                   </div>
                   <div className="m-badge">Score #1</div>
                 </div>
@@ -120,39 +131,28 @@ export function Hero() {
 
             <div className="floating-card fc-left fc-dark">
               <div className="fc-label">Top Mitglieder</div>
-              <div className="fc-row">
-                <div className="fc-avatar" style={{ background: "#185FA5", color: "#fff" }}>
-                  LW
+              {HERO_DEMO.topMembers.map((m, i) => (
+                <div className="fc-row" key={m.initials + m.name}>
+                  <div
+                    className="fc-avatar"
+                    style={{
+                      background: ["#185FA5", "#3B6D11", "#854F0B"][i],
+                      color: "#fff",
+                    }}
+                  >
+                    {m.initials}
+                  </div>
+                  <span className="fc-name" style={{ color: "rgba(255,255,255,.8)" }}>
+                    {m.name}
+                  </span>
+                  <span
+                    className="fc-pts"
+                    style={{ color: i === 0 ? "#5DCAA5" : "rgba(255,255,255,.45)" }}
+                  >
+                    {m.pts}
+                  </span>
                 </div>
-                <span className="fc-name" style={{ color: "rgba(255,255,255,.8)" }}>
-                  Leon W.
-                </span>
-                <span className="fc-pts" style={{ color: "#5DCAA5" }}>
-                  24
-                </span>
-              </div>
-              <div className="fc-row">
-                <div className="fc-avatar" style={{ background: "#3B6D11", color: "#fff" }}>
-                  FM
-                </div>
-                <span className="fc-name" style={{ color: "rgba(255,255,255,.8)" }}>
-                  Femke M.
-                </span>
-                <span className="fc-pts" style={{ color: "rgba(255,255,255,.45)" }}>
-                  18
-                </span>
-              </div>
-              <div className="fc-row">
-                <div className="fc-avatar" style={{ background: "#854F0B", color: "#fff" }}>
-                  CK
-                </div>
-                <span className="fc-name" style={{ color: "rgba(255,255,255,.8)" }}>
-                  Celina K.
-                </span>
-                <span className="fc-pts" style={{ color: "rgba(255,255,255,.45)" }}>
-                  12
-                </span>
-              </div>
+              ))}
             </div>
           </div>
         </div>

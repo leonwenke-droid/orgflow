@@ -11,18 +11,14 @@ import NotificationBell from "./NotificationBell";
 import { OrgFlowLogoLockup } from "./brand/OrgFlowLogoLockup";
 import type { AppShellUser } from "./AppShell";
 import type { DbRole } from "../types";
-
-const RESERVED = ["admin", "dashboard", "login", "super-admin", "task", "api", "claim-org", "auth", "create-organisation", "join"];
-// Public / non-organisation routes that must not be interpreted as orgSlug.
-// (Otherwise /imprint -> orgSlug="imprint" would lead to links like /imprint/dashboard.)
-const LEGAL_RESERVED = ["imprint", "privacy", "terms", "invite", "onboarding", "avv"];
+import { isNonOrgTopSegment } from "../lib/orgRouteSegments";
 
 function useOrgSlug(): string | null {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const segments = pathname.split("/").filter(Boolean);
   const orgFromPath =
-    segments.length >= 1 && !RESERVED.includes(segments[0]) && !LEGAL_RESERVED.includes(segments[0]) ? segments[0] : null;
+    segments.length >= 1 && !isNonOrgTopSegment(segments[0]) ? segments[0] : null;
   const orgFromQuery = searchParams?.get("org")?.trim() || null;
   return orgFromPath || orgFromQuery;
 }

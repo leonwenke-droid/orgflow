@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 import AppHeader from "./AppHeader";
 import MobileNav from "./layout/MobileNav";
+import { isNonOrgTopSegment } from "../lib/orgRouteSegments";
 
 export type AppShellUser =
   | {
@@ -15,32 +16,12 @@ export type AppShellUser =
     }
   | null;
 
-const RESERVED = [
-  "admin",
-  "dashboard",
-  "login",
-  "super-admin",
-  "task",
-  "api",
-  "claim-org",
-  "auth",
-  "create-organisation",
-  "join",
-  // Public / non-organisation routes (kein Org-Slug)
-  "imprint",
-  "privacy",
-  "terms",
-  "invite",
-  "onboarding",
-  "avv",
-];
-
 function useOrgSlug(): string | null {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const segments = pathname.split("/").filter(Boolean);
   const orgFromPath =
-    segments.length >= 1 && !RESERVED.includes(segments[0]) ? segments[0] : null;
+    segments.length >= 1 && !isNonOrgTopSegment(segments[0]) ? segments[0] : null;
   const orgFromQuery = searchParams?.get("org")?.trim() || null;
   return orgFromPath || orgFromQuery;
 }

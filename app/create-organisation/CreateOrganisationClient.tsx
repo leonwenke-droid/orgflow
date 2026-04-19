@@ -25,7 +25,7 @@ const MODULES = [
   { key: "finance", label: "Finance", description: "Track treasury updates and keep balances transparent." },
   { key: "resources", label: "Resources", description: "Manage materials and purchases in one place." },
   { key: "engagement", label: "Engagement", description: "Reward contributions and keep workload distribution fair." },
-  { key: "events", label: "Events", description: "Coordinate event-specific tasks, shifts and resources in one place." },
+  { key: "events", label: "Events", description: "Group tasks, shifts and resources under one event." },
 ];
 
 const PENDING_KEY = "create-org-pending";

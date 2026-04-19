@@ -34,25 +34,6 @@ import {
   canViewFinance,
 } from "../lib/permissions";
 
-const RESERVED = [
-  "admin",
-  "dashboard",
-  "login",
-  "super-admin",
-  "task",
-  "api",
-  "claim-org",
-  "auth",
-  "create-organisation",
-  "join",
-  "imprint",
-  "privacy",
-  "terms",
-  "invite",
-  "onboarding",
-  "avv",
-];
-
 type NavItem = { href: string; labelKey: string; icon: React.ElementType };
 
 type OrgModules = {

@@ -46,10 +46,10 @@ export default function AboutPage() {
 
       <h2>Kontakt</h2>
       <p>
-        Fragen, Support und Partnerschaften:{" "}
+        Fragen, Support, Demo-Anfragen und Partnerschaften:{" "}
         <a href="mailto:info@lyniqmedia.com">info@lyniqmedia.com</a>
         <br />
-        Weitere Infos unter{" "}
+        Weitere Informationen zum Unternehmen:{" "}
         <a href="https://www.lyniqmedia.com" target="_blank" rel="noopener noreferrer">
           lyniqmedia.com
         </a>
